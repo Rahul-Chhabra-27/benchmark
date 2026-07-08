@@ -91,19 +91,7 @@ This README tracks benchmark results for **Qwen3-8B** evaluated on the [LongBenc
 
 ## Notes
 
-- Fill in each cell with the corresponding score once evaluation runs complete.
 - The "Average" row can be computed as the mean across all 21 tasks (or split into English/Chinese/code subsets if desired).
 - Memory columns (2GB/4GB/6GB/8GB) refer to the memory budget allocated for the model/KV-cache during inference — specify exactly what this constrains (e.g., KV-cache size, quantization level, GPU memory limit) here for clarity.
 
 ## How to Reproduce
-
-```bash
-# Example placeholder — adjust to your actual evaluation pipeline
-python eval_longbench.py \
-  --model Qwen3-8B \
-  --tasks narrativeqa qasper multifieldqa_en multifieldqa_zh hotpotqa \
-          2wikimqa musique dureader gov_report qmsum multi_news \
-          vcsum trec triviaqa samsum lsht passage_count \
-          passage_retrieval_en passage_retrieval_zh lcc repobench-p \
-  --memory_budget <2GB|4GB|6GB|8GB>
-```
