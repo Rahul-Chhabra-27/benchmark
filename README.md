@@ -63,8 +63,32 @@ This README tracks benchmark results for **Qwen3-8B** evaluated on the [LongBenc
 - **Metric:** *(fill in — e.g., F1 / Rouge-L / Accuracy, as defined per-task by LongBench)*
 
 ## Results
+## Meta-llama/Llama3.1-8B-Instruct
+| Task | 1GB | 2GB | 4GB | 6GB | 8GB | Average |
+|---|---|---|---|---|---|---|
+| narrativeqa | 32.14| 30.07| 30.81| 30.66|30.62 | 30.86 |
+| qasper | 47.46| 47.15| 47.25| 47.25|47.25 | 47.27 |
+| multifieldqa_en |56.48 |54.95 | 54.95| 54.95| 54.95| 55.26 |
+| multifieldqa_zh | 63.46| 63.49| 63.49| 63.49|63.49 | 63.48 |
+| hotpotqa | 57.55| 59.32| 59.27| 59.27| 59.27| 58.94 |
+| 2wikimqa | 51.37 | 51.09| 51.09|51.09 | 51.09| 51.15 |
+| musique | 29.57| 32.76| 32.76| 32.76| 32.76| 32.12 |
+| dureader |32.69 | 32.28| 32.36|32.36 | 32.36| 32.41 |
+| gov_report |20.33 | 20.34| 20.38| 20.35| 20.35| 20.35 |
+| qmsum | 25.06| 24.92| 24.86| 24.86|24.86 | 24.91 |
+| multi_news | 22.0| 21.97| 21.97| 21.97| 21.97| 21.98 |
+| vcsum |14.67 | 14.8| 14.63| 14.63| 14.63| 14.67 |
+| trec | 27.0| 29.5| 29.5| 29.5| 29.5| 29.00 |
+| triviaqa | 90.83| 91.71| 92.21| 92.21| 92.21| 91.83 |
+| samsum | 37.96|40.88| 40.85| 40.85| 40.85| 40.28 |
+| lsht | | | | | | |
+| passage_count |11.61 |11.42 | 12.17| 12.17|12.17 | 11.91 |
+| passage_retrieval_en | 100.0| 100.0| 100.0|100.0 |100.0 |100.0 |
+| passage_retrieval_zh | 99.0|99.0 | 99.0| 99.0| 99.0| 99.0|
+| lcc | 51.15| 51.12| 51.06| 51.06| 51.06| 51.09 |
+| repobench-p |44.77 |44.19 |44.51 | 44.51|44.51 | 44.50 |
 
-
+## Qwen3-8B
 | Task | 2GB | 4GB | 6GB | 8GB | Average |
 |---|---|---|---|---|---|
 | narrativeqa | 27.85| 28.80| 28.87| 28.87| 28.60 |
@@ -86,12 +110,7 @@ This README tracks benchmark results for **Qwen3-8B** evaluated on the [LongBenc
 | passage_count | 9.0| 10.0|10.0 |10.0 | 9.75 |
 | passage_retrieval_en |91.87 | 91.87|91.87 |91.87 | 91.87 |
 | passage_retrieval_zh | 99.0| 99.0| 99.0| 99.0| 99.00 |
-| lcc | | 64.87| 64.87| 64.87| 64.87 |
-| repobench-p | | 60.24| 60.25| 60.25| 60.25 |
+| lcc | 64.87| 64.87| 64.87| 64.87| 64.87 |
+| repobench-p | 60.41| 60.24| 60.25| 60.25| 60.25 |
 
-## Notes
 
-- The "Average" row can be computed as the mean across all 21 tasks (or split into English/Chinese/code subsets if desired).
-- Memory columns (2GB/4GB/6GB/8GB) refer to the memory budget allocated for the model/KV-cache during inference — specify exactly what this constrains (e.g., KV-cache size, quantization level, GPU memory limit) here for clarity.
-
-## How to Reproduce
