@@ -46,7 +46,7 @@ BUDGETS=(0.2 0.4 0.6 0.8)  # GB
 
 Results will be added below as they come in, one budget at a time.
 
-| Task | 205 MB | 410 MB | 614 MB | 819 MB |
+| Task | 200 MB | 400 MB | 600 MB | 800 MB |
 |---|---|---|---|---|
 | cwe | | | | |
 | fwe | | | | |
