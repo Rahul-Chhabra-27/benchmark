@@ -1,349 +1,116 @@
-[![PyPI version](https://badge.fury.io/py/kvpress.svg)](https://badge.fury.io/py/kvpress)
-[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Colab example notebook](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1JNvaTKuuAHrl49dYB9-mdEH_y52Ib-NP?usp=drive_link)
-[![Hugging Face Space](https://img.shields.io/badge/🤗%20Hugging%20Face-Space-blue)](https://huggingface.co/spaces/nvidia/kvpress)
-[![Blog post](https://img.shields.io/badge/🤗%20Hugging%20Face-Blog-blue)](https://huggingface.co/blog/nvidia/kvpress)
-[![Hugging Face Leaderboard](https://img.shields.io/badge/🤗%20HuggingFace-Leaderboard-orange)](https://huggingface.co/spaces/nvidia/kvpress-leaderboard)
-[![arXiv](https://img.shields.io/badge/arXiv-2510.00636-b31b1b.svg)](https://arxiv.org/abs/2510.00636v1)
+# Qwen3-8B — LongBench Benchmark Results
+
+This README tracks benchmark results for **Qwen3-8B** evaluated on the [LongBench](https://github.com/THUDM/LongBench) dataset across different memory budgets (e.g., KV-cache / GPU memory constraints).
+# LongBench statistics
+
+| Task          | Task Type | Eval metric |     Avg len                            |Language | \#Sample |
+| :-------- | :-----------:| :-----------: |:-------: | :-----------: |:--------: |
+| HotpotQA   | Multi-doc QA | F1                        |9,151                           |EN                           |200                           |
+| 2WikiMultihopQA| Multi-doc QA | F1                        |4,887                           |EN                           |200                           |
+| MuSiQue| Multi-doc QA | F1                        |11,214                           |EN                           |200                           |
+| DuReader| Multi-doc QA | Rouge-L                 |15,768                           |ZH                           |200                           |
+| MultiFieldQA-en| Single-doc QA | F1                        |4,559                           |EN                           |150                           |
+| MultiFieldQA-zh| Single-doc QA | F1                        |6,701                           |ZH                           |200                           |
+| NarrativeQA| Single-doc QA | F1                        |18,409                           |EN                           |200                           |
+| Qasper| Single-doc QA | F1                        |3,619                           |EN                           |200                           |
+| GovReport| Summarization | Rouge-L                 |8,734                           |EN                           |200                           |
+| QMSum| Summarization | Rouge-L                 |10,614                           |EN                           |200                           |
+| MultiNews| Summarization  | Rouge-L                 |2,113                           |EN                          |200                           |
+| VCSUM| Summarization | Rouge-L                 |15,380                           |ZH                           |200                           |
+| TriviaQA| Few shot  | F1                        |8,209                           |EN                           |200                           |
+| SAMSum| Few shot | Rouge-L                        |6,258                           |EN                           |200                           |
+| TREC| Few shot | Accuracy                |5,177                           |EN                           |200                           |
+| LSHT| Few shot | Accuracy                |22,337                           |ZH                           |200                           |
+| PassageRetrieval-en| Synthetic | Accuracy                |9,289                           |EN                           |200                           |
+| PassageCount| Synthetic | Accuracy                |11,141                           |EN                           |200  |
+| PassageRetrieval-zh | Synthetic | Accuracy                |6,745                           |ZH                           |200                           |
+| LCC| Code | Edit Sim              |1,235                           |Python/C#/Java                           |500                           |
+| RepoBench-P| Code | Edit Sim                |4,206                           |Python/Java                           |500                           |
+
+
+# Task description
+
+| Task              | Task Description                                            |
+| :---------------- | :----------------------------------------------------------- |
+| HotpotQA          | Answer related questions based on multiple given documents   |
+| 2WikiMultihopQA   | Answer related questions based on multiple given documents   |
+| MuSiQue           | Answer related questions based on multiple given documents   |
+| DuReader          | Answer related Chinese questions based on multiple retrieved documents |
+| MultiFieldQA-en   | Answer English questions based on a long article, which comes from a relatively diverse field |
+| MultiFieldQA-zh   | Answer Chinese questions based on a long article, which comes from a relatively diverse field |
+| NarrativeQA       | Answer questions based on stories or scripts, including understanding of important elements such as characters, plots, themes, etc. |
+| Qasper            | Answer questions based on a NLP research paper, questions proposed and answered by NLP practitioners |
+| GovReport         | A summarization task that requires summarizing government work reports |
+| MultiNews             | A multi-doc summarization that requires summarizing over multiple news   |
+| QMSum             | A summarization task that requires summarizing meeting records based on user queries |
+| VCSUM             | A summarization task that requires summarizing Chinese meeting records |
+| SAMSum            | A dialogue summarization task, providing several few-shot examples                    |
+| TriviaQA          | Single document question answering task, providing several few-shot examples |
+| NQ                | Single document question answering task, providing several few-shot examples |
+| TREC              | A classification task that requires categorizing questions, includes 50 categories in total |
+| LSHT              | A Chinese classification task that requires categorizing news, includes 24 categories in total |
+| PassageRetrieval-en | Given 30 English Wikipedia paragraphs, determine which paragraph the given summary corresponds to |
+| PassageCount | Determine the total number of different paragraphs in a given repetitive article |
+| PassageRetrieval-zh | Given several Chinese paragraphs from the C4 data set, determine which paragraph the given abstract corresponds to |
+| LCC               | Given a long piece of code, predict the next line of code |
+| RepoBench-P       | Given code in multiple files within a GitHub repository (including cross-file dependencies), predict the next line of code |
+
+## Setup
+
+- **Model:** Qwen3-8B
+- **Benchmark:** LongBench
+- **Memory configurations tested:** 2GB, 4GB, 6GB, 8GB
+- **Metric:** *(fill in — e.g., F1 / Rouge-L / Accuracy, as defined per-task by LongBench)*
+
+## Results
+## Meta-llama/Llama3.1-8B-Instruct
+| Task | 256MB | 512MB | 768MB | 1GB | 2GB | 4GB | 6GB | 8GB | Average |
+|---|---|---|---|---|---|---|---|---|---|
+| narrativeqa | 24.85 | 30.78 | 30.77 | 32.14| 30.07| 30.81| 30.66|30.62 | 30.86 |
+| qasper | 45.4 | 48.43 | 47.22 | 47.46| 47.15| 47.25| 47.25|47.25 | 47.27 |
+| multifieldqa_en | 56.06 | 56.54 | 56.22 |56.48 |54.95 | 54.95| 54.95| 54.95| 55.26 |
+| multifieldqa_zh | 61.58 | 62.99 | 63.38 | 63.46| 63.49| 63.49| 63.49|63.49 | 63.48 |
+| hotpotqa | 58.0 | 54.26 | 54.44 | 57.55| 59.32| 59.27| 59.27| 59.27| 58.94 |
+| 2wikimqa | 48.34 | 48.98 | 50.58 | 51.37 | 51.09| 51.09|51.09 | 51.09| 51.15 |
+| musique | 28.49 | 25.68 | 28.23 | 29.57| 32.76| 32.76| 32.76| 32.76| 32.12 |
+| dureader | 31.27 | 32.78 | 32.87 |32.69 | 32.28| 32.36|32.36 | 32.36| 32.41 |
+| gov_report | 20.11 | 20.37 | 20.43 |20.33 | 20.34| 20.38| 20.35| 20.35| 20.35 |
+| qmsum | 24.35 | 25.17 | 25.17 | 25.17| 24.92| 24.86| 24.86|24.86 | 24.91 |
+| multi_news | - | - | - | 22.0| 21.97| 21.97| 21.97| 21.97| 21.98 |
+| vcsum | - | - | - |14.67 | 14.8| 14.63| 14.63| 14.63| 14.67 |
+| trec | - | - | - | 27.0| 29.5| 29.5| 29.5| 29.5| 29.00 |
+| triviaqa | - | - | - | 90.83| 91.71| 92.21| 92.21| 92.21| 91.83 |
+| samsum | - | - | - | 37.96|40.88| 40.85| 40.85| 40.85| 40.28 |
+| lsht | - | - | - | | | | | | |
+| passage_count | - | - | - |11.61 |11.42 | 12.17| 12.17|12.17 | 11.91 |
+| passage_retrieval_en | - | - | - | 100.0| 100.0| 100.0|100.0 |100.0 |100.0 |
+| passage_retrieval_zh | - | - | - | 99.0|99.0 | 99.0| 99.0| 99.0| 99.0|
+| lcc | - | - | - | 51.15| 51.12| 51.06| 51.06| 51.06| 51.09 |
+| repobench-p | - | - | - |44.77 |44.19 |44.51 | 44.51|44.51 | 44.50 |
+
+## Qwen3-8B
+| Task | 2GB | 4GB | 6GB | 8GB | Average |
+|---|---|---|---|---|---|
+| narrativeqa | 27.85| 28.80| 28.87| 28.87| 28.60 |
+| qasper | 43.67| 43.74| 43.74| 43.74| 43.72 |
+| multifieldqa_en |55.63 |55.63 | 55.63|55.63 | 55.63 |
+| multifieldqa_zh | 66.07| 66.07|66.07 | 66.07| 66.07 |
+| hotpotqa | 62.8| 62.8| 62.8|62.8 | 62.80 |
+| 2wikimqa |48.3 | 48.3| 48.3|48.3 | 48.30 |
+| musique | 34.90| 34.97| 34.97| 34.97| 34.95 |
+| dureader | 26.76| 26.83| 26.83| 26.83| 26.81 |
+| gov_report |18.3 | 18.3| 18.3| 18.3| 18.30 |
+| qmsum |24.48 | 24.62| 24.64| 24.64| 24.60 |
+| multi_news | 19.9| 19.9| 19.9|19.9| 19.90 |
+| vcsum | 13.48| 13.5| 13.5| 13.5| 13.50 |
+| trec | 40.5| 40.5| 40.5|40.5 | 40.50 |
+| triviaqa | 90.46| 90.46| 90.46| 90.46| 90.46 |
+| samsum | 40.4| 40.57| 40.57| 40.57| 40.53 |
+| lsht |20.0 |20.0 | 20.0| 20.0| 20.00 |
+| passage_count | 9.0| 10.0|10.0 |10.0 | 9.75 |
+| passage_retrieval_en |91.87 | 91.87|91.87 |91.87 | 91.87 |
+| passage_retrieval_zh | 99.0| 99.0| 99.0| 99.0| 99.00 |
+| lcc | 64.87| 64.87| 64.87| 64.87| 64.87 |
+| repobench-p | 60.41| 60.24| 60.25| 60.25| 60.25 |
 
 
-![kvpress](kvpress.jpg)
-
-
-Deploying long-context LLMs is costly due to the linear growth of the key-value (KV) cache in transformer models. For example, handling 1M tokens with Llama 3.1-70B in float16 requires up to 330GB of memory. kvpress implements multiple KV cache compression methods and benchmarks using 🤗 transformers, aiming to simplify the development of new methods for researchers and developers in this field.
-
-## Installation
-
-```bash
-pip install kvpress
-```
-
-For a local installation, use [uv](https://docs.astral.sh/uv/):
-
-```bash
-git clone https://github.com/NVIDIA/kvpress.git
-cd kvpress
-uv sync
-```
-
-To install with all optional dependencies, run:
-
-```bash
-git clone https://github.com/NVIDIA/kvpress.git
-cd kvpress
-uv sync --extra eval --extra flash-attn
-```
-
-## Usage
-
-KVPress provides a set of "presses" that compress the KV cache during the prefilling-phase. Each press is associated with a `compression_ratio` attribute that measures the compression of the cache. The easiest way to use a press is through our custom `KVPressTextGenerationPipeline`. It is automatically registered as a transformers pipeline with the name "kv-press-text-generation" when kvpress is imported and handles chat templates and tokenization for you:
-
-```python
-from transformers import pipeline
-from kvpress import ExpectedAttentionPress
-
-model = "Qwen/Qwen3-8B"
-pipe = pipeline("kv-press-text-generation", model=model, device_map="auto", dtype="auto")
-
-context = "A very long text you want to compress once and for all"
-question = "\nA question about the compressed context"  # optional
-
-press = ExpectedAttentionPress(compression_ratio=0.5)
-answer = pipe(context, question=question, press=press)["answer"]
-```
-
-In the snippet above, the compression is only applied on the context tokens so that you can evaluate the compression for different questions. Check the [Wikipedia notebook demo](notebooks/wikipedia_demo.ipynb) for a more detailed example (also available on Colab [here](https://colab.research.google.com/drive/1JNvaTKuuAHrl49dYB9-mdEH_y52Ib-NP)).
-
-<details><summary>
-Decoding Compression
-</summary>
-By default, KVPress applies compression during the prefilling phase. As a new (experimental) feature, we now support decoding compression via the `DecodingPress` wrapper. `DecodingPress` compresses the KV cache periodically during token generation, optionally maintaining a buffer of recent hidden states. `DecodingPress` supports the following parameters:
-
-- `base_press`: Any ScorerPress (e.g., `KNormPress`, `CriticalKVPress`)
-- `compression_interval`: Steps between compressions (default: 10)
-- `target_size`: Target cache size of the cache after compression (default: 1024)
-- `hidden_states_buffer_size`: Number of hidden states to buffer before compression (default: 128). Some presses don't need buffered hidden states and can set this to 0.
-
-Unlike a compression ratio, decoding press uses a `target_size` to compress the cache. This means that the cache is compressed every `compression_interval` steps, and the compression ratio is automatically computed such that the size of the cache after compression equals `target_size`.
-
-An example for decoding compression:
-
-```python
-from transformers import pipeline
-from kvpress import KnormPress
-from kvpress import DecodingPress
-
-# Initialize the pipeline
-device = "cuda:0"
-model = "meta-llama/Llama-3.1-8B-Instruct"
-model_kwargs = {"attn_implementation": "flash_attention_2"}
-pipe = pipeline("kv-press-text-generation", model=model, device=device, model_kwargs=model_kwargs)
-
-# Create a decoding press that compresses every 10 steps to 512 tokens
-decoding_press = DecodingPress(
-    base_press=KnormPress(),
-    compression_steps=10,
-    token_buffer_size=512
-)
-
-# Use with pipeline
-context = "A very long text you want to compress during generation"
-question = "Tell me a long story about this context"
-response = pipe(context, question=question, press=decoding_press)["answer"]
-```
-
-> Not all existing presses are fully compatible with DecodingPress due to fundamental differences in how compression works during decoding versus prefilling. in particular, we only support ScorerPresses as base presses.
-
-</details>
-
-## Available presses
-
-All current presses are training free and inherit from `BasePress` ([source](kvpress/presses/base_press.py)). 
-
-Several presses inherit from `ScorerPress` ([source](kvpress/presses/scorer_press.py)) and rely on a score to prune the KV pairs with lowest importance:
-
-- `RandomPress` ([source](kvpress/presses/random_press.py)): random score
-- `KnormPress` ([source](kvpress/presses/knorm_press.py), [paper](https://arxiv.org/abs/2406.11430)): inverse norm of the key
-- `SnapKVPress` ([source](kvpress/presses/snapkv_press.py), [paper](https://arxiv.org/abs/2404.14469)): average attention weight of the last queries
-- `ExpectedAttentionPress` ([source](kvpress/presses/expected_attention_press.py), [notebook](notebooks/expected_attention.ipynb)): expected attention weight during the generation phase 
-- `StreamingLLMPress` ([source](kvpress/presses/streaming_llm_press.py), [paper](https://arxiv.org/abs/2309.17453)): keep only the initial and recent tokens 
-- `TOVAPress` ([source](kvpress/presses/tova_press.py), [paper](https://arxiv.org/abs/2401.06104)): attention weight of the last query averaged across heads 
-- `ObservedAttentionPress` ([source](kvpress/presses/observed_attention_press.py), [paper](https://arxiv.org/abs/2306.14048)): average attention weight observed during in prefilling phase
-- `QFilterPress` ([source](kvpress/presses/qfilter_press.py), [paper](https://arxiv.org/abs/2503.02812)): project the Key representations on the main SVD component of the Query vectors to approximate the attention scores.
-- `PyramidKVPress` ([source](kvpress/presses/pyramidkv_press.py), [paper](https://arxiv.org/abs/2406.02069)): maintain pyramid-like cache sizes, allocating more cache budget to lower layers and less to higher layers
-- `LagKVPress` ([source](kvpress/presses/lagkv_press.py), [paper](https://arxiv.org/abs/2504.04704)): leverage on the KV lag-relative information to compress. It's query free, attention-weight free, and flash-attention compatible.
-- `KeyDiffPress` ([source](kvpress/presses/keydiff_press.py), [paper](https://arxiv.org/abs/2504.15364)): evict tokens based solely on key similarity.
-- `NonCausalAttnPress` ([source](kvpress/presses/non_causal_attention_press.py), [paper](https://arxiv.org/abs/2507.08143)): evict tokens based on non-causal chunked attention scores.
-- `LeverageScorePress` ([source](kvpress/presses/leverage_press.py), [paper](https://arxiv.org/abs/2507.08143)): evict tokens based on approximate statistical leverage (i.e we preserve outliers in the key space).
-- `CompactorPress` ([source](kvpress/presses/compactor_press.py), [paper](https://arxiv.org/abs/2507.08143)): blend `NonCausalAttnPress` and `LeverageScorePress` based on the compression_ratio.
-- `CURPress` ([source](kvpress/presses/cur_press.py), [paper](https://arxiv.org/abs/2509.15038)): prune keys and values based on the CUR decomposition using approximate leverage scores.
-- `KVzapPress` ([source](kvpress/presses/kvzap/kvzap_press.py), [paper](https://arxiv.org/abs/2601.07891), [training](kvzap)): approximate KVzip+ using a fast surrogate model. To be used in conjunction with the `DMSPress`.
-- `FastKVzipPress` ([source](kvpress/presses/fastkvzip_press.py), [paper](https://arxiv.org/abs/2601.17668)): approximate KVzip through a lightweight gating mechanism.
-- `CapPress` ([source](kvpress/presses/cap_press.py), [paper](https://arxiv.org/abs/2604.25975)): evict tokens based on query-aware capacity scores from a log-determinant leverage proxy.
-
-Some presses rely on a different logic:
-- `ThinKPress` ([source](kvpress/presses/think_press.py), [paper](https://arxiv.org/abs/2407.21018)): compress the dimensions of the keys based on the channel attention score on the last queries 
-- `SimLayerKVPress` ([source](kvpress/presses/simlayerkv_press.py), [paper](https://arxiv.org/abs/2410.13846)): identify "lazy" layers, and apply the StreamingLLM approach to them 
-- `DuoAttentionPress` ([source](kvpress/presses/duo_attention_press.py), [paper](https://arxiv.org/abs/2410.10819)): split heads into retrieval heads (no compression) and streaming heads (StreamingLLM approach)
-- `FinchPress` ([source](kvpress/presses/finch_press.py), [paper](https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00716/125280)): similar to SnapKV with a dynamic window size and key value re-rotation
-- `KVzipPress` ([source](kvpress/presses/kvzip_press.py), [paper](https://arxiv.org/abs/2505.23416)): identify redundant KV pairs through context reconstruction. Achieve near-lossless compression at the cost of multiple forward passes.
-- `KVComposePress` ([source](kvpress/presses/kvcompose_press.py), [paper](https://arxiv.org/abs/2509.05165)): attention-guided eviction, aligning per-head selections into composite tokens to preserve cache structure.
-
-> [!NOTE]  
-> `KVComposePress` performs an extra pass over the full context, temporarily creating a KV cache of ~2x the context length and creating memory overhead during prefill.
-
-Finally we provide wrapper presses that can be combined with other presses:
-- `AdaKVPress` ([source](kvpress/presses/adakv_press.py), [paper](https://arxiv.org/abs/2407.11550)): prune bottom scores of any `ScorerPress` but across all heads, achieving head-wise compressions 
-- `LUKVPress` ([source](kvpress/presses/lukv_press.py), [paper](https://arxiv.org/abs/2602.08585)): applies layer/head budget curves to a `ScorerPress`
-- `PerLayerCompressionPress` ([source](kvpress/presses/per_layer_compression_press.py)): compress each layer with a different compression ratio (experimental)
-- `ComposedPress` ([source](kvpress/presses/composed_press.py)): compose multiple presses together by chaining their forward hooks
-- `KeyRerotationPress` ([source](kvpress/presses/key_rerotation_press.py)): rerotate pruned keys to have continuous RoPE embeddings
-- `ChunkKVPress` ([source](kvpress/presses/chunkkv_press.py), [paper](https://arxiv.org/abs/2502.00299)): compress by selecting important chunks, preserving semantic coherence
-- `ChunkPress` ([source](kvpress/presses/chunk_press.py), [paper](https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00716/125280)): compress the KV cache on each sequence chunk separately. This can yield to more uniform compression across long sequences
-- `CriticalKVPress` and `CriticalAdaKVPress` ([source](kvpress/presses/criticalkv_press.py), [paper](https://arxiv.org/abs/2502.03805)): refine the scores using the L1 norm of Wo @ values, coupled with a two-stage selection.
-- `BlockPress` ([source](kvpress/presses/block_press.py), [paper](https://arxiv.org/abs/2504.15364)): segment input sequence into non-overlapping blocks and compress iteratively (⚠️ not a true chunked-prefill implementation)
-- `DecodingPress` ([source](kvpress/presses/decoding_press.py)): allow for compression during decoding, see decoding section in this README.
-- `CompressionRatioDecodingPress` ([source](kvpress/presses/compression_ratio_decoding_press.py)): compress during decoding to keep a fixed fraction of all tokens seen so far.
-- `PrefillDecodingPress` ([source](kvpress/presses/prefill_decoding_press.py)): allow to compress both during prefilling and during decoding.
-- `DMSPress` ([source](kvpress/presses/dms_press.py), [paper](https://arxiv.org/abs/2506.05345)): evict keys and values with scores below a given threshold of any `ScorerPress` instead of relying on top-k scores. Support both prefilling and decoding (if decoding=True), but only supports dense-prefill and not sparse-prefill. ⚠️ Does not include the trained evictors from the DMS paper.
-- `CAMPress` ([source](kvpress/presses/cam_press.py), [paper](https://openreview.net/forum?id=LCTmppB165)): A decoding press that merges the kv cache of evicted tokens into keep tokens to preserve information.
-- `MergingPress` ([source](kvpress/presses/merging_press.py)): A prefill press that wraps any `ScorerPress` and folds each evicted token's value into its most cosine-similar surviving neighbor (keys preserved by default). 🤖 automated agent contribution
-
-For a detailed list of existing KV cache compression methods, check [Awesome-KV-Cache-Compression](https://github.com/October2001/Awesome-KV-Cache-Compression) or [Awesome-LLM-Compression](https://github.com/HuangOwen/Awesome-LLM-Compression?tab=readme-ov-file#kv-cache-compression)
-
-
-## Evaluation
-We provide a simple CLI to evaluate the performance of different presses on several long-context datasets. 
-
-- Accuracy: Test your method on popular benchmarks directly using our CLI. 
-- Speed and Memory: The [speed_and_memory](notebooks/speed_and_memory.ipynb) notebook can help you measure peak memory usage and total time gain.
-
-Please refer to the [evaluation](evaluation/README.md) directory in this repo for more details and results. 
-
-Below we report the average performance on the RULER dataset with 4k context length for different presses, from our [![Hugging Face Leaderboard](https://img.shields.io/badge/🤗%20HuggingFace-Leaderboard-orange)](https://huggingface.co/spaces/nvidia/kvpress-leaderboard)
-
-## Quantization
-
-We support KV cache quantization through the transformers `QuantizedCache` class (see [HF blog post](https://huggingface.co/blog/kv-cache-quantization#how-to-use-quantized-kv-cache-in-%F0%9F%A4%97-transformers)). To use it, simply pass a cache object to your pipeline:
-
-```python
-from transformers import QuantizedCache
-
-cache = QuantizedCache(backend="quanto", nbits=4)
-
-pipe(..., cache=cache)
-```
-
-By default, the `DynamicCache` is used (no quantization). 
-
-> [!IMPORTANT]  
-> To use the `QuantizedCache`, you need to install additional dependencies (_e.g._ `pip install optimum-quanto`).
-
-## Contributing
-
-We welcome contributions! To add a new press, simply open an issue or submit a pull request. Check the [new_press.ipynb](notebooks/new_press.ipynb) notebook for a step-by-step guide.
-
-## Citation
-
-If you use KVPress in your research, please cite our paper:
-
-```bibtex
-@article{devoto2025expectedattention,
-  title={Expected Attention: KV Cache Compression by Estimating Attention from Future Queries Distribution},
-  author={Devoto, Alessio and Jeblick, Maximilian and J{\'e}gou, Simon},
-  journal={arXiv preprint arXiv:2510.00636},
-  year={2025},
-  url={https://arxiv.org/abs/2510.00636}
-}
-```
-
-## FAQ
-
-<details><summary> 
-
-### Which models are supported ? 
-</summary>
-
-Some presses depend on the model architecture (_e.g._ `ExpectedAttentionPress` or `SnapKVPress`) hence they might not work with all models. We tested support for `LlamaForCausalLM`, `MistralForCausalLM`, `Phi3ForCausalLM`, `Qwen2ForCausalLM`, `Qwen3ForCausalLM`, and `Gemma3ForCausalLM` but many other models might be supported out of the box because their implementation is often similar in transformers.
-</details>
-
-<details><summary> 
-
-### How to run inference on multiple GPUs ? 
-</summary>
-
-kvpress supports multi-GPU inference through [accelerate](https://huggingface.co/docs/accelerate/en/index):
-
-```python
-pipe = pipeline("kv-press-text-generation", model=model, device_map="auto")
-```
-
-</details>
-
-
-<details> <summary> 
-
-### What are the memory and throughput gains ?
-</summary>
-
-Memory usage should be reduced by around `compression_ratio * kv_cache_size`. As the KV cache is smaller, decoding should also be faster. You can measure peak memory usage gain and total time gain using [this notebook](notebooks/speed_and_memory.ipynb).
-</details>
-
-
-<details> <summary> 
-
-### How does a press work ? </summary>
-
-A press registers a forward hook (`press.forward_hook` method) to each attention layer during the prefilling phase. Registration can be applied using the press as a context manager (`press.__call__` method):
-
-```python
-import torch
-from transformers import AutoModelForCausalLM
-from kvpress import KnormPress
-
-device = "cuda:0"
-ckpt = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-model = AutoModelForCausalLM.from_pretrained(ckpt).to(device)
-press = KnormPress(compression_ratio=0.4)
-
-inputs = model.dummy_inputs["input_ids"].to(device)
-
-with torch.no_grad():
-    print(model(inputs).past_key_values[0][0].shape)
-    # torch.Size([3, 8, 5, 128])
-    
-with torch.no_grad(), press(model):
-    print(model(inputs).past_key_values[0][0].shape)
-    # torch.Size([3, 8, 3, 128])
-```
-</details>
-
-<details><summary> 
-
-### Why not using model.generate ? 
-</summary>
-
-In fact you can use `model.generate` with a press by using the press as a context manager:
-
-```python
-with press(model):
-    outputs = model.generate(inputs)
-```
-
-However, the `generate` method does not allow to exclude the question from the compression, which would artificially favors methods such as SnapKV. Ideally, we want a compression method that works whatever comes after the context (_e.g._ for use cases such as chat or document question answering). Finally the `generate` method does not allow to provide generation for multiple questions at once.
-
-</details>
-
-
-
-<details><summary> 
-
-### Can I combine compression during prefilling and decoding ? 
-</summary>
-
-
-Combines separate presses for prefilling and decoding phases.
-
-**Parameters:**
-- `prefilling_press`: Press used during prefill phase
-- `decoding_press`: Press used during decoding phase
-
-## Usage Examples
-
-### Basic Decoding Compression
-
-```python
-from transformers import pipeline
-from kvpress import KnormPress
-from kvpress import DecodingPress
-
-# Initialize the pipeline
-device = "cuda:0"
-model = "meta-llama/Llama-3.1-8B-Instruct"
-model_kwargs = {"attn_implementation": "flash_attention_2"}
-pipe = pipeline("kv-press-text-generation", model=model, device=device, model_kwargs=model_kwargs)
-
-# Create a decoding press that compresses every 10 steps to 512 tokens
-decoding_press = DecodingPress(
-    base_press=KnormPress(),
-    compression_steps=10,
-    token_buffer_size=512
-)
-
-# Use with pipeline
-context = "A very long text you want to compress during generation"
-question = "Tell me a long story about this context"
-response = pipe(context, question=question, press=decoding_press)["answer"]
-```
-
-### Combined Prefill + Decoding Compression
-
-```python
-from transformers import pipeline
-from kvpress import CriticalKVPress, KnormPress
-from kvpress import DecodingPress, PrefillDecodingPress
-
-# Initialize the pipeline
-device = "cuda:0"
-model = "meta-llama/Llama-3.1-8B-Instruct"
-model_kwargs = {"attn_implementation": "flash_attention_2"}
-pipe = pipeline("kv-press-text-generation", model=model, device=device, model_kwargs=model_kwargs)
-
-# Different strategies for prefill vs decoding
-prefill_press = CriticalKVPress(KnormPress())
-decoding_press = DecodingPress(
-    base_press=KnormPress(compression_ratio=0.2),
-    compression_steps=5,
-    token_buffer_size=256
-)
-
-# Combine them
-combined_press = PrefillDecodingPress(
-    prefilling_press=prefill_press,
-    decoding_press=decoding_press
-)
-
-context = "A very long context that will be compressed during prefill"
-question = "Generate a detailed analysis that will be compressed during decoding"
-response = pipe(context, question=question, press=combined_press)["answer"]
-```
