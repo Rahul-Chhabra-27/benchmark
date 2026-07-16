@@ -2,7 +2,7 @@
 
 # RULER 32K Dataset
 
-Benchmark results for the **RULER (32K context length)** dataset across multiple memory budget configurations.
+Benchmark results for the **RULER (32K context length)** dataset across multiple memory budget configurations and Qwen3-8B model.
 
 ## Dataset
 
