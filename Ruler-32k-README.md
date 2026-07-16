@@ -37,28 +37,30 @@ BUDGETS=(0.2 0.4 0.6 0.8)  # GB
 
 | Budget (GB) | Budget (MB) |
 |---|---|
-| 0.2 | 205 |
-| 0.4 | 410 |
-| 0.6 | 614 |
-| 0.8 | 819 |
+| 0.2 | 200 |
+| 0.4 | 400 |
+| 0.6 | 600 |
+| 0.8 | 800 |
 
 ## Results
 
 Results will be added below as they come in, one budget at a time.
 
-| Task | 200 MB | 400 MB | 600 MB | 800 MB |
-|---|---|---|---|---|
-| cwe | | | | |
-| fwe | | | | |
-| niah_multikey_1 | | | | |
-| niah_multikey_2 | | | | |
-| niah_multikey_3 | | | | |
-| niah_multiquery | | | | |
-| niah_multivalue | | | | |
-| niah_single_1 | | | | |
-| niah_single_2 | | | | |
-| niah_single_3 | | | | |
-| qa_1 | | | | |
-| qa_2 | | | | |
-| vt | | | | |
-| **Avg** | | | | |
+## Results
+
+| Task              | 200 MB | 400 MB | 600 MB | 800 MB |
+|--------------------|--------|--------|--------|--------|
+| cwe                | 0.0    | 15.2   | 51.6   | 73.2   |
+| fwe                | 77.67  | 95.67  | 97.0   | 96.0   |
+| niah_multikey_1    | 32.0   | 58.0   | 81.0   | 90.0   |
+| niah_multikey_2    | 3.0    | 46.0   | 80.0   | 86.0   |
+| niah_multikey_3    | 0.0    | 2.0    | 18.0   | 38.0   |
+| niah_multiquery    | 17.5   | 87.75  | 98.25  | 99.5   |
+| niah_multivalue    | 24.25  | 68.25  | 86.0   | 91.25  |
+| niah_single_1      | 100.0  | 100.0  | 100.0  | 100.0  |
+| niah_single_2      | 8.0    | 91.0   | 100.0  | 100.0  |
+| niah_single_3      | 13.0   | 99.0   | 100.0  | 100.0  |
+| qa_1               | 50.0   | 63.0   | 68.0   | --    |
+| qa_2               | 26.0   | 52.0   | 62.0   | 64.0   |
+| vt                 | 100.0  | 100.0  | 100.0  | 100.0  |
+| **Avg**            | **34.72** | **67.53** | **80.14** |  |
