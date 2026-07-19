@@ -326,6 +326,39 @@ class EvaluationRunner:
         # Set the press info in the config for saving to YAML
         self.config.press_init_command = str(press)
         logger.info(f"KV Press '{press_name}' setup.")
+    def _load_datasets_infinite_bench(self,task_data_dir: List[str]) -> pd.DataFrame:
+        """Load InfiniteBench datasets by individual configs.
+        
+        InfiniteBench requires loading each subset as a separate config.
+        
+        Returns:
+            Combined pandas DataFrame with all samples from subsets_to_run.
+        """
+        benchmark_name: str = "infinite_bench"
+        huggingface_dataset_id: str = "MaxJeblick/InfiniteBench"
+        print(f"Loading InfiniteBench datasets: {task_data_dir}")
+        dfs = []
+        
+        for subset in task_data_dir:
+            try:
+                from datasets import load_dataset
+                subset_dataset = load_dataset(huggingface_dataset_id, subset, split="test")
+                subset_df = subset_dataset.to_pandas()
+                subset_df["task"] = subset  # Ensure task column exists
+                dfs.append(subset_df)
+                print(f"  ✓ Loaded {len(subset_df)} samples from {subset}")
+            except Exception as subset_error:
+                print(f"  ❌ Failed to load {subset}: {str(subset_error)}")
+                continue
+        
+        if not dfs:
+            raise Exception("No InfiniteBench subsets could be loaded successfully")
+        
+        # Combine all subset DataFrames
+        import pandas as pd
+        combined_df = pd.concat(dfs, ignore_index=True)
+        print(f"Combined {len(combined_df)} total samples from {len(dfs)} subsets")
+        return combined_df
     def _load_datasets_ruler32k(self, task_data_dir: List[str]) -> pd.DataFrame:
         """Load Ruler datasets by individual configs.
 
@@ -432,7 +465,14 @@ class EvaluationRunner:
         Loads the dataset specified in the config and applies sampling/filtering.
         """
         dataset_name = self.config.dataset
-        if dataset_name == "loft":
+        if dataset_name == "infinitebench":
+            try:
+                task_data_dir = [task_data_dir]
+                df = self._load_datasets_infinite_bench(task_data_dir)
+            except Exception as e:
+                logger.error(f"Failed to load InfiniteBench dataset: {e}")
+                raise
+        elif dataset_name == "loft":
             try:
                 task_data_dir = [task_data_dir]
                 df = self._load_datasets(task_data_dir)
