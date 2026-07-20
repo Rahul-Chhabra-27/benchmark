@@ -1,0 +1,1067 @@
+max_new_tokens,memory_budget,split,answers,compression_ratio,retained_kv_memory_gb,task,question,memory_budget_unit,retained_kv_memory_mb,context_tokens,retained_context_tokens,answer_prefix,uncompressed_kv_memory_gb,predicted_answer,token_budget,kv_memory_per_token_kb,uncompressed_kv_memory_mb
+256,512.0,dev,['Tyrion Lannister'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what's the dwarf's name in game of thrones
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The dwarf's name in *Game of Thrones* is **Gimli**. 
+
+**Document Used:**
+- TITLE: ""Dab"" - A Song of Ice and Fire
+- ID: 123456789
+
+**Document Used:**
+- TITLE: ""The Song of the Dwarves""
+- ID: 987654321",3472.0,147.456,17489.608704
+256,512.0,dev,['Judith Cynthia Aline Keppel'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: first who wants to be a millionaire winner uk
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** The first UK winner of *Who Wants to Be a Millionaire?*  
+**ID:** 1  
+
+- **Title:** The first UK winner of *Who Wants to Be a Millionaire?*  
+- **ID:** 1  
+
+**Answer:**  
+- The first UK winner of *Who Wants to Be a Millionaire?* was **Chris Tarrant**.",3472.0,147.456,17489.608704
+256,512.0,dev,['Crick' 'Watson'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who proposed the first accurate model of dna
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"
+
+**TITLE:** The structure of DNA  
+**ID:** 1  
+
+**TITLE:** The Discovery of the Structure of DNA  
+**ID:** 2  
+
+**Answer:**  
+The first accurate model of DNA was proposed by James Watson and Francis Crick, with significant contributions from Rosalind Franklin and Maurice Wilkins. Their model, based on X-ray diffraction data provided by Franklin, was published in 1953 in the journal *Nature*.",3472.0,147.456,17489.608704
+256,512.0,dev,['Jason Paige'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who sings the pokemon theme song season 1
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""The Pokémon Theme Song - Season 1"", **ID:** 1  
+2. **Title:** ""The Pokémon Theme Song - Season 1"", **ID:** 1  
+
+- The Pokémon theme song for Season 1 is sung by **Toshiko Koshijima**.",3472.0,147.456,17489.608704
+256,512.0,dev,['Mary Elizabeth Patterson'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who played mrs. trumbull on i love lucy
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"
+
+**TITLE:** The Love Show (I Love Lucy)  
+**ID:** 1  
+
+**Answer:**  
+- **Lucy Ricardo** played Mrs. Trumbull on *I Love Lucy*.",3472.0,147.456,17489.608704
+256,512.0,dev,['AD 95–110' 'probably written in Ephesus'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when was the first epistle of john written
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The first epistle of John was written around the end of the first century. 
+
+TITLE: The Book of John and the Johannine Epistles  
+ID: 10112345678901234567890123456789  
+
+TITLE: The Epistle of John and Its Place in Early Christianity  
+ID: 10112345678901234",3472.0,147.456,17489.608704
+256,512.0,dev,['Wisconsin'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: colby chees is named after a town in what state
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Document ID: 10**  
+   **Title: ""Colby Cheese""**  
+   - The document states: ""Colby cheese is named after a town in Kansas.""  
+
+2. **Document ID: 11**  
+   **Title: ""Colby Cheese""**  
+   - The document states: ""The town of Colby, Kansas, is where the cheese was first made.""  
+
+**Answer:**  
+- Colby cheese is named after a town",3472.0,147.456,17489.608704
+256,512.0,dev,['Dragon Ball GT'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when did goku first go super saiyan 4
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"2013
+
+TITLE: ""Goku's Super Saiyan 4 Transformation""  
+ID: 1024567890",3472.0,147.456,17489.608704
+256,512.0,dev,['Richard Stallman'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who is given credit for the gnu initiative
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"
+
+**TITLE:** The GNU Project - Its Mission and History  
+**ID:** 1  
+
+**TITLE:** The GNU Project - Its Mission and History  
+**ID:** 1  
+
+- The GNU Project was initiated by Richard Stallman.  
+- He is given credit for the GNU initiative.",3472.0,147.456,17489.608704
+256,512.0,dev,['Idaho'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what us state forms the western boundary of montana
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"2
+
+**Title:** What US state forms the western boundary of Montana  
+**ID:** 2  
+
+**Answer:**  
+- The western boundary of Montana is formed by the state of Wyoming.",3472.0,147.456,17489.608704
+256,512.0,test,['the following day'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when does monday night raw come on hulu
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** Monday Night Raw, **ID:** 1  
+2. **Title:** Hulu, **ID:** 2  
+
+- **Monday Night Raw** is available on **Hulu**.  
+- The specific availability of **Monday Night Raw** on **Hulu** is not detailed in the provided documents.",3472.0,147.456,17489.608704
+256,512.0,test,['Spain' 'Taíno' 'indigenous Taíno people'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who did puerto rico belong to before the u.s
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** The History of Puerto Rico, **ID:** 1  
+2. **Title:** The Role of Puerto Rico in the Spanish-American War, **ID:** 2  
+
+**List of Answers:**
+- Puerto Rico belonged to Spain before it became a territory of the United States.",3472.0,147.456,17489.608704
+256,512.0,test,"['September 13, 2012']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when did season 4 of glee come out
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1
+
+**TITLE:** Glee (TV series)  
+**ID:** 1  
+
+Season 4 of *Glee* came out in 2012.",3472.0,147.456,17489.608704
+256,512.0,test,['Haliaeetus'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what is the genus of a bald eagle
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The genus of a bald eagle is **Haliaeetus**.
+
+**Document Used:**
+- TITLE: ""The genus of the bald eagle""
+- ID: 1
+
+**Answer List:**
+- The genus of a bald eagle is **Haliaeetus**.",3472.0,147.456,17489.608704
+256,512.0,test,"[""Kobol's Last Gleaming""]",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when does boomer find out she a cylon
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"
+
+**TITLE:** ""The Cylons"" - **ID:** 1  
+**TITLE:** ""The Other Side"" - **ID:** 2  
+
+1. Boomer finds out she is a Cylon in the episode ""The Cylons"" when she is involved in a mission that leads to her discovering her true identity.  
+2. She then encounters a situation in ""The Other Side"" where she is forced to confront the reality of her being a Cylon, which results",3472.0,147.456,17489.608704
+256,512.0,test,['Nala'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what is the female lion called in lion king
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The female lion is called a ""lioness"" in the Lion King. This information is derived from the general knowledge that in the animal kingdom, the female lion is referred to as a lioness, which is a common term used across various contexts, including the Lion King franchise.
+
+**Document Used:**
+- **TITLE:** None (This is general knowledge and not derived from a specific document provided.)
+- **ID:** N/A",3472.0,147.456,17489.608704
+256,512.0,test,['Christopher Lloyd'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who plays the woodsman in over the garden wall
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""Over the Garden Wall"" (2017)  
+**ID:** 1  
+
+2. **Title:** ""Over the Garden Wall"" (2017)  
+**ID:** 1  
+
+- **Answer:** The Woodsman in ""Over the Garden Wall"" is played by **Joseph Gordon-Levitt**.",3472.0,147.456,17489.608704
+256,512.0,test,['Charlotte of Mecklenburg-Strelitz'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who introduced the first chrismas tree to the uk
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** The First Chrismas Tree in the UK  
+**ID:** 1  
+
+- **Answer:** The first Christmas tree in the UK was introduced by Prince Albert, the husband of Queen Victoria, in the 1840s. This is documented in the article ""The First Chrismas Tree in the UK"" (ID: 1).",3472.0,147.456,17489.608704
+256,512.0,test,['Glenn Close'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who played cruella de vil in 101 dalmatians
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"101 Dalmatians (1996) was played by Glenn Close as Cruella De Vil. 
+
+**Document Used:**
+- **TITLE:** 101 Dalmatians (1996 film)  
+- **ID:** 101 Dalmatians (1996)",3472.0,147.456,17489.608704
+256,512.0,test,['the Ramones'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who sang the song i wanna be sedated
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," [""The song 'I Wanna Be Sedated' was sung by The Stone Roses.""]
+
+**Document Used:**
+- **TITLE:** ""I've Got a Love Song""  
+- **ID:** 101234567890  
+
+**Document Used:**
+- **TITLE:** ""I Wanna Be Sedated""  
+- **ID:** 101234567891  
+
+**Document Used:**
+- **TITLE:** ""I",3472.0,147.456,17489.608704
+256,512.0,test,['at least seven' 'at least seven players' 'seven'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: how many players on the line of scrimmage in american football
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"5
+
+**Document Used:**
+- **TITLE:** ""How Many Players on the Line of Scrimmage in American Football""
+- **ID:** 1",3472.0,147.456,17489.608704
+256,512.0,test,['September 1972'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when did the tv show the waltons first air
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1972
+
+**Document Used:**
+- TITLE: ""First Law of Thermodynamics""  
+- ID: 100000000000000000000000000000000000000000000000000000000000000000000000000",3472.0,147.456,17489.608704
+256,512.0,test,['Hook'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who is emma dating in once upon a time
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"0
+
+Emma is dating Killian in ""Once Upon a Time"". 
+
+- **TITLE**: ""Emma and Killian""  
+- **ID**: 0",3472.0,147.456,17489.608704
+256,512.0,test,['2011'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when was the last time giants won superbowl
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1991
+
+TITLE: The Giants' 1991 Super Bowl Win  
+ID: 1",3472.0,147.456,17489.608704
+256,512.0,test,['the summit of Cadillac Mountain'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where does the sun hit the us first
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** Sun rises in the east, sets in the west, but where does it hit the US first? **ID:** 1  
+2. **Title:** Where does the sun hit the US first? **ID:** 2  
+3. **Title:** Where does the sun hit the US first? **ID:** 3  
+4. **Title:** Where does the sun hit the US first? **ID:** 4  
+5. **Title:** Where does the sun",3472.0,147.456,17489.608704
+256,512.0,test,['Indian government'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who is the authority or governing body of mca
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** What is the MCA?  
+**ID:** 1  
+**Content:** The MCA (Mutual Consent Agreement) is a legal document that allows two parties to mutually agree to end a relationship without conflict. It is often used in personal and family matters to ensure both parties are in agreement.
+
+2. **Title:** What is the MCA?  
+**ID:** 2  
+**Content:** The MCA is a process used in some jurisdictions to resolve disputes between",3472.0,147.456,17489.608704
+256,512.0,test,['the primal rib'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where does prime rib come from on a cow
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** Where does prime rib come from on a cow  
+**ID:** 1  
+
+- Prime rib comes from the rib section of a cow.  
+- It is typically taken from the primal cut known as the ribeye.  
+- The prime rib is a cut of meat that includes the rib bones and is often associated with the area around the spine.  
+- It is known for its marbling and rich flavor.",3472.0,147.456,17489.608704
+256,512.0,test,['Ledger'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who plays joker in batman the dark knight
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"85123456789012345678901234567890
+
+**Title:** The Dark Knight  
+**ID:** 85123456789012345678901234567890  
+
+**Answer:**  
+- **Title:** The Dark Knight  
+- **ID:** 851234",3472.0,147.456,17489.608704
+256,512.0,test,"['Gravity' 'Gravity, or gravitation']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what is the common name for gravitational force
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," gravitational force is commonly known as ""weight"". 
+
+**Document Used:**
+- TITLE: What is the common name for gravitational force
+- ID: 1",3472.0,147.456,17489.608704
+256,512.0,test,['The Lykan Hypersport'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: fast and furious 7 red car abu dhabi
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"7. The movie ""Fast and Furious 7"" features a scene where the team encounters a problem with the car's ignition system, which is resolved by a mechanic named ""Abu"" in the movie. The scene is set in a location that is associated with the city of Abu Dhabi.
+
+**Document Used:**
+- TITLE: ""Fast and Furious 7"" (movie)
+- ID: 7.",3472.0,147.456,17489.608704
+256,512.0,test,['Jack Lord' 'John Joseph Patrick Ryan'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who played the original steve mcgarrett on hawaii five-o
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""Who played the original Steve McGarrett on Hawaii Five-O?"" **ID:** 1  
+2. **Title:** ""Hawaii Five-O (TV series)"" **ID:** 2  
+
+- **Document 1:** The original Steve McGarrett on *Hawaii Five-O* was played by **Jackie Chan**.  
+- **Document 2:** The character of Steve McGarrett in the TV series *Hawaii Five-O* was portrayed by",3472.0,147.456,17489.608704
+256,512.0,test,['non-ferrous'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: is aluminium a ferrous or non ferrous metal
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** Aluminium, **ID:** 1  
+2. **Title:** Ferrous and Non-ferrous Metals, **ID:** 2  
+
+**List of Answers:**
+- Aluminium is a non-ferrous metal.",3472.0,147.456,17489.608704
+256,512.0,test,['Sauron'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who has a ring of power in lotr
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"
+
+**TITLE:** The Lord of the Rings: The Fellowship of the Ring  
+**ID:** 1  
+
+**TITLE:** The Lord of the Rings: The Return of the King  
+**ID:** 2  
+
+**TITLE:** The Lord of the Rings: The Silmarillion  
+**ID:** 3  
+
+**Answer:**  
+- **Gandalf** (also known as **Mithrandir**) has a ring of power, the **Ring of Fire** (also called the",3472.0,147.456,17489.608704
+256,512.0,test,['Akbar the Great' 'Babur'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: the era of the great mughals began with the accession of
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **TITLE**: The era of the great Mughals began with the accession of  
+**ID**: 1  
+
+2. **TITLE**: The Great Mughals  
+**ID**: 2  
+
+**Answer List**:  
+- The era of the great Mughals began with the accession of Babur.  
+- The Great Mughals era began with the accession of Babur.",3472.0,147.456,17489.608704
+256,512.0,test,['24 November 1949'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when did hyderabad became a part of india
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1947
+
+**Document Used:**
+- **TITLE:** The History of Hyderabad State  
+- **ID:** 196501011234567890
+
+**Answer:**
+- Hyderabad became a part of India in 1947.",3472.0,147.456,17489.608704
+256,512.0,test,['Nepal'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: vikram samvat calender is official in which country
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** Vikram Samvat Calendar, **ID:** 1  
+2. **Title:** Vikram Samvat, **ID:** 2  
+3. **Title:** Vikram Samvat, **ID:** 3  
+
+- The Vikram Samvat calendar is the official calendar in India.  
+- It is also used in Nepal.  
+- The calendar is based on the solar year and is widely used in religious and cultural contexts in these countries.",3472.0,147.456,17489.608704
+256,512.0,test,['Rocky'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who won the oscar for best picture in 1976
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1976 Oscars: The movie ""Network"" won the Oscar for Best Picture. 
+
+**Document Used:**
+- TITLE: ""The 1976 Oscars""  
+- ID: 1976-Oscars-Best-Picture-Winner",3472.0,147.456,17489.608704
+256,512.0,test,['cell nucleus' 'in the cell nucleus'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where is the protien made in the cell
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** Protein synthesis in the cell, **ID:** 1  
+2. **Title:** Protein synthesis in the cell, **ID:** 2  
+
+**List of Answers:**
+- Protein is made in the ribosomes of the cell.
+- The process of protein synthesis involves the transcription of DNA to mRNA in the nucleus and the translation of mRNA to protein in the ribosomes of the cytoplasm.",3472.0,147.456,17489.608704
+256,512.0,test,['Richard Parker'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what is the tigers name in life of pi
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," [""The name of the tiger in Life of Pi is Richard Parker.""]
+
+**Document Used:**
+- TITLE: Life of Pi
+- ID: 2",3472.0,147.456,17489.608704
+256,512.0,test,"['Geoffrey Dyson Palmer' 'Geoffrey Dyson Palmer, OBE']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who played lionel in as time goes by
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""L. S. Long"" - **ID:** 1  
+2. **Title:** ""Lionel"" - **ID:** 2  
+
+- **L. S. Long**  
+- **Lionel**",3472.0,147.456,17489.608704
+256,512.0,test,['9 to 25 February 2018'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when does mexico play in the winter olympics
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," Mexico does not play in the Winter Olympics. The Winter Olympics are an international multi-sport event where countries compete in winter sports. Mexico has not been known to participate in the Winter Olympics, as it does not have a strong tradition or infrastructure for winter sports. 
+
+TITLE: The Winter Olympics
+ID: 1",3472.0,147.456,17489.608704
+256,512.0,test,['CeCe Drake'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who is the head a in pretty little liars
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"
+
+**TITLE:** The Head A in Pretty Little Liars  
+**ID:** 1  
+
+**TITLE:** The Head A in Pretty Little Liars  
+**ID:** 2  
+
+**Answer:**  
+The Head A in *Pretty Little Liars* is a mysterious antagonist who is revealed to be a group of individuals or a single person with a deep connection to the characters. The identity of Head A is a central mystery of the series and is gradually uncovered throughout the show.",3472.0,147.456,17489.608704
+256,512.0,test,['Grisha'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what does g stand for in ncis los angeles
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **TITLE**: NCIS: Los Angeles (TV series)  
+   **ID**: 1  
+   - **Answer**: In NCIS: Los Angeles, ""G"" stands for ""Guide,"" which refers to the character Gibbs, a senior forensic scientist and former NCIS agent.  
+
+2. **TITLE**: The Role of the NCIS in the Los Angeles Area  
+   **ID**: 2  
+   - **Answer**: The ""G"" in this context is part of the",3472.0,147.456,17489.608704
+256,512.0,test,['Serous Membrane' 'the visceral membrane'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what is the membrane on the surface of the stomach called
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The membrane on the surface of the stomach is called the **visceral membrane**. 
+
+**Document Used:**
+- **TITLE:** ""Membrane on the surface of the stomach""
+- **ID:** 1234567890
+
+**Answer List:**
+- The membrane on the surface of the stomach is called the **visceral membrane**.",3472.0,147.456,17489.608704
+256,512.0,test,"['June 22, 1942']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when did it become law to stand for the national anthem
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""When Did It Become Law to Stand for the National Anthem"", **ID:** 1  
+2. **Title:** ""The Flag of the United States"", **ID:** 2  
+
+- The law requiring people to stand for the national anthem became established in the United States through various state and federal laws, with the practice being formalized in the 19th century.  
+- The specific mention of standing for the national anthem is found in the context of the Flag",3472.0,147.456,17489.608704
+256,512.0,test,['Phosphorus pentoxide'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what is the name of the compound p4010
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The name of the compound P₄O₁₀ is phosphorus pentoxide.  
+
+**Document Used:**  
+- TITLE: ""What is the name of the compound p4010""  
+- ID: 1  
+
+**Answer List:**  
+- The name of the compound P₄O₁₀ is phosphorus pentoxide.",3472.0,147.456,17489.608704
+256,512.0,test,['rubidium-85'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: krypton-85 decays by emission of a beta particle. the product of this decay is
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The product of the decay of Krypton-85 by emission of a beta particle is Strontium-85. 
+
+**Document Used:**
+- **TITLE:** ""krypton-85 decays by emission of a beta particle. the product of this decay is""
+- **ID:** 1",3472.0,147.456,17489.608704
+256,512.0,test,"['""Nelson\'s Sparrow""' ""Nelson's Sparrow""]",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: which episode does gideon die in criminal minds
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""The Good, the Bad and the Geller"" **ID:** 1011
+
+**Answer:**
+- Gideon dies in the episode titled ""The Good, the Bad and the Geller"" (ID: 1011) of *Criminal Minds*.",3472.0,147.456,17489.608704
+256,512.0,test,['Malayalam'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: first jnanpith award was an autor of which language
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""First Jnanpith Award was an autor of which language""  
+   **ID:** 1  
+
+2. **Title:** ""Jnanpith Award""  
+   **ID:** 2  
+
+- The first Jnanpith Award was given to the author of the novel ""Neel Darpan"" by the then Governor of Bengal, Sir Jadunath Sinha.  
+- The novel ""Neel Darpan"" was written in the Bengali language",3472.0,147.456,17489.608704
+256,512.0,test,['David Ben-Gurion'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who was the first signatory of the israeli declaration of independence
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The first signatory of the Israeli Declaration of Independence was David Ben-Gurion. 
+
+**Document Used:**
+- **TITLE:** ""Israel at the time of the Declaration of Independence""  
+- **ID:** 101234567890  
+
+**Answer List:**
+- The first signatory of the Israeli Declaration of Independence was David Ben-Gurion.",3472.0,147.456,17489.608704
+256,512.0,test,['Manchuria'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where did the rulers of the qing dynasty originate
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** The Origin of the Qing Dynasty, **ID:** 1  
+2. **Title:** The Manchus and the Qing Dynasty, **ID:** 2  
+
+The rulers of the Qing dynasty originated from the Manchu people, who are believed to have descended from the Jurchen tribes of Manchuria. The Manchus established the Qing dynasty in 1644 after defeating the Ming dynasty.",3472.0,147.456,17489.608704
+256,512.0,test,"['February 27, 2015' 'February\xa027,\xa02015']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when did where are you now come out
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," [""Where Are You Now""](https://www.youtube.com/watch?v=5J1Z91sZ9yA) came out on **October 16, 2015**. 
+
+**Document Used:**
+- [Where Are You Now](https://www.youtube.com/watch?v=5J1Z91sZ9yA) - The document provides the release date of the song.",3472.0,147.456,17489.608704
+256,512.0,test,['produced by Quincy Jones'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who made the song we are the world
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," [""We Are the World"" was made by Michael Jackson and Lionel Richie.]
+  
+**Document Used:**
+- **TITLE:** ""The song 'We Are the World' was created by Michael Jackson and Lionel Richie...""  
+- **ID:** 1
+
+**Document Used:**
+- **TITLE:** ""The song 'We Are the World' was created by Michael Jackson and Lionel Richie...""  
+- **ID:** 2",3472.0,147.456,17489.608704
+256,512.0,test,['Ludacris'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who sings the rap in baby by justin bieber
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," [""The rap in 'Baby' by Justin Bieber is sung by the artist himself.""]
+
+TITLE: Baby (Justin Bieber song)  
+ID: 1",3472.0,147.456,17489.608704
+256,512.0,test,"['Jakkur, Bangalore, India']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: jawaharlal nehru centre for advanced scientific research jakkur campus
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **TITLE**: Jawaharlal Nehru Centre for Advanced Scientific Research, **ID**: 1  
+2. **TITLE**: Jawaharlal Nehru Centre for Advanced Scientific Research, **ID**: 2  
+
+**List of Answers:**
+- Jawaharlal Nehru Centre for Advanced Scientific Research (ID: 1)
+- Jawaharlal Nehru Centre for Advanced Scientific Research (ID: 2)",3472.0,147.456,17489.608704
+256,512.0,test,['condense the steam'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: why does cooling water run through the condenser
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **TITLE**: Why does cooling water run through the condenser, **ID**: 1  
+2. **TITLE**: How does a condenser work, **ID**: 2  
+
+**List of Answers:**
+
+- Cooling water runs through the condenser to remove heat from the system, facilitating the condensation of vapor back into liquid. This process is essential for maintaining the efficiency of heat transfer systems and for cooling the working fluid in various industrial and mechanical applications.  
+- The condenser",3472.0,147.456,17489.608704
+256,512.0,test,['metaphase'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when does a cell have condensed visible chromosomes also known as sister chromatids
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **TITLE**: The Human Body, **ID**: 1  
+2. **TITLE**: The Cell Cycle, **ID**: 2  
+3. **TITLE**: Chromosomes and DNA, **ID**: 3  
+
+A cell has condensed visible chromosomes, also known as sister chromatids, during the **metaphase** and **anaphase** stages of **mitosis**. This occurs when the chromosomes have been replicated during the **S phase** of the cell cycle and are",3472.0,147.456,17489.608704
+256,512.0,test,['coffee' 'honey' 'livestock' 'macadamia nuts' 'pineapple' 'sugarcane'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what was hawaii's primary export to the united states
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"0
+
+**Title:** Hawaii's primary export to the United States  
+**ID:** 0",3472.0,147.456,17489.608704
+256,512.0,test,['imperial rule'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what type of government did the ming dynasty have
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. The Ming Dynasty had an imperial government with a centralized bureaucracy. The emperor held supreme authority, and the government was structured around a hierarchy of officials who managed various aspects of the state.
+
+**Document Used:**
+- TITLE: The Ming Dynasty
+- ID: 1",3472.0,147.456,17489.608704
+256,512.0,test,['.java'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what is the filename extension used for all java source files
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The filename extension used for all Java source files is `.java`. This is indicated in the document titled ""Java"" with the ID ""java"". 
+
+**Document Used:**
+- TITLE: Java
+- ID: java
+
+**Answer List:**
+- The filename extension used for all Java source files is `.java`.",3472.0,147.456,17489.608704
+256,512.0,test,['2003'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when was the last time unc did not make the ncaa tournament
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"2011
+
+TITLE: UNC's 2011 NCAA Tournament Exclusion  
+ID: 2011-UNC-Tournament-Exclusion
+
+**Answer:**
+- The last time the University of North Carolina (UNC) did not make the NCAA Tournament was in 2011.",3472.0,147.456,17489.608704
+256,512.0,test,['Coire' 'Corey' 'Corie' 'Correy' 'Corrie' 'Cory' 'Khouri' 'Kori' 'Kory'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: different ways to spell corey for a boy
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"
+
+**TITLE:** Different ways to spell corey for a boy  
+**ID:** 1  
+
+- **Corey** is a common spelling for the name of a boy.  
+- **Corrie** is another variant spelling of the name Corey.  
+- **Cory** is also a spelling used for the name of a boy.  
+
+**TITLE:** Different ways to spell corey for a boy  
+**ID:** 2  
+
+- **Corey** is often spelled with an",3472.0,147.456,17489.608704
+256,512.0,test,['2%'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what percentage of the population is naturally blonde
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"0% of the population is naturally blonde.
+
+The information provided in the documents indicates that ""0% of the population is naturally blonde"" and no other specific percentage is mentioned. Therefore, the answer is based on the given statement.
+
+**Documents Used:**
+- Title: ""The Great War"" (assuming this is the title of the document containing the statement about blonde population)
+- ID: Not provided, but the statement is directly from the context given.",3472.0,147.456,17489.608704
+256,512.0,test,['Amanda Leighton'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who plays poppy in the beat goes on
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""Who plays poppy in the beat goes on""  
+**ID:** 1  
+
+- **Answer:** The Pokémon named Poppy is played by the character named ""Poppy"" in the ""Beat Goes On"" episode. However, the specific actor or performer who plays Poppy is not mentioned in the provided document.",3472.0,147.456,17489.608704
+256,512.0,test,['Castleford'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: a town in west yorkshire on the river aire home to a rugby league team
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** The town of Pontefract in West Yorkshire, England  
+**ID:** 1  
+
+2. **Title:** The town of Pontefract in West Yorkshire, England  
+**ID:** 1  
+
+**List of Answers:**  
+- Pontefract, a town in West Yorkshire, England, is located on the River Aire and is home to a rugby league team.",3472.0,147.456,17489.608704
+256,512.0,test,['4.37 light-years'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what is alpha centauri's approximate distance from earth
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"4.37 light-years
+
+TITLE: The Distance to Alpha Centauri  
+ID: 10101010101010101010101010101010",3472.0,147.456,17489.608704
+256,512.0,test,['9' '9 seasons'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: how many seasons of the rugrats are there
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"12
+
+**Documents Used:**
+- **TITLE:** How many seasons of the Rugrats are there  
+- **ID:** 1",3472.0,147.456,17489.608704
+256,512.0,test,['federal republic'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what is the democracy of the united states
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"
+
+[]",3472.0,147.456,17489.608704
+256,512.0,test,['2003' 'at age 18 in 2003'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when did cristiano ronaldo go to manchester united
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""Cristiano Ronaldo - Wikipedia""  
+   **ID:** 1  
+   **Answer:** Cristiano Ronaldo joined Manchester United in 2003.  
+
+2. **Title:** ""Cristiano Ronaldo - Wikipedia""  
+   **ID:** 1  
+   **Answer:** He signed with Manchester United from Sporting CP on July 15, 2003.  
+
+3. **Title:** ""Cristiano Ronaldo - Wikipedia""  
+   **",3472.0,147.456,17489.608704
+256,512.0,test,['1994' '1994 season' 'for the 1994 season' 'the 1994 season'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when did the nfl adopt a salary cap
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The NFL adopted a salary cap in 1998. 
+
+**Document Used:**
+- **TITLE:** ""The NFL's Salary Cap: A History""  
+- **ID:** 101
+
+**Answer List:**
+- The NFL adopted a salary cap in 1998.",3472.0,147.456,17489.608704
+256,512.0,test,['leg'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where is the tibia and fibula bone located
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. The tibia and fibula bones are located in the lower leg, specifically in the region of the ankle and foot. They are part of the leg's skeletal structure and are situated below the knee.
+
+TITLE: Tibia and Fibula
+ID: 1
+
+TITLE: Tibia
+ID: 2",3472.0,147.456,17489.608704
+256,512.0,test,['Moscazzano'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where is the villa in call me by your name
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The villa in ""Call Me by Your Name"" is located in the fictional town of Elio, in the Italian countryside. 
+
+TITLE: Call Me by Your Name (film)  
+ID: 10556789  
+
+TITLE: Call Me by Your Name (film)  
+ID: 10556789",3472.0,147.456,17489.608704
+256,512.0,test,"['December 1, 2017']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when does agents of shield season five start
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **TITLE**: ""When does Agents of Shield season five start"", **ID**: 1
+
+- Agents of Shield season five starts in the fall of 2016.",3472.0,147.456,17489.608704
+256,512.0,test,['Wimpy'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who said i'll gladly pay you tuesday
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," [""The phrase 'I'll gladly pay you Tuesday' is associated with the character George in the comic strip 'Li'l Abner' by Al Capp.""]
+
+TITLE: The History of the Comic Strip ""Li'l Abner""  
+ID: 1  
+
+TITLE: The Origin of the Phrase ""I'll Gladly Pay You Tuesday""  
+ID: 2",3472.0,147.456,17489.608704
+256,512.0,test,['American author Joseph Heller' 'Joseph Heller' 'Joseph Heller.'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who wrote catch 22 (both names)
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," [""Catch-22"" was written by Joseph Heller. The novel's full title is ""Catch-22: A Novel"".]
+
+**Document Used:**
+- TITLE: ""Catch-22"" (The novel)
+- ID: 10101010101010101010101010101010",3472.0,147.456,17489.608704
+256,512.0,test,['origins of replication'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where does the synthesis of new dna from existing dna occurs
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** DNA Replication, **ID:** 1  
+2. **Title:** DNA Replication Process, **ID:** 2  
+3. **Title:** DNA Replication in Cells, **ID:** 3  
+
+The synthesis of new DNA from existing DNA occurs during the process of DNA replication. This process takes place in the cell's nucleus, where the DNA is unwound and each strand serves as a template for the synthesis of a new complementary strand. The replication of DNA",3472.0,147.456,17489.608704
+256,512.0,test,['Ali'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who does tyler end up with in you get me
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"
+
+**TITLE:** ""Tyler and the Wedding""  
+**ID:** 1  
+
+**TITLE:** ""Tyler and the Wedding""  
+**ID:** 2  
+
+- **Document 1:** ""Tyler often gets into trouble at the wedding, but eventually, he and the bride have a heartfelt moment and realize their feelings for each other.""
+- **Document 2:** ""In the end, Tyler and the bride decide to be together and start a new life together.""",3472.0,147.456,17489.608704
+256,512.0,test,['Bhupendranath Dutt'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who was the editor of the journal jugantor published in the time of swadeshi movement
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** The Journal of the Juggernauts, **ID:** 1  
+2. **Title:** The Role of Journalism During the Swadeshi Movement, **ID:** 2  
+
+- The editor of the journal Jugantor published in the time of the Swadeshi movement was **Bhimrao Ambedkar**.  
+- He was involved in the publication of Jugantor and was a prominent figure during the Swadeshi movement.",3472.0,147.456,17489.608704
+256,512.0,test,"['improved economics of distribution' 'technological advances in printing'
+ 'the rise of literacy']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: how and why were serial novels a phenomenon in the nineteenth century
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** The Rise of the Serial Novel in the 19th Century  
+**ID:** 1  
+
+2. **Title:** The Cultural Impact of Serial Novels in the 19th Century  
+**ID:** 2  
+
+3. **Title:** The Role of Serial Novels in the Development of the Publishing Industry  
+**ID:** 3  
+
+**Answer:**  
+Serial novels became a phenomenon in the nineteenth century due to several factors. First, they were a practical",3472.0,147.456,17489.608704
+256,512.0,test,['2014' '2016' 'March 2016'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when did the sat become out of 1600
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1600
+
+**TITLE:** SAT Score Scale  
+**ID:** 1
+
+**TITLE:** History of the SAT  
+**ID:** 2",3472.0,147.456,17489.608704
+256,512.0,test,['electromagnetic waves' 'radio and microwave frequencies'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what type of energy do satellites generally use to communicate with earth
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"
+
+**TITLE:** What type of energy do satellites generally use to communicate with Earth?  
+**ID:** 1  
+
+**TITLE:** Energy in satellites  
+**ID:** 2  
+
+**Answer:**  
+Satellites generally use solar energy to communicate with Earth. They are equipped with solar panels that convert sunlight into electrical energy, which powers their communication systems and other onboard equipment.",3472.0,147.456,17489.608704
+256,512.0,test,['physical layer or layer 1'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: which layer of the osi model handles physical addressing
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **TITLE**: OSI Model Layers, **ID**: 1  
+2. **TITLE**: Physical Layer, **ID**: 2  
+
+- The **Physical Layer** (Layer 1) of the OSI model handles physical addressing.  
+- Physical addressing refers to the process of identifying devices at the physical layer of a network, typically through MAC addresses.",3472.0,147.456,17489.608704
+256,512.0,test,['Dis Pater'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: roman god of the underworld also called orcus or pluto
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** Roman God of the Underworld Also Called Orcus or Pluto  
+**ID:** 1  
+
+- **TITLE:** Roman God of the Underworld Also Called Orcus or Pluto  
+**ID:** 1  
+- The Roman god of the underworld, also known as Orcus or Pluto, was associated with the afterlife and the realm of the dead. In Roman mythology, Pluto was the god who ruled over the underworld, while Orcus was a name used for the underworld",3472.0,147.456,17489.608704
+256,512.0,test,['Austrian neurologist Sigmund Freud' 'Sigmund Freud'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who is regarded as the founder of psychoanalysis
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," Sigmund Freud is regarded as the founder of psychoanalysis.
+
+**Documents Used:**
+- **TITLE:** The History of Psychology: From the Beginnings to the Present  
+  **ID:** 1  
+- **TITLE:** The Rise of Psychoanalysis  
+  **ID:** 2  
+- **TITLE:** The Foundations of Psychoanalysis  
+  **ID:** 3",3472.0,147.456,17489.608704
+256,512.0,test,['103'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: how many national parks are present in india
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"0
+
+TITLE: National Park and Wildlife Sanctuary in India  
+ID: 1  
+
+TITLE: National Statistical Office of India  
+ID: 2  
+
+TITLE: National Park and Wildlife Sanctuary in India  
+ID: 3  
+
+TITLE: National Park and Wildlife Sanctuary in India  
+ID: 4  
+
+TITLE: National Park and Wildlife Sanctuary in India  
+ID: 5  
+
+TITLE: National Park and Wildlife Sanctuary in India  
+ID: 6  
+
+TITLE: National Park and Wildlife Sanctuary in India  
+",3472.0,147.456,17489.608704
+256,512.0,test,['1945' '1961'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when did they start 3 pointers in basketball
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"3 pointers in basketball were introduced in the 1980s. 
+
+**Documents Used:**
+- **TITLE:** ""History of basketball""  
+  **ID:** 1  
+- **TITLE:** ""The Evolution of the Basketball Game""  
+  **ID:** 2",3472.0,147.456,17489.608704
+256,512.0,test,['English law' 'Northern Ireland law' 'Scots law'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what type of legal system is used in the uk
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** UK Legal System Overview, **ID:** 1  
+2. **Title:** Legal Systems Around the World, **ID:** 2  
+
+- The United Kingdom has a common law legal system, which is based on judicial decisions and legal precedents.  
+- This system is characterized by case law, where court decisions serve as binding precedents for future cases.  
+- The UK's legal system is also influenced by statutory law, where legislation is passed by Parliament to create laws",3472.0,147.456,17489.608704
+256,512.0,test,['5.7 million' '5.7 million customer accounts'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: how many customers does edf have in the uk
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"0
+
+TITLE: EDF - European Data Forum  
+ID: 2  
+TITLE: EDF - European Data Forum  
+ID: 2  
+TITLE: EDF - European Data Forum  
+ID: 2  
+TITLE: EDF - European Data Forum  
+ID: 2  
+TITLE: EDF - European Data Forum  
+ID: 2  
+TITLE: EDF - European Data Forum  
+ID: 2  
+TITLE: EDF - European Data Forum  
+ID: 2  
+",3472.0,147.456,17489.608704
+256,512.0,test,['Buffalo Lookout' 'Lookout'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what is the highest peak in the ozarks
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The highest peak in the Ozarks is not explicitly mentioned in the provided documents. However, the document titled ""Ozarks"" mentions that the region's highest peak is in the area of the Ozarks, but does not specify the name or height of the peak.
+
+**Document Used:**
+- TITLE: Ozarks
+- ID: 2",3472.0,147.456,17489.608704
+256,512.0,test,['InterContinental Hotels Group'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who is the owner of the crowne plaza
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The owner of the Crowne Plaza is the hotel's management company, which is typically a part of a larger hotel chain. However, the specific owner is not mentioned in the provided documents.
+
+TITLE: Crowne Plaza - A Luxury Hotel Chain  
+ID: 1234567890",3472.0,147.456,17489.608704
+256,512.0,test,"['""Heroes and Villains""']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: batman and robin episode only fools and horses
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""The F Word"" **ID:** 1  
+2. **Title:** ""The F Word"" **ID:** 2  
+
+- **The F Word** (ID: 1): This episode features the characters of *Only Fools and Horses* and includes a storyline involving a fictional character named ""F"" who is a criminal. It is a crossover with *Batman: The Animated Series* where the character ""F"" is a criminal who is after Batman",3472.0,147.456,17489.608704
+256,512.0,test,['1923'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when was the immigration act passed in canada
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1
+
+**Title:** Immigration and Refugee Protection Act  
+**ID:** 1
+
+The Immigration and Refugee Protection Act (IRPA) was passed in Canada in 2002. It replaced the old Immigration Act and established a comprehensive framework for managing immigration and refugee claims.",3472.0,147.456,17489.608704
+256,512.0,test,['Bhimrao Ramji Ambedkar'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who is known as the father of indian constitution
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The father of the Indian Constitution is Dr. B. R. Ambedkar. 
+
+**Document Used:**
+- **TITLE:** ""The Constitution of India""  
+- **ID:** 1  
+
+- **TITLE:** ""History of the Indian Constitution""  
+- **ID:** 2  
+
+- **TITLE:** ""Key Figures in the Indian Constitution""  
+- **ID:** 3  
+
+**Answer:**
+- Dr. B. R. Ambedkar is known as the father of",3472.0,147.456,17489.608704
+256,512.0,test,['Ashley Roberts' 'Jason Gardiner' 'Karen Barber' 'Robin Cousins'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who were the judges on dancing on ice 2014
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"2014 Dancing on Ice did not have a specific set of judges mentioned in the provided documents. However, it is noted that the show featured a mix of professional athletes and celebrities, and that the format included a panel of judges who were not explicitly named. 
+
+- TITLE: ""Dancing on Ice"" (document 2)
+- TITLE: ""Dancing on Ice (TV series)"" (document 3)
+
+**List of Answers:**
+- The judges on Dancing on Ice 2",3472.0,147.456,17489.608704
+256,512.0,test,['breast or lower chest' 'the breast or lower chest'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where does a brisket come from on a cow
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** Where does a brisket come from on a cow  
+**ID:** 1  
+
+- The brisket comes from the chest area of the cow, specifically the breast or lower chest region. It is a cut of meat that is part of the cow's ribcage and is known for being a tough cut that benefits from slow cooking methods.",3472.0,147.456,17489.608704
+256,512.0,test,"['over 3,800' 'over 3,800 years']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: how long were the pyramids the tallest structure
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. The Great Pyramid of Giza was the tallest structure in the world for over 3,800 years. It was surpassed by the Lincoln Cathedral in the 14th century. The exact duration it held the title of the tallest structure is not specified in the provided documents. 
+
+TITLE: The Great Pyramid of Giza  
+ID: 1  
+
+TITLE: The Lincoln Cathedral  
+ID: 2",3472.0,147.456,17489.608704
+256,512.0,test,['Keith Thibodeaux'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who played little ricky on i love lucy show
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""I Love Lucy"" - **ID:** 123456789  
+2. **Title:** ""I Love Lucy"" - **ID:** 123456789  
+
+- The character Little Ricky on the *I Love Lucy* show was played by **Richard O'Keeffe**.",3472.0,147.456,17489.608704
+256,512.0,test,"['April 24, 2018']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when does the new season on the 100 come out
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"100 (The 100) is a television series, and its new season typically premieres in the fall. However, the exact release date is not specified in the provided documents. 
+
+TITLE: The 100 (TV series)  
+ID: 100",3472.0,147.456,17489.608704
+256,512.0,test,"['Ireland' ""Ireland's Johnny Logan""]",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who has won the eurovision song contest the most times
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," [""Conchita Wurster"", ""Eurovision Song Contest 2010 - Germany""]",3472.0,147.456,17489.608704
+256,512.0,test,['CBS Television City'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where do they film young and the restless
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** Where do they film young and the restless **ID:** 1
+
+- **Where do they film Young and the Restless?**  
+  The show ""Young and the Restless"" is filmed at the CBS Studio Center in Los Angeles, California. It is produced at Stage 24, which is one of the primary studios used for daytime television productions.",3472.0,147.456,17489.608704
+256,512.0,test,['Ghubar-e-Khatir' 'India Wins Freedom' 'Tarjumanul Quran' 'Tazkirah'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: list of books written by abul kalam azad
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"
+
+[]",3472.0,147.456,17489.608704
+256,512.0,test,['late-night'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when does rick and morty play on tv
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""When does rick and morty play on tv""  
+**ID:** 1  
+
+- Rick and Morty is a television series that airs on the Comedy Central channel.  
+- The show typically premieres new episodes on a weekly basis, with specific air dates announced for each season.  
+- For example, the show has had episodes that aired on specific dates such as ""The Vat of Acid"" and ""The Whopping Wumpus.""  
+- The",3472.0,147.456,17489.608704
+256,512.0,test,['Claudia Grace Wells'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who played jennifer in back to the future
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** ""Back to the Future"" (1989) - **ID:** 123456789  
+2. **Title:** ""Back to the Future: The Musical"" (2017) - **ID:** 987654321  
+
+- **Michael J. Fox** played the role of **Jennifer** in *Back to the Future* (1989).  
+- **Michael J.",3472.0,147.456,17489.608704
+256,512.0,test,['Egyptian hieroglyphs' 'hieroglyphs'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what type of writing did ancient egypt use
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** The use of writing in Ancient Egypt  
+**ID:** 1  
+
+2. **Title:** The use of writing in Ancient Egypt  
+**ID:** 1  
+
+- **Answer:** Ancient Egypt used hieroglyphs as their primary writing system. Hieroglyphs were a formal script that combined logographic and alphabetic elements, and they were used for religious texts, inscriptions on monuments, and other official documents.",3472.0,147.456,17489.608704
+256,512.0,test,['Numbers 22:28'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where does the donkey talk in the bible
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"0
+
+**Title:** The Bible  
+**ID:** 0  
+
+The concept of a ""donkey talking"" is not found in the Bible. The Bible does not contain any instances of a donkey speaking. The reference to a talking donkey is not present in any of the canonical texts of the Bible.",3472.0,147.456,17489.608704
+256,512.0,test,['16 December 1689' '1689'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when did the bill of rights come out
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The Bill of Rights came out in 1791.  
+
+**Documents Used:**
+- **TITLE:** ""The Bill of Rights""  
+- **ID:** 1  
+
+- **TITLE:** ""The Bill of Rights""  
+- **ID:** 2  
+
+- **TITLE:** ""The Bill of Rights""  
+- **ID:** 3  
+
+- **TITLE:** ""The Bill of Rights""  
+- **ID:** 4  
+
+- **TITLE:** ""The Bill of Rights",3472.0,147.456,17489.608704
+256,512.0,test,"['Bobby Beathard' 'Brian Dawkins' 'Brian Urlacher' 'Jerry Kramer'
+ 'Randy Moss' 'Ray Lewis' 'Robert Brazile' 'Terrell Owens']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: who was selected for the 2018 football hall of fame
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"2018 Football Hall of Fame - The answer is not directly provided in the given documents. However, the document mentions ""The 2018 Football Hall of Fame"" but does not specify who was selected. Therefore, no specific information can be extracted from the provided text.
+
+No documents were used to answer this query.",3472.0,147.456,17489.608704
+256,512.0,test,['1945'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: when was you'll never walk alone first released
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," [""You'll Never Walk Alone"" was first released in 1965 as part of the musical ""Carousel"".]
+
+**Document Used:**
+- TITLE: ""You'll Never Walk Alone"" (song)
+- ID: 2",3472.0,147.456,17489.608704
+256,512.0,test,"['Hendersonville, North Carolina' 'High Hampton Inn in Cashiers'
+ 'western North Carolina']",0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where was the remake of dirty dancing filmed
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704," The remake of *Dirty Dancing* was filmed in the fictional town of ""Kodiak,"" which is a location in the movie. This information is derived from the document titled ""Dirty Dancing (2017 film)"" with the ID ""DirtyDancing2017"". 
+
+**List of Answers:**
+- **Title:** Dirty Dancing (2017 film)
+- **ID:** DirtyDancing2017
+- **Answer:** The remake of *Dirty Dancing*",3472.0,147.456,17489.608704
+256,512.0,test,['the physician George Huntington'],0.9707273478403831,0.511967232,nq_128k,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: where did huntington's disease get its name
+",MB,511.967232,118609.0,3472.0,Final Answer: ,17.489608704,"1. **Title:** The Origin of Huntington's Disease, **ID:** 1  
+2. **Title:** The History of Huntington's Disease, **ID:** 2  
+
+- Huntington's disease got its name from Dr. George Huntington, who first described the condition in 1872.  
+- The disease was named after him due to his significant contributions to understanding the disorder.",3472.0,147.456,17489.608704

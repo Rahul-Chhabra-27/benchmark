@@ -18,7 +18,8 @@ from datasets import load_dataset
 from evaluate_registry import DATASET_REGISTRY, PRESS_REGISTRY, SCORER_REGISTRY
 from fire import Fire
 from tqdm import tqdm
-from transformers import FineGrainedFP8Config, Pipeline, pipeline
+from transformers import BitsAndBytesConfig, FineGrainedFP8Config, Pipeline, pipeline
+from verify_int8_model import verify_int8_model
 
 from kvpress import (
     ComposedPress,
@@ -78,6 +79,7 @@ class EvaluationConfig:
 
     # Quantization
     fp8: bool = False
+    int8: bool = False
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -112,6 +114,8 @@ class EvaluationConfig:
         # Initialize model_kwargs if None
         if self.model_kwargs is None:
             self.model_kwargs = {}
+
+        assert not (self.fp8 and self.int8), "fp8 and int8 quantization cannot both be enabled"
 
         if self.dataset == "needle_in_haystack":
             assert self.needle_depth is not None, "needle_depth must be set for needle_in_haystack"
@@ -158,6 +162,8 @@ class EvaluationConfig:
             components.append(f"fraction{self.fraction:.3f}")
         if self.max_context_length is not None:
             components.append(f"max_context{self.max_context_length}")
+        if self.int8:
+            components.append("int8")
         if self.query_aware:
             components.append("query_aware")
         if self.key_channel_compression_ratio is not None:
@@ -568,6 +574,13 @@ class EvaluationRunner:
             model_kwargs["quantization_config"] = FineGrainedFP8Config()
             logger.info("FP8 quantization enabled.")
 
+        if self.config.int8:
+            model_kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_8bit=True,
+                llm_int8_threshold=6.0,
+            )
+            logger.info("INT8 bitsandbytes quantization enabled.")
+
         if isinstance(self.press, ObservedAttentionPress):
             model_kwargs["attn_implementation"] = "eager"
             logger.info("ObservedAttentionPress detected, setting attn_implementation to 'eager'.")
@@ -592,6 +605,10 @@ class EvaluationRunner:
         else:
             pipeline_kwargs["device"] = device
         self.pipeline = pipeline("kv-press-text-generation", **pipeline_kwargs)
+
+        if self.config.int8:
+            int8_verification = verify_int8_model(self.pipeline.model)
+            logger.info("INT8 model verification passed: %s", int8_verification)
 
         self.pipeline.model.eval()
         logger.info("Model pipeline loaded.")

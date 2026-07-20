@@ -1,0 +1,556 @@
+max_new_tokens,predicted_answer,uncompressed_kv_memory_gb,compression_ratio,retained_context_tokens,context_tokens,uncompressed_kv_memory_mb,answers,task,split,retained_kv_memory_mb,kv_memory_per_token_kb,answer_prefix,question,retained_kv_memory_gb
+256," ['2014 Senior Open Championship', '2015 Senior Open Championship', '2017 Senior Open Championship', '2018 Senior Open Championship', '2019 Senior Open Championship']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['2010 Senior Open Championship' '2014 Senior Open Championship'
+ '2017 Senior Open Championship' '2018 Senior Open Championship'
+ '2019 Senior Open Championship']",qampari_128k,dev,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What competition is a Senior British Open Championship?
+",17.54578944
+256," ['Oru Pennum Randaanum', 'Mukhamukham', 'Mathilukal', 'Aattakatha', 'Kodiyettam']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Anantaram' 'Kodiyettam' 'Mathilukal' 'Mukhamukham'
+ 'Oru Pennum Randaanum']",qampari_128k,dev,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which movie was screenwritten by Adoor Gopalakrishan?
+",17.54578944
+256," ['Blaine Island', 'Barrington', 'Bradstone', 'Bransfield Island', 'Canton', 'Dollar Lake', 'Dover', 'Gibraltar', 'Kilcommon', 'Kilnagour', 'Kilnagour', 'Kilnagour', 'Kilnagour', 'Kilnagour', 'Kilnagour', 'Kilnagour', 'Kilnagour', 'K",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Bradstone' 'Lezant' 'Plymouth' 'St Stephens by Launceston Rural'
+ 'Werrington']",qampari_128k,dev,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the name of the settlement that is next to the Tamar River?
+",17.54578944
+256," ['Montague (1979)', 'Rover', 'Sir John Sherbrooke', 'The Gourdou-Leseurre GL.2', 'The Gourdou-Leseurre GL.50', 'The Gourdou-Leseurre GL.812 HY', 'The Gourdou-Leseurre GL.832 HY', 'The Gourdou-Leseurre GL.30', 'The Gourdou-Leseurre GL.81",17.723031552,0.01,118990.0,120192.0,17723.031552,['Agnes' 'Montague' 'Rover' 'Sherbrooke' 'Sir John Sherbrooke'],qampari_128k,dev,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Name the ships registered in Nova Scotia.
+",17.54578944
+256," ['Wie schön leuchtet der Morgenstern, BWV 1', 'Wachet auf, ruft uns die Stimme, BWV 140', 'Allein zu dir, Herr Jesu Christ, BWV 33', 'Ein feste Burg ist unser Gott, BWV 140', 'O, Ewigkeit, du Donnerwort, BWV 20']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Allein zu dir, Herr Jesu Christ, BWV 33'
+ 'Ein feste Burg ist unser Gott, BWV 80'
+ 'O Ewigkeit, du Donnerwort, BWV 20'
+ 'Wachet auf, ruft uns die Stimme, BWV 140'
+ 'Wie schön leuchtet der Morgenstern, BWV 1']",qampari_128k,dev,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What composition is an example of a chorale cantata?
+",17.54578944
+256," ['Alternate Empires', 'Alternate Heroes', 'Alternate Wars', 'Alternate Americas', 'Alternate Wars']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Alternate Americas' 'Alternate Empires' 'Alternate Heroes'
+ 'Alternate Wars' 'Nebula Awards Showcase 2000']",qampari_128k,dev,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Gregory Benford edited what piece of writing?
+",17.54578944
+256," ['Dustin Lynch', 'Samuel Medlen', 'Joshua Dobbs', 'Zachary James Thornton', 'Reilly Opelka']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Michele Serros' 'Paul Seaton' 'Sun Mingming' 'Terrance Dotsy'
+ 'Zack Thornton']",qampari_128k,dev,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What's the name of a former student from Ventura College?
+",17.54578944
+256," ['Myint Swe', 'Min Aung Hlaing', 'Aung San Suu Kyi', 'Aung Min', 'Win Tin']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Aung Min' 'Maung Maung Ohn' 'Myint Swe' 'San Yu' 'Thein Sein'],qampari_128k,dev,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What individual served in the Myanmar Army?
+",17.54578944
+256," ['Dr. A.O. Thomas House', 'Chadron Public Library', 'Crawford County Courthouse (Iowa)', 'Elmendorf Christian Community', 'Old City Hall (Guelph)', 'The Milltown Hutterite Colony', 'Franklin County Courthouse (Nebraska)', 'Montague (1979 film)']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Chadron Public Library' 'Crawford County Courthouse'
+ 'Dr. A.O. Thomas House' 'Franklin County Courthouse'
+ 'Howard County Courthouse']",qampari_128k,dev,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What structures di George A. Berlinghof create?
+",17.54578944
+256," ['The Producers', 'The Time of the Doctor', 'The Hound of Florence', 'The Doctor', 'The Time of the Doctor', 'The Time of the Doctor', 'The Time of the Doctor', 'The Time of the Doctor', 'The Time of the Doctor', 'The Time of the Doctor', 'The Time of the Doctor', 'The Time of the Doctor', 'The Time of the Doctor', 'The Time of the Doctor', 'The Time of the Doctor',",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Last of the Time Lords' 'Music of the Spheres'
+ 'The Unicorn and the Wasp' 'Time Crash' 'Voyage of the Damned']",qampari_128k,dev,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What show was executively produced by Russell T Davies?
+",17.54578944
+256," ['2015 King Cup Final', '2015 Città di Caltanissetta – Singles', '2018 Knoxville Challenger – Men's Singles', '2018 King Cup Final', '2018 Città di Caltanissetta – Singles', '2018 Launceston Challenger – Men's Singles', '2018 Wimbledon Championships – Boys' Singles', '2019 Caltanissetta",17.723031552,0.01,118990.0,120192.0,17723.031552,"[""2018 Kentucky Bank Tennis Championships – Men's Singles""
+ ""2018 Kunming Open – Men's Doubles""
+ ""2018 Stockton Challenger – Men's Singles""
+ ""2019 Burnie International – Men's Doubles""
+ ""2019 Launceston Tennis International – Men's Singles""]",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which competition did the tennis man Lloyd Harris win?
+",17.54578944
+256," ['Gorilla Biscuits', 'Rival Schools', 'Quicksand', 'The Playing Favorites', 'Me First and the Gimme Gimmes']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Dead Heavens' 'Gorilla Biscuits' 'Quicksand' 'Rival Schools'
+ 'Walking Concert']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What groups was Walter Schreifels a member of?
+",17.54578944
+256," ['Arabsat-1A', 'Arabsat-1B', 'Arabsat-5A', 'Badr-4', 'Arabsat-1C']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Arabsat-1A' 'Arabsat-1B' 'Arabsat-5A' 'Badr-4' 'INSAT-2DT'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What does the Arab Satellite Communications Organization own?
+",17.54578944
+256," ['Wikipedia', 'RationalWiki', 'Veropedia', 'Diplopedia', 'Wiktionary']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Diplopedia' 'RationalWiki' 'Uncyclopedia' 'Veropedia' 'Wiktionary'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What are the existing wiki projects ?
+",17.54578944
+256," ['Helen Jenkins', 'Magali Di Marco Messmer', 'Rebekah Jordan', 'Pete Jacobs', 'Elias Ymer', 'Lloyd Harris', 'Reilly Opelka', 'Yan Zi', 'Zheng Jie', 'Mikael Ymer', 'Elias Ymer', 'Lloyd Harris', 'Reilly Opelka', 'Yan Zi', 'Zheng Jie', 'Mikael Ymer', 'Yan Zi",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Chris McCormack' 'Chrissie Wellington' 'Helen Jenkins' 'Magali Messmer'
+ 'Pete Jacobs']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who was a notable triathlete ?
+",17.54578944
+256," ['Collins reagent', 'Estradiol benzoate/hydroxyprogesterone caproate', 'Estradiol cypionate/hydroxyprogesterone caproate', 'Estradiol dipropionate/hydroxyprogesterone caproate', 'Estradiol valerate/hydroxyprogesterone caproate', 'Estradiol benzoate/estradiol valerate/hydroxyprogesterone caproate",17.723031552,0.01,118990.0,120192.0,17723.031552,['Ammonia' 'Collins reagent' 'Dimethylformamide' 'Ethanol' 'Sodium azide'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What are the existing reagent compounds ?
+",17.54578944
+256," ['Dosan Seowon', 'Byeongsan Seowon', 'Oksan Seowon', 'Sosu Seowon', 'Bale Pandiya Seowon']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Byeongsan Seowon' 'Dosan Seowon' 'Oksan Seowon' 'Seoak Seowon'
+ 'Sosu Seowon']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What are some of the notable seowons ?
+",17.54578944
+256," ['2015 King Cup Final', '2015 Città di Caltanissetta – Singles', '2018 Knoxville Challenger – Men's Singles', '2018 Launceston Challenger – Singles', '2018 Senior Open Championship', '2018 Città di Caltanissetta – Singles', '2018 King Cup Final', '2018 Wimbledon Championships – Boys' Singles', '20",17.723031552,0.01,118990.0,120192.0,17723.031552,"[""2015 Wimbledon Championships – Boys' Singles""
+ ""2016 Charlottesville Men's Pro Challenger – singles""
+ '2018 BNP Paribas Primrose Bordeaux – singles'
+ '2018 JSM Challenger of Champaign–Urbana – singles'
+ '2018 Knoxville Challenger – singles']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In which sports competition did Reilly Opelka emerge victorious?
+",17.54578944
+256," ['Christian Peter', 'Jeff Kunkel', 'Joshua Hassan', 'Marc Silvestri', 'Marcus Amerman', 'Matthew Leung', 'Michael McHugh', 'Paul Smith', 'William Leung']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Christian Peter' 'Howard Barbieri' 'Jeff Kunkel' 'Knowshon Moreno'
+ 'Melanie McGuire']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who graduated from Middletown High School South?
+",17.54578944
+256," ['2015 King Cup Final', '2015 Città di Caltanissetta – Singles', '2017 Internationaux de Tennis de Vendée – Singles', '2018 Senior Open Championship', '2018 Wimbledon Championships – Boys\' Singles', '2018 Caltanissetta Challenger – Singles', '2019 Senior Open Championship', '2019 King Cup Final', '2019",17.723031552,0.01,118990.0,120192.0,17723.031552,"['2015 Città di Caltanissetta – singles'
+ '2016 Open Città della Disfida – singles' '2016 Stockholm Open – doubles'
+ '2017 Internationaux de Tennis de Vendée – singles'
+ '2017 Internazionali di Tennis del Friuli Venezia Giulia – singles']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What competition did Elias Ymer win?
+",17.54578944
+256," ['Dustin Lynch', 'Matti Lives in Finland', 'Samuel Smith', 'Steve Darcis', 'William Pether']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Antonio London' 'Bryan Morris' 'Dewon Brazelton' 'Dustin Lynch'
+ 'Jordan Sheffield']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who are Tullahoma High School alumni?
+",17.54578944
+256," ['The Bright Day', 'The Sale', 'The Traces of Light', 'The 2017 Senior Open Championship', 'The 2018 Senior Open Championship', 'The 2019 Senior Open Championship', 'The 2015 King Cup Final', 'The 2015 Città di Caltanissetta – Singles', 'The 2015 Wimbledon Championships – Boys\' Singles', 'The 2016",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Conditional release' 'Ghost' 'The Bright Day' 'The Sale'
+ 'The Traces of Light']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: For which motion picture was Hossein Shahabi responsible for production?
+",17.54578944
+256," ['Knowshon Moreno', 'Joshua Hassan', 'Curtis Jamall Brown', 'Dustin Lynch', 'Ego Ferguson', 'Devin Bush Jr.']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Ego Ferguson' 'Jerry Janes' 'Ron Rivera' 'Roquan Smith' 'Will Sutton'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What lineback was drafted by the Chicago Bears?
+",17.54578944
+256," ['Kanthirava Narasaraja II', 'Krishnaraja Wadiyar II', 'Krishnaraja Wadiyar III', 'Chamarajendra Wadiyar X', 'Mummadhi Krishnaraja Wadiyar']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Chamarajendra Wadiyar X' 'Kanthirava Narasaraja I'
+ 'Kanthirava Narasaraja II' 'Krishnaraja Wadiyar II'
+ 'Krishnaraja Wadiyar III' 'Mir Ghulam Ali']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who habitated the Kingdom of Mysore?
+",17.54578944
+256," ['Gourdou-Leseurre GL.2', 'Gourdou-Leseurre GL.812 HY', 'Gourdou-Leseurre GL.50', 'Gourdou-Leseurre GL.832 HY']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Gourdou-Leseurre GL-812 HY' 'Gourdou-Leseurre GL-832 HY'
+ 'Gourdou-Leseurre GL.2' 'Gourdou-Leseurre GL.30' 'Gourdou-Leseurre GL.50']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is something that Gourdou-Leseurre produced?
+",17.54578944
+256," ['Mukund Lal Agrawal', 'Marcus Amerman', 'Martha Berry', 'Teri Greeves', 'Juanita Growing Thunder Fogarty']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Charles Eastman' 'Little Crow' 'Sitting Bull' 'Spotted Elk' 'Zitkala-Sa'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who spoke Sioux as their mother tongue?
+",17.54578944
+256," ['Connor Walsh', 'Martha Berry', 'Michele Serros', 'Martha Berry (artist)', 'Martha Berry (artist)']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Amy Fote' 'Connor Walsh' 'Jun Shuang Huang' 'Simon Ball' 'Stanton Welch'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who is employed by the Houston Ballet?
+",17.54578944
+256," ['Carlos García Cambón', 'Gustavo Alfaro', 'Jorge José Benítez', 'Mick Walker', 'Mario Fortunato']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Carlos García Cambón' 'Gustavo Alfaro' 'Jorge José Benítez'
+ 'Mario Fortunato' 'Miguel Ángel Russo']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who provided coaching for the Boca Juniors athletic team?
+",17.54578944
+256," ['The Little Humpbacked Horse', 'After the Rain', 'Carousel (ballet)', 'Alice's Adventures in Wonderland', 'The Life Aquatic with Steve Zissou']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['After the Rain' ""Alice's Adventures in Wonderland""
+ 'An American in Paris' 'Carousel' 'Liturgy']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which ballet features dances were choreographed by Christopher Wheeldon?
+",17.54578944
+256," ['Domingo Deluana', 'Lolinato To-ong', 'Matti Lives in Finland', 'Rezzakul Haider Chowdhury', 'Shamsul Haque']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Custodio Parcon' 'Domingo Deluana' 'Herminigildo Yurong'
+ 'Lolinato To-ong' 'Tomas Campo Jr.']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What famous person was remembered for serving in the Philippine Marine corps?
+",17.54578944
+256," ['Asterix and the Chieftain's Shield', 'Asterix and the Great Crossing', 'Asterix and the Nine Gallant Knights', 'Asterix and the Olympic Games', 'Asterix and the Persians', 'Asterix and the Vikings', 'Asterix in Belgium', 'Asterix in Britain', 'Asterix in the Land of the Celts', 'Asterix and the Roman Legion', 'Asterix and the",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Asterix and Cleopatra' ""Asterix and the Chieftain's Shield""
+ 'Asterix and the Great Crossing' 'Asterix in Belgium' 'Obelix and Co.']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Albert Uderzo illustrated what comic?
+",17.54578944
+256," ['The X-Files', 'Breaking Bad', 'Better Call Saul', 'Battle Creek', 'The Lone Gunmen']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Battle Creek' 'Better Call Saul' 'Breaking Bad' 'The Lone Gunmen'
+ 'The X-Files']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Vince Gilligan was the executive producer of what television program?
+",17.54578944
+256," ['Zdenka Ticharová', 'Mikić', 'Zdeněk Frolík', 'Zdeněk Frolík', 'Zdeněk Frolík', 'Zdeněk Frolík', 'Zdeněk Frolík', 'Zdeněk Frolík', 'Zdeněk Frolík', 'Zdeněk Frolík']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Ivo Babuška' 'Petr Vopěnka' 'Vlastimil Dlab' 'Věra Trnková'
+ 'Zdeněk Frolík']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Eduard Čech was the doctoral advisor to whom?
+",17.54578944
+256," ['MS European Seaway', 'MS Pride of Dover', 'MS Pride of France', 'MS Pride of Burgundy']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['MS European Seaway' 'MS Pride of Burgundy' 'MS Pride of Calais'
+ 'MS Pride of Dover' 'MS Spirit of France']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which vessels had a home port of Dover?
+",17.54578944
+256," ['Helium', 'Neon', 'Xenon', 'Krypton']",17.723031552,0.01,118990.0,120192.0,17723.031552,['argon' 'helium' 'krypton' 'neon' 'xenon'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What did WIlliam Ramsey discover?
+",17.54578944
+256," ['Elmendorf Christian Community', 'Milltown Hutterite Colony', 'Oberon Hutterite Colony', 'Schmiedeleut', 'Dora Milaje']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Detention River Christian Community' 'Elmendorf Christian Community'
+ 'Milltown Hutterite Colony' 'Owa Hutterite Colony' 'Schmiedeleut']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What group or person identifies itself as Hutterite?
+",17.54578944
+256," ['Marcello Mastroianni', 'Melanie McGuire', 'Matti Lives in Finland', 'Mohanlal', 'Morgan Freeman', 'Myint Swe', 'Nathanial D. P. (Napoleon)', 'Olga Zammitt', 'Paul Klee', 'Peter the Mariner', 'Rajesh Khanna', 'Richard Aitson', 'Solomon Levy', 'Teri Greeves', 'William Pether', 'William",17.723031552,0.01,118990.0,120192.0,17723.031552,['Alice Lon' 'Elena Jahn' 'Paul Klee' 'Perry DeAngelis' 'Will Sampson'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Whose cause of death was scleroderma?
+",17.54578944
+256," ['2006 Australian Open – Women's Doubles', '2006 World Snooker Championship', '2010 Senior Open Championship', '2015 King Cup Final', '2015 Wimbledon Championships – Boys\' Singles', '2017 Senior Open Championship', '2018 Senior Open Championship', '2018 Kunming Open – Men\'s Singles', '2018 St. Petersburg Open – Singles', '2",17.723031552,0.01,118990.0,120192.0,17723.031552,"[""2008 Pilot Pen Tennis – Men's Singles"" '2009 Chennai Open – singles'
+ '2010 Aircel Chennai Open – singles' '2010 PBZ Zagreb Indoors – singles'
+ '2011 St. Petersburg Open – singles']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Marin Čilić was the victor of which competition?
+",17.54578944
+256," ['Mithlesh Kumar', 'Mukund Lal Agrawal', 'Sanjay Kumar Gautam', 'Virendra Singh', 'Vishwa']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Agys Ramsaran Verma' 'Lokendra Singh' 'Mithlesh Kumar'
+ 'Mukund Lal Agrawal' 'Virendra Singh']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who is a former student from Bareilly College?
+",17.54578944
+256," ['Breakfast', 'Children's Everywhere', 'Wacaday', 'Wazzup Wazzup', 'Us Girls', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'Wicked', 'W",17.723031552,0.01,118990.0,120192.0,17723.031552,['Breakfast' 'Rush TV' 'Us Girls' 'Wazzup Wazzup' 'Y Speak'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What TV show originally was broadcast by Studio 23?
+",17.54578944
+256," ['Eleanor Coade', 'Henry Mazer', 'William Doxford', 'William Petzal', 'William Thomas']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Edward Kennion' 'Eleanor Coade' 'Theodora Cowan' 'William Pether'
+ 'William Wynne Ryland']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: The Society of Artists has which person as a member?
+",17.54578944
+256," ['Suddha', 'Oru Pennum Randaanum', 'Sompa', 'Oksan Seowon', '2010 MPS Group Championships – Doubles', '2015 Città di Caltanissetta – Men\'s Singles', '2018 Knoxville Challenger – Men\'s Singles', '2017–18 Saudi Professional League', '2015 King Cup Final', '2015 Senior Open",17.723031552,0.01,118990.0,120192.0,17723.031552,['Nirel' 'Oriyardori Asal' 'Rang' 'Sompa' 'Suddha'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which movie originally had dialogue spoken in Tulu?
+",17.54578944
+256," ['Bright Eyes', 'Conor Oberst and the Mystic Valley Band', 'Dead Oceans', 'The Playboys', 'The Pines']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Bright Eyes' 'Conor Oberst and the Mystic Valley Band' 'Desaparecidos'
+ 'Monsters of Folk' 'Park Ave.']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Conor Oberst is part of what musical group?
+",17.54578944
+256," ['2015 King Cup Final', '2016 King Cup Final', '2018 King Cup Final', '2019 King Cup Final']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['1998 Asian Super Cup' '2015 King Cup Final' '2015 Saudi Super Cup'
+ '2016 King Cup Final' '2017–18 Saudi Professional League']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which contests did Al-Nassr take part in?
+",17.54578944
+256," ['Baojun 510', 'Baojun 530', 'Baojun 630', 'Baojun 730', 'Baojun E300', 'Baojun 560', 'Baojun 530 Plus']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Baojun 510' 'Baojun 530' 'Baojun 630' 'Baojun 730' 'Baojun E300'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What car does the brand Baojun produce?
+",17.54578944
+256," ['Jerry Janes', 'Gary Megson', 'John Barton', 'Mick Walker', 'Paul Smith']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Bobby Hope' 'Harold Bodle' 'John Barton' 'Kevin Poole' 'Mick Walker'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What person was in charge of Burton Albion F.C.?
+",17.54578944
+256," ['Dr. A.O. Thomas House', 'Elmendorf Christian Community', 'Old City Hall (Guelph)', 'Palladium House', 'The Ocean Forest Hotel', 'The Rockefeller Center', 'The South Dakota State Capitol', 'The Washington Monument', 'The White House', 'The World Trade Center']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['330 West 42nd Street' 'Ideal House' 'Ocean Forest Hotel'
+ 'Rockefeller Center' 'Scranton Cultural Center']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which architectural structure did Raymond Hood design?
+",17.54578944
+256," ['Ballet', 'Carousel', 'La Vivandière', 'The Little Humpbacked Horse', 'The Story About Ping']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Coppélia' 'La Vivandière or Markitenka' 'La source' 'Pâquerette'
+ 'The Little Humpbacked Horse']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Arthur Saint-Léon choreographed what kind of dance?
+",17.54578944
+256," ['Amdo Tibetan', 'Central Tibetan', 'Khams Tibetan', 'Lhasa Tibetan', 'Tibetan']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Amdo Tibetan' 'Central Tibetan' 'Khams Tibetan' 'Ladakhi' 'Tibetan'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which language is native to Tibet?
+",17.54578944
+256," ['Wacaday', 'Wide Awake Club', 'Worst Things Waiting', 'Wazzup Wazzup', 'Wicked']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Good Morning Britain' ""Hey, Hey, It's Saturday!"" 'The Shoe People'
+ 'Wacaday' 'Wide Awake Club']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What TV show was originally on TV-AM?
+",17.54578944
+256," ['TauTona Mine', 'Geita Gold Mine', 'Sadiola Gold Mine', 'Yatela Mine', 'Morila Gold Mine']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Geita Gold Mine' 'Sadiola Gold Mine' 'Sunrise Dam Gold Mine'
+ 'TauTona Mine' 'Yatela Mine']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which facility does AngloGold Ashanti own?
+",17.54578944
+256," ['Gourdou-Leseurre GL.2', 'Gourdou-Leseurre GL.812 HY', 'Gourdou-Leseurre GL.50', 'Gourdou-Leseurre GL.30', 'Gourdou-Leseurre GL.832 HY', 'Gourdou-Leseurre GL.2', 'Gourdou-Leseurre GL.812 HY', 'Gourdou-Leseurre GL.50',",17.723031552,0.01,118990.0,120192.0,17723.031552,['Auguste Piccard' 'Ben Franklin' 'F.-A. Forel' 'Goliath' 'Titan'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What items did Giovanola produce?
+",17.54578944
+256," ['Tony Iommi', 'Geezer Butler', 'Ozzy Osbourne', 'Bill Ward', 'Glynis Johns']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Adam Wakeman' 'Geoff Nicholls' 'Neil Murray' 'Tony Martin'
+ 'Vinny Appice']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Black Sabbath had who as a member?
+",17.54578944
+256," ['The Great Escape', 'The Producers', 'The Texas Chainsaw Massacre', 'The Time of the Phoenix', 'The Time of the Phoenix']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['633 Squadron' 'The Great Escape' 'The Satan Bug' 'To Sir, with Love'
+ 'Walk Like a Dragon']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: James Clavell was screenwriter for what movie?
+",17.54578944
+256," ['Bad Astronaut', 'Lagwagon', 'Quicksand', 'The Playing Favorites', 'The Producers']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Bad Astronaut' ""Joey Cape's Bad Loud"" 'Lagwagon'
+ 'Me First and the Gimme Gimmes' 'The Playing Favorites']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Joey Cape is part of what musical group?
+",17.54578944
+256," ['Blaine Island', 'Magic Island', 'Roger Lake', 'Tyler Island', 'Wilson River Bridge']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Blaine Island' 'Magic Island' 'Scotts Island' 'Tyler Island'
+ 'Wilson Island (West Virginia)']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What geographic entity is next to Kanawha River?
+",17.54578944
+256," ['Gary Megson', 'Neil Murray', 'Mick Walker', 'John Barton', 'Dale Smith']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Arthur Mann' 'George Kerr' 'Jimmy Cringan' ""Ray O'Brien"" 'Rob Scott']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who was the coach of Boston United FC?
+",17.54578944
+256," ['Franklin County Courthouse (Nebraska)', 'Mark Abis', 'Matti Lives in Finland', 'Morgan Freeman', 'Morgan Murray', 'Morgan Williams', 'Morgan Zammitt', 'Morgan Zammitt', 'Morgan Zammitt', 'Morgan Zammitt', 'Morgan Zammitt', 'Morgan Zammitt', 'Morgan Zammitt', 'Morgan Zammitt', 'Morgan Zammitt',",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Colton Greene' 'David Rice Atchison' 'Frank James' 'M. Jeff Thompson'
+ 'Sterling Price']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who is within the Missouri State Guard?
+",17.54578944
+256," ['Three Tales of Horror', 'Death Stalks the Night', 'The Secret History of Vampires', 'Snow White, Blood Red', 'The Hound of Florence', 'The Little Humpbacked Horse', 'Liturgy', 'The Bright Day', 'The Producers', 'The Perfect General', 'The Blackheath Bulletin', 'The Secret History of Vampires', 'The Secret History of Vampires', 'The Secret History of Vampires',",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Death Stalks the Night' 'Sleep No More' 'Three Tales of Horror'
+ 'Who Knocks?' 'Worse Things Waiting']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What piece of literature featured illustrations by Lee Brown Coye?
+",17.54578944
+256," ['Snow White, Blood Red', 'Three Tales of Horror', 'The Secret History of Vampires', 'The Best Horror of the Year', 'Year's Best Fantasy and Horror', 'The Best Horror of the Year', 'The Secret History of Vampires', 'Snow White, Blood Red', 'Three Tales of Horror', 'The Best Horror of the Year', 'Year's Best Fantasy and Horror']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Black Thorn, White Rose' 'Ruby Slippers, Golden Tears'
+ 'Salon Fantastique' 'Snow White, Blood Red'
+ ""Year's Best Fantasy and Horror""]",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which work of literature did Terri Windling edit?
+",17.54578944
+256, ['Ojibwe'],17.723031552,0.01,118990.0,120192.0,17723.031552,['Central Ojibwa' 'Eastern Ojibwa' 'Mohawk' 'Northwestern Ojibwa' 'Oneida'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is Ontario's native language ?
+",17.54578944
+256," ['Florida State Road 874', 'Florida State Road 924', 'Florida State Road 878', 'Florida State Road 112', 'Florida State Road 836']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Florida State Road 112' 'Florida State Road 836'
+ 'Florida State Road 874' 'Florida State Road 878'
+ 'Florida State Road 924']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What structures does the Miami-Dade Expressway Authority keep in good working condition?
+",17.54578944
+256," ['Aneroid Lake', 'Bonny Lakes', 'Dollar Lake', 'Roger Lake', 'LeGore Lake', 'Aneroid Mountain', 'Bonny Lakes basin', 'Dollar Lake', 'Roger Lake', 'Aneroid Lake', 'Aneroid Mountain', 'Bonny Lakes basin', 'Dollar Lake', 'Roger Lake', 'LeGore Lake', 'LeGore mine', 'Aneroid Mountain', 'Bonny Lakes basin', 'D",17.723031552,0.01,118990.0,120192.0,17723.031552,['Aneroid Lake' 'Bonny Lakes' 'Dollar Lake' 'Legore Lake' 'Roger Lake'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which landform is located in the protected area Eagle Cap Wilderness?
+",17.54578944
+256," ['Break My Stride', 'Reflection', 'The Skeptics\' Guide to the Universe', 'The Producers', 'Springtime for Hitler']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['A Girl Worth Fighting For' 'Beautiful Disaster' 'Break My Stride'
+ 'Honor to Us All' 'Mulan' 'Reflection']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What tracks did Matthew Wilder compose?
+",17.54578944
+256," ['Oh Yeah! Cartoons', 'Random! Cartoons', 'Wacaday', 'Wide Awake Club', 'Young Frankenstein']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Bee and PuppyCat' 'Castlevania' 'My Life as a Teenage Robot'
+ 'Oh Yeah! Cartoons' 'Random! Cartoons']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What TV show did Frederator Studios produce?
+",17.54578944
+256," ['Joshua Dobbs', 'Markus Münch', 'Markus Münch', 'Markus Münch', 'Markus Münch', 'Markus Münch', 'Markus Münch', 'Markus Münch', 'Markus Münch', 'Markus Münch', 'Markus Münch', 'Markus Münch', 'Markus Münch', 'Markus Münch', 'Markus",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Curtis Brown' 'David Paulson' 'Devin Bush Jr.' 'Joshua Dobbs'
+ 'Mason Rudolph']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: The Pittsburgh Steelers drafted whom?
+",17.54578944
+256, ['The Doctor (Doctor Who)'],17.723031552,0.01,118990.0,120192.0,17723.031552,['Rassilon' 'Romana' 'Susan Foreman' 'The Doctor' 'The Master'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which character's native language was Gallifreyan?
+",17.54578944
+256," ['John Toohey', 'Patrick Keane', 'William Deane', 'Henry Mazer', 'Julius Bürger', 'Gareth Roberts', 'Marc Silvestri', 'Marc Silvestri', 'Marc Silvestri', 'Marc Silvestri', 'Marc Silvestri', 'Marc Silvestri', 'Marc Silvestri', 'Marc Silvestri', 'Marc Silvestri', 'Marc Silvestri', 'Marc Silvestri', 'Marc Silvest",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Frank Kitto' 'John Toohey' 'Michael McHugh' 'Patrick Keane'
+ 'William Deane']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who served on the High Court of Australia as a Justice?
+",17.54578944
+256," ['Jim Zub', 'Riley Rossmo', 'Marc Silvestri', 'Rajinikanth', 'Rajan Lyallpuri', 'Rival Schools', 'Gorilla Biscuits', 'Rival Schools', 'Rival Schools', 'Rival Schools', 'Rival Schools', 'Rival Schools', 'Rival Schools', 'Rival Schools', 'Rival Schools', 'Rival Schools', 'Rival Schools', 'Rival Schools',",17.723031552,0.01,118990.0,120192.0,17723.031552,['Dan Panosian' 'Jim Zub' 'Marc Silvestri' 'Riley Rossmo' 'Sam Liu'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who is employed by Image Comics?
+",17.54578944
+256," ['Oru Pennum Randaanum', 'Paavam Poornima', 'Mathilukal', 'Visa', 'Aattakatha', 'Kodiyettam']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Aattakatha' 'Onnum Mindatha Bharya' 'Paavam Poornima'
+ 'Thakilu Kottampuram' 'Visa']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What movie did Balu Kiriyath screenwrite for?
+",17.54578944
+256," ['Dr. A.O. Thomas House', 'Elmendorf Christian Community', 'Old City Hall (Guelph)', 'St. Michael's Cathedral Basilica (Toronto)', 'St. Paul's Presbyterian Church (Hamilton, Ontario)', 'The Milltown Hutterite Colony', 'The Blue Mountain Echo', 'The Blue Mountains Advertiser', 'The Blue Mountains Times', 'The Mountaineer (Katoomba)']",17.723031552,0.01,118990.0,120192.0,17723.031552,"[""Brock's Monument"" 'Old City Hall'
+ ""St Matthew's Church, Duddeston and Nechells"" ""St. Michael's Cathedral""
+ ""St. Paul's Presbyterian Church""]",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What buildings did William Thomas design?
+",17.54578944
+256," ['2003 World Snooker Championship', '2005 World Snooker Championship', '2006 World Snooker Championship', '2008 World Snooker Championship', '2010 World Snooker Championship', '2011 World Snooker Championship', '2012 World Snooker Championship', '2013 World Snooker Championship', '2014 World Snooker Championship', '",17.723031552,0.01,118990.0,120192.0,17723.031552,"['1982 World Snooker Championship' '2002 World Snooker Championship'
+ '2003 World Snooker Championship' '2004 World Snooker Championship'
+ '2005 World Snooker Championship']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Embassy sponsored what competition?
+",17.54578944
+256," ['Italian battleship Littorio', 'Italian battleship Vittorio Veneto', 'Italian aircraft carrier Cavour']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Italian aircraft carrier Cavour'
+ 'Italian aircraft carrier Giuseppe Garibaldi'
+ 'Italian battleship Littorio' 'Italian battleship Roma' 'Vittorio Veneto']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What marine vessel was based out of Taranto?
+",17.54578944
+256," ['Oru Pennum Randaanum', 'Mission Kashmir', 'Shikara', '2017 Internationaux de Tennis de Vendée – Singles', '2015 Città di Caltanissetta – Singles', '2015 King Cup Final', '2015 Wimbledon Championships – Boys\' Singles', '2015 Senior Open Championship', '2015 King Cup Final', '2015 Città di",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Broken Horses' 'Mission Kashmir' 'Murder at Monkey Hill' 'Parinda'
+ 'Shikara']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Vidhu Vinod Chopra directed which film?
+",17.54578944
+256," ['John Barton', 'George Kerr', 'Mick Walker', 'Gareth Roberts', 'Franklin County Courthouse (Nebraska)']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Anne Begg' 'Joseph Fairweather Lamb' 'Kevin Thomson' 'Kirstene Hair'
+ 'Robert Watson-Watt']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who was a graduate of Brechin High School?
+",17.54578944
+256," ['The Doctor (Doctor Who)', 'The Hound of Florence', 'Peter the Mariner', 'The Successor', 'The Shakespeare Code']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Adam and Eve' 'Column X' 'Peter the Mariner'
+ ""We'll Meet Again in the Heimat"" 'You Walk So Softly']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What's the name of the film produced by Reinhold Schünzel?
+",17.54578944
+256," ['Rang', 'The Perfect General', 'The Secret History of Vampires', 'The Blackheath Bulletin', 'The Hound of Florence', 'The Shaggy Dog', 'The Secret History of Vampires', 'The Perfect General', 'The Secret History of Vampires', 'The Blackheath Bulletin', 'The Hound of Florence', 'The Shaggy Dog', 'The Secret History of Vampires', 'The Perfect General', 'The Secret",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Ace of Diamond' 'Attack on Titan' 'Giant Killing' 'Monster Soul'
+ 'The Seven Deadly Sins']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Kodansha USA published what literary works?
+",17.54578944
+256," ['Win Tin', 'Aung San Suu Kyi', 'Myint Swe', 'Aung Min', 'San Yu']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Aung San Suu Kyi' 'Bamar' 'Min Aung Hlaing' 'Saw Wai' 'Win Tin'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who was a native speaker of Burmese?
+",17.54578944
+256," ['Anthony Lombard', 'Julian B. Smith', 'Oliver B. Smith', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', 'Solomon Levy', '",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Anthony Lombard' 'Joshua Hassan' 'Julio Alcantara' 'Olga Zammitt'
+ 'Solomon Levy']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: List all the Mayors of Gibraltar?
+",17.54578944
+256," ['Helen Jenkins', 'Gareth Kunkel', 'Garry Hastings', 'Gary Megson', 'Jerry Janes', 'Gareth Kunkel', 'Garry Hastings', 'Gary Megson', 'Jerry Janes', 'Gareth Kunkel', 'Garry Hastings', 'Gary Megson', 'Jerry Janes', 'Gareth Kunkel', 'Garry Hastings', 'Gary Megson', 'Jerry Janes', 'Gareth Kunkel',",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Aled Jones' 'Gethin Jones' 'Helen Carnell' 'John Stapleton'
+ 'Laura Tobin']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What journalist is featured on the show ITV breakfast?
+",17.54578944
+256," ['Moinul Hossain Chowdhury', 'Gulzar Uddin Ahmed', 'Rezzakul Haider Chowdhury', 'Shamsul Haque', 'Kanthirava Narasaraja II']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Gulzar Uddin Ahmed' 'Md Mahfuzur Rahman' 'Moinul Hossain Chowdhury'
+ 'Rezzakul Haider Chowdhury' 'Shamsul Haque']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: The Bangladesh Army military branch contains what person?
+",17.54578944
+256," ['Quilombos do Médio Ribeira Environmental Protection Area', 'Rio Turvo State Park', 'Barra do Turvo Sustainable Development Reserve', 'Morro dos Seis Lagos Biological Reserve', 'Pico da Neblina National Park']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Barreiro/Anhemas Sustainable Development Reserve'
+ 'Caverna do Diabo State Park'
+ 'Pinheirinhos Sustainable Development Reserve'
+ 'Quilombos de Barra do Turvo Sustainable Development Reserve'
+ 'Rio Turvo State Park']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What geographical feature is located in or around Barra do Turvo?
+",17.54578944
+256," ['The Texas Chainsaw Massacre (2003 film)', 'The Life Aquatic with Steve Zissou', 'The Doctor (Doctor Who)', 'The Texas Chainsaw Massacre (1974 film)', 'The Texas Chainsaw Massacre (2003 film)']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Conan the Barbarian' 'Exeter' 'Frankenstein' 'Friday the 13th'
+ 'The Texas Chainsaw Massacre']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What movies was Marcus Nispel the director of?
+",17.54578944
+256," ['2006 Australian Open – Women's Doubles', '2006 Ordina Open – Women's Doubles', '2015 King Cup Final', '2015 Città di Caltanissetta – Singles', '2017 Internationaux de Tennis de Vendée – Singles', '2018 Senior Open Championship', '2018 Kunming Open – Men's Singles', '2018 Città di",17.723031552,0.01,118990.0,120192.0,17723.031552,"[""2006 Australian Open – Women's Doubles""
+ ""2006 Ordina Open – Women's Doubles""
+ '2008 Internationaux de Strasbourg – doubles'
+ ""2008 Medibank International – Women's Doubles""
+ '2010 MPS Group Championships – doubles']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What tennis competition was won by Yan Zi?
+",17.54578944
+256," ['Black Panther', 'Okoye', 'M'Baku', 'Dora Milaje', 'The Face of Boe']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Black Panther' 'Dora Milaje' 'Man-Ape' 'Okoye' 'Storm'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who possesses citizenship from Wakanda?
+",17.54578944
+256," ['Twentysomething', 'Wazzup Wazzup', 'Children of the World', 'The Playing Favorites', 'Bee and PuppyCat']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Beached Az' 'Maximum Choppage' 'Review with Myles Barlow' 'Soul Mates'
+ 'Twentysomething']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which TV show originally aired on ABC2?
+",17.54578944
+256," ['The Perfect General', 'Conquered Kingdoms', 'Battles of Destiny', 'The Grandest Fleet', 'The Producers']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Battles of Destiny' 'Conquered Kingdoms' ""Solitaire's Journey""
+ 'The Grandest Fleet' 'The Perfect General']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Quantum Quality Productions published what piece of writing?
+",17.54578944
+256," ['Bernhard Langer', 'George Solti', 'Raymond Hood', 'William Thomas']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Bob Knuth' 'Henry Mazer' 'Philip Farkas' 'Ray Still' 'Theodore Thomas'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: The Chicago Symphony Orchestra employs whom?
+",17.54578944
+256," ['Fantastic Mr. Fox', 'The Life Aquatic with Steve Zissou', 'The Royal Tenenbaums', 'Rushmore', 'The Darjeeling Limited', 'The Grand Budapest Hotel', 'The Moon Knight', 'The Man Who Would Be King', 'The Fabelmans', 'The French Dispatch']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Fantastic Mr. Fox' 'Hotel Chevalier' 'Rushmore'
+ 'The Life Aquatic with Steve Zissou' 'The Royal Tenenbaums']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What movie was screenwritten by Wes Anderson?
+",17.54578944
+256," ['2010 U.S. Open Cup', '2014 King Cup Final', '2016 King Cup Final', '2018 King Cup Final', '2018 Senior Open Championship', '2019 Senior Open Championship', '2021 King Cup Final']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['1998 U.S. Open Cup Final' ""2004 CONCACAF Champions' Cup""
+ '2011 U.S. Open Cup Final' 'Brimstone Cup' 'MLS Cup 2000']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In which tournament was Chicago Fire FC a competitor?
+",17.54578944
+256," ['Elle Kari', 'Mathilukal', 'Mukund Lal Agrawal', 'Sudanese War', 'The Story About Ping', 'The Hound of Florence', 'The Perfect General', 'The Blackheath Bulletin', 'The Blue Mountains Times', 'The Mountaineer', 'The Producers', 'The Story About Ping', 'The Hound of Florence', 'The Perfect General', 'The Blackheath Bulletin', 'The Blue Mountains Times",17.723031552,0.01,118990.0,120192.0,17723.031552,"[""Children's Everywhere"" 'Elle Kari' 'Matti Lives in Finland'
+ 'Noy lives in Thailand' 'Sia lives on Kilimanjaro']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What's the name of a book containing art by Anna Riwkin-Brick?
+",17.54578944
+256," ['Big Creek Bridge', 'Dollar Lake', 'Wilson River Bridge', 'Ten Mile Creek Bridge', 'Conde McCullough Memorial Bridge']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Big Creek Bridge' 'Conde McCullough Memorial Bridge'
+ 'Ten Mile Creek Bridge' 'Wilson River Bridge' 'Yaquina Bay Bridge']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What did Conde Balcom McCullough design?
+",17.54578944
+256," ['Alfred Mann', 'Julius Bürger', 'Marc Silvestri', 'Walter Schreifels', 'Zdeněk Frolík']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Berthold Goldschmidt' 'Julius Bürger' 'Rudolf Kolisch' 'Walter Kaufmann'
+ 'Zdenka Ticharich']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who studied under Franz Schreker?
+",17.54578944
+256," ['Fayard Nicholas', 'Harold Nicholas', 'Marc Silvestri', 'Mick Walker', 'Walter Schreifels']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Ayodele Casel' 'Fayard Nicholas' 'Harold Nicholas' 'Maceo Anderson'
+ 'Nicholas Brothers']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who worked as a tap dancer?
+",17.54578944
+256," ['310 Squadron RAF', 'No. 310 Squadron RAF', 'No. 310 Squadron RAF', 'No. 310 Squadron RAF', 'No. 310 Squadron RAF', 'No. 310 Squadron RAF', 'No. 310 Squadron RAF', 'No. 310 Squadron RAF', 'No. 310 Squadron RAF', 'No. 310 Squadron RAF', 'No.",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Czechoslovakian Naval Forces' 'Josef Šnejdárek' 'Ján Nálepka'
+ 'No. 310 Squadron RAF' 'Radola Gajda']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What military unit served for Czechoslovakia?
+",17.54578944
+256," ['Benbecula Airport', 'Barrington Island Airport', 'Barra Airport', 'Island of Tiree Airport', 'Kilcommon Airport', 'Kirkwall Airport', 'Loughor Airport', 'Mudhol Airport', 'Plymouth Airport', 'Tiree Airport', 'Warrington Airport', 'Wattenscheid Airport', 'Worthing Airport', 'Yankee Airport', 'Zurich Airport']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Barra Airport' 'Benbecula Airport' 'Islay Airport' 'Kirkwall Airport'
+ 'Tiree Airport']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is operated by Highlands and Islands Airports?
+",17.54578944
+256," ['Estradiol benzoate', 'Estradiol cypionate', 'Estradiol valerate', 'Estradiol dipropionate', 'Estradiol benzoate/hydroxyprogesterone caproate', 'Estradiol valerate/hydroxyprogesterone caproate', 'Estradiol cypionate/hydroxyprogesterone caproate', 'Estradiol dipropionate/hydroxyprog",17.723031552,0.01,118990.0,120192.0,17723.031552,"['estradiol benzoate/estradiol valerate/hydroxyprogesterone caproate'
+ 'estradiol benzoate/hydroxyprogesterone caproate'
+ 'estradiol cypionate/hydroxyprogesterone caproate'
+ 'estradiol dipropionate/hydroxyprogesterone caproate'
+ 'estradiol valerate/hydroxyprogesterone caproate']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What are the chemical substances in hydroxyprogesterone caproate?
+",17.54578944
+256," ['Gary Megson', 'Jimmy Phillips', 'John Barton', 'John Ordronaux', 'John Paul Jones', 'John Barton', 'John Ordronaux', 'John Paul Jones', 'John Barton', 'John Ordronaux', 'John Paul Jones', 'John Barton', 'John Ordronaux', 'John Paul Jones', 'John Barton', 'John Ordronaux', 'John Paul Jones', 'John Barton', 'John Ordronaux', 'John Paul Jones', '",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Archie Knox' 'Gary Megson' 'Jimmy McIlroy' 'Jimmy Phillips'
+ 'Phil Hughes']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who was the coach of Bolton Wanders F.C.?
+",17.54578944
+256," ['John Burroughs', 'John Barton', 'John Ordronaux', 'John Burroughs', 'John Paul Jones', 'John Barton', 'John Burroughs', 'John Ordronaux', 'John Paul Jones', 'John Ordronaux', 'John Paul Jones', 'John Ordronaux', 'John Paul Jones', 'John Ordronaux', 'John Paul Jones', 'John Ordronaux', 'John Paul Jones', 'John Ordronaux', 'John",17.723031552,0.01,118990.0,120192.0,17723.031552,"['David Hawley' 'Dudley Saltonstall' 'John Burroughs Hopkins'
+ 'John Paul Jones' 'Richard Wickes']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who was a member of the Continental Navy?
+",17.54578944
+256," ['Three Tales of Horror', 'Snow White, Blood Red', 'Black Thorn, White Rose', 'Cthulhu's Reign', 'The Secret History of Vampires', 'The Best Horror of the Year', 'The Best Fantasy and Horror', 'The Best Horror of the Year', 'The Best Fantasy and Horror', 'The Best Horror of the Year', 'The Best Horror of the Year', 'The Best Horror of the Year', 'The Best Horror of the Year', '",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Another Round at the Spaceport Bar' ""Cthulhu's Reign""
+ 'Tales from the Spaceport Bar' 'That is Not Dead'
+ 'The Secret History of Vampires']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What anthology did Darrell Schweitzer edit?
+",17.54578944
+256," ['Henry Mazer', 'Henry Petzal', 'Louisa Courtauld', 'Martha Berry', 'William Petzal', 'William Ramsay', 'William Pether', 'William Thomas']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Ann-Sophie Qvarnström' 'Antonio Sancho de Benevento' 'Henry Petzal'
+ 'Louisa Courtauld' 'Tommy Singer']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who is employed in the silversmith industry?
+",17.54578944
+256," ['Jack Reacher', 'The Life Aquatic with Steve Zissou', 'The Texas Chainsaw Massacre', 'The Doctor', 'The Big O', 'The Lone Gunmen', 'The Producers', 'Young Frankenstein', 'The Timeless Children', 'The Secret History of Vampires', 'The Perfect General', 'The Blackheath Bulletin', 'The Hound of Florence', 'The Story About Ping', 'The Five Chinese Brothers', 'The Texas Chainsaw",17.723031552,0.01,118990.0,120192.0,17723.031552,"['American Assassin' 'Beastly' 'Five Feet Apart' 'Last Vegas'
+ 'Scary Stories to Tell in the Dark']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: CBS Films produced which movie?
+",17.54578944
+256," ['Steve Staggs', 'Kris Medlen', 'Markus Münch', 'Dustin Lynch', 'Sterling Sharp', 'Samuel Staggs', 'Joshua Hassan', 'Mark Abis', 'Markin Smith', 'Mark Staggs', 'Mark Staggs', 'Mark Staggs', 'Mark Staggs', 'Mark Staggs', 'Mark Staggs', 'Mark Staggs', 'Mark Staggs', '",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Braden Shewmake' 'Garry Hill' 'Kris Medlen' 'Shea Langeliers'
+ 'Sterling Sharp']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: The Atlanta Braves drafted whom?
+",17.54578944
+256," ['2011 U.S. Open Cup Final', '2019 Senior Open Championship', '2015 King Cup Final', '2016 King Cup Final', '2016 Saudi Super Cup']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['1939 Taça de Portugal Final' '1951 Taça de Portugal Final'
+ '1967 Taça de Portugal Final' '2012 Supertaça Cândido de Oliveira'
+ '2012 Taça de Portugal Final']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which competition final did the Associação Académica de Coimbra – O.A.F make?
+",17.54578944
+256," ['Cué-cué/Marabitanas Indigenous Territory', 'Alto Rio Negro Indigenous Territory', 'Bonny Lakes', 'Dollar Lake', 'Pico da Neblina National Park', 'São Gabriel da Cachoeira']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Alto Rio Negro Indigenous Territory' 'Balaio Indigenous Territory'
+ 'Cué-cué/Marabitanas Indigenous Territory'
+ 'Morro dos Seis Lagos Biological Reserve' 'Pico da Neblina National Park']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which location is related to São Gabriel da Cachoeira?
+",17.54578944
+256," ['ABM', 'Castle Wolfenstein', 'Full Screen Mario', 'Maximum Choppage', 'Wazzup Wazzup']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['ABM (video game)' 'Beyond Castle Wolfenstein' 'Castle Wolfenstein'
+ 'Firebug' 'Three Mile Island']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What did Muse Software publish?
+",17.54578944
+256," ['Jameson Irish Whiskey', 'Paddy Whiskey', 'Redbreast (whiskey)']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Cork Dry Gin' 'Green Spot' 'Jameson' 'Paddy Whiskey' 'Redbreast'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What drink is manfactured by an Irish distiller?
+",17.54578944
+256," ['Mad Mod', 'Okoye', 'Ocean Master', 'The Dora Milaje', 'Zdeněk Frolík']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Black Manta' 'Mad Mod' 'Mal Duncan' 'Mera' 'Ocean Master'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Nick Cardy created which fictional character?
+",17.54578944
+256," ['John Barton', 'Larry Wallis', 'Paul Smith', 'Tommy Singer', 'William Fulton']",17.723031552,0.01,118990.0,120192.0,17723.031552,['Japhet Sery' 'Paul Smith' 'Phil Holder' 'Ron Noades' 'Terry Bullivant'],qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who works for Brentford football club?
+",17.54578944
+256," ['Super Bowl XXIII', 'Super Bowl XVI', 'Bengals–Browns rivalry', 'Bengals–Steelers rivalry', 'Bengals–Ravens rivalry', 'Bengals–Ravens rivalry', 'Bengals–Ravens rivalry', 'Bengals–Ravens rivalry', 'Bengals–Ravens rivalry', 'Bengals–Ravens rivalry']",17.723031552,0.01,118990.0,120192.0,17723.031552,"['Bengals–Browns rivalry' 'Bengals–Ravens rivalry'
+ 'Bengals–Steelers rivalry' 'Super Bowl XVI' 'Super Bowl XXIII']",qampari_128k,test,17545.78944,147.456,Final Answer: ,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What sporting event featured the Cincinnati Bengals as a competitor?
+",17.54578944

@@ -7,6 +7,7 @@ from evaluate import EvaluationConfig, EvaluationRunner, _load_yaml_config
 
 
 LOFT_32K_BUDGETS = [
+    (256.0, "MB"),
     (512.0, "MB"),
     (1.0, "GB"),
     (2.0, "GB"),
@@ -48,7 +49,7 @@ def main() -> None:
         tasks=assigned_tasks,
         memory_budgets=LOFT_32K_BUDGETS,
         baseline_compression_ratio=0.01,
-        include_baseline=False,
+        include_baseline=True,
     )
 
 

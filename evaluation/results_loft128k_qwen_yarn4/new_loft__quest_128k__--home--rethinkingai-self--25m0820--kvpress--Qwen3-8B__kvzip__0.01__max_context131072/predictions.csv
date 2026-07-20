@@ -1,0 +1,463 @@
+max_new_tokens,task,retained_kv_memory_mb,retained_context_tokens,predicted_answer,uncompressed_kv_memory_gb,uncompressed_kv_memory_mb,question,kv_memory_per_token_kb,context_tokens,answers,compression_ratio,answer_prefix,split,retained_kv_memory_gb
+256,quest_128k,17222.418432,116797.0," ['The Village of No Return', 'The Invincible Constable', 'The Adventures of Jinbao']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Capua Films
+",147.456,117977.0,['Spartacus (film)'],0.01,Final Answer: ,dev,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Adventures of Peregrine Pickle', 'Moondru Deivangal', 'Roja', 'The Jungle Bunch', 'The Village of No Return', 'The Midnight Zoo', 'The Violent Bear It Away', 'The God that Failed', 'The Lives of Animals', 'The Violent Bear It Away', 'The God that Failed', 'The Lives of Animals', 'The Violent Bear It Away', 'The God that Failed', 'The Lives of Animals",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1990s Indian and folklore romance films.
+",147.456,117977.0,['Laal Paree' 'Roja (film)' 'Sahasa Veerudu Sagara Kanya'],0.01,Final Answer: ,dev,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Jungle Bunch (film)', 'The Last Winter', 'The Violent Bear It Away', 'The Veteran (2011 film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films shot in Gauteng or New Zealand action thrillers or Western films from South Africa
+",147.456,117977.0,['6 Days (2017 film)' 'Glory Glory (2000 film)' 'The Jackals'],0.01,Final Answer: ,dev,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Scarlet Letter', 'The Adventures of Peregrine Pickle', 'The Wandering Hill', 'The History of Sir Charles Grandison', 'The Violent Bear It Away', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The History of Sir Charles Grandison', 'The Violent Bear It Away', 'The Wandering Hill', 'The Scarlet Letter', 'The God that Failed', 'The Lives of Animals', 'The History of",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1860 novels or 1860 American novels or Ivan Turgenev novellas
+",147.456,117977.0,['Max Havelaar' 'The Marble Faun' 'The Mill on the Floss'],0.01,Final Answer: ,dev,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Grim Prairie Tales', 'The Adventures of Peregrine Pickle', 'The Violent Bear It Away', 'The Two Captains', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Horror anthology films about time travel that were shot in the US
+",147.456,117977.0,['Southbound (2015 film)' 'Twilight Zone: The Movie'],0.01,Final Answer: ,dev,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Adventures of Peregrine Pickle', 'The Midnight Zoo', 'The Wandering Hill', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based on European myths and legends and young adult literature
+",147.456,117977.0,['Percy Jackson & the Olympians: The Lightning Thief'],0.01,Final Answer: ,dev,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Last Winter', 'The Village of No Return', 'The Abandoned', 'The Wandering Hill', 'The Violent Bear It Away', 'The Last Winter (film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Supernatural horror films in the Artic
+",147.456,117977.0,"['Kajutaijuq: The Spirit That Comes' 'The Abandoned (2006 film)'
+ 'The Last Winter (2006 film)']",0.01,Final Answer: ,dev,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Jungle Bunch (film)', 'District 9', 'The Last Chance', 'The Portage to San Cristobal of A.H.']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Northern Mariana Islands set films
+",147.456,117977.0,['Anatahan (film)' 'Oba: The Last Samurai'],0.01,Final Answer: ,dev,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The God that Failed', 'The History of Sir Charles Grandison', 'The Making of the Representative for Planet 8', 'The Violent Bear It Away', 'The Veteran']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1980 books that are non fiction and, about British thriller.
+",147.456,117977.0,['Man on Fire (Quinnell novel)' 'Sweet Adelaide'],0.01,Final Answer: ,dev,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Marble Faun', 'The Girl on the Stairs', 'The Violent Bear It Away', 'The Wandering Hill', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away',",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Australian novels from 1991
+",147.456,117977.0,['Cloudstreet' 'Mandragora (novel)' 'Our Sunshine'],0.01,Final Answer: ,dev,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Scarlet Letter', 'The Wandering Hill', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels about families set in Boston and New England.
+",147.456,117977.0,['A Case of Need'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The 3 Mistakes of My Life', 'One Night @ the Call Center', 'Five Point Someone']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2009 Indian, or by Chetan Bhagat, novels
+",147.456,117977.0,"['Five Point Someone' 'One Night @ the Call Center'
+ 'The 3 Mistakes of My Life']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Veteran (2011 film)', 'The Last Chance (1945 film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are some Hungarian Revolution of 1956 or Austrian war films
+",147.456,117977.0,['Duel with Death' 'Fly Away Home (2016 film)' 'Sunshine (1999 film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Village of No Return', 'Quest for a Heart', 'Hotel Clausewitz', 'The Midnight Zoo', 'The Violent Bear It Away', 'The Making of the Representative for Planet 8', 'The God that Failed', 'The Lives of Animals', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Finnish television and animated films
+",147.456,117977.0,"['Moomins and the Comet Chase' 'Quest for a Heart'
+ 'Santa Claus and the Magic Drum']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Wandering Hill', 'The King and the Clown', 'The Lives of Animals', 'The Midnight Zoo', 'The Violent Bear It Away', 'The Lives of Animals', 'The Violent Bear It Away', 'The Midnight Zoo', 'The Lives of Animals', 'The Violent Bear It Away', 'The Midnight Zoo', 'The Lives of Animals', 'The Violent Bear It Away', 'The Midnight Zoo', 'The Lives of Animals', 'The Violent Bear",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Hispanic and Latino American novels set anywhere besides North America
+",147.456,117977.0,['At Night We Walk in Circles' 'La reina de América' 'Lost City Radio'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Violent Bear It Away', 'The Deadly Game']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Swiss Films about stalking
+",147.456,117977.0,['One Way Trip 3D'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Magic Snowflake', 'Hotel Transylvania', 'Blinky Bill the Movie', 'The Jungle Bunch', 'Moomins and the Comet Chase', 'The Adventures of Peregrine Pickle', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', '",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2010s supernatural children's animated films
+",147.456,117977.0,"['Lego Scooby-Doo! Blowout Beach Bash'
+ 'Scooby-Doo! and the Curse of the 13th Ghost' 'The Magic Snowflake']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Wandering Hill', 'The Violent Bear It Away', 'The Drowning Girl']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1971 British thriller novels
+",147.456,117977.0,['Firecrest (novel)' 'Lament for Leto'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Crisis of Conscience', 'The God that Failed', 'The Lives of Animals', 'The Scepter of Judah']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Critical Jehovah's Witness books.
+",147.456,117977.0,['Crisis of Conscience'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0, ['The History of Sir Charles Grandison'],17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are some Novels set in Jiangsu, 1750s, or Novels by Charlotte Lennox?
+",147.456,117977.0,"['Demi-Gods and Semi-Devils' 'The Adventures of Peregrine Pickle'
+ 'The History of Sir Charles Grandison']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Chain of Attack', 'The Final Nexus']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Gene DeWeese novels
+",147.456,117977.0,['Chain of Attack' 'The Final Nexus' 'The Peacekeepers'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Veteran (2011 film)', 'The God that Failed', 'The Lives of Animals', 'The Jungle Bunch (film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1980s political films about science and the United States Armed Forces
+",147.456,117977.0,['Best Defense' 'Red Dawn'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Wandering Hill', 'The Jungle Bunch', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2010s speculative fiction novels about Washington (state) and the United States.
+",147.456,117977.0,['Seveneves'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Patay na si Hesus', 'Mac & Devin Go to High School', 'Alega Gang: Public Enemy No.1 of Cebu']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Cebu films
+",147.456,117977.0,"['Alega Gang: Public Enemy No.1 of Cebu' 'Lapu-Lapu (2002 film)'
+ 'Patay na si Hesus']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The God that Failed', 'The Violent Bear It Away', 'The Making of the Representative for Planet 8', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Viol",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Crime novels set in Japan
+",147.456,117977.0,['All She Was Worth' 'Crossfire (novel)' 'Out (novel)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Copper', 'The Violent Bear It Away', 'The History of Sir Charles Grandison', 'The Making of the Representative for Planet 8', 'The Violent Bear It Away', 'The History of Sir Charles Grandison', 'The Making of the Representative for Planet 8']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1990's historical films about security and surveillance that are set in England
+",147.456,117977.0,['Elizabeth (film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Scarlet Letter', 'The History of Sir Charles Grandison', 'The God that Failed', 'The Lives of Animals', 'The Picturegoers', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1890s historical books and novels published by Harper & Brothers
+",147.456,117977.0,['Personal Recollections of Joan of Arc'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Flora & Ulysses', 'The Veteran', 'The Jungle Bunch', 'Night Raiders', 'The Legend of the White Snake', 'The Last Winter', 'The Village of No Return', 'The King and the Clown', 'The God that Failed', 'The Violent Bear It Away', 'The Last Winter', 'The Village of No Return', 'The King and the Clown', 'The God that Failed', 'The Violent Bear It Away', 'The Last",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2021 films about action and comedy.
+",147.456,117977.0,"[""Hitman's Wife's Bodyguard"" 'Red Notice (film)' ""The King's Man""]",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Adventures of Peregrine Pickle', 'The Wandering Hill', 'The Violent Bear It Away']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: History/Adventure books about France from 1933
+",147.456,117977.0,['The Way of the Scarlet Pimpernel'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Batman & Robin', 'The Assassination of Richard Nixon', 'The History of Sir Charles Grandison', 'The Final Nexus', 'The King and the Clown', 'The Violent Bear It Away', 'The Peacekeepers', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based on works by Bill Finger that are any genre except Animated action films
+",147.456,117977.0,['Batman & Bill' 'Batman & Robin (film)' 'Batman (serial)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Batman: The Killing Joke (film)', 'The League of Extraordinary Gentlemen (film)', 'The Magician\'s Nephew', 'Pérák: The Shadow over Prague']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based on works by Alan Moore or Wildstorm titles, or that are Czech superhero films
+",147.456,117977.0,"['Batman: The Killing Joke (film)' 'Pérák: The Shadow over Prague'
+ 'The League of Extraordinary Gentlemen (film)']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Fireworker's Daughter', 'The Violent Bear It Away', 'The Wandering Hill']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Crime novels that are both American crime novels and 1932 novels
+",147.456,117977.0,['Poison in Jest' 'The Waxworks Murder'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Scarlet Letter', 'To Live', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', '",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Debut novels released in 1953.
+",147.456,117977.0,"['Battle Cry (Uris novel)' 'Go Tell It on the Mountain (novel)'
+ 'Junkie (novel)']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Assassination of Richard Nixon', 'The Village of No Return', 'P4W: Prison for Women', 'Hitman's Wife's Bodyguard', 'The God that Failed', 'The Final Nexus', 'The History of Sir Charles Grandison', 'The Violent Bear It Away', 'The Wandering Hill', 'The Public Image', 'The God that Failed', 'The History of Sir Charles Grandison', 'The Violent Bear It Away', 'The Wandering Hill",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Penal system documentary films that are not about law enforcement in the United States
+",147.456,117977.0,['P4W: Prison for Women' 'The Phantom (2021 film)' 'Waseskun'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', '",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1984 Fantasy novels about the United Kingdom
+",147.456,117977.0,['Mythago Wood' 'Nights at the Circus'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The History of Sir Charles Grandison', 'The History of Sir Charles Grandison']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels published by Hutchinson about film director and producers
+",147.456,117977.0,['Laughing Gas (novel)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Silent Patient', 'The Life of Verdi', 'The God that Failed', 'The Violent Bear It Away', 'The Copper', 'The Secret Man', 'The Lives of Animals', 'The God that Failed', 'The Violent Bear It Away', 'The Copper', 'The Secret Man', 'The Lives of Animals']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: American medical novels set in the 1940's
+",147.456,117977.0,['Hannibal Rising' 'Jewel (novel)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Veteran (2011 film)', 'P4W: Prison for Women', 'The Public Image']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Canadian documentaries about homelessness and LGBT
+",147.456,117977.0,['Ryan (film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Life of Verdi (miniseries)', 'The Violent Bear It Away']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films set in Italy that are 1982 television films
+",147.456,117977.0,"['Cavalleria rusticana (1982 film)' 'The Deadly Game (1982 film)'
+ 'The Life of Verdi (miniseries)']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Jungle Bunch (film)', 'The Lighthouse at the End of the World', 'The Sun (film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Animated non-children films set in New York (state)
+",147.456,117977.0,['Hulk: Where Monsters Dwell' 'Resident Evil: Vendetta'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Wandering Hill', 'Alega Gang: Public Enemy No.1 of Cebu', 'The Village of No Return', 'The Invincible Constable', 'The Two Captains', 'The Violent Bear It Away', 'The Two Who Stole the Moon', 'The Secret Man', 'The Last Winter', 'The Making of the Representative for Planet 8', 'The Violent Bear It Away', 'The Two Captains', 'The Secret Man', '",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: mystery drama films that are Chinese
+",147.456,117977.0,['A Lingering Face' 'Looking Up (film)' 'Ni Jing: Thou Shalt Not Steal'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Wandering Hill', 'Self Defense', 'The Girl on the Stairs', 'The Violent Bear It Away', 'The Two Captains', 'The Drowning Girl', 'The Last Chance', 'The Public Image', 'The Violent Bear It Away', 'The Two Captains', 'The Drowning Girl', 'The Last Chance', 'The Public Image', 'The Violent Bear It Away', 'The Two Captains', 'The Drowning Girl', 'The",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: exploitation films from the 1940s
+",147.456,117977.0,"['Child Bride' 'I Accuse My Parents' ""The Devil's Sleep""]",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Cloudstreet', 'Time and the Wind', 'The Jungle Bunch', 'The Lives of Animals', 'The Making of the Representative for Planet 8', 'The Portage to San Cristobal of A.H.', 'The Violent Bear It Away', 'The Wandering Hill']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Erico Verissimo works adapted into films
+",147.456,117977.0,['Time and the Wind'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Adventures of Peregrine Pickle', 'Moondru Deivangal', 'Circe', 'The Drowning Girl', 'The Violent Bear It Away', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Contemporary fantasy romance novels, that aren't Urban fantasy
+",147.456,117977.0,['Midnight Sun (Meyer novel)' 'New Moon (novel)' 'Twilight (Meyer novel)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0, ['The Jungle Bunch (film)'],17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Young adult novels set in Oceania that are not Australian or for children
+",147.456,117977.0,['Boy at War' 'The Changeover' 'The Firebird Rocket'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Drowning Girl', 'The Veteran', 'The Wandering Hill']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2012 comedy films that are also about social issues in the United States.
+",147.456,117977.0,['Killing Them Softly' 'Mac & Devin Go to High School'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Blind Owl', 'The Wandering Hill', 'The Bewitched']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Iranian novels or books by Sadegh Hedayat
+",147.456,117977.0,['My Uncle Napoleon' 'Savushun' 'The Blind Owl'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Legend of the Jungle', 'The Portage to San Cristobal of A.H.', 'The Making of the Representative for Planet 8', 'The Jungle Bunch (film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Propaganda films that are epic and based on actual events.
+",147.456,117977.0,['Doctor Zhivago (film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Scarlet Letter', 'The Violent Bear It Away', 'The Violent Bear It Away']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1960 Catholic fiction books
+",147.456,117977.0,['The Picturegoers' 'The Violent Bear It Away'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Making of the Representative for Planet 8', 'The Life of Verdi', 'The God that Failed', 'The Scepter of Judah', 'The Final Nexus', 'The History of Sir Charles Grandison', 'The League of Extraordinary Gentlemen', 'The Violent Bear It Away', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed',",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: NBC network original films about ideologies that are set in outer space.
+",147.456,117977.0,['Undercover with the KKK'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Copper', 'The Violent Bear It Away', 'The Two Captains', 'The Girl on the Stairs', 'The Violent Bear It Away', 'The Two Captains', 'The Girl on the Stairs', 'The Violent Bear It Away', 'The Two Captains', 'The Girl on the Stairs']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1930 non american crime films
+",147.456,117977.0,"['An Obvious Situation' ""That Night's Wife"" 'The Copper (1930 film)']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Life of Verdi (miniseries)', 'Ace Attorney (film)', 'The God that Failed', 'The Violent Bear It Away', 'The Jungle Bunch (film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2010s legal mystery drama films
+",147.456,117977.0,['Ace Attorney (film)' 'True Story (film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Bewitched', 'The Midnight Zoo', 'The Mystery of the Yellow Room', 'The Lives of Animals', 'The God that Failed', 'The Scarlet Letter', 'The History of Sir Charles Grandison', 'The Violent Bear It Away', 'The God that Failed', 'The History of Sir Charles Grandison', 'The Violent Bear It Away', 'The God that Failed', 'The History of Sir Charles Grandison', 'The Violent Bear It Away', 'The",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: French novels from 1913 or 1922, or that are mysteries
+",147.456,117977.0,"['Le Grand Meaulnes' 'The Mysteries of Paris'
+ 'The Mystery of the Yellow Room']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Last Winter', 'The Wandering Hill', 'The Village of No Return', 'The King and the Clown', 'The Violent Bear It Away', 'The Two Captains', 'The King and the Clown', 'The Violent Bear It Away', 'The Two Captains', 'The King and the Clown', 'The Violent Bear It Away', 'The Two Captains']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films set in 1831 or 1809
+",147.456,117977.0,['Casta Diva (1935 film)' 'The Fire Devil' 'Under Capricorn'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The King and the Clown', 'The Veteran', 'First Invasion: The War of 1812', 'The War of 1812']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Andrew Jackson films or films about the War or 1812
+",147.456,117977.0,"['First Invasion: The War of 1812' 'Last of the Buccaneers'
+ 'Mohawk (2017 film)']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The 13th Warrior', 'The 1972 Winter Olympics', 'The Veteran (2011 film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films about sportspeople set in 1972
+",147.456,117977.0,['Going Vertical' 'Prefontaine (film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Summer of Night', 'A Winter Haunting', 'Fires of Eden']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Dan Simmons novels
+",147.456,117977.0,['Ilium (novel)' 'Summer of Night' 'The Fall of Hyperion (novel)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Violent Bear It Away', 'The Two Captains', 'The Violent Bear It Away', 'The Two Captains']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1936 Alternate history novels and books based in Asia
+",147.456,117977.0,['We the Living'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Babes in Toyland (1934 film)', 'Babes in Toyland (1994 film)', 'The Village of No Return', 'The God that Failed', 'The Violent Bear It Away', 'The Wandering Hill', 'The Girl on the Stairs', 'The Midnight Zoo', 'The Violent Bear It Away', 'The Wandering Hill', 'The Girl on the Stairs', 'The Midnight Zoo', 'The Violent Bear",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films about sisters shot in Paris.
+",147.456,117977.0,['Le Divorce' 'Peppermint Soda' 'Two English Girls'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['A.P.E.X.', 'The Violent Bear It Away', 'The Changeover', 'The Final Nexus', 'The History of Sir Charles Grandison', 'The Wandering Hill', 'The Secret Man', 'The Wounds of the World', 'The God that Failed', 'The Wounds of the World', 'The God that Failed', 'The Wounds of the World', 'The God that Failed', 'The Wounds of the World', 'The God that Failed',",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Non American independent films that are from 1994
+",147.456,117977.0,['Aftermath (1994 film)' 'Amoklauf' 'Aya: Imagined Autobiography'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Violent Bear It Away', 'The Violent Bear It Away']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Books about social psychology set in the Middle Ages that are Hachette Book Group books
+",147.456,117977.0,['Circe (novel)' 'Julian (novel)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Magician's Nephew', 'The Midnight Zoo', 'The Violent Bear It Away', 'The Wandering Hill', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away',",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: children's books set in subterranea(such as the Chronicles of Narnia) or Isekai novels and light novels
+",147.456,117977.0,"[""Alice's Adventures in Wonderland"" 'Prince Caspian'
+ ""The Magician's Nephew""]",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0, ['A.P.E.X.'],17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films set in the year 2073
+",147.456,117977.0,['A.P.E.X.'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Babes in Toyland (1934 film)', 'The Jungle Bunch (film)', 'Moomins and the Comet Chase', 'The Midnight Zoo', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away',",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Stop-motion animated paranormal musical comedy films
+",147.456,117977.0,['Babes in Toyland (1934 film)' 'Mad Monster Party?'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Wandering Hill', 'The Midnight Zoo', 'The Violent Bear It Away']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Australian novels made into tv shows, or 1911 debut novels, or novels by Joan Lindsay.
+",147.456,117977.0,['Come in Spinner' 'The Thorn Birds' 'Zuleika Dobson'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Scarlet Letter', 'The Wandering Hill', 'The Violent Bear It Away']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: French novels made in 1905.
+",147.456,117977.0,['The Lighthouse at the End of the World'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The God that Failed', 'The Veteran (2011 film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2004 films that are set in 1974
+",147.456,117977.0,"['Anchorman: The Legend of Ron Burgundy'
+ 'The Assassination of Richard Nixon']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Resident Evil: Vendetta', 'CJ7', 'The Jungle Bunch', 'The God that Failed', 'The Violent Bear It Away', 'The Veteran', 'The Making of the Representative for Planet 8', 'The Last Winter', 'The Formula', 'The Magician's Nephew', 'The Firebird Rocket', 'The League of Extraordinary Gentlemen', 'The Wandering Hill', 'The Violent Bear It Away', 'The Veteran', '",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: sci-fi films from 2008
+",147.456,117977.0,"['CJ7' ""God's Puzzle (film)"" 'Stargate: The Ark of Truth']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['From Dusk Till Dawn 3: The Hangman's Daughter', 'Demoni', 'The Jungle Bunch', 'The Violent Bear It Away', 'The God that Failed', 'The Adventures of Peregrine Pickle', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Bulgarian animated films or Polish or Belgian animated fantasy films
+",147.456,117977.0,['Demoni (2012 film)' 'Dragon Rider (film)' 'Felix the Cat: The Movie'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Lives of Animals', 'The God that Failed', 'The Scarlet Letter', 'The Violent Bear It Away', 'The Lives of Animals', 'The God that Failed', 'The Violent Bear It Away', 'The Scarlet Letter', 'The Violent Bear It Away', 'The Lives of Animals', 'The God that Failed', 'The Violent Bear It Away', 'The Scarlet Letter']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels adapted into radio programs that are set during WWI
+",147.456,117977.0,['All Quiet on the Western Front'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Adventures of Peregrine Pickle', 'Alega Gang: Public Enemy No.1 of Cebu', 'Little Otik', 'The Midnight Zoo', 'The Wandering Hill', 'The Two Captains', 'The Violent Bear It Away', 'The Wandering Hill', 'The Midnight Zoo', 'The Two Captains', 'The Violent Bear It Away', 'The Wandering Hill', 'The Midnight Zoo', 'The Two Captains', 'The",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Horror drama films from the 2000s or Karel Jaromír Erben films
+",147.456,117977.0,['Little Otik' 'Nails (2003 film)' 'Princess Goldilocks'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Guardians of the Galaxy Vol. 3', 'Spider-Man: Across the Spider-Verse', 'The Jungle Bunch']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2023 action comedy, 2020s superhero comedy, or Guardians of the Galaxy films
+",147.456,117977.0,"['Flora & Ulysses (film)' 'Guardians of the Galaxy Vol. 3'
+ 'Spider-Man: Across the Spider-Verse']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Durgeshnandini', 'The King and the Clown', 'The Story Without a Name (novel)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Bengali written Indian historical novels
+",147.456,117977.0,['Anandamath' 'Durgeshnandini' 'Those Days (novel)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0, [],17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1970s television films set in Palestine about terrorism
+",147.456,117977.0,['Victory at Entebbe'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Batman & Robin', 'Self Defense', 'The Last Winter', 'The Killing Joke', 'The Village of No Return', 'The Two Captains', 'The Violent Bear It Away', 'The Two Who Stole the Moon', 'The Secret Man', 'The History of Sir Charles Grandison', 'The Adventures of Peregrine Pickle', 'The Final Nexus', 'The Abandoned', 'The Wandering Hill', 'The Peacekeepers', 'The Two Captains",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1990s American buddy action, but not comedy, films
+",147.456,117977.0,['Die Hard with a Vengeance' 'Fled' 'Point Break'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The God that Failed', 'The Scepter of Judah', 'The Lives of Animals', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: fictional WWII novels about antisemitisim.
+",147.456,117977.0,['The Boys from Brazil (novel)' 'The Portage to San Cristobal of A.H.'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Scarlet Letter', 'The Making of the Representative for Planet 8', 'The Lives of Animals', 'The God that Failed', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals',",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: English books published by Farrar Straus and Giroux
+",147.456,117977.0,['Hild (novel)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Babes in Toyland (1934 film)', 'Babes in Toyland (1934 film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films shot in Europe that are Austrian drama films and English language French films.
+",147.456,117977.0,['Taking Sides (film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Blind Owl', 'The Wandering Hill', 'The Changeover', 'The Final Nexus', 'The History of Sir Charles Grandison', 'The Scarlet Letter', 'The Two Who Stole the Moon', 'The Violent Bear It Away', 'The Wandering Hill', 'The Year of the Flood']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2013 novels about multiple time paths
+",147.456,117977.0,['Life After Life (novel)' 'To Be or Not to Be (book)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The God that Failed', 'The Last Winter', 'The Secret Man', 'The Violent Bear It Away', 'The Veteran']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels set in Russia and the Arctic about war and conflict
+",147.456,117977.0,['The Samovar Girl' 'The Two Captains'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Making of the Representative for Planet 8', 'The Violent Bear It Away', 'The Wandering Hill']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: English-language novels that are 1985 speculative fiction but not American 1985 novels
+",147.456,117977.0,['Illywhacker' 'Star Healer' 'The Hounds of the Morrigan'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Village of No Return', 'The Invincible Constable', 'The Adventures of Jinbao']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Historical Chinese martial arts films about terrorism
+",147.456,117977.0,"[""A Queen's Ransom""]",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Midnight Zoo', 'The Violent Bear It Away', 'The Wandering Hill', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', '",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Iranian and Asian short films from 2010's
+",147.456,117977.0,['Game Over (2013 film)' 'The Poot' 'Two & Two (2011 film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Adventures of Peregrine Pickle', 'The Wandering Hill', 'The Violent Bear It Away', 'The King and the Clown', 'The God that Failed', 'The Lives of Animals', 'The Violent Bear It Away', 'The God that Failed', 'The Lives of Animals', 'The Violent Bear It Away', 'The God that Failed', 'The Lives of Animals', 'The Violent Bear It Away', 'The God that Failed', 'The Lives",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1968 art novels
+",147.456,117977.0,['It Happened in Boston?' 'The Public Image'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['To Live', 'The God that Failed', 'The Lives of Animals', 'The Veteran', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: books about socialism and the french revolution
+",147.456,117977.0,['To the Finland Station'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Babes in Toyland (1934 film)', 'The Adventures of Peregrine Pickle', 'The Violent Bear It Away', 'The King and the Clown', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: American Science fiction children's comedy films set in castles.
+",147.456,117977.0,['Hotel Transylvania (film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Chronicle of Malaysia', 'The Lives of Animals', 'The Scepter of Judah', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', '",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: History books about Malaysia or the Qing dynasty or about South Korea
+",147.456,117977.0,"['Chronicle of Malaysia' 'Korea: A Walk Through the Land of Miracles'
+ 'Treason by the Book']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Wandering Hill', 'The Violent Bear It Away', 'Grim Prairie Tales', 'The Last Winter', 'The Two Captains', 'The Final Nexus', 'The Adventures of Peregrine Pickle', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Supernatural western horror films from the 1990's
+",147.456,117977.0,"[""From Dusk Till Dawn 3: The Hangman's Daughter"" 'Grim Prairie Tales'
+ 'Mad at the Moon']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The God that Failed', 'Red Diapers: Growing Up in the Communist Left', 'The Veteran (2011 film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Non History Books about communism
+",147.456,117977.0,"['Red Diapers: Growing Up in the Communist Left'
+ 'Ten Days That Shook the World' 'The God that Failed']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Wandering Hill', 'The Lives of Animals', 'To Live', 'The Killing Joke', 'The Scarlet Letter', 'The Adventures of Peregrine Pickle', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Chinese novels adapted into plays or Yu Hua novels
+",147.456,117977.0,['Brothers (Yu novel)' 'Chronicle of a Blood Merchant' 'To Live (novel)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The History of Sir Charles Grandison', 'The Ferrara Bible', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1534 books or 1553 books
+",147.456,117977.0,['Ferrara Bible' 'Observations (Belon book)' 'Scepter of Judah'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Aerials', 'The Jungle Bunch', 'The Glassworker', 'The Veteran', 'The Jungle Bunch (film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are some Emirati multilingual or Pakistani animated films
+",147.456,117977.0,"['3 Bahadur: The Revenge of Baba Balaam' 'Aerials (film)'
+ 'The Glassworker']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Girl on the Stairs', 'The Violent Bear It Away', 'The Bullet Trick']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: novels written by by Louise Welsh
+",147.456,117977.0,['Tamburlaine Must Die' 'The Girl on the Stairs'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0, ['The Last Chance (1945 film)'],17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: WWII films that are Swiss
+",147.456,117977.0,['The Last Chance (1945 film)' 'The Sun (film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Scarlet Letter', 'The Lives of Animals', 'The Jungle Bunch', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals', 'The Lives of Animals",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1898 English-language books that are also about adventure
+",147.456,117977.0,['In the Sargasso Sea' 'Rupert of Hentzau'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Wandering Hill', 'The Village of No Return', 'The God that Failed', 'The Violent Bear It Away', 'The Last Winter', 'The King and the Clown', 'The Violent Bear It Away', 'The God that Failed', 'The Wandering Hill', 'The Village of No Return', 'The King and the Clown', 'The Violent Bear It Away', 'The Last Winter', 'The King and the Clown', 'The Violent Bear It Away",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Dutch coming-of-age or Dutch erotic or erotic thriller films
+",147.456,117977.0,['Jongens'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Village of No Return', 'The Invincible Constable', 'The Adventures of Jinbao']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Non-supernatural fantasy films about televised people
+",147.456,117977.0,['Being John Malkovich' 'Bubba Ho-Tep' 'Millennium Actress'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', 'The History of Sir Charles Grandison', '",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1988 fiction environmental books
+",147.456,117977.0,"[""The Gate to Women's Country"" 'Zodiac (novel)']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Two Who Stole the Moon', 'Demoni', 'The Adventures of Peregrine Pickle', 'The Wandering Hill', 'The Violent Bear It Away', 'The Jungle Bunch']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are  some Bulgarian animated, or Polish children's films
+",147.456,117977.0,"['Demoni (2012 film)' 'The Two Who Stole the Moon'
+ 'The Young Magician (film)']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Scarlet Letter', 'The Wandering Hill', 'The Lives of Animals']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1850s social psychology books
+",147.456,117977.0,['Madame Bovary' 'The Scarlet Letter'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Violent Bear It Away', 'The Two Captains', 'The God that Failed', 'The Violent Bear It Away', 'The Two Captains', 'The God that Failed', 'The Violent Bear It Away', 'The Two Captains', 'The God that Failed', 'The Violent Bear It Away', 'The Two Captains', 'The God that Failed', 'The Violent Bear It Away', 'The Two Captains', 'The God that Failed',",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: German spy comedy films, or 2000s comedy-drama mystery films.
+",147.456,117977.0,['Hotel Clausewitz' 'Scorpions and Miniskirts' 'Tunis Top Secret'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Scarlet Letter', 'The Wandering Hill', 'The Violent Bear It Away']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: American LGBT novels set in New England and that are also Speculative fiction novels
+",147.456,117977.0,['The Drowning Girl'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Deadly Game (1982 film)', 'Home Sweet Homicide', 'Self Defense (1983 film)']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based of Craig Rices' work
+",147.456,117977.0,"['Home Sweet Homicide' ""Mrs. O'Malley and Mr. Malone""
+ 'The Underworld Story']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Violent Bear It Away', 'The Last Winter', 'The God that Failed', 'The Violent Bear It Away', 'The Last Winter', 'The God that Failed']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: New Zealand science fiction thriller films, films shot in Gauteng, or New Zealand post-apocalyptic films.
+",147.456,117977.0,['District 9' 'Night Raiders (2021 film)' 'The Quiet Earth (film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Public Image', 'The Village of No Return']",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2004 romantic drama films about media
+",147.456,117977.0,['2046 (film)' 'Being Julia' 'Closer (2004 film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Village of No Return', 'The Invincible Constable', 'The Assassination of Richard Nixon', 'The Veteran', 'The Violent Bear It Away', 'The Two Captains', 'The God that Failed', 'The Public Image', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', 'The God that Failed', '",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Soviet crime films that arent russian made
+",147.456,117977.0,['Look for a Woman' 'The Master of Taiga' 'Visit to Minotaur (film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Making of the Representative for Planet 8', 'The Life of Verdi', 'The Final Nexus', 'The History of Sir Charles Grandison', 'The Secret Man', 'The Violent Bear It Away', 'The Wandering Hill', 'The Two Captains', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Violent Bear It Away', 'The Viol",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: British science fiction novels set on fictional planets excluding novels based on Doctor Who.
+",147.456,117977.0,"['The Making of the Representative for Planet 8'
+ 'The Restaurant at the End of the Universe']",0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['Blinky Bill the Movie', 'The Young Magician', 'The Village of No Return', 'The Magic Snowflake', 'The Wandering Hill', 'The Fire Devil', 'The Violent Bear It Away', 'The Jungle Bunch', 'The Poot', 'The Midnight Zoo', 'The Violent Bear It Away', 'The Fire Devil', 'The Violent Bear It Away', 'The Jungle Bunch', 'The Poot', 'The Midnight Zoo', 'The",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Animated films about koalas or 1990s Australian animated films
+",147.456,117977.0,['Blinky Bill the Movie' 'Go to Hell!!' 'The Jungle Bunch (film)'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['A Taxi Driver', 'Alega Gang: Public Enemy No.1 of Cebu', 'The Veteran', 'The Village of No Return', 'The Making of the Representative for Planet 8', 'The Veteran', 'The Making of the Representative for Planet 8', 'The Veteran', 'The Veteran', 'The Veteran', 'The Veteran', 'The Veteran', 'The Veteran', 'The Veteran', 'The Veteran', 'The Veteran', 'The Veteran', 'The",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: South Korean historical comedy-drama films or Films set in Gwangju or 2000s historical comedy-drama films
+",147.456,117977.0,['A Taxi Driver' 'The King and the Clown'],0.01,Final Answer: ,test,17.222418432
+256,quest_128k,17222.418432,116797.0," ['The Hyperion Cantos', 'The Chronicles of Narnia', 'The League of Extraordinary Gentlemen', 'The Final Nexus', 'The Secret Man', 'The Making of the Representative for Planet 8', 'The God that Failed', 'The Lives of Animals', 'The Scepter of Judah', 'The Lives of Animals', 'The God that Failed', 'The Scepter of Judah', 'The Chronicles of Narnia', 'The League of Extra",17.396416512,17396.416512,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1984 Science fiction Space opera novel series
+",147.456,117977.0,"['The Final Reflection' 'The Trellisane Confrontation'
+ 'The Vulcan Academy Murders']",0.01,Final Answer: ,test,17.222418432

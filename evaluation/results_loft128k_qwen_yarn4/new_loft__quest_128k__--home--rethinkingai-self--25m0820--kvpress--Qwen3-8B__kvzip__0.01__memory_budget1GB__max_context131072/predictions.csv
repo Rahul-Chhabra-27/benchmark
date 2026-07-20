@@ -1,0 +1,500 @@
+max_new_tokens,memory_budget,task,retained_kv_memory_mb,retained_context_tokens,memory_budget_unit,predicted_answer,uncompressed_kv_memory_gb,uncompressed_kv_memory_mb,kv_memory_per_token_kb,question,context_tokens,answers,compression_ratio,answer_prefix,token_budget,split,retained_kv_memory_gb
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Adventures of Jinbao (1996 film)']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Capua Films
+",117977.0,['Spartacus (film)'],0.9425226951015876,Final Answer: ,6781.0,dev,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1990s Indian and folklore romance films.
+",117977.0,['Laal Paree' 'Roja (film)' 'Sahasa Veerudu Sagara Kanya'],0.9425226951015876,Final Answer: ,6781.0,dev,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Mystery of the Yellow Room', 'The Village of No Return', 'The Adventures of Jinbao', 'The Wolverine']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films shot in Gauteng or New Zealand action thrillers or Western films from South Africa
+",117977.0,['6 Days (2017 film)' 'Glory Glory (2000 film)' 'The Jackals'],0.9425226951015876,Final Answer: ,6781.0,dev,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Bewitched', 'The Bewitched', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1860 novels or 1860 American novels or Ivan Turgenev novellas
+",117977.0,['Max Havelaar' 'The Marble Faun' 'The Mill on the Floss'],0.9425226951015876,Final Answer: ,6781.0,dev,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'Tot Watchers', 'The 1972 film ""The Carey Treatment""']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Horror anthology films about time travel that were shot in the US
+",117977.0,['Southbound (2015 film)' 'Twilight Zone: The Movie'],0.9425226951015876,Final Answer: ,6781.0,dev,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Mystery of the Yellow Room', 'The Adventures of Jinbao', 'The Village of No Return', 'The League of the Extraordinary Gentlemen', 'The Last Mistress', 'The Last of the Buccaneers', 'The Last of the Buccaneers', 'The Last Mistress', 'The League of the Extraordinary Gentlemen', 'The Village of No Return', 'The Adventures of Jinbao', 'The Mystery of the Yellow Room', 'The Last Mistress', 'The League of the Extraordinary",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based on European myths and legends and young adult literature
+",117977.0,['Percy Jackson & the Olympians: The Lightning Thief'],0.9425226951015876,Final Answer: ,6781.0,dev,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', '78']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Supernatural horror films in the Artic
+",117977.0,"['Kajutaijuq: The Spirit That Comes' 'The Abandoned (2006 film)'
+ 'The Last Winter (2006 film)']",0.9425226951015876,Final Answer: ,6781.0,dev,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', '78']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Northern Mariana Islands set films
+",117977.0,['Anatahan (film)' 'Oba: The Last Samurai'],0.9425226951015876,Final Answer: ,6781.0,dev,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '28']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1980 books that are non fiction and, about British thriller.
+",117977.0,['Man on Fire (Quinnell novel)' 'Sweet Adelaide'],0.9425226951015876,Final Answer: ,6781.0,dev,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '28']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Australian novels from 1991
+",117977.0,['Cloudstreet' 'Mandragora (novel)' 'Our Sunshine'],0.9425226951015876,Final Answer: ,6781.0,dev,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Mystery of the Yellow Room', 'The Village of No Return', 'The Adventures of Jinbao', 'The Lives of Animals']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels about families set in Boston and New England.
+",117977.0,['A Case of Need'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The 2009 Indian, or by Chetan Bhagat, novels', 'The 2009 Indian, or by Chetan Bhagat, novels']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2009 Indian, or by Chetan Bhagat, novels
+",117977.0,"['Five Point Someone' 'One Night @ the Call Center'
+ 'The 3 Mistakes of My Life']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', 'The Invincible Colonel', 'The Midnight Zoo', 'The Village of No Return', 'The Invincible Colonel', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are some Hungarian Revolution of 1956 or Austrian war films
+",117977.0,['Duel with Death' 'Fly Away Home (2016 film)' 'Sunshine (1999 film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', '78']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Finnish television and animated films
+",117977.0,"['Moomins and the Comet Chase' 'Quest for a Heart'
+ 'Santa Claus and the Magic Drum']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '28']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Hispanic and Latino American novels set anywhere besides North America
+",117977.0,['At Night We Walk in Circles' 'La reina de América' 'Lost City Radio'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Swiss Films about stalking
+",117977.0,['One Way Trip 3D'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2010s supernatural children's animated films
+",117977.0,"['Lego Scooby-Doo! Blowout Beach Bash'
+ 'Scooby-Doo! and the Curse of the 13th Ghost' 'The Magic Snowflake']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '220']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1971 British thriller novels
+",117977.0,['Firecrest (novel)' 'Lament for Leto'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Critical Jehovah's Witness books.
+",117977.0,['Crisis of Conscience'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Mystery of the Yellow Room', 'The Bewitched', 'The Story Without a Name']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are some Novels set in Jiangsu, 1750s, or Novels by Charlotte Lennox?
+",117977.0,"['Demi-Gods and Semi-Devils' 'The Adventures of Peregrine Pickle'
+ 'The History of Sir Charles Grandison']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Final Nexus', 'The Adventures of Pericles', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final Nexus', 'The Final",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Gene DeWeese novels
+",117977.0,['Chain of Attack' 'The Final Nexus' 'The Peacekeepers'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', 'The Village of No Return (ID: 78)']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1980s political films about science and the United States Armed Forces
+",117977.0,['Best Defense' 'Red Dawn'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2010s speculative fiction novels about Washington (state) and the United States.
+",117977.0,['Seveneves'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Cebu films
+",117977.0,"['Alega Gang: Public Enemy No.1 of Cebu' 'Lapu-Lapu (2002 film)'
+ 'Patay na si Hesus']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched', 'The Bewitched']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Crime novels set in Japan
+",117977.0,['All She Was Worth' 'Crossfire (novel)' 'Out (novel)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '220']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1990's historical films about security and surveillance that are set in England
+",117977.0,['Elizabeth (film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Mystery of the Yellow Room', 'The Bewitched', 'The Invincible Constance']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1890s historical books and novels published by Harper & Brothers
+",117977.0,['Personal Recollections of Joan of Arc'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo',",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2021 films about action and comedy.
+",117977.0,"[""Hitman's Wife's Bodyguard"" 'Red Notice (film)' ""The King's Man""]",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Bewitched']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: History/Adventure books about France from 1933
+",117977.0,['The Way of the Scarlet Pimpernel'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based on works by Bill Finger that are any genre except Animated action films
+",117977.0,['Batman & Bill' 'Batman & Robin (film)' 'Batman (serial)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Village of No Return', 'The Adventures of Jinbao', 'The Invincible Detective', 'The Bewitched', 'The Village of No Return (2016)']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based on works by Alan Moore or Wildstorm titles, or that are Czech superhero films
+",117977.0,"['Batman: The Killing Joke (film)' 'Pérák: The Shadow over Prague'
+ 'The League of Extraordinary Gentlemen (film)']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '28']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Crime novels that are both American crime novels and 1932 novels
+",117977.0,['Poison in Jest' 'The Waxworks Murder'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '220']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Debut novels released in 1953.
+",117977.0,"['Battle Cry (Uris novel)' 'Go Tell It on the Mountain (novel)'
+ 'Junkie (novel)']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', 'The Village of No Return (ID: 78)']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Penal system documentary films that are not about law enforcement in the United States
+",117977.0,['P4W: Prison for Women' 'The Phantom (2021 film)' 'Waseskun'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB,"1. **Title:** The Bewitched, **ID:** 220  
+2. **Title:** The Invincible Conscript, **ID:** 220  
+3. **Title:** The Invincible Conscript, **ID:** 220  
+4. **Title:** The Invincible Conscript, **ID:** 220  
+5. **Title:** The Invincible Conscript, **ID:** 220  
+6. **Title:** The Inv",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1984 Fantasy novels about the United Kingdom
+",117977.0,['Mythago Wood' 'Nights at the Circus'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '28']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels published by Hutchinson about film director and producers
+",117977.0,['Laughing Gas (novel)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: American medical novels set in the 1940's
+",117977.0,['Hannibal Rising' 'Jewel (novel)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Canadian documentaries about homelessness and LGBT
+",117977.0,['Ryan (film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '220']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films set in Italy that are 1982 television films
+",117977.0,"['Cavalleria rusticana (1982 film)' 'The Deadly Game (1982 film)'
+ 'The Life of Verdi (miniseries)']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Animated non-children films set in New York (state)
+",117977.0,['Hulk: Where Monsters Dwell' 'Resident Evil: Vendetta'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Invincible Colonel']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: mystery drama films that are Chinese
+",117977.0,['A Lingering Face' 'Looking Up (film)' 'Ni Jing: Thou Shalt Not Steal'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'Tot Watchers', 'The 1949 film ""Tot Watchers""']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: exploitation films from the 1940s
+",117977.0,"['Child Bride' 'I Accuse My Parents' ""The Devil's Sleep""]",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Adventures of Jinbao (1967)']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Erico Verissimo works adapted into films
+",117977.0,['Time and the Wind'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Contemporary fantasy romance novels, that aren't Urban fantasy
+",117977.0,['Midnight Sun (Meyer novel)' 'New Moon (novel)' 'Twilight (Meyer novel)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," []
+
+No documents were found that match the query ""Young adult novels set in Oceania that are not Australian or for children.""",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Young adult novels set in Oceania that are not Australian or for children
+",117977.0,['Boy at War' 'The Changeover' 'The Firebird Rocket'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Midnight Zoo', 'The Village of No Return', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2012 comedy films that are also about social issues in the United States.
+",117977.0,['Killing Them Softly' 'Mac & Devin Go to High School'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Bewitched (1936; , ''Boof-e koor'', )']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Iranian novels or books by Sadegh Hedayat
+",117977.0,['My Uncle Napoleon' 'Savushun' 'The Blind Owl'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Invincible Colonel', 'The Invincible Colonel', 'The Invincible Colonel', 'The Invincible Colonel', 'The Invincible Colonel']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Propaganda films that are epic and based on actual events.
+",117977.0,['Doctor Zhivago (film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '193']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1960 Catholic fiction books
+",117977.0,['The Picturegoers' 'The Violent Bear It Away'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: NBC network original films about ideologies that are set in outer space.
+",117977.0,['Undercover with the KKK'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB,"1. **Title**: Tot Watchers  
+   **ID**: 285  
+
+2. **Title**: The Bewitched  
+   **ID**: 220  
+
+3. **Title**: The Mystery of the Missing Man  
+   **ID**: 229  
+
+**List of Answers**:  
+- Tot Watchers (ID: 225)  
+- The Bewitched (ID: 220)  
+- The Mystery of the Missing Man (ID: ",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1930 non american crime films
+",117977.0,"['An Obvious Situation' ""That Night's Wife"" 'The Copper (1930 film)']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2010s legal mystery drama films
+",117977.0,['Ace Attorney (film)' 'True Story (film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Mystery of the Yellow Room', 'The Village of No Return', 'The Adventures of Jinbao', 'The Mystery of the Yellow Room', 'The Mystery of the Yellow Room', 'The Mystery of the Yellow Room', 'The Mystery of the Yellow Room', 'The Mystery of the Yellow Room', 'The Mystery of the Yellow Room', 'The Mystery of the Yellow Room', 'The Mystery of the Yellow Room', 'The Mystery of the Yellow Room', '",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: French novels from 1913 or 1922, or that are mysteries
+",117977.0,"['Le Grand Meaulnes' 'The Mysteries of Paris'
+ 'The Mystery of the Yellow Room']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'Tot Watchers', 'The Bewitched', 'The Mystery of the Yellow Room']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films set in 1831 or 1809
+",117977.0,['Casta Diva (1935 film)' 'The Fire Devil' 'Under Capricorn'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The 1934 film ""The Bewitched"" (ID: 2)', 'The 1983 film ""The Last Mistress"" (ID: 3)']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Andrew Jackson films or films about the War or 1812
+",117977.0,"['First Invasion: The War of 1812' 'Last of the Buccaneers'
+ 'Mohawk (2017 film)']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films about sportspeople set in 1972
+",117977.0,['Going Vertical' 'Prefontaine (film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Dan Simmons novels
+",117977.0,['Ilium (novel)' 'Summer of Night' 'The Fall of Hyperion (novel)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB,"1. **Title:** *The Bewitched* | **ID:** 220  
+2. **Title:** *The Invincible Colonel* | **ID:** 220  
+3. **Title:** *The Adventures of Jinbao* | **ID:** 196  
+4. **Title:** *The Bewitched* | **ID:** 220  
+5. **Title:** *The Invincible Colonel* | **ID:** 220  
+
+**",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1936 Alternate history novels and books based in Asia
+",117977.0,['We the Living'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Mystery of the Yellow Room', 'The Village of No Return', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films about sisters shot in Paris.
+",117977.0,['Le Divorce' 'Peppermint Soda' 'Two English Girls'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Non American independent films that are from 1994
+",117977.0,['Aftermath (1994 film)' 'Amoklauf' 'Aya: Imagined Autobiography'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '285']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Books about social psychology set in the Middle Ages that are Hachette Book Group books
+",117977.0,['Circe (novel)' 'Julian (novel)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Village of No Return', 'The Mystery of the Underground World', 'The Chronicles of Narnia', 'Isekai Novels']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: children's books set in subterranea(such as the Chronicles of Narnia) or Isekai novels and light novels
+",117977.0,"[""Alice's Adventures in Wonderland"" 'Prince Caspian'
+ ""The Magician's Nephew""]",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films set in the year 2073
+",117977.0,['A.P.E.X.'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '28']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Stop-motion animated paranormal musical comedy films
+",117977.0,['Babes in Toyland (1934 film)' 'Mad Monster Party?'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Mystery of the 1911 Debut Novel', 'The Midnight Zoo']
+
+**Answer List:**
+
+1. **The Bewitched** - ID: 220  
+   This is a novel by Jules Barbey d'Aurevilly, which was adapted into a 2007 film titled *The Last Mistress*.
+
+2. **The Mystery of the 1911 Debut Novel** - ID: 22",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Australian novels made into tv shows, or 1911 debut novels, or novels by Joan Lindsay.
+",117977.0,['Come in Spinner' 'The Thorn Birds' 'Zuleika Dobson'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Bewitched']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: French novels made in 1905.
+",117977.0,['The Lighthouse at the End of the World'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2004 films that are set in 1974
+",117977.0,"['Anchorman: The Legend of Ron Burgundy'
+ 'The Assassination of Richard Nixon']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: sci-fi films from 2008
+",117977.0,"['CJ7' ""God's Puzzle (film)"" 'Stargate: The Ark of Truth']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Village of No Return', 'The Village of No Return (ID: 78)']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Bulgarian animated films or Polish or Belgian animated fantasy films
+",117977.0,['Demoni (2012 film)' 'Dragon Rider (film)' 'Felix the Cat: The Movie'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels adapted into radio programs that are set during WWI
+",117977.0,['All Quiet on the Western Front'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Horror drama films from the 2000s or Karel Jaromír Erben films
+",117977.0,['Little Otik' 'Nails (2003 film)' 'Princess Goldilocks'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Invincible Constanle', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', '",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2023 action comedy, 2020s superhero comedy, or Guardians of the Galaxy films
+",117977.0,"['Flora & Ulysses (film)' 'Guardians of the Galaxy Vol. 3'
+ 'Spider-Man: Across the Spider-Verse']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Story Without a Name']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Bengali written Indian historical novels
+",117977.0,['Anandamath' 'Durgeshnandini' 'Those Days (novel)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '29']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1970s television films set in Palestine about terrorism
+",117977.0,['Victory at Entebbe'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1990s American buddy action, but not comedy, films
+",117977.0,['Die Hard with a Vengeance' 'Fled' 'Point Break'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: fictional WWII novels about antisemitisim.
+",117977.0,['The Boys from Brazil (novel)' 'The Portage to San Cristobal of A.H.'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Formula (2002 film)', 'The Formula (2002 film)']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: English books published by Farrar Straus and Giroux
+",117977.0,['Hild (novel)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', 'Tot Watchers', 'The Bewitched', 'The Mystery of the Yellow Room']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films shot in Europe that are Austrian drama films and English language French films.
+",117977.0,['Taking Sides (film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '285']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2013 novels about multiple time paths
+",117977.0,['Life After Life (novel)' 'To Be or Not to Be (book)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Invincible Colonel', 'The Invincible Colonel', 'The Invincible Colonel', 'The Invincible Colonel', 'The Invincible Colonel']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels set in Russia and the Arctic about war and conflict
+",117977.0,['The Samovar Girl' 'The Two Captains'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '28']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: English-language novels that are 1985 speculative fiction but not American 1985 novels
+",117977.0,['Illywhacker' 'Star Healer' 'The Hounds of the Morrigan'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Historical Chinese martial arts films about terrorism
+",117977.0,"[""A Queen's Ransom""]",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Iranian and Asian short films from 2010's
+",117977.0,['Game Over (2013 film)' 'The Poot' 'Two & Two (2011 film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Bewitched', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1968 art novels
+",117977.0,['It Happened in Boston?' 'The Public Image'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: books about socialism and the french revolution
+",117977.0,['To the Finland Station'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: American Science fiction children's comedy films set in castles.
+",117977.0,['Hotel Transylvania (film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', 'The Invincible Colonel', 'The Mystery of the Yellow Room', 'The History of the Qing Dynasty', 'The Adventures of Jinbao', 'The Midnight Zoo', 'The Lives of Animals']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: History books about Malaysia or the Qing dynasty or about South Korea
+",117977.0,"['Chronicle of Malaysia' 'Korea: A Walk Through the Land of Miracles'
+ 'Treason by the Book']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Supernatural western horror films from the 1990's
+",117977.0,"[""From Dusk Till Dawn 3: The Hangman's Daughter"" 'Grim Prairie Tales'
+ 'Mad at the Moon']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Invincible Colonel', 'The Invincible Colonel', 'The Invincible Colonel']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Non History Books about communism
+",117977.0,"['Red Diapers: Growing Up in the Communist Left'
+ 'Ten Days That Shook the World' 'The God that Failed']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Chinese novels adapted into plays or Yu Hua novels
+",117977.0,['Brothers (Yu novel)' 'Chronicle of a Blood Merchant' 'To Live (novel)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '1534 books or 1553 books']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1534 books or 1553 books
+",117977.0,['Ferrara Bible' 'Observations (Belon book)' 'Scepter of Judah'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Village of No Return', 'The Village of No Return (film)']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are some Emirati multilingual or Pakistani animated films
+",117977.0,"['3 Bahadur: The Revenge of Baba Balaam' 'Aerials (film)'
+ 'The Glassworker']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: novels written by by Louise Welsh
+",117977.0,['Tamburlaine Must Die' 'The Girl on the Stairs'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', '78']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: WWII films that are Swiss
+",117977.0,['The Last Chance (1945 film)' 'The Sun (film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', '1985: The Bewitched', 'The Village of No Return', 'The Invincible Colonel']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1898 English-language books that are also about adventure
+",117977.0,['In the Sargasso Sea' 'Rupert of Hentzau'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Netherlands: A History of the World', 'The Dutch Connection', 'The Dutch Connection: A Film About the Dutch', 'The Dutch Connection: A Film About the Dutch and the American Revolution', 'The Dutch Connection: A Film About the Dutch and the American Revolution', 'The Dutch Connection: A Film About the Dutch and the American Revolution', 'The Dutch Connection: A Film About the Dutch and the American Revolution', 'The Dutch Connection: A Film About the Dutch and the American Revolution",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Dutch coming-of-age or Dutch erotic or erotic thriller films
+",117977.0,['Jongens'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Non-supernatural fantasy films about televised people
+",117977.0,['Being John Malkovich' 'Bubba Ho-Tep' 'Millennium Actress'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Bewitched']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1988 fiction environmental books
+",117977.0,"[""The Gate to Women's Country"" 'Zodiac (novel)']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are  some Bulgarian animated, or Polish children's films
+",117977.0,"['Demoni (2012 film)' 'The Two Who Stole the Moon'
+ 'The Young Magician (film)']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '1850s social psychology books']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1850s social psychology books
+",117977.0,['Madame Bovary' 'The Scarlet Letter'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of No Return', 'The Village of",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: German spy comedy films, or 2000s comedy-drama mystery films.
+",117977.0,['Hotel Clausewitz' 'Scorpions and Miniskirts' 'Tunis Top Secret'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '220']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: American LGBT novels set in New England and that are also Speculative fiction novels
+",117977.0,['The Drowning Girl'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based of Craig Rices' work
+",117977.0,"['Home Sweet Homicide' ""Mrs. O'Malley and Mr. Malone""
+ 'The Underworld Story']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Invincible Colonel', 'The Village of No Return', 'The Midnight Zoo', 'The Village of No Return', 'The Midnight Zoo', 'The Village of No Return', 'The Midnight Zoo', 'The Village of No Return', 'The Midnight Zoo', 'The Village of No Return', 'The Midnight Zoo', 'The Village of No Return', 'The Midnight Zoo', 'The Village of No Return', 'The Midnight Zoo', 'The Village of No Return', 'The Midnight",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: New Zealand science fiction thriller films, films shot in Gauteng, or New Zealand post-apocalyptic films.
+",117977.0,['District 9' 'Night Raiders (2021 film)' 'The Quiet Earth (film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '220']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2004 romantic drama films about media
+",117977.0,['2046 (film)' 'Being Julia' 'Closer (2004 film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Village of No Return', '78']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Soviet crime films that arent russian made
+",117977.0,['Look for a Woman' 'The Master of Taiga' 'Visit to Minotaur (film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Bewitched', '28']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: British science fiction novels set on fictional planets excluding novels based on Doctor Who.
+",117977.0,"['The Making of the Representative for Planet 8'
+ 'The Restaurant at the End of the Universe']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Adventures of Jinbao', 'Tot Watchers', 'The Village of No Return', 'The Village of No Return']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Animated films about koalas or 1990s Australian animated films
+",117977.0,['Blinky Bill the Movie' 'Go to Hell!!' 'The Jungle Bunch (film)'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: South Korean historical comedy-drama films or Films set in Gwangju or 2000s historical comedy-drama films
+",117977.0,['A Taxi Driver' 'The King and the Clown'],0.9425226951015876,Final Answer: ,6781.0,test,0.999899136
+256,1.0,quest_128k,999.899136,6781.0,GB,"1. **Title**: *The Bewitched* | **ID**: 193  
+2. **Title**: *The Invincible Colonel* | **ID**: 193  
+3. **Title**: *The Invincible Colonel* | **ID**: 193  
+4. **Title**: *The Invincible Colonel* | **ID**: 193  
+5. **Title**: *The Invincible Colonel* | **ID**: 193  
+6",17.396416512,17396.416512,147.456,"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1984 Science fiction Space opera novel series
+",117977.0,"['The Final Reflection' 'The Trellisane Confrontation'
+ 'The Vulcan Academy Murders']",0.9425226951015876,Final Answer: ,6781.0,test,0.999899136

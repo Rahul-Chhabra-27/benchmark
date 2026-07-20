@@ -1,0 +1,1016 @@
+question,context_tokens,compression_ratio,uncompressed_kv_memory_mb,predicted_answer,answers,memory_budget_unit,memory_budget,answer_prefix,split,token_budget,uncompressed_kv_memory_gb,kv_memory_per_token_kb,task,retained_context_tokens,retained_kv_memory_mb,max_new_tokens,retained_kv_memory_gb
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How many times did plague occur in the birth city of the composer of Nulla in mundo pax sincera?
+",119446.0,0.9854662357885572,17613.029376,"1
+
+**Documents Used:**
+- TITLE: Nulla in mundo pax sincera, ID: 123456789
+- TITLE: Plague in the birth city of the composer of Nulla in mundo pax sincera, ID: 987654321
+
+The composer of ""Nulla in mundo pax sincera"" is Giuseppe Verdi. Verdi was born in Roncole, which is part of the commune",['22'],MB,256.0,Final Answer: ,dev,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What does seal stand for in the U.S. military branch that operates a list of destroyer classes and the USS Stag?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: U.S. Navy Destroyer Classes, **ID**: 1  
+2. **TITLE**: USS Stag (DD-835), **ID**: 2  
+
+- **USS Stag (DD-835)** is a ship that belongs to the **Gearing-class destroyers**.  
+- The **U.S. Navy** operates a list of destroyer classes, including the **Gearing-class**, which the **USS Stag** is","['Sea, Air, and Land']",MB,256.0,Final Answer: ,dev,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the political party Alaska generally supports take control of the determiner of rules of the US House and US Senate?
+",119446.0,0.9854662357885572,17613.029376,"1976
+
+TITLE: The Determiner of Rules of the US House and US Senate  
+ID: 1",['January 2015'],MB,256.0,Final Answer: ,dev,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who won the 1993 Indy Car Race in the largest city of the state where the library district and the city of Yuma share the same county?
+",119446.0,0.9854662357885572,17613.029376,"1993 Indy Car Race winner in the largest city of the state where the library district and the city of Yuma share the same county is **Raul Boesel**.
+
+**Document Used:**
+- **TITLE:** ""Who won the 1993 Indy Car Race in the largest city of the state where the library district and the city of Yuma share the same county?""
+- **ID:** 1
+
+**Answer List:**
+- The 1993",['Mario Andretti'],MB,256.0,Final Answer: ,dev,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the capital of the county that shares a border with the county where KRSU is licensed to broadcast?
+",119446.0,0.9854662357885572,17613.029376,1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000,['Green Bay'],MB,256.0,Final Answer: ,dev,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the deepest part of the ocean, near the state, where the county that holds the city of Winchester is found?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: The Deepest Part of the Ocean, **ID**: 1  
+2. **TITLE**: The Ocean's Deepest Point, **ID**: 2  
+
+The deepest part of the ocean, near the state, where the county that holds the city of Winchester is found, is the Mariana Trench. It is located in the Pacific Ocean, near the island of Guam, and is the deepest known part of the Earth's oceans.",['Milwaukee Deep'],MB,256.0,Final Answer: ,dev,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the largest medical school in the nation where, along with the country of citizenship of the mother of Marie Antoinette, many expelled French Jews relocated?
+",119446.0,0.9854662357885572,17613.029376,"1. **Title:** ""Marie Antoinette and the Expulsion of the Jews""  
+   **ID:** 1  
+   **Answer:** The largest medical school in the nation where, along with the country of citizenship of the mother of Marie Antoinette, many expelled French Jews relocated is the University of Paris.",['Medical University of Warsaw'],MB,256.0,Final Answer: ,dev,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In what region of Germany is the district where a sermon on Marian devotion was preached by the man who wanted to reform the religion of Victor Razafimahatratra?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""Victor Razafimahatratra and the Reform of Religion""  
+   **ID**: 1  
+   **Answer**: The district where a sermon on Marian devotion was preached by the man who wanted to reform the religion of Victor Razafimahatratra is in the region of Bavaria in Germany.  
+
+2. **TITLE**: ""Marian Devotion and Religious Reform in Germany""  
+   **ID**: 2  
+   **Answer**:",['Saxony-Anhalt'],MB,256.0,Final Answer: ,dev,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who runs the school system in the country that is the natural boundary between the country that hosted the tournament and the country where That Dam is located?
+",119446.0,0.9854662357885572,17613.029376,"1. **Title:** Who runs the school system in the country that is the natural boundary between the country that hosted the tournament and the country where That Dam is located?  
+**ID:** 1  
+
+**Answer:**  
+- The school system in the country that is the natural boundary between the country that hosted the tournament and the country where That Dam is located is run by the **Ministry of Education**.",['the Ministry of Education'],MB,256.0,Final Answer: ,dev,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which university has more national championships, university of the state having Fort Hill or university of the state whose primary was won by Edwards besides the state having WEKL?
+",119446.0,0.9854662357885572,17613.029376,1. The university of the state whose primary was won by Edwards besides the state having WEKL is the University of the State with Fort Hill. 2. The university of the state having Fort Hill has more national championships. 3. The university of the state whose primary was won by Edwards besides the state having WEKL is the University of the State with Fort Hill. 4. The university of the state having Fort Hill has more national championships. 5. The university of the state whose,['University of South Carolina'],MB,256.0,Final Answer: ,dev,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the great mosque constructed at the site of the old temple in the city originating christianity in Rome, Egypt, Judea and the country for Vasilopita?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: The Great Mosque of Djenné  
+**ID**: 1  
+2. **TITLE**: The History of Vasilopita  
+**ID**: 2  
+
+- The Great Mosque of Djenné was constructed at the site of the old temple in the city of Djenné, which is in present-day Mali, not Rome, Egypt, or Judea.  
+- Vasilopita is a traditional Greek New Year's dish, not directly related to the Great",['Al - Aqsa Mosque'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What label was bought in the UK by the other major New York broadcast that is in addition to ABC, and the one who released Stand Against Fear?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""The Other Major New York Broadcast""  
+   **ID**: 1  
+   **TITLE**: ""The New York Broadcast""  
+   **ID**: 2  
+   **TITLE**: ""The Label That Released Stand Against Fear""  
+   **ID**: 3  
+
+- The label that was bought in the UK by the other major New York broadcast, in addition to ABC, is ""The New York Broadcast"".  
+- The label that released ""Stand Against Fear""",['Oriole Records.'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the rx 350 model of the luxury division of the company that built Daihatsu boon change body style?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: When did the rx 350 model of the luxury division of the company that built Daihatsu boon change body style?  
+**ID**: 1  
+
+The RX 350 model of the luxury division (which is Lexus, a brand under Toyota) changed its body style in 2007. This information is inferred from the context that Daihatsu Boon is a product of the company that built the RX 350, which is",['Sales began worldwide in April 2012'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What year did the Governor of the city where the basilica named after the same saint as the one that Mantua Cathedral is dedicated to die?
+",119446.0,0.9854662357885572,17613.029376,"1457
+
+**Documents Used:**
+- **TITLE:** Mantua Cathedral, **ID:** 2
+- **TITLE:** Basilica of San Pietro in Carcere, **ID:** 3
+- **TITLE:** History of the city of Mantua, **ID:** 4
+
+**Answer Explanation:**
+1. From the document titled ""Mantua Cathedral"" (ID: 2), we learn that Mantua Cathedral is dedicated to San Pietro.
+2",['1952'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What UK label was bought by the company which, along with ABC and the network which broadcasted Hello, Larry, is the other major broadcaster based in NY?
+",119446.0,0.9854662357885572,17613.029376,"1. The UK label that was bought by the company is ""BBC"". 2. The ID of the document is ""1"". 3. The other major broadcaster based in NY is ""CBS"". 4. The ID of the document is ""2"". 5. The answer is ""BBC"".",['Oriole Records.'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What year did the country where Siddhi Savetsila was born form an alliance with Japan?
+",119446.0,0.9854662357885572,17613.029376,"1941
+
+**Documents Used:**
+- TITLE: ""Siddhi Savetsila""  
+  ID: 1  
+- TITLE: ""History of the Japanese Empire""  
+  ID: 2  
+
+**Answer:**
+- The country where Siddhi Savetsila was born (which is Thailand) formed an alliance with Japan in the year 1941.",['1941'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: The Beach was filmed in what location of the country that contains the birth city of Siddhi Savetsila?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: The Beach, **ID**: 1  
+2. **TITLE**: The Beach, **ID**: 1  
+
+- The Beach was filmed in the location of the country that contains the birth city of Siddhi Savetsila.  
+- The birth city of Siddhi Savetsila is Bangkok, Thailand.  
+- The Beach, a 1996 film, was primarily filmed in the coastal town of **Pattaya**, Thailand.  
+- Therefore, the",['island Koh Phi Phi'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Arie Supriyatna's birth country was one participant in a Commission of Truth and Friendship. Who is the president of the other country that participated?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""A Commission of Truth and Friendship""  
+   **ID**: 1  
+   **TITLE**: ""Commission of Truth and Friendship""  
+   **ID**: 2  
+
+The president of the other country that participated is **Andrew Johnson**.",['Francisco Guterres'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the meaning of the word that is also a majority religion in the area that became India when the country that withdrew its forces was created in the Arabic dictionary?
+",119446.0,0.9854662357885572,17613.029376," The word ""Islam"" means ""submission"" in the Arabic dictionary. It is the majority religion in the area that became India and was the religion of the people who withdrew their forces from the region.
+
+**Documents Used:**
+- TITLE: ""The Meaning of the Word 'Islam' in the Arabic Dictionary""
+- ID: 123456789",['the country of India'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Widely practiced in the region having the second largest rain-forest in the world, how long ago did this religion arrive in Zhejiang?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: The Arrival of a Religion in Zhejiang, **ID**: 1  
+2. **TITLE**: Religious Practices in the Region, **ID**: 2  
+
+**Answer:**
+- The religion arrived in Zhejiang 100 years ago.","['1,400 years']",MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the name of the famous bridge in the city where the composer of La Silvia was born?
+",119446.0,0.9854662357885572,17613.029376,"1. The famous bridge in the city where the composer of *La Silvia* was born is the **Golden Gate Bridge**.  
+2. The **ID** of the document that provides this information is **1**.
+
+**List of Answers:**
+- The name of the famous bridge in the city where the composer of *La Silvia* was born is the Golden Gate Bridge. (ID: 1)",['Rialto Bridge'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the merchant of the city where the composer of Al gran sole carico d'amore takes place?
+",119446.0,0.9854662357885572,17613.029376,"1. The composer of ""Al gran sole carico d'amore"" is Giuseppe Verdi. 2. The city where this opera takes place is Milan. 3. The merchant of the city is mentioned in the context of the opera's setting. 4. The merchant is not explicitly dated in the document, but the opera is set in the 19th century. 5. Therefore, the merchant of the city where the composer of ""Al gran sole carico d",['16th - century'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who is the president of the newly declared independent country that formed the Timor Leste Commission of Truth and Friendship with the country where Pantar is found?
+",119446.0,0.9854662357885572,17613.029376,"1. **Title**: ""Timor Leste Commission of Truth and Friendship""  
+   **ID**: 1  
+   **Answer**: The president of the newly declared independent country that formed the Timor Leste Commission of Truth and Friendship is Francisco Guterres.  
+
+2. **Title**: ""Pantar""  
+   **ID**: 2  
+   **Answer**: The country where Pantar is found is Indonesia.  
+
+**Combined Answer**:  
+The president of the newly declared independent country",['Francisco Guterres'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the name of the famous bridge in the place of birth of who composed the Concerto in C Major Op 3 6?
+",119446.0,0.9854662357885572,17613.029376,"1. **Title:** ""The Life and Times of Johann Strauss II""  
+   **ID:** 1  
+   **Answer:** The famous bridge in the place of birth of the composer of the Concerto in C Major Op 3 6 is the Charles Bridge.
+
+2. **Title:** ""Johann Strauss II: The Man Behind the Music""  
+   **ID:** 2  
+   **Answer:** The famous bridge in the place of birth of the composer of the Concerto",['Rialto Bridge'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Where do greyhound buses leave from the in the city where the headquarters of the production company which produced A Cosmic Christmas is located?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""Where do greyhound buses leave from the in the city where the headquarters of the production company which produced A Cosmic Christmas is located?""  
+   **ID**: 1  
+
+2. **TITLE**: ""A Cosmic Christmas""  
+   **ID**: 2  
+
+3. **TITLE**: ""Greyhound buses""  
+   **ID**: 3  
+
+4. **TITLE**: ""Production company""  
+   **ID**: 4  
+
+5. **TITLE**: ""Head",['Toronto Coach Terminal'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who was a prominent figure at the radio division of the network that created the version of The Biggest Loser set in the country where Seria is?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""Who was a prominent figure at the radio division of the network that created the version of The Biggest Loser set in the country where Seria is?""  
+   **ID**: 1  
+
+**Answer**:
+- The prominent figure at the radio division of the network that created the version of *The Biggest Loser* set in the country where Seria is was not explicitly mentioned in the provided documents. However, based on the context, it can be inferred that the",['Walter Sabo'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What were the Genesis's advantages over the platform that plays Drac's Night Out?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: Drac's Night Out, **ID**: 2  
+2. **TITLE**: Genesis, **ID**: 1  
+
+- The Genesis had the advantage of being a more powerful console compared to the platform that plays Drac's Night Out.  
+- The Genesis also had a more extensive library of games and better graphical capabilities.  
+- Additionally, the Genesis had a stronger marketing presence and was more widely available in the market.",['built on 16-bit architectures and offered improved graphics and sound'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When was the Palau de la Generalitat constructed in the city where Martin of the place where Castiliscar is located died?
+",119446.0,0.9854662357885572,17613.029376,"1397
+
+**Documents Used:**
+- **TITLE:** The History of Palau de la Generalitat  
+  **ID:** 1  
+- **TITLE:** The Life and Times of Martin of Castiliscar  
+  **ID:** 2  
+
+**Answer:**
+- The Palau de la Generalitat was constructed in 1397.  
+- Martin of the place where Castiliscar is located died in the city of Castiliscar, which is",['built in the 15th century'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the U.S. and the country in effective control of political and military functions of the group the People's Socialist Republic of Albania was a member of become allies?
+",119446.0,0.9854662357885572,17613.029376,"1. The U.S. and the country in effective control of the political and military functions of the group the People's Socialist Republic of Albania was a member of became allies in 1948. This is based on the information that the People's Socialist Republic of Albania was a member of the group that was in effective control of political and military functions, and the U.S. became allies with the country in effective control in 1948.
+
+**Documents Used:**
+- TITLE:",['June 1941'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What team does the person who hit the first home run at the new stadium in South Bronx play for?
+",119446.0,0.9854662357885572,17613.029376,"1. The person who hit the first home run at the new stadium in South Bronx plays for the **New York Yankees**. This information is derived from the document titled ""The First Home Run at the New Stadium in South Bronx"" with ID **DOC1**.
+
+**Documents Used:**
+- TITLE: The First Home Run at the New Stadium in South Bronx
+- ID: DOC1
+
+**Answer:**
+- The person who hit the first home run at the new stadium in South Bronx",['New York Yankees'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the Governorship end of the city where the author of Paenitentiam Agere died?
+",119446.0,0.9854662357885572,17613.029376,"1. The Governorship of the city where the author of ""Paenitentiam Agere"" died ended in 1993. This information is derived from the document titled ""Paenitentiam Agere"" with ID ""PEN1993"".",['1952'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the name of the famous bridge in the birth city of the composer of Scanderbeg?
+",119446.0,0.9854662357885572,17613.029376,"1. The famous bridge in the birth city of the composer of *Scanderbeg* is the **Bridge of Sighs**.  
+2. The composer of *Scanderbeg* is **Vittorio Alfieri**, and his birth city is **Turin**.  
+3. The **Bridge of Sighs** is a famous bridge in **Turin**.
+
+**Document Used:**
+- TITLE: ""Vittorio Alfieri and the opera Scanderbeg""
+-",['Rialto Bridge'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What year did the country where Ercole Manfredi was born form an alliance with Japan?
+",119446.0,0.9854662357885572,17613.029376,"1941
+
+**Documents Used:**
+- TITLE: ""Ercole Manfredi""  
+  ID: 1  
+- TITLE: ""History of the Italian Republic""  
+  ID: 2  
+
+**Answer:**
+- The country where Ercole Manfredi was born is Italy.  
+- Italy formed an alliance with Japan in 1941.",['1941'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What year did the country that includes the birth city of Bodindecha form an alliance with Japan?
+",119446.0,0.9854662357885572,17613.029376,"1975
+
+**Documents Used:**
+- **TITLE:** Japan's Relations with Southeast Asia  
+  **ID:** 1  
+- **TITLE:** Japan's Relations with Southeast Asia (cont'd)  
+  **ID:** 2  
+
+**Answer:**
+- The country that includes the birth city of Bodindecha (which is assumed to be in Indonesia, given the context of Bodindecha's name and the document references) formed an alliance with Japan in the year 19",['1941'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was Nintendo's limit on games per developer per year for the platform with an abbreviated name that had the game Sunman?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: Nintendo's limit on games per developer per year for the platform with an abbreviated name that had the game Sunman  
+   **ID**: 1
+
+- Nintendo's limit on games per developer per year for the platform with an abbreviated name that had the game Sunman was not explicitly stated in the provided documents. However, it is implied that Nintendo had a limit on the number of games a developer could release on a specific platform per year, as it is a common practice among",['five'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In the Arabic dictionary, what's the meaning of the word for the majority religion in the area of British India that became India when Dourkhan's country was created?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: The Meaning of the Word ""Dourkhan"" in the Arabic Dictionary  
+**ID**: 1  
+**Meaning**: The word ""Dourkhan"" refers to a type of religious or spiritual practice, often associated with a specific community or sect.  
+
+2. **TITLE**: The Role of Dourkhan in the Formation of a Nation  
+**ID**: 2  
+**Meaning**: Dourkhan was a significant religious practice in the region",['the country of India'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was the wettest year in the city that shares the same county as the ghost town Allen?
+",119446.0,0.9854662357885572,17613.029376,"1912
+
+Document Used:
+- TITLE: ""Wettest Year in the City That Shares the Same County as the Ghost Town Allen""
+- ID: 1912",['1905'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was Nintendo's limit on games per developer per year on the platform with a three letter abbreviation, that had the game Pinball Quest?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: Pinball Quest, **ID**: 102
+2. **TITLE**: Nintendo's limit on games per developer per year, **ID**: 105",['five'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What UK label was bought by the company which, along with ABC and the network which broadcasted Here and Now, is the other major broadcaster based in NY?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""What UK label was bought by the company which, along with ABC and the network which broadcasted Here and Now, is the other major broadcaster based in NY?""  
+   **ID**: 1  
+
+2. **TITLE**: ""What UK label was bought by the company which, along with ABC and the network which broadcasted Here and Now, is the other major broadcaster based in NY?""  
+   **ID**: 1  
+
+**Answer List**:  
+- The UK",['Oriole Records.'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the name of the castle in the city where the headquarters of the production company of Care Bear: Journey to Joke-a-lot is located?
+",119446.0,0.9854662357885572,17613.029376," The name of the castle in the city where the headquarters of the production company of ""Care Bear: Journey to Joke-a-lot"" is located is ""Castle of Joke-a-lot"".
+
+**Documents used:**
+- TITLE: ""Care Bear: Journey to Joke-a-lot""
+- ID: 101
+- TITLE: ""Production Company Headquarters""
+- ID: 102",['Casa Loma'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In the Arabic dictionary, what's the meaning of the word for the majority religion in the area of British India that became India when Achh's country was created?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: The Meaning of the Word ""Achcha"" in the Arabic Dictionary  
+**ID**: 1  
+**Meaning**: The word ""Achcha"" in the Arabic dictionary refers to something good or favorable.  
+
+2. **TITLE**: The Creation of the Nation of Achh  
+**ID**: 2  
+**Meaning**: The word ""Achcha"" is associated with the creation of the nation of Achh, which is a reference to the region that",['the country of India'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the RX 350 from the Scion xB manufacturer's luxury division change body style?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: Scion xB, **ID**: 101
+2. **TITLE**: Scion xB, **ID**: 102
+3. **TITLE**: Scion xB, **ID**: 103
+4. **TITLE**: Scion xB, **ID**: 104
+5. **TITLE**: Scion xB, **ID**: 105
+
+The Scion xB, which is part of",['Sales began worldwide in April 2012'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who has the most hits in the history of the organization that includes the team Jim Wilson was released by?
+",119446.0,0.9854662357885572,17613.029376,"12345
+
+**Title:** The History of the Organization That Includes the Team Jim Wilson Was Released By  
+**ID:** 12345  
+
+**Answer:**
+- The team Jim Wilson was released by is part of the organization that includes the team with the most hits in the history of the organization.  
+- The team with the most hits is the one that has the highest number of hits recorded in the organization's history.  
+- The organization that includes the team Jim",['Pete Rose'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who is the owner of the record label that singer of the theme song from the movie Arthur belongs to?
+",119446.0,0.9854662357885572,17613.029376,"1. **Title**: ""The Arthur Movie Theme Song""  
+   **ID**: 1  
+   **Answer**: The singer of the theme song from the movie *Arthur* is Rod Stewart. He belongs to the record label Polydor. Therefore, the owner of the record label is Polydor.
+
+2. **Title**: ""Record Label Ownership""  
+   **ID**: 2  
+   **Answer**: Polydor is owned by Universal Music Group.
+
+**Combined Answer**:  
+",['Warner Music Group'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Where does the body of water by the city where Write This Down was formed empty into the Gulf of Mexico?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: Write This Down  
+**ID**: 1  
+
+**ANSWER**:
+The body of water by the city where Write This Down was formed (which is New Orleans) empties into the Gulf of Mexico through the Mississippi River.",['the Mississippi River Delta'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who was appointed arbitrator by the first convert to the faith that is the most common religion in Southeast Asia?
+",119446.0,0.9854662357885572,17613.029376,"1. **Title**: ""The Role of the Arbitrator in the Context of Religious Conversion""  
+   **ID**: 1  
+   **Answer**: The first convert to the faith that is the most common religion in Southeast Asia (which is Buddhism) was a person who converted to the faith and was appointed as an arbitrator. However, the specific name of the arbitrator is not mentioned in the provided document.
+
+2. **Title**: ""Religious Conversion and the Role of the Arbit",['Abu Musa Ashaari'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who is the host of Who Wants to be a Millionaire in the country that MacGruder and Loud's creator is from?
+",119446.0,0.9854662357885572,17613.029376,"1. The host of *Who Wants to Be a Millionaire* in the country that *MacGruder* and *Loud*'s creator is from is **John Roberts**.  
+2. The host of *Who Wants to Be a Millionaire* in the country that *MacGruder* and *Loud*'s creator is from is **John Roberts**.  
+
+**Documents used:**
+- TITLE: ""Who Wants to Be a Millionaire (U.S. version)""",['Chris Harrison'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who is the author of Growing Up this nationality of the creator MacGruder and Loud?
+",119446.0,0.9854662357885572,17613.029376,"1. The author of ""Growing Up"" is not explicitly mentioned in the provided documents. 2. The creator of ""MacGruder and Loud"" is not explicitly mentioned in the provided documents.",['Min Zhou'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What does seal stand for in the U.S. military branch that operates a list of destroyer classes, as well as the USS Sable?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: U.S. Military Branch and Seal Meaning, **ID**: 1  
+2. **TITLE**: USS Sable and Its Association with Destroyer Classes, **ID**: 2  
+
+- **Seal** in the U.S. military branch that operates a list of destroyer classes stands for the **Seal of the United States Navy**.  
+- The **USS Sable** is a ship that was part of the **United States Navy**. It was a","['Sea, Air, and Land']",MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Where do greyhound buses leave from in the city the performer of Born a Lion formed in?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""Where do greyhound buses leave from in the city the performer of Born a Lion formed in?""  
+**ID**: 1  
+
+**Answer**:  
+Greyhound buses leave from the same location where the performer of ""Born a Lion"" formed in the city. Based on the information provided, this location is referred to as ""the city"" where the performer formed, and it is implied that greyhound buses leave from this city as well. However, the specific location or",['Toronto Coach Terminal'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What does seal stand for in the U.S. military branch that operates a list of destroyer classes as well as the USS Jason?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: U.S. Navy Destroyer Classes, **ID**: 1  
+2. **TITLE**: USS Jason (DD-680), **ID**: 2  
+
+- Seal stands for ""Seal of Approval"" in the U.S. military branch that operates a list of destroyer classes, specifically the U.S. Navy.  
+- The USS Jason (DD-680) is a destroyer in the U.S. Navy, which is part of the list of","['Sea, Air, and Land']",MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was the wettest year of the administrative territorial entity that contains the administrative territorial entity where Drexel Heights is located?
+",119446.0,0.9854662357885572,17613.029376,"1993
+
+**Documents Used:**
+- **TITLE:** Drexel Heights
+- **ID:** 1
+- **TITLE:** Drexel Heights
+- **ID:** 2
+- **TITLE:** Drexel Heights
+- **ID:** 3
+- **TITLE:** Drexel Heights
+- **ID:** 4
+- **TITLE:** Drexel Heights
+- **ID:** 5
+- **TITLE:** Drexel Heights
+-",['1905'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Why did Roncalli leave the place where Crucifixion's creator died?
+",119446.0,0.9854662357885572,17613.029376,1. The document does not provide enough information to answer the query. 2. The query is based on a misunderstanding or misinterpretation of the content in the provided documents.,['for the conclave in Rome'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How many times did the plague occur where the creator of The Entombment died?
+",119446.0,0.9854662357885572,17613.029376,"0
+
+**Reasoning:**
+- The query asks about the number of times the plague occurred where the creator of *The Entombment* died.
+- However, there is no document provided that mentions *The Entombment* or its creator.
+- Therefore, there is no information to base an answer on, and the answer is 0.",['22'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the state, that contains the county where Elmo is found, reinstate the death penalty?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""The History of the Death Penalty in Arkansas"", **ID**: 12345  
+2. **TITLE**: ""Arkansas Capital Punishment Reinstatement"", **ID**: 67890  
+
+The state that contains the county where Elmo is found is Arkansas. According to the documents, Arkansas reinstated the death penalty in 1976.",['1984'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How many square miles is the city where the Yongle emperor greeted the person to whom the edict was addressed?
+",119446.0,0.9854662357885572,17613.029376,"100 square miles
+
+**Documents Used:**
+- TITLE: ""Yongle Emperor""  
+  ID: 1  
+- TITLE: ""Yongle""  
+  ID: 2  
+- TITLE: ""Yongle Emperor""  
+  ID: 3  
+- TITLE: ""Yongle""  
+  ID: 4  
+- TITLE: ""Yongle Emperor""  
+  ID: 5  
+
+**Answer:**
+- The city where the Yongle","['2,548 sq mi']",MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the name of the major basketball team from the city where the Yongle emperor greeted the person to whom the edict was addressed?
+",119446.0,0.9854662357885572,17613.029376,"1478
+
+**Title:** Yongle Emperor and the Edict  
+**ID:** 1478  
+
+The Yongle Emperor greeted the person to whom the edict was addressed in the city where the major basketball team is based. The document refers to this city as the one where the Yongle Emperor greeted the person, but it does not explicitly state the name of the basketball team. However, based on the context and the information provided, the major basketball team from that city is",['Jiangsu Nangang Basketball Club'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who is the child of the president who suffered a major defeat when the body which approves members of the American cabinet refused to ratify the Versailles treaty?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: The Impact of the Treaty of Versailles on International Relations, **ID**: 12345
+2. **TITLE**: The Role of the American Cabinet in Foreign Policy, **ID**: 67890
+
+- **The Impact of the Treaty of Versailles on International Relations (ID: 12345)**: This document discusses the Treaty of Versailles and its implications for international relations, including the rejection by the U.S. Senate",['Jessie Woodrow Wilson'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How were the people that the Ajuran Empire declared independence from by minting coins expelled from David Htan's country?
+",119446.0,0.9854662357885572,17613.029376,0 documents found.,['The dynasty regrouped and defeated the Portuguese'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was the language Auctor comes from during the era of Rotrude's father later known as?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""What was the language Auctor comes from during the era of Rotrude's father later known as?""  
+**ID**: 1  
+
+The language Auctor comes from during the era of Rotrude's father later known as is **Latin**.",['Medieval Latin'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was the language Auctor comes from during the era of the king who was crowned emperor of the west in 800 CE?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""What was the language Auctor comes from during the era of the king who was crowned emperor of the west in 800 CE?""  
+   **ID**: 1  
+
+2. **TITLE**: ""What was the language Auctor comes from during the era of the king who was crowned emperor of the west in 800 CE?""  
+   **ID**: 1  
+
+- The language Auctor comes from is Latin.  
+- The king who was",['Medieval Latin'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was the language Auctor comes from during the era of the man crowned first Holy Roman Emperor later known as?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: The Holy Roman Empire, **ID**: 1  
+2. **TITLE**: The Rise of the Holy Roman Empire, **ID**: 2  
+
+- The Holy Roman Empire, ID: 1  
+- The Rise of the Holy Roman Empire, ID: 2",['Medieval Latin'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the maker of the Acura Legend, the manufacturer of Toyopet Master, and Nissan open US assembly plants?
+",119446.0,0.9854662357885572,17613.029376,"1959, 1960, and 1960 respectively.
+
+**Documents Used:**
+- TITLE: Acura Legend, ID: 1
+- TITLE: Toyopet Master, ID: 2
+- TITLE: Nissan, ID: 3
+
+**Answer:**
+- Acura Legend: 1959
+- Toyopet Master: 1960
+- Nissan: 1960",['1981'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the maker of the Acura Legend, the employer of Katsuaki Watanabe, and Nissan open US assembly plants?
+",119446.0,0.9854662357885572,17613.029376,"1. Acura Legend - 101, 2. Katsuaki Watanabe - 102, 3. Nissan - 103
+
+1. **Acura Legend** - 101: The Acura Legend was made by Honda, which opened a US assembly plant in 1974.
+2. **Katsuaki Watanabe** - 102: Katsuaki Watanabe was employed by Honda, which opened",['1981'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was the version of the language where the last name Sylvester originates, used in the era of Fastrada's spouse, later known as?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: The Last Name Sylvester, **ID**: 12345. 2. **TITLE**: The Sylvester Family, **ID**: 67890. 3. **TITLE**: Sylvester and the Language of the Era, **ID**: 54321.
+
+- The version of the language where the last name Sylvester originates is the **Latin** language.
+- The era of Fastrada's spouse, later known as",['Medieval Latin'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was the version of the language where the last name Sylvester originates, used in the era of the king that united the tribes in the 9th century, later called?
+",119446.0,0.9854662357885572,17613.029376,"1. The version of the language where the last name Sylvester originates is Latin. 2. The language used in the era of the king that united the tribes in the 9th century, later called, is Old Norse. 
+
+Document Used:
+- TITLE: ""The Last Name Sylvester and Its Origins""
+- ID: 1
+
+- TITLE: ""The Language of the 9th Century and Its Evolution""
+- ID: 2",['Medieval Latin'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the maker of the Acura RLX, the owner of Scion, and Nissan open US assembly plants?
+",119446.0,0.9854662357885572,17613.029376,"1. Acura RLX maker (Honda) opened a US assembly plant in 1986. 2. Scion owner (Toyota) opened a US assembly plant in 1996. 3. Nissan opened a US assembly plant in 1985. 
+
+**Documents Used:**
+- TITLE: Honda's US Assembly Plant, ID: 1
+- TITLE: Toyota's US Assembly Plant, ID: 2
+- TITLE: Nissan's US Assembly",['1981'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How were the people that the Somali Muslim Ajuran Empire made coins to proclaim independence from, expelled from the country that Minyekyawdin lived in?
+",119446.0,0.9854662357885572,17613.029376,"1. TITLE: ""Somali Muslim Ajuran Empire"", ID: 1  
+2. TITLE: ""Somali Muslim Ajuran Empire"", ID: 1  
+
+- The people that the Somali Muslim Ajuran Empire made coins to proclaim independence from were the Italians.  
+- The Italians were expelled from the country that Minyekyawdin lived in, which is Somalia.",['The dynasty regrouped and defeated the Portuguese'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When was the last time Cian Hughton's team beat the 1894–95 FA Cup winner?
+",119446.0,0.9854662357885572,17613.029376,"1895
+
+**Documents Used:**
+- **TITLE:** The 1894–95 FA Cup
+- **ID:** 2",['1 December 2010'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When was the last time Gary Rowett's team beat the 1894-95 FA Cup winner?
+",119446.0,0.9854662357885572,17613.029376,"1995
+
+**Documents Used:**
+- TITLE: The 1894-95 FA Cup Final, ID: 1
+- TITLE: The 1894-95 FA Cup, ID: 2
+- TITLE: The 1894-95 FA Cup Final, ID: 3
+- TITLE: The 1894-95 FA Cup, ID: 4
+- TITLE: The 189",['1 December 2010'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When was the last time Johnny Newman's team beat the 1894–95 FA Cup winner?
+",119446.0,0.9854662357885572,17613.029376,"1995
+
+TITLE: 1894–95 FA Cup, ID: 1  
+TITLE: 1995 FA Cup Final, ID: 2  
+
+The last time Johnny Newman's team beat the 1894–95 FA Cup winner was in 1995.",['1 December 2010'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When was the last time Ken Faulkner's team beat the 1894-95 FA Cup winner?
+",119446.0,0.9854662357885572,17613.029376,"1995
+
+**Documents Used:**
+- **TITLE:** The 1894-95 FA Cup Final  
+- **ID:** 1  
+- **TITLE:** The 1995 FA Cup Final  
+- **ID:** 2  
+
+**Answer:**
+- The last time Ken Faulkner's team beat the 1894-95 FA Cup winner was in **1995**.",['1 December 2010'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When was the last time the team that Malcolm Briggs was a member of beat the 1894-95 FA cup winner?
+",119446.0,0.9854662357885572,17613.029376,"1895
+
+**Documents Used:**
+- **TITLE:** The 1894-95 FA Cup Final
+- **ID:** 1
+
+**Answer:**
+- The last time the team that Malcolm Briggs was a member of beat the 1894-95 FA Cup winner was in **1895**.",['1 December 2010'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How long had the city where the Yongle Emperor greeted the Karmapa been the capitol city of Yaxing Coach's headquarters location?
+",119446.0,0.9854662357885572,17613.029376,"0
+
+The query is based on a misunderstanding or a misstatement. There is no document that mentions ""Yaxing Coach's headquarters location"" or provides information about the duration of a city being the capitol of Yaxing. Therefore, no documents can be used to answer the query.",['about 400 years'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In what region of the country containing the Cái River is the place where John Phan was born?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""John Phan's Birthplace and the Cái River""  
+   **ID**: 123  
+   **Answer**: The place where John Phan was born is in the Mekong Delta region of Vietnam, which contains the Cái River.",['South Central Coast'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the party that controls the House of Representatives take control of the branch that gives regulators discretion to prohibit proprietary trades?
+",119446.0,0.9854662357885572,17613.029376,"1976
+
+**Documents Used:**
+- **TITLE:** ""The House of Representatives""  
+  **ID:** 1  
+- **TITLE:** ""The Senate and the House of Representatives""  
+  **ID:** 2  
+- **TITLE:** ""The Legislative Branch""  
+  **ID:** 3  
+- **TITLE:** ""The United States Congress""  
+  **ID:** 4  
+- **TITLE:** ""The United States Government""  
+  **ID:** ",['January 2015'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the party Oklahoma's US Senators come from take control of the body determining the rules of the US House and US Senate?
+",119446.0,0.9854662357885572,17613.029376,"1. The query is about when Oklahoma's US Senators came from took control of the body determining the rules of the US House and US Senate. However, the provided documents do not contain any information related to this specific query. Therefore, no documents were used to answer this question.",['January 2015'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What region is to the north of what used to be known as Near East and the body of water between east africa and Arabian Peninsula?
+",119446.0,0.9854662357885572,17613.029376,"1. The region to the north of what used to be known as the Near East is the **Middle East**. 2. The body of water between East Africa and the Arabian Peninsula is the **Red Sea**.
+
+**Documents Used:**
+- TITLE: ""Near East"" (ID: 1)
+- TITLE: ""Middle East"" (ID: 2)
+- TITLE: ""Red Sea"" (ID: 3)",['Kingdom of Saudi Arabia'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which county shares a border with the county where the most populous city in the state where WEKL operates is located?
+",119446.0,0.9854662357885572,17613.029376,"1. The most populous city in the state where WEKL operates is located in the county that shares a border with the county where the city is located. 
+
+To answer this query, I need to determine the state where WEKL operates, identify the most populous city in that state, and then find which county shares a border with the county where that city is located.
+
+From the documents:
+- The document titled ""WEKL"" (ID: 1) states that WEKL is a radio station",['Presque Isle County'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In New Zealand, 12.6% of Christians belong to a church that is also active in Lesotho. What movement was led by a man who challenged this church?
+",119446.0,0.9854662357885572,17613.029376,"12.6% of Christians in New Zealand belong to a church that is also active in Lesotho. The movement led by a man who challenged this church is the **Mormon movement**.
+
+**Documents Used:**
+- TITLE: ""Mormon movement"", ID: 1",['German Renaissance'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the abbreviation for Angela Merkel's original home country that once had border troops called the Deutsche Grenzpolizei?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: Angela Merkel's Original Home Country and Border Troops  
+**ID**: 1  
+
+The abbreviation for Angela Merkel's original home country, Germany, is **DE**. The border troops called the Deutsche Grenzpolizei were part of Germany's military forces.  
+
+2. **TITLE**: Historical Border Troops of Germany  
+**ID**: 2  
+
+The border troops called the Deutsche Grenzpolizei were part of Germany's military forces.  
+
+**Answer List",['GDR'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was the wettest year in the second largest city in the state where Yuma's Library District is located?
+",119446.0,0.9854662357885572,17613.029376,"1. The wettest year in the second largest city in the state where Yuma's Library District is located was 1993. 2. The document that provides this information is ""Yuma, Arizona - Library District"" with ID ""1"". 3. The wettest year in the second largest city in the state where Yuma's Library District is located was 1993. 4. The document that provides this information is ""Yuma, Arizona - Library",['1905'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How long are the city council terms in the second largest city in the state where Yuma is located?
+",119446.0,0.9854662357885572,17613.029376,"4 years
+
+**Documents Used:**
+- **TITLE:** City Council Terms and Responsibilities  
+- **ID:** 1  
+
+**Answer List:**
+- The city council terms in the second largest city in the state where Yuma is located are 4 years.",['four-year'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How many ethnic minorities were looked at differently where the only group larger than BMG's partner from 2005 to 2007 is headquartered?
+",119446.0,0.9854662357885572,17613.029376,"1
+
+**Documents Used:**
+- TITLE: ""How many ethnic minorities were looked at differently where the only group larger than BMG's partner from 2005 to 2007 is headquartered?""
+- ID: 1",['two'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When do hurricanes occur in the ocean that borders the state where Williamsburg, Main Street Station and another share a track?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""When do hurricanes occur in the ocean that borders the state where Williamsburg, Main Street Station and another share a track?""  
+   **ID**: 1  
+
+Hurricanes occur in the Atlantic Ocean, which borders the United States. They typically form between June and November, with the peak season occurring in August and September.",['usually in the summer or fall'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the seat of the county sharing a border with the county in which J.P. Hayes was born?
+",119446.0,0.9854662357885572,17613.029376,"1. The seat of the county sharing a border with the county in which J.P. Hayes was born is **Huntington, West Virginia**. This information is derived from the document titled ""Biography of J.P. Hayes"" with ID ""doc1"". 
+
+2. The county in which J.P. Hayes was born is **Huntington County, West Virginia**. This is also mentioned in the document titled ""Biography of J.P. Hayes"" with ID ""doc1",['Green Bay'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What shares a border with the city where the person who went to the state where the 951 area code is used during the gold rush works?
+",119446.0,0.9854662357885572,17613.029376,"951
+
+**TITLE:** 951  
+**ID:** 951  
+
+The answer is: 951.",['Rio Linda'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How many ethnic minorities were looked at differently in the city where the headquarters of the company that Study in Brown's record label is a part of?
+",119446.0,0.9854662357885572,17613.029376,"1
+
+**Documents Used:**
+- TITLE: ""Study in Brown's record label""  
+  ID: 1
+
+- TITLE: ""Company that Study in Brown's record label is a part of""  
+  ID: 2
+
+- TITLE: ""City where the headquarters of the company that Study in Brown's record label is a part of""  
+  ID: 3
+
+- TITLE: ""How many ethnic minorities were looked at differently in the city where the headquarters of the company",['two'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When was the region that lies to the north of the region where Aluf is located and the Persian Gulf created?
+",119446.0,0.9854662357885572,17613.029376,"1971
+
+**Documents Used:**
+- **TITLE:** Israel's Declaration of Independence
+- **ID:** 1
+
+- **TITLE:** The History of the Knesset
+- **ID:** 2",['1930'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the capital of the county that shares a border with the county whose capital is the birthplace of Erik Jensen?
+",119446.0,0.9854662357885572,17613.029376,"1. The capital of the county that shares a border with the county whose capital is the birthplace of Erik Jensen is **Horsens**.  
+2. The capital of the county whose capital is the birthplace of Erik Jensen is **Herning**.  
+3. The county that shares a border with the county whose capital is Herning is **Vesthimmerland**.  
+4. The capital of Vesthimmerland is **Horsens**.
+
+**Documents Used",['Green Bay'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who won the Indy car race in the largest city and capitol of the state where the Changes Two performer is from?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""Who won the Indy car race in the largest city and capitol of the state where the Changes Two performer is from?""  
+**ID**: 1  
+
+**Answer**:  
+- The Indy car race in the largest city and capitol of the state where the Changes Two performer is from was won by **Mario Andretti**.",['Mario Andretti'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who won the Indy Car Race in the largest populated city of the state where the performer of Mingus Three is from?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""Who won the Indy Car Race in the largest populated city of the state where the performer of Mingus Three is from?""  
+   **ID**: 1  
+
+**Answer**:
+- The performer of ""Mingus Three"" is Charles Mingus.  
+- Charles Mingus was from the state of Mississippi.  
+- The largest populated city in Mississippi is Jackson.  
+- The Indy Car Race in Jackson was won by A.J. Foyt.  
+
+Thus",['Mario Andretti'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When is the opening day of the league of the team with the most titles from the event after which they give out the MLB MVP award?
+",119446.0,0.9854662357885572,17613.029376,"1997-04-14
+
+**Documents Used:**
+- TITLE: ""MLB Season"", ID: 1997-04-14
+
+The opening day of the league for the team with the most titles from the event after which they give out the MLB MVP award is April 14, 1997. This is based on the document titled ""MLB Season"" with the ID 1997-04-1","['Thursday, March 29']",MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When does the regular season of the league where the team with the most titles from the series after which the MLB MVP award is given out plays?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""When does the regular season of the league where the team with the most titles from the series after which the MLB MVP award is given out plays?""  
+**ID**: 1  
+
+The regular season of the league where the team with the most titles from the series after which the MLB MVP award is given out plays is in the **National Football League (NFL)**. The NFL regular season typically starts in late July or early August and runs through December, with the season finale","['March 29, 2018']",MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When is opening day of the season of the league that the team that has the most titles from the competition they gave out MVP awards after?
+",119446.0,0.9854662357885572,17613.029376,"1997-01-01
+
+**Documents Used:**
+- **TITLE:** When is opening day of the season of the league that the team that has the most titles from the competition they gave out MVP awards after?
+- **ID:** 1
+
+**Answer:**
+- The opening day of the season of the league that the team with the most titles from the competition they gave out MVP awards after is January 1, 1997.","['March 29, 2018']",MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who was second pick in the 1999 draft of the league that has a competition where they give out the MLB MVP award after it?
+",119446.0,0.9854662357885572,17613.029376,"1999 Draft Pick
+
+**TITLE**: ""MLB Draft Pick""  
+**ID**: 1  
+
+**TITLE**: ""MLB MVP Award""  
+**ID**: 2  
+
+The second pick in the 1999 draft of the league that gives out the MLB MVP award was **Mark McGwire**.",['Josh Beckett'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: The original language of the film titled and about the city of Tito's final resting place is the co-official language of a country. Where are the headquarters for that country's national radio and TV broadcaster?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""Tito's Final Resting Place""  
+**ID**: 12345  
+**Answer**: The headquarters for the country's national radio and TV broadcaster are in **Tito's Final Resting Place**.  
+
+2. **TITLE**: ""Language and Media in Tito's Country""  
+**ID**: 67890  
+**Answer**: The headquarters for the country's national radio and TV broadcaster are in **Tito's Final Rest",['Pristina'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: A country's military branch, the equivalent of which in the US contains the Air Defense Artillery, was unprepared for the invasion of Ivo Werner's country. When was the word ""Slavs"" used in the national anthem of the unprepared country?
+",119446.0,0.9854662357885572,17613.029376,"1. The document mentions that the ""Slavs"" were used in the national anthem of the unprepared country. The title of the document is ""National Anthem of the Unprepared Country"" and the ID is ""D1"". 
+
+- ""Slavs"" was used in the national anthem of the unprepared country.",['1943–1992'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: A country's military branch, the equivalent of which in the US contains the Air Defense Artillery, was unprepared for the invasion of the country that developed the ZH-29. When was the word ""Slavs"" used in the national anthem of the unprepared country?
+",119446.0,0.9854662357885572,17613.029376,"1945
+
+**Documents Used:**
+- **TITLE:** National Anthem of the Soviet Union  
+  **ID:** 1  
+- **TITLE:** The Role of the Air Defense Artillery in the US Military  
+  **ID:** 2  
+- **TITLE:** The ZH-29 and Its Development Country  
+  **ID:** 3  
+
+**Answer:**
+- The word ""Slavs"" was used in the national anthem of the unprepared country (the Soviet Union",['1943–1992'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Country A developed the ZH-29 and invaded Country B because their military branch that the Air Defense Artillery is a branch of was unprepared. Country B was the only communist country to have an embassy where?
+",119446.0,0.9854662357885572,17613.029376,"1. **Title**: Country A developed the ZH-29 and invaded Country B because their military branch that the Air Defense Artillery is a branch of was unprepared.  
+   **ID**: 1  
+
+2. **Title**: The ZH-29 is a type of weapon system.  
+   **ID**: 2  
+
+3. **Title**: Country B was the only communist country to have an embassy where?  
+   **ID**: 3  
+
+**Answer List**:","[""Alfredo Stroessner's Paraguay""]",MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Hana Mandlikova was born in Country A that invaded Country B because the military branch that helped Old West's local police was unprepared. Country B was the only communist country to have an embassy where?
+",119446.0,0.9854662357885572,17613.029376,"1. **Title:** ""Hana Mandlikova""  
+   **ID:** 1  
+   **Answer:** Hana Mandlikova was born in Czechoslovakia. The country that invaded Country B (Cuba) was the Soviet Union, which was unprepared due to the military branch (Red Army) helping Old West's local police. The only communist country to have an embassy in the United States was Cuba.
+
+2. **Title:** ""Hana Mandlikova""  
+","[""Alfredo Stroessner's Paraguay""]",MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How were the Portuguese expelled from the country that is a natural boundary between the country that hosted the tournament and the country That Dam is located?
+",119446.0,0.9854662357885572,17613.029376,"1. **Title:** How were the Portuguese expelled from the country that is a natural boundary between the country that hosted the tournament and the country That Dam is located?  
+   **ID:** 1
+
+2. **Title:** The Portuguese were expelled from the country that is a natural boundary between the country that hosted the tournament and the country That Dam is located.  
+   **ID:** 2
+
+**Answer:**
+- The Portuguese were expelled from the country that is a natural boundary between the",['The dynasty regrouped and defeated the Portuguese'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did Burma change its name to the country on the natural boundary between the country that hosted the tournament and the country where That Dam is from?
+",119446.0,0.9854662357885572,17613.029376,"1989
+
+**Documents Used:**
+- **TITLE:** ""Burma's name change to Myanmar""
+- **ID:** 1
+- **TITLE:** ""The natural boundary between the country that hosted the tournament and the country where That Dam is from""
+- **ID:** 2",['1989'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who brought the language Hokkien to the country on the natural boundary between the country that hosted the tournament and the country where A Don is from?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: Hokkien, 2. **ID**: 2  
+3. **TITLE**: Hokkien, 4. **ID**: 4  
+
+The answer to the query is: The language Hokkien was brought to the country on the natural boundary by the people from the country where A Don is from.",['Han Chinese emigrants'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When was Burma's name changed to the country between the country that hosted the tournament and the country where A Don is from?
+",119446.0,0.9854662357885572,17613.029376,"1989
+
+**Documents Used:**
+- **TITLE:** ""Burma"" - **ID:** 1
+- **TITLE:** ""A Don"" - **ID:** 2
+
+**Answer:**
+- The name of Burma was changed to the country between the country that hosted the tournament and the country where ""A Don"" is from in 1989.",['1235'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who burned down the city where Dunn Dunn's artist died in the war after which the government got involved in healthcare?
+",119446.0,0.9854662357885572,17613.029376,"117
+
+**Title:** The War of the Roses  
+**ID:** 117  
+
+**Answer:**  
+- The city where Dunn Dunn's artist died in the war was burned down by the forces of the opposing side.  
+- The war after which the government got involved in healthcare was the War of the Roses.  
+- The artist died during the war, and the city was burned down by the opposing forces.",['Confederate Gen. John Bell Hood'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: New coins by the Somali Muslim Ajuran Empire were a proclamation of independence from a nation. How were the people of that nation expelled from country that borders Thailand and Ban Nampo village's country?
+",119446.0,0.9854662357885572,17613.029376, No documents are available to answer this query.,['The dynasty regrouped and defeated the Portuguese'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: A country gained control of Florida after the war in which Charles Edward Nugent saw action. Besides being in different parts of that country, what other differences are there between Real Madrid and Hostafrancs's city's team?
+",119446.0,0.9854662357885572,17613.029376,"1. **TITLE**: ""A country gained control of Florida after the war in which Charles Edward Nugent saw action.""  
+   **ID**: 1  
+
+2. **TITLE**: ""Besides being in different parts of that country, what other differences are there between Real Madrid and Hostafrancs's city's team?""  
+   **ID**: 2  
+
+**Answer List:**
+
+1. The country that gained control of Florida after the war in which Charles Edward Nugent saw action is",['two cities'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In the top five largest urban areas in the US state in which the band performing Scars was formed, where does the city having Pathology rank?
+",119446.0,0.9854662357885572,17613.029376,"1. **Title:** ""In the top five largest urban areas in the US state in which the band performing Scars was formed, where does the city having Pathology rank?""  
+**ID:** 1  
+
+**Answer:**  
+The city having Pathology ranks 4th among the top five largest urban areas in the US state where the band performing ""Scars"" was formed.",['third-largest'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the town WIZE is licensed in become capitol of the state where Ward Township is located?
+",119446.0,0.9854662357885572,17613.029376,"1000000000
+
+The query is based on incorrect assumptions. The documents do not mention a town named ""WIZE"" or any licensing related to it. Additionally, there is no information indicating that ""WIZE"" is a town or that it is licensed. The documents also do not provide any information about ""Ward Township"" being located in a state where a town named ""WIZE"" is the capitol. Therefore, no documents are used to answer this",['1839'],MB,256.0,Final Answer: ,test,1736.0,17.613029376,147.456,musique_128k,1736.0,255.983616,256,0.255983616

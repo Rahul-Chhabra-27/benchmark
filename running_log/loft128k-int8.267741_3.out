@@ -1,0 +1,7 @@
+INT8 preflight passed: torch=2.11.0+cu128, CUDA=12.8, bitsandbytes=0.49.2, GPU=NVIDIA A100-SXM4-80GB, probe=1.0
+Starting LOFT 128K INT8 worker=3; Qwen YaRN-4 loads once
+Worker 3/5 assigned tasks: qampari_128k
+max_context_length not provided, using model's max length: 131072
+Loading LOFT RAG datasets: ['qampari_128k']
+  ✓ Loaded 110 samples from qampari_128k
+Combined 110 total samples from 1 subsets

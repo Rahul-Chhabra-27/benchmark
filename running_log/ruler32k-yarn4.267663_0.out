@@ -1,0 +1,7 @@
+CUDA preflight passed: torch=2.11.0+cu128, CUDA=12.8, GPU=NVIDIA L40S, probe=1.0
+Starting full RULER 32K YaRN-4 worker=0; Qwen loads once
+Worker 0/4 assigned tasks: cwe, niah_multikey_3, niah_single_2, vt
+max_context_length not provided, using model's max length: 131072
+Loading Ruler datasets: ['cwe']
+  ✓ Loaded 200 samples from cwe || context_length = 32768
+Combined 200 total samples from 1 subsets || context_length = 32768

@@ -1,0 +1,26 @@
+dataset: loft
+data_dir: nq_128k
+model: /home/rethinkingai-self/25m0820/kvpress/Qwen3-8B
+device: cuda:0
+press_name: kvzip
+compression_ratio: 0.01
+key_channel_compression_ratio: null
+memory_budget: 512.0
+memory_budget_unit: MB
+fraction: 1.0
+max_new_tokens: 100
+max_context_length: 131072
+query_aware: false
+needle_depth: null
+compression_interval: null
+target_size: null
+hidden_states_buffer_size: null
+output_dir: ./results_loft128k_qwen_yarn4
+log_level: INFO
+model_kwargs:
+  attn_implementation: null
+  dtype: auto
+press_init_command: KVzipPress(compression_ratio=0.01, layerwise=False, n_sink=4,
+  kvzip_plus_normalization=False)
+seed: 42
+fp8: false
