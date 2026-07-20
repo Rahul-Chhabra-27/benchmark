@@ -1,0 +1,11 @@
+answer,uncompressed_kv_memory_mb,answer_prefix,context_tokens,task,token_budget,retained_kv_memory_mb,context_length,retained_context_tokens,predicted_answer,compression_ratio,max_new_tokens,kv_memory_per_token_kb,uncompressed_kv_memory_gb,retained_kv_memory_gb,memory_budget_unit,question,memory_budget
+"['languid' 'million' 'ballpark' 'subtract' 'hepatitis' 'uppity' 'decrease'
+ 'vintner' 'ginger' 'emission']",9633.742848,,65333.0,cwe,13563.0,1999.945728,65536,13563.0,"To determine the 10 most common words in the list, we need to count the frequency of each word. After analyzing the list, the top 10 most common words are:
+
+1. **languid** - Appears multiple times throughout the list.
+2. **ginger** - Also appears frequently.
+3. **emission** - Repeated several times.
+4. **vintner** - Appears often.
+5. **decrease** - Frequent occurrence.
+6. **ballpark** - Repeated multiple times.
+7. **hanger** - Appears several times",0.7924020020510308,120,147.456,9.633742848,1.999945728,GB,Question: What are the 10 most common words in the above list?,2.0

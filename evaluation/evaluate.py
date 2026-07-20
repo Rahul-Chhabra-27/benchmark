@@ -50,6 +50,7 @@ class EvaluationConfig:
     head_compression_ratio: Optional[float] = None
     threshold: Optional[float] = None
     memory_budget: Optional[float] = None
+    memory_budget_unit: str = "GB"
     # Dataset and generation parameters
     fraction: float = 1.0
     max_new_tokens: Optional[int] = None
@@ -101,6 +102,13 @@ class EvaluationConfig:
         # Validate fraction
         assert 0.0 < self.fraction <= 1.0, f"fraction must be between 0.0 and 1.0, got {self.fraction}"
 
+        if self.memory_budget is not None:
+            assert self.memory_budget > 0, f"memory_budget must be positive, got {self.memory_budget}"
+            self.memory_budget_unit = self.memory_budget_unit.upper()
+            assert self.memory_budget_unit in {"MB", "GB"}, (
+                f"memory_budget_unit must be MB or GB, got {self.memory_budget_unit}"
+            )
+
         # Initialize model_kwargs if None
         if self.model_kwargs is None:
             self.model_kwargs = {}
@@ -145,7 +153,7 @@ class EvaluationConfig:
         elif self.head_compression_ratio is not None:
             components[-1] = f"{self.head_compression_ratio:.2f}"
         if self.memory_budget is not None:
-            components.append(f"memory_budget{self.memory_budget:.1f}GB")
+            components.append(f"memory_budget{self.memory_budget:g}{self.memory_budget_unit}")
         if self.fraction < 1.0:
             components.append(f"fraction{self.fraction:.3f}")
         if self.max_context_length is not None:
@@ -161,14 +169,7 @@ class EvaluationConfig:
         dir_name = f"new_{dir_name}" 
         config_dir = output_dir / dir_name
 
-        # Make sure the directory does not exist, if it does, add a number to the end
-        # This is to avoid overwriting results
-        if config_dir.exists():
-            i = 1
-            while (config_dir / f"{i}").exists():
-                i += 1
-            config_dir = config_dir / f"{i}"
-
+        # Use a deterministic directory so interrupted matrix runs can resume.
         config_dir.mkdir(parents=True, exist_ok=True)
         return config_dir
 
@@ -400,6 +401,26 @@ class EvaluationRunner:
             f"Combined {len(combined_df)} total samples from {len(dfs)} subsets || context_length = 32768"
         )
         return combined_df
+
+    def _load_dataset_ruler64k(self, task: str) -> pd.DataFrame:
+        """Load one task from the cached Qwen-tokenized RULER 64K dataset."""
+        huggingface_dataset_id = DATASET_REGISTRY["ruler64k"]
+        dataset = load_dataset(
+            huggingface_dataset_id,
+            "65536",
+            split="test",
+        )
+
+        available_tasks = set(dataset.unique("task"))
+        if task not in available_tasks:
+            available = ", ".join(sorted(available_tasks))
+            raise ValueError(f"Unknown RULER 64K task {task!r}. Available tasks: {available}")
+
+        task_dataset = dataset.filter(lambda example: example["task"] == task)
+        task_df = task_dataset.to_pandas()
+        task_df["context_length"] = 65536
+        print(f"  ✓ Loaded {len(task_df)} samples from {task} || target context length = 65536")
+        return task_df
      ### TODO : specially used for loft rag dataset
     def _load_datasets(self, task_data_dir: List[str]) -> pd.DataFrame:
         """Load LOFT RAG datasets from HuggingFace Hub.
@@ -485,6 +506,14 @@ class EvaluationRunner:
                 df = self._load_datasets_ruler32k(task_data_dir)
             except Exception as e:
                 logger.error(f"Failed to load Ruler32k dataset: {e}")
+                raise
+        elif dataset_name == "ruler64k":
+            if task_data_dir is None:
+                raise ValueError("RULER 64K requires a task name in data_dir")
+            try:
+                df = self._load_dataset_ruler64k(task_data_dir)
+            except Exception as e:
+                logger.error(f"Failed to load RULER 64K task {task_data_dir!r}: {e}")
                 raise
         else:
         # data_dir = str(self.config.data_dir) if self.config.data_dir else None
@@ -615,13 +644,18 @@ class EvaluationRunner:
                     press=self.press,
                     max_new_tokens=max_new_tokens,
                     max_context_length=self.config.max_context_length,
-                    memory_budget = self.config.memory_budget
+                    memory_budget=self.config.memory_budget,
+                    memory_budget_unit=self.config.memory_budget_unit,
                 )
                 self.df.loc[df_group.index, "predicted_answer"] = output["answers"]  # type: ignore[union-attr]
-                # Store the actual compression ratio used (if the press has one)
-                self.df.loc[df_group.index, "compression_ratio"] = (
-                    self.press.compression_ratio if self.press is not None else 0.0  # type: ignore[attr-defined]
-                )  # type: ignore[union-attr, attr-defined]
+                budget_stats = getattr(self.pipeline, "last_memory_budget_stats", None)
+                if budget_stats is not None:
+                    for column, value in budget_stats.items():
+                        self.df.loc[df_group.index, column] = value
+                else:
+                    self.df.loc[df_group.index, "compression_ratio"] = (
+                        self.press.compression_ratio if self.press is not None else 0.0  # type: ignore[attr-defined]
+                    )  # type: ignore[union-attr, attr-defined]
                 torch.cuda.empty_cache()  # Clear CUDA cache to free up memory
 
         logger.info("Inference completed.")
@@ -656,13 +690,201 @@ class EvaluationRunner:
         scorer = SCORER_REGISTRY[dataset_name]
 
         logger.info(f"Calculating metrics for dataset: {dataset_name}")
-        metrics = scorer(self.df)  # type: ignore[call-arg]
+        score = scorer(self.df)  # type: ignore[call-arg]
+        metrics = score if isinstance(score, dict) else {"score": score}
+
+        if "compression_ratio" in self.df.columns:
+            # A shared context may have multiple questions. Count that context once in the summary.
+            context_stats = self.df.drop_duplicates(subset=["context"])
+            metrics["average_compression_ratio"] = float(context_stats["compression_ratio"].mean())
+            metrics["average_original_context_tokens"] = float(context_stats["context_tokens"].mean())
+            metrics["average_retained_context_tokens"] = float(
+                context_stats["retained_context_tokens"].mean()
+            )
+            metrics["kv_memory_per_token_kb"] = float(context_stats["kv_memory_per_token_kb"].iloc[0])
+            metrics["average_retained_kv_memory_mb"] = float(
+                context_stats["retained_kv_memory_mb"].mean()
+            )
+            metrics["average_retained_kv_memory_gb"] = float(
+                context_stats["retained_kv_memory_gb"].mean()
+            )
+            metrics["average_uncompressed_kv_memory_mb"] = float(
+                context_stats["uncompressed_kv_memory_mb"].mean()
+            )
+            metrics["average_uncompressed_kv_memory_gb"] = float(
+                context_stats["uncompressed_kv_memory_gb"].mean()
+            )
+
+            if self.config.memory_budget is not None:
+                metrics["memory_budget"] = self.config.memory_budget
+                metrics["memory_budget_unit"] = self.config.memory_budget_unit
+                metrics["token_budget"] = int(context_stats["token_budget"].iloc[0])
+
+            logger.info(
+                "Average retained context KV memory: "
+                f"{metrics['average_retained_kv_memory_mb']:.2f} MB "
+                f"({metrics['average_retained_kv_memory_gb']:.4f} GB); "
+                f"average compression ratio: {metrics['average_compression_ratio']:.6f}"
+            )
 
         with open(str(save_filename), "w") as f:
             json.dump(metrics, f, indent=4)  # Pretty print JSON
 
         logger.info(f"Metrics saved to {save_filename}")
         logger.info(f"Metrics:\n{json.dumps(metrics, indent=2)}")
+        return metrics
+
+    def _save_results_readme(self, readme_filename: Path, task: str, metrics: Dict[str, Any]):
+        """Write a self-contained summary as soon as one task finishes."""
+        if self.config.memory_budget is None:
+            configuration = f"KVzip baseline (compression ratio {self.config.compression_ratio:.4f})"
+        else:
+            configuration = f"KVzip memory budget: {self.config.memory_budget:g} {self.config.memory_budget_unit}"
+
+        metric_rows = "\n".join(
+            f"| `{name}` | {value:.6f} |" if isinstance(value, float) else f"| `{name}` | {value} |"
+            for name, value in metrics.items()
+        )
+        contents = f"""# {self.config.dataset.upper()} Benchmark Result
+
+- Model: `{self.config.model}`
+- Task: `{task}`
+- Configuration: {configuration}
+- Press: `{self.config.press_name}`
+- Dataset fraction: `{self.config.fraction}`
+
+## Metrics and KV-cache statistics
+
+| Field | Value |
+|---|---:|
+{metric_rows}
+
+Files in this directory:
+
+- `predictions.csv`: per-sample predictions and KV-cache statistics
+- `metrics.json`: machine-readable metrics and averages
+- `config.yaml`: complete evaluation configuration
+"""
+        readme_filename.write_text(contents)
+        logger.info(f"Result summary saved to {readme_filename}")
+
+    def _reset_reused_model_state(self) -> None:
+        """Clear state that must not leak between matrix configurations."""
+        if self.pipeline is None:
+            return
+
+        self.pipeline.last_memory_budget_stats = None  # type: ignore[attr-defined]
+        language_model = (
+            self.pipeline.model.model.language_model
+            if hasattr(self.pipeline.model.model, "language_model")
+            else self.pipeline.model.model
+        )
+        for layer in language_model.layers:
+            layer.self_attn.masked_key_indices = None
+
+        if self.press is not None and hasattr(self.press, "_reset_internal_parameters"):
+            self.press._reset_internal_parameters()  # type: ignore[attr-defined]
+
+        self._setup_deterministic_seeds()
+        torch.cuda.empty_cache()
+
+    def run_memory_budget_matrix(
+        self,
+        tasks: list[str],
+        memory_budgets: list[tuple[float, str]],
+        baseline_compression_ratio: float = 0.01,
+        include_baseline: bool = True,
+    ) -> None:
+        """Run multiple tasks and KV budgets while loading the model only once."""
+        if not tasks:
+            raise ValueError("At least one task is required for a matrix evaluation")
+
+        output_dir = self._setup_directories()
+        self.config.compression_ratio = baseline_compression_ratio
+        self.config.memory_budget = None
+        self._setup_press()
+        self._setup_model_pipeline()
+
+        configurations: list[tuple[Optional[float], str]] = list(memory_budgets)
+        if include_baseline:
+            configurations.insert(0, (None, "MB"))
+
+        for task in tasks:
+            logger.info(f"=== Starting matrix task: '{task}' ===")
+            pending_configurations: list[tuple[Optional[float], str, Path]] = []
+
+            for memory_budget, memory_budget_unit in configurations:
+                self.config.data_dir = task
+                self.config.compression_ratio = baseline_compression_ratio
+                self.config.memory_budget = memory_budget
+                self.config.memory_budget_unit = memory_budget_unit.upper()
+                results_dir = self.config.get_results_dir(output_dir, data_dir=task)
+                predictions_filename = results_dir / "predictions.csv"
+                metrics_filename = results_dir / "metrics.json"
+
+                if predictions_filename.exists() and metrics_filename.exists():
+                    logger.info(
+                        f"Completed results already exist for task={task}, "
+                        f"memory_budget={memory_budget}{memory_budget_unit}; skipping."
+                    )
+                    continue
+                pending_configurations.append((memory_budget, memory_budget_unit, results_dir))
+
+            if not pending_configurations:
+                logger.info(f"All matrix configurations already exist for task '{task}'; skipping dataset load.")
+                continue
+
+            # Dataset text is loaded and prepared once, then copied before every
+            # inference configuration because scoring mutates predicted_answer.
+            self.config.memory_budget = None
+            self.config.memory_budget_unit = "MB"
+            self.config.compression_ratio = baseline_compression_ratio
+            self._setup_press()
+            self._load_and_prepare_dataset(task_data_dir=task)
+            source_df = self.df.copy(deep=True)  # type: ignore[union-attr]
+
+            for memory_budget, memory_budget_unit, results_dir in pending_configurations:
+                self.config.data_dir = task
+                self.config.compression_ratio = baseline_compression_ratio
+                self.config.memory_budget = memory_budget
+                self.config.memory_budget_unit = memory_budget_unit.upper()
+                self._setup_press()
+                self._reset_reused_model_state()
+                self.df = source_df.copy(deep=True)
+
+                if memory_budget is None:
+                    logger.info(
+                        f"Running task={task}, KVzip reference "
+                        f"compression_ratio={baseline_compression_ratio:.4f}"
+                    )
+                else:
+                    logger.info(
+                        f"Running task={task}, logical KVzip budget="
+                        f"{memory_budget:g}{self.config.memory_budget_unit}"
+                    )
+
+                predictions_filename = results_dir / "predictions.csv"
+                metrics_filename = results_dir / "metrics.json"
+                config_filename = results_dir / "config.yaml"
+                readme_filename = results_dir / "README.md"
+
+                self._run_inference()
+                self._save_results(predictions_filename)
+                metrics = self._calculate_and_save_metrics(metrics_filename)
+                self.config.save_config(config_filename)
+                self._save_results_readme(readme_filename, task, metrics)
+                logger.info(
+                    f"Completed task={task}, memory_budget="
+                    f"{memory_budget if memory_budget is not None else 'reference'}"
+                    f"{self.config.memory_budget_unit if memory_budget is not None else ''}"
+                )
+
+            self.df = None
+            del source_df
+            torch.cuda.empty_cache()
+            logger.info(f"=== Completed matrix task: '{task}' ===")
+
+        logger.info("Memory-budget matrix evaluation completed successfully with one model load.")
 
     def run_evaluation(self):
         """
@@ -698,6 +920,7 @@ class EvaluationRunner:
             predictions_filename = results_dir / "predictions.csv"
             metrics_filename = results_dir / "metrics.json"
             config_filename = results_dir / "config.yaml"
+            readme_filename = results_dir / "README.md"
 
             if predictions_filename.exists() and metrics_filename.exists():
                 logger.info(
@@ -710,8 +933,9 @@ class EvaluationRunner:
 
             self._run_inference()
             self._save_results(predictions_filename)
-            self._calculate_and_save_metrics(metrics_filename)
+            metrics = self._calculate_and_save_metrics(metrics_filename)
             self.config.save_config(config_filename)
+            self._save_results_readme(readme_filename, task, metrics)
             logger.info(f"=== Completed task: '{task}' ===")
         logger.info("Evaluation run completed successfully.")
 

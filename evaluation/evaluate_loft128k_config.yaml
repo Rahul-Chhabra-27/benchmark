@@ -1,0 +1,30 @@
+# Qwen3-8B YaRN-4 evaluation on the five cached LOFT 128K tasks.
+output_dir: "./results_loft128k_qwen_yarn4"
+
+model: "/home/rethinkingai-self/25m0820/kvpress/Qwen3-8B"
+dataset: "loft"
+data_dir:
+  - "nq_128k"
+  - "hotpotqa_128k"
+  - "musique_128k"
+  - "qampari_128k"
+  - "quest_128k"
+
+press_name: "kvzip"
+compression_ratio: 0.01
+key_channel_compression_ratio: null
+threshold: null
+memory_budget: null
+memory_budget_unit: "MB"
+
+fraction: 1.0
+max_new_tokens: 100
+max_context_length: 131072
+query_aware: false
+needle_depth: null
+
+device: "cuda:0"
+fp8: false
+model_kwargs:
+  attn_implementation: null
+  dtype: "auto"

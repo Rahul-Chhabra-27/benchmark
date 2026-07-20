@@ -1,0 +1,6 @@
+CUDA preflight passed: torch=2.11.0+cu128, CUDA=12.8, GPU=NVIDIA A100-SXM4-80GB, probe=1.0
+Starting RULER 64K matrix worker=2; Qwen will be loaded once
+Worker 2/5 assigned tasks: niah_multikey_1, niah_single_1, vt
+max_context_length not provided, using model's max length: 131072
+  ✓ Loaded 500 samples from niah_multikey_1 || target context length = 65536
+  ✓ Loaded 500 samples from niah_single_1 || target context length = 65536

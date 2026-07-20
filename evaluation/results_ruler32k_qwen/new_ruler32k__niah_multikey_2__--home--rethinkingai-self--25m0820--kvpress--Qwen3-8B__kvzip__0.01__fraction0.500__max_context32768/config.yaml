@@ -1,0 +1,26 @@
+dataset: ruler32k
+data_dir: niah_multikey_2
+model: /home/rethinkingai-self/25m0820/kvpress/Qwen3-8B
+device: cuda:0
+press_name: kvzip
+compression_ratio: 0.01
+key_channel_compression_ratio: null
+memory_budget: null
+memory_budget_unit: MB
+fraction: 0.5
+max_new_tokens: null
+max_context_length: 32768
+query_aware: false
+needle_depth: null
+compression_interval: null
+target_size: null
+hidden_states_buffer_size: null
+output_dir: ./results_ruler32k_qwen
+log_level: INFO
+model_kwargs:
+  attn_implementation: null
+  dtype: auto
+press_init_command: KVzipPress(compression_ratio=0.01, layerwise=False, n_sink=4,
+  kvzip_plus_normalization=False)
+seed: 42
+fp8: false

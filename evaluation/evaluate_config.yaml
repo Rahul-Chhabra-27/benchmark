@@ -1,16 +1,16 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-output_dir: "./results_infinitebench"
+output_dir: "./results_loft_qwen"
 
-model: "/home/rethinkingai-self/25m0820/kvpress/meta-llama/Llama-3.1-8B-Instruct"
-# model: "/home/rethinkingai-self/25m0820/kvpress/Qwen3-8B"
-dataset: "infinitebench"
-data_dir:
-  - "kv_retrieval"
-  - "code_run"
-  - "math_find"
-  - "longdialogue_qa_eng"
+# Local Qwen model; compute nodes run with Hugging Face offline mode.
+model: "/home/rethinkingai-self/25m0820/kvpress/Qwen3-8B"
+# dataset: "infinitebench"
+# data_dir:
+#   - "kv_retrieval"
+#   - "code_run"
+#   - "math_find"
+#   - "longdialogue_qa_eng"
 
                               # see DATASET_REGISTRY in evaluate_registry.py
 # dataset: "ruler32k"
@@ -29,18 +29,18 @@ data_dir:
   # - "qa_2"
   # - "vt"  
 # model: "/home/rethinkingai-self/25m0820/kvpress/meta-llama/Llama-3.1-8B-Instruct"
-# dataset: "loft"                              # see DATASET_REGISTRY in evaluate_registry.py
-# data_dir:
-# #   - "nq_32k"
-# #   - "nq_128k"
-#   - "hotpotqa_32k"
-#   - "hotpotqa_128k"
-#   - "musique_32k"
-#   - "musique_128k"
-#   - "qampari_32k"
-#   - "qampari_128k"
-#   - "quest_32k"
-#   - "quest_128k"           
+dataset: "loft"                              # see DATASET_REGISTRY in evaluate_registry.py
+data_dir:
+  - "nq_32k"
+  - "nq_128k"
+  - "hotpotqa_32k"
+  - "hotpotqa_128k"
+  - "musique_32k"
+  - "musique_128k"
+  - "qampari_32k"
+  - "qampari_128k"
+  - "quest_32k"
+  - "quest_128k"
 
 # dataset: "ruler"                                  # see DATASET_REGISTRY in evaluate_registry.py
 # data_dir: "4096"                                  # Subdirectory of the dataset (if applicable) else leave "null"
@@ -61,12 +61,13 @@ data_dir:
 #   - "hotpotqa"
 #   - "2wikimqa"                               # Subdirectory of the dataset (if applicable) else leave it will run for all subdirectories
 press_name: "kvzip"                               # see PRESS_REGISTRY in evaluate_registry.py
-compression_ratio: 0.95                            # Compression ratio for the press (0.0 to 1.0)
+compression_ratio: 0.01                            # KVzip baseline; budgeted runs override this dynamically
 key_channel_compression_ratio: null               # For ThinKPress and ComposedPress (0.0 to 1.0)
 threshold: null                                   # For DMSPress
-memory_budget : null                                 # unit of memory should be in GB, if no memory constraint use null
-fraction: 0.5                                     # Fraction of dataset to evaluate (0.0 to 1.0), for quick testing
-max_new_tokens: 50                              # Maximum new tokens to generate (null = use dataset default)
+memory_budget: null                                # Context KV-cache budget; null disables budget-based compression
+memory_budget_unit: "GB"                          # Supported units: MB or GB (decimal)
+fraction: 1.0                                     # Fraction of dataset to evaluate (0.0 to 1.0), for quick testing
+max_new_tokens: 100                              # Maximum new tokens to generate (null = use dataset default)
 max_context_length: null                          # Maximum context length (null = use model maximum)
 query_aware: false                                # Whether to include question in context for query-aware compression
 needle_depth: null                                # Depth (int or list of ints) percentage of the needle in the haystack (0 to 100), only for needle_in_haystack dataset

@@ -1,0 +1,10 @@
+CUDA preflight passed: torch=2.11.0+cu128, CUDA=12.8, GPU=NVIDIA L40S, probe=1.0
+Starting LOFT 32K matrix worker=1; Qwen will be loaded once
+Worker 1/4 assigned tasks: hotpotqa_32k
+max_context_length not provided, using model's max length: 131072
+Loading LOFT RAG datasets: ['hotpotqa_32k']
+  ✓ Loaded 110 samples from hotpotqa_32k
+Combined 110 total samples from 1 subsets
+max_context_length not provided, using model's max length: 131072
+max_context_length not provided, using model's max length: 131072
+max_context_length not provided, using model's max length: 131072

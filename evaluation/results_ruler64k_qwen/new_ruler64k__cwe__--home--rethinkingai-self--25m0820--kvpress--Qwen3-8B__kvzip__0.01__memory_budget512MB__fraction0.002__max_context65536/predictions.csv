@@ -1,0 +1,25 @@
+answer,uncompressed_kv_memory_mb,answer_prefix,context_tokens,task,token_budget,retained_kv_memory_mb,context_length,retained_context_tokens,predicted_answer,compression_ratio,max_new_tokens,kv_memory_per_token_kb,uncompressed_kv_memory_gb,retained_kv_memory_gb,memory_budget_unit,question,memory_budget
+"['languid' 'million' 'ballpark' 'subtract' 'hepatitis' 'uppity' 'decrease'
+ 'vintner' 'ginger' 'emission']",9633.742848,,65333.0,cwe,3472.0,511.967232,65536,3472.0,"To determine the **10 most common words** in the given list, we need to:
+
+1. Count the frequency of each word.
+2. Sort the words by frequency in descending order.
+3. Select the top 10 words.
+
+Let’s go through the process step by step.
+
+---
+
+### Step 1: Count the frequency of each word
+
+We'll count how many times each word appears in the list.
+
+Here is the list of words (for reference):
+
+```
+1. cute
+2. cinema
+3. occupation
+4. relish
+5. heartwood
+6",0.9468568717187332,120,147.456,9.633742848,0.511967232,MB,Question: What are the 10 most common words in the above list?,512.0

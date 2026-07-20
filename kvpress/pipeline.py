@@ -4,7 +4,7 @@
 
 import contextlib
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 import torch
 from transformers import AutoModelForCausalLM, Cache, DynamicCache, Pipeline, QuantizedCache
@@ -19,6 +19,11 @@ from kvpress.presses.key_rerotation_press import KeyRerotationPress
 from kvpress.presses.prefill_decoding_press import PrefillDecodingPress
 
 logger = logging.getLogger(__name__)
+
+MEMORY_UNIT_TO_BYTES = {
+    "MB": 1000**2,
+    "GB": 1000**3,
+}
 
 
 class KVPressTextGenerationPipeline(Pipeline):
@@ -47,6 +52,7 @@ class KVPressTextGenerationPipeline(Pipeline):
         enable_thinking: bool = False,
         cache: Optional[Cache] = None,
         memory_budget: Optional[float] = None,
+        memory_budget_unit: str = "GB",
         **kwargs,
     ):
         """
@@ -100,29 +106,66 @@ class KVPressTextGenerationPipeline(Pipeline):
             "max_context_length": max_context_length,
             "enable_thinking": enable_thinking,
         }
-        forward_kwargs = {"press": press, "max_new_tokens": max_new_tokens,"memory_budget": memory_budget, "cache": cache}
+        forward_kwargs = {
+            "press": press,
+            "max_new_tokens": max_new_tokens,
+            "memory_budget": memory_budget,
+            "memory_budget_unit": memory_budget_unit,
+            "cache": cache,
+        }
         return preprocess_kwargs, forward_kwargs, postprocess_kwargs
-    def _compute_token_budget_from_memory(self, memory_budget_gb: float, batch_size: int = 1) -> int:
-        """
-        Compute how many tokens can fit in the KV cache given a memory budget in GB.
 
-        memory_per_token = num_layers * 2 (K and V) * num_kv_heads * head_dim * dtype_bytes
-        """
+    def _compute_kv_bytes_per_token(self, batch_size: int = 1) -> int:
+        """Return the number of bytes used by one token across the model's KV cache."""
         config = self.model.config
-
         num_layers = config.num_hidden_layers
         num_kv_heads = getattr(config, "num_key_value_heads", config.num_attention_heads)
         head_dim = getattr(config, "head_dim", config.hidden_size // config.num_attention_heads)
-
         dtype = self.model.dtype
         bytes_per_element = torch.finfo(dtype).bits // 8
+        return num_layers * 2 * num_kv_heads * head_dim * bytes_per_element * batch_size
 
-        bytes_per_token = num_layers * 2 * num_kv_heads * head_dim * bytes_per_element * batch_size
+    def _compute_token_budget_from_memory(
+        self, memory_budget: float, memory_budget_unit: str = "GB", batch_size: int = 1
+    ) -> tuple[int, int, int]:
+        """
+        Compute how many tokens can fit in the KV cache for an explicit memory unit.
 
-        memory_budget_bytes = memory_budget_gb * (1024 ** 3)
+        Returns the token budget, bytes per token, and budget in bytes.
+        """
+        if memory_budget <= 0:
+            raise ValueError(f"memory_budget must be positive, got {memory_budget}")
+
+        normalized_unit = memory_budget_unit.strip().upper()
+        if normalized_unit not in MEMORY_UNIT_TO_BYTES:
+            supported_units = ", ".join(MEMORY_UNIT_TO_BYTES)
+            raise ValueError(
+                f"Unsupported memory_budget_unit={memory_budget_unit!r}. Supported units: {supported_units}"
+            )
+
+        bytes_per_token = self._compute_kv_bytes_per_token(batch_size)
+        memory_budget_bytes = int(memory_budget * MEMORY_UNIT_TO_BYTES[normalized_unit])
         token_budget = int(memory_budget_bytes // bytes_per_token)
+        if token_budget < 1:
+            raise ValueError(
+                f"A {memory_budget:g} {memory_budget_unit} KV budget is smaller than one KV token "
+                f"({bytes_per_token} bytes per token for this model)."
+            )
 
-        return token_budget
+        return token_budget, bytes_per_token, memory_budget_bytes
+
+    @staticmethod
+    def _compute_context_compression_ratio(context_length: int, token_budget: int) -> tuple[int, float]:
+        """Return retained context tokens and the compression ratio for a token budget."""
+        if context_length < 1:
+            raise ValueError(f"context_length must be positive, got {context_length}")
+        if token_budget < 1:
+            raise ValueError(f"token_budget must be positive, got {token_budget}")
+
+        retained_context_tokens = min(context_length, token_budget)
+        compression_ratio = 1 - (retained_context_tokens / context_length)
+        return retained_context_tokens, compression_ratio
+
     def preprocess(
         self,
         context: str,
@@ -198,6 +241,7 @@ class KVPressTextGenerationPipeline(Pipeline):
         press: Optional[BasePress] = None,
         cache: Optional[Cache] = None,
         memory_budget: Optional[float] = None,
+        memory_budget_unit: str = "GB",
     ):
         """
         Execute KV cache compression and text generation pipeline.
@@ -235,16 +279,46 @@ class KVPressTextGenerationPipeline(Pipeline):
         if cache is None:
             cache = DynamicCache()
         
-        # Dynamically compute compression_ratio from memory_budget, if provided
-        if memory_budget is not None and press is not None and hasattr(press, "compression_ratio"):
-            token_budget = self._compute_token_budget_from_memory(memory_budget)
-            ratio = 1 - (token_budget / context_length)
-            ratio = max(0.0, min(ratio, 0.99))  # clamp to valid range
-            press.compression_ratio = ratio
-            print(
-                f"memory_budget={memory_budget}GB -> token_budget={token_budget}, "
-                f"context_length={context_length}, computed compression_ratio={ratio:.4f}"
+        bytes_per_token = self._compute_kv_bytes_per_token()
+        compression_ratio = float(getattr(press, "compression_ratio", 0.0)) if press is not None else 0.0
+        retained_context_tokens = max(1, int(context_length * (1 - compression_ratio)))
+        budget_stats: dict[str, Any] = {}
+
+        # Dynamically compute the context compression ratio from the KV-cache budget.
+        if memory_budget is not None:
+            if press is None or not hasattr(press, "compression_ratio"):
+                raise ValueError("memory_budget requires a press with a compression_ratio attribute")
+
+            token_budget, bytes_per_token, memory_budget_bytes = self._compute_token_budget_from_memory(
+                memory_budget, memory_budget_unit
             )
+            retained_context_tokens, ratio = self._compute_context_compression_ratio(context_length, token_budget)
+            press.compression_ratio = ratio
+            compression_ratio = ratio
+            budget_stats = {
+                "memory_budget": memory_budget,
+                "memory_budget_unit": memory_budget_unit.upper(),
+                "token_budget": token_budget,
+            }
+            logger.info(
+                f"memory_budget={memory_budget:g}{memory_budget_unit} -> token_budget={token_budget}, "
+                f"context_length={context_length}, retained_context_tokens={retained_context_tokens}, "
+                f"compression_ratio={ratio:.6f}"
+            )
+
+        retained_kv_bytes = retained_context_tokens * bytes_per_token
+        uncompressed_kv_bytes = context_length * bytes_per_token
+        self.last_memory_budget_stats = {
+            **budget_stats,
+            "kv_memory_per_token_kb": bytes_per_token / 1000,
+            "context_tokens": context_length,
+            "retained_context_tokens": retained_context_tokens,
+            "compression_ratio": compression_ratio,
+            "retained_kv_memory_mb": retained_kv_bytes / 1000**2,
+            "retained_kv_memory_gb": retained_kv_bytes / 1000**3,
+            "uncompressed_kv_memory_mb": uncompressed_kv_bytes / 1000**2,
+            "uncompressed_kv_memory_gb": uncompressed_kv_bytes / 1000**3,
+        }
         # We only perform prefill compression if the press is a prefill press
         perform_prefill_compression = press is not None and not isinstance(press, DecodingPress)
         with press(self.model) if perform_prefill_compression else contextlib.nullcontext():

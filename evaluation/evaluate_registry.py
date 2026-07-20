@@ -62,7 +62,8 @@ DATASET_REGISTRY = {
     "aime25": "alessiodevoto/aime25",
     "math500": "alessiodevoto/math500",
     "loft": "f20180301/loft-rag",
-    "ruler32k": "xAlg-AI/att-hub-ruler-32k"
+    "ruler32k": "xAlg-AI/att-hub-ruler-32k",
+    "ruler64k": "ollamaweights/Ruler-64k",
 }
 
 SCORER_REGISTRY = {
@@ -78,6 +79,7 @@ SCORER_REGISTRY = {
     "math500": math500_scorer,
     "loft": loft_scorer,
     "ruler32k": ruler32k_scorer,
+    "ruler64k": ruler32k_scorer,
 }
 
 

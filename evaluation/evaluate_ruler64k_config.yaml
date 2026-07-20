@@ -1,0 +1,38 @@
+# Qwen3-8B evaluation on the locally cached RULER 64K dataset.
+output_dir: "./results_ruler64k_qwen"
+
+model: "/home/rethinkingai-self/25m0820/kvpress/Qwen3-8B"
+dataset: "ruler64k"
+data_dir:
+  - "cwe"
+  - "fwe"
+  - "niah_multikey_1"
+  - "niah_multikey_2"
+  - "niah_multikey_3"
+  - "niah_multiquery"
+  - "niah_multivalue"
+  - "niah_single_1"
+  - "niah_single_2"
+  - "niah_single_3"
+  - "qa_1"
+  - "qa_2"
+  - "vt"
+
+press_name: "kvzip"
+compression_ratio: 0.01
+key_channel_compression_ratio: null
+threshold: null
+memory_budget: null
+memory_budget_unit: "MB"
+
+fraction: 0.5
+max_new_tokens: null
+max_context_length: 65536
+query_aware: false
+needle_depth: null
+
+device: "cuda:0"
+fp8: false
+model_kwargs:
+  attn_implementation: null
+  dtype: "auto"

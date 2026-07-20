@@ -1,0 +1,16 @@
+{
+    "cwe": {
+        "string_match": 70.0
+    },
+    "average_compression_ratio": 0.8962086541257863,
+    "average_original_context_tokens": 65333.0,
+    "average_retained_context_tokens": 6781.0,
+    "kv_memory_per_token_kb": 147.456,
+    "average_retained_kv_memory_mb": 999.899136,
+    "average_retained_kv_memory_gb": 0.999899136,
+    "average_uncompressed_kv_memory_mb": 9633.742848,
+    "average_uncompressed_kv_memory_gb": 9.633742848,
+    "memory_budget": 1.0,
+    "memory_budget_unit": "GB",
+    "token_budget": 6781
+}

@@ -1,0 +1,330 @@
+token_budget,context_length,uncompressed_kv_memory_gb,task,compression_ratio,retained_context_tokens,kv_memory_per_token_kb,retained_kv_memory_mb,max_new_tokens,predicted_answer,answer_prefix,question,memory_budget_unit,context_tokens,memory_budget,retained_kv_memory_gb,answer,uncompressed_kv_memory_mb
+6781.0,32768,4.55712768,qa_1,0.7805856657498786,6781.0,147.456,999.899136,32, The tradition of singing.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What tradition were the Saint-Evroul monks known for? ",GB,30905.0,1.0,0.999899136,['singing' 'singing' 'singing'],4557.12768
+6781.0,32768,4.804411392,qa_1,0.7918789515683506,6781.0,147.456,999.899136,32, Normandy.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What part of France were the Normans located? ",GB,32582.0,1.0,0.999899136,['north' 'the north' 'north'],4804.411392
+6781.0,32768,4.760322048,qa_1,0.7899513675928507,6781.0,147.456,999.899136,32, The river Deabolis.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What river was Petrela located by? ",GB,32283.0,1.0,0.999899136,['Deabolis' 'the river Deabolis' 'Deabolis'],4760.322048
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, A deterministic Turing machine.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is an example of a machine model that deviates from a generally accepted multi-tape Turing machine? ",GB,32768.0,1.0,0.999899136,"['random access machines' 'random access machines'
+ 'random access machines']",4831.838208
+6781.0,32768,4.815323136,qa_1,0.7923505634492896,6781.0,147.456,999.899136,32, The encoding decision needs to be made on how graphs are encoded as binary strings.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What encoding decision needs to be made in order to determine an exact definition of the formal language? ",GB,32656.0,1.0,0.999899136,"['how graphs are encoded as binary strings'
+ 'how graphs are encoded as binary strings'
+ 'how graphs are encoded as binary strings']",4815.323136
+6781.0,32768,4.732010496,qa_1,0.7886946495902278,6781.0,147.456,999.899136,32, Computational complexity theory most specifically seeks to answer how computational problems can be classified according to their inherent difficulty and how these classes relate to each other.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What does computational complexity theory most specifically seek to answer?  ",GB,32091.0,1.0,0.999899136,"['computational problems' 'computational problems'
+ 'computational problems']",4732.010496
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, Conrad of Montferrat.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Guy's Rival? ",GB,32768.0,1.0,0.999899136,['Conrad of Montferrat' 'Conrad of Montferrat' 'Conrad of Montferrat'],4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, computational resources,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Time and space are both examples of what type of resource? ",GB,32768.0,1.0,0.999899136,['complexity resources' 'complexity resources' 'complexity'],4831.838208
+6781.0,32768,4.7222784,qa_1,0.7882591725214676,6781.0,147.456,999.899136,32, Decision tree is an example of a complexity measure.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Decision tree is an example of what type of measure? ",GB,32025.0,1.0,0.999899136,['Complexity measures' 'complexity measures' 'complexity'],4722.2784
+6781.0,32768,4.67288064,qa_1,0.78602082675923,6781.0,147.456,999.899136,32," The Anglo-Norman language was eventually absorbed into the Anglo-Saxon language of their subjects and influenced it, helping in the development of Middle English.",Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What was the Anglo-Norman language's final form? ",GB,31690.0,1.0,0.999899136,['Modern English' 'Modern English' 'Modern English'],4672.88064
+6781.0,32768,4.785094656,qa_1,0.7910387969554097,6781.0,147.456,999.899136,32, Berengaria,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Richard's fiancee? ",GB,32451.0,1.0,0.999899136,['Berengaria' 'Berengaria' 'Berengaria'],4785.094656
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, the most efficient algorithm solving a given problem,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Classification of resources is contingent on determining the upper and lower bounds of minimum time required by what?   ",GB,32768.0,1.0,0.999899136,"['the most efficient algorithm' 'the most efficient algorithm'
+ 'the most efficient algorithm solving a given problem']",4831.838208
+6781.0,32768,4.603871232,qa_1,0.7828134008071232,6781.0,147.456,999.899136,32, Non-determinism.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the most critical resource in the analysis of computational problems associated with non-deterministic Turing machines? ",GB,31222.0,1.0,0.999899136,['time' 'non-deterministic time' 'non-deterministic time'],4603.871232
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, Norman architecture typically stands out as a new stage in the architectural history of the regions they subdued. They spread a unique Romanesque idiom to England and Italy,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the Norman architecture idiom? ",GB,32768.0,1.0,0.999899136,['Romanesque' 'Romanesque' 'Romanesque'],4831.838208
+6781.0,32768,4.600332288,qa_1,0.7826463234822745,6781.0,147.456,999.899136,32," The colloquial phrase used to convey the continuum of algorithms with unlimited availability irrespective of time is ""the time complexities in any two reasonable and general models of computation",Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the colloquial phrase used to convey the continuum of algorithms with unlimited availability irrespective of time?  ",GB,31198.0,1.0,0.999899136,"['all possible algorithms' 'all possible algorithms'
+ 'all possible algorithms']",4600.332288
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, Time and space.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is one common example of a critical complexity measure? ",GB,32768.0,1.0,0.999899136,['time' 'time complexity' 'time complexity'],4831.838208
+6781.0,32768,4.392861696,qa_1,0.772380920412205,6781.0,147.456,999.899136,32, The Welsh.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Ralph in charge of being at war with? ",GB,29791.0,1.0,0.999899136,['the Welsh' 'the Welsh' 'the Welsh'],4392.861696
+6781.0,32768,4.742479872,qa_1,0.7891611218207824,6781.0,147.456,999.899136,32, probabilistic Turing machine,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the term used to identify a deterministic Turing machine that has additional random bits? ",GB,32162.0,1.0,0.999899136,"['A probabilistic Turing machine' 'probabilistic'
+ 'probabilistic Turing machine']",4742.479872
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, The Norman Arab architectural style is found in the Kingdom of Sicily.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What place had the Norman Arab architectural style? ",GB,32768.0,1.0,0.999899136,['Sicily' 'Sicily' 'Kingdom of Sicily'],4831.838208
+6781.0,32768,4.80854016,qa_1,0.7920576510272923,6781.0,147.456,999.899136,32, Richard the Lion-hearted ruled Cyprus in 1191.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who ruled Cyprus in 1191? ",GB,32610.0,1.0,0.999899136,['Isaac Komnenos' 'Isaac' 'Isaac Komnenos'],4808.54016
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, The output will be either yes or no.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What will the output be for a member of the language of a decision problem? ",GB,32768.0,1.0,0.999899136,['yes' 'yes' 'yes'],4831.838208
+6781.0,32768,4.58440704,qa_1,0.7818912833708588,6781.0,147.456,999.899136,32," The Normans were noted for their military accomplishments and innovations, which were major exports.",Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What was one of the Norman's major exports? ",GB,31090.0,1.0,0.999899136,['fighting horsemen' 'fighting horsemen' 'fighting horsemen'],4584.40704
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, The most commonplace model utilized in complexity theory is the deterministic Turing machine.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the most commonplace model utilized in complexity theory? ",GB,32768.0,1.0,0.999899136,['the Turing machine' 'the Turing machine' 'Turing machine'],4831.838208
+6781.0,32768,4.578361344,qa_1,0.7816032722470934,6781.0,147.456,999.899136,32, Sant'Eufemia.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What monastery did the Saint-Evroul monks establish in Italy? ",GB,31049.0,1.0,0.999899136,"[""Latin monastery at Sant'Eufemia."" ""a Latin monastery at Sant'Eufemia""
+ ""Sant'Eufemia""]",4578.361344
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, A storm dispersed his fleet.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What ruined Richard's plans to reach Acre? ",GB,32768.0,1.0,0.999899136,['a storm' 'a storm' 'a storm'],4831.838208
+6781.0,32768,4.72522752,qa_1,0.7883913246996411,6781.0,147.456,999.899136,32, William of Montreuil,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was in charge of the papal army in the War of Barbastro? ",GB,32045.0,1.0,0.999899136,['William of Montreuil' 'William of Montreuil' 'William of Montreuil'],4725.22752
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, The Normans used the church to unify themselves.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who used the church to unify themselves? ",GB,32768.0,1.0,0.999899136,['dukes' 'the dukes' 'dukes'],4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, 1191,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What year did the storm hit Richard's fleet? ",GB,32768.0,1.0,0.999899136,['1191' '1191' '1191'],4831.838208
+6781.0,32768,4.526014464,qa_1,0.77907734410634,6781.0,147.456,999.899136,32, yes,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What answer denotes that an algorithm has accepted an input string? ",GB,30694.0,1.0,0.999899136,['yes' 'yes' 'yes'],4526.014464
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, The integer factorization problem.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In addition to the traveling salesman problem, what is another example of a function problem? ",GB,32768.0,1.0,0.999899136,"['the integer factorization problem' 'integer factorization'
+ 'integer factorization problem']",4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, 9th century,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When was the Latin version of the word Norman first recorded? ",GB,32768.0,1.0,0.999899136,['9th century' '9th century' '9th century'],4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, In the 1050s.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did Herve serve as a Byzantine general? ",GB,32768.0,1.0,0.999899136,['1050s' 'in the 1050s' 'in the 1050s'],4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, Hereford.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Where was Ralph earl of? ",GB,32768.0,1.0,0.999899136,['Hereford' 'Hereford' 'Hereford'],4831.838208
+6781.0,32768,4.67951616,qa_1,0.7863242476760675,6781.0,147.456,999.899136,32," Jean's nephew Maciot de Bethencourt sold the rights to the islands to Enrique Pérez de Guzmán, 2nd Count de Niebla.",Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who sold the rights? ",GB,31735.0,1.0,0.999899136,['Maciot de Bethencourt' 'Maciot de Bethencourt' 'Maciot de Bethencourt'],4679.51616
+6781.0,32768,4.809719808,qa_1,0.792108651664725,6781.0,147.456,999.899136,32, deterministic Turing machine,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is generally considered to be the most basic iteration of a Turing machine? ",GB,32618.0,1.0,0.999899136,"['A deterministic Turing machine' 'deterministic'
+ 'deterministic Turing machine']",4809.719808
+6781.0,32768,4.617142272,qa_1,0.7834376596831886,6781.0,147.456,999.899136,32, Analysis of algorithms and computability theory.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What two fields of theoretical computer science closely mirror computational complexity theory? ",GB,31312.0,1.0,0.999899136,"['analysis of algorithms and computability theory'
+ 'analysis of algorithms and computability theory'
+ 'analysis of algorithms and computability theory']",4617.142272
+6781.0,32768,4.471160832,qa_1,0.7763669942615923,6781.0,147.456,999.899136,32, The expression set is called a set of triples.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: If two integers are multiplied and output a value, what is this expression set called? ",GB,30322.0,1.0,0.999899136,"['set of triples' 'triple'
+ 'the set of triples (a, b, c) such that the relation a × b = c holds']",4471.160832
+6781.0,32768,4.636459008,qa_1,0.7843399166746176,6781.0,147.456,999.899136,32, The running time may be contingent on the input size.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is one variable on which the running time may be contingent? ",GB,31443.0,1.0,0.999899136,['the instance' 'the instance' 'the size of the instance'],4636.459008
+6781.0,32768,4.573642752,qa_1,0.7813779540252119,6781.0,147.456,999.899136,32, non-deterministic time is a very important resource in analyzing computational problems.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: A non-deterministic Turing machine has the ability to capture what facet of useful analysis? ",GB,31017.0,1.0,0.999899136,['mathematical models' 'mathematical models' 'branching'],4573.642752
+6781.0,32768,4.692344832,qa_1,0.7869084281314813,6781.0,147.456,999.899136,32, Jersey and Guernsey are Channel Islands.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Where are Jersey and Guernsey ",GB,31822.0,1.0,0.999899136,['Channel Islands' 'the Channel Islands' 'the Channel Islands'],4692.344832
+6781.0,32768,4.564353024,qa_1,0.7809329973509078,6781.0,147.456,999.899136,32," Norman architecture is characterized by rounded arches, particularly over windows and doorways.",Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What kind of arches does Norman architecture have? ",GB,30954.0,1.0,0.999899136,['rounded' 'rounded' 'rounded'],4564.353024
+6781.0,32768,4.776247296,qa_1,0.7906517242443889,6781.0,147.456,999.899136,32, Cobham-Edmonds thesis,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What thesis specifies that a polynomial relationship exists within time complexities in a computational model?  ",GB,32391.0,1.0,0.999899136,['Cobham-Edmonds thesis' 'Cobham-Edmonds' 'Cobham-Edmonds thesis'],4776.247296
+6781.0,32768,4.747935744,qa_1,0.7894033976210442,6781.0,147.456,999.899136,32, Harthacnut,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Edward the Confessor's half-brother? ",GB,32199.0,1.0,0.999899136,['Harthacnut' 'Harthacnut' 'Harthacnut'],4747.935744
+6781.0,32768,4.71785472,qa_1,0.7880606344741365,6781.0,147.456,999.899136,32, The Raoulii family were descended from an Italo-Norman named Raoul during the period of the Comnenian Restoration in Byzantine Greece.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What were the origins of the Raouliii family? ",GB,31995.0,1.0,0.999899136,"['Norman mercenary' 'an Italo-Norman named Raoul'
+ 'descended from an Italo-Norman named Raoul']",4717.85472
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, yes or no,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What are the two simple word responses to a decision problem? ",GB,32768.0,1.0,0.999899136,['yes or no' 'yes or no' 'yes or no'],4831.838208
+6781.0,32768,4.667572224,qa_1,0.7857774688822897,6781.0,147.456,999.899136,32, Polynomial time.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: A multi-tape Turing machine requires what type of time for a solution? ",GB,31654.0,1.0,0.999899136,['linear time' 'linear' 'linear'],4667.572224
+6781.0,32768,4.692639744,qa_1,0.7869218200100553,6781.0,147.456,999.899136,32, Bohemond.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Robert's son? ",GB,31824.0,1.0,0.999899136,['Bohemond' 'Bohemond' 'Bohemond'],4692.639744
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, 1060s,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did Robert Crispin go up against the Turks? ",GB,32768.0,1.0,0.999899136,['1060s' 'In the 1060s' 'In the 1060s'],4831.838208
+6781.0,32768,4.621123584,qa_1,0.7836242381696927,6781.0,147.456,999.899136,32, Worst-case time complexity,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What term corresponds to the maximum measurement of time across all functions of n?  ",GB,31339.0,1.0,0.999899136,"['worst-case time complexity' 'worst-case time complexity'
+ 'the worst-case time complexity']",4621.123584
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, Embroidery.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What kind of needlework was used in the creation of the Bayeux Tapestry? ",GB,32768.0,1.0,0.999899136,['embroidery' 'embroidery' 'embroidery'],4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, The quantitative answer to the traveling salesman problem fails to answer the specific instance of a route through all sites in Milan.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is one example of an instance that the quantitative answer to the traveling salesman problem fails to answer? ",GB,32768.0,1.0,0.999899136,"['round trip through all sites in Milan'
+ 'asking for a round trip through all sites in Milan whose total length is at most 10 km'
+ 'a round trip through all sites in Milan whose total length is at most 10 km']",4831.838208
+6781.0,32768,4.757078016,qa_1,0.7898081274604011,6781.0,147.456,999.899136,32, Communication complexity is an example of a complexity measure.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Communication complexity is an example of what type of measure? ",GB,32261.0,1.0,0.999899136,['Complexity measures' 'complexity measures' 'complexity'],4757.078016
+6781.0,32768,4.697063424,qa_1,0.7871224963897784,6781.0,147.456,999.899136,32, Duke William II of Normandy.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was the duke in the battle of Hastings? ",GB,31854.0,1.0,0.999899136,['William the Conqueror' 'William the Conqueror' 'William the Conqueror'],4697.063424
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, A graph is an example of an input used in a decision problem.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What kind of graph is an example of an input used in a decision problem? ",GB,32768.0,1.0,0.999899136,['arbitrary graph' 'arbitrary' 'arbitrary'],4831.838208
+6781.0,32768,4.60357632,qa_1,0.7827994875080077,6781.0,147.456,999.899136,32, binary alphabet,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the name of the alphabet is most commonly used in a problem instance? ",GB,31220.0,1.0,0.999899136,['binary alphabet' 'binary' 'binary'],4603.57632
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, Bethencourt,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who became the King of the Canary Islands? ",GB,32768.0,1.0,0.999899136,['Bethencourt' 'Bethencourt' 'Bethencourt'],4831.838208
+6781.0,32768,4.816207872,qa_1,0.7923887085910232,6781.0,147.456,999.899136,32, the size of the input.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Complexity theory seeks to define the relationship between the scale of algorithms with respect to what other variable? ",GB,32662.0,1.0,0.999899136,['an increase in the input size' 'input size' 'input size'],4816.207872
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, A computational problem.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the term for a task that generally lends itself to being solved by a computer? ",GB,32768.0,1.0,0.999899136,"['computational problems' 'A computational problem'
+ 'computational problem']",4831.838208
+6781.0,32768,4.590747648,qa_1,0.7821925288279318,6781.0,147.456,999.899136,32, The Blum complexity axioms.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is typically used to broadly define complexity measures? ",GB,31133.0,1.0,0.999899136,"['Blum complexity axioms' 'the Blum complexity axioms'
+ 'the Blum complexity axioms']",4590.747648
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, Computational complexity theory.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What branch of theoretical computer science deals with broadly classifying computational problems by difficulty and class of relationship? ",GB,32768.0,1.0,0.999899136,"['Computational complexity theory' 'Computational complexity theory'
+ 'Computational complexity theory']",4831.838208
+6781.0,32768,4.76946432,qa_1,0.7903539959808317,6781.0,147.456,999.899136,32, Time and space.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the most critical resource measured to in assessing the determination of a Turing machine's ability to solve any given set of problems? ",GB,32345.0,1.0,0.999899136,['time' 'time' 'time'],4769.46432
+6781.0,32768,4.788338688,qa_1,0.7911803652264958,6781.0,147.456,999.899136,32, By their inherent difficulty.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: By what main attribute are computational problems classified utilizing computational complexity theory?  ",GB,32473.0,1.0,0.999899136,['inherent difficulty' 'their inherent difficulty' 'inherent difficulty'],4788.338688
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, The Normans attacked Dyrrachium in 1081.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did the Normans attack Dyrrachium? ",GB,32768.0,1.0,0.999899136,['1185' 'in 1185' '1185'],4831.838208
+6781.0,32768,4.8033792,qa_1,0.7918342287029931,6781.0,147.456,999.899136,32, The river Epte.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What river originally bounded the Duchy ",GB,32575.0,1.0,0.999899136,['Seine' 'Epte' 'Seine'],4803.3792
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, Duke Richard II of Normandy.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Emma's brother? ",GB,32768.0,1.0,0.999899136,['Duke Richard II' 'Duke Richard II' 'Duke Richard II'],4831.838208
+6781.0,32768,4.73481216,qa_1,0.7888196823419495,6781.0,147.456,999.899136,32, Integers are commonly expressed in binary notation.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In the encoding of mathematical objects, what is the way in which integers are commonly expressed? ",GB,32110.0,1.0,0.999899136,['binary notation' 'binary notation' 'binary notation'],4734.81216
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, Duke William II of Normandy killed Harold II at the Battle of Hastings.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who killed Harold II?  ",GB,32768.0,1.0,0.999899136,['William II' 'Duke William II' 'Duke William II'],4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, T(n) = O(n²),Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: How would one write T(n) = 7n2 + 15n + 40 in big O notation?  ",GB,32768.0,1.0,0.999899136,['T(n) = O(n2)' 'T(n) = O(n2)' 'T(n) = O(n2)'],4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, 11th century,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In what century did important classical music developments occur in Normandy? ",GB,32768.0,1.0,0.999899136,['11th' 'the 11th' '11th'],4831.838208
+6781.0,32768,4.696178688,qa_1,0.7870823913589551,6781.0,147.456,999.899136,32, Time and space.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is a commonly used measurement used to determine the complexity of a computational problem? ",GB,31848.0,1.0,0.999899136,"['how much time the best algorithm requires to solve the problem' 'time'
+ 'time']",4696.178688
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, 1072,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When was Scotland invaded by William? ",GB,32768.0,1.0,0.999899136,['1072' '1072' '1072'],4831.838208
+6781.0,32768,4.738203648,qa_1,0.7889708399464724,6781.0,147.456,999.899136,32, The set of all connected graphs related to this decision problem is referred to as the formal language associated with the decision problem.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the term for the set of all connected graphs related to this decision problem? ",GB,32133.0,1.0,0.999899136,"['formal language' 'The formal language'
+ 'The formal language associated with this decision problem']",4738.203648
+6781.0,32768,4.705173504,qa_1,0.7874894230467893,6781.0,147.456,999.899136,32, Non-deterministic Turing machine,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What type of Turing machine can be characterized by checking multiple possibilities at the same time? ",GB,31909.0,1.0,0.999899136,"['non-deterministic' 'non-deterministic'
+ 'non-deterministic Turing machine']",4705.173504
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, At the Battle of Hastings.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Where did Harold II die? ",GB,32768.0,1.0,0.999899136,['Battle of Hastings' 'the Battle of Hastings' 'at the Battle of Hastings'],4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, input string,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is another term for the string of a problem instance? ",GB,32768.0,1.0,0.999899136,['bitstrings' 'bitstrings' 'bitstrings'],4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, 2000 kilometers,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: By how many kilometers does the traveling salesman problem seek to classify a route between the 15 largest cities in Germany? ",GB,32768.0,1.0,0.999899136,['2000' '2000' '2000'],4831.838208
+6781.0,32768,4.76946432,qa_1,0.7903539959808317,6781.0,147.456,999.899136,32, Dyrrachium fell to the Normans in 1082.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did Dyrrachium  fall to the Normans? ",GB,32345.0,1.0,0.999899136,['1082' 'February 1082' 'February 1082'],4769.46432
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, The size of the input is measured in bits.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In what unit is the size of the input measured? ",GB,32768.0,1.0,0.999899136,['bits' 'bits' 'bits'],4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32," The method used to intuitively assess or quantify the amount of resources required to solve a computational problem is computational complexity theory, which classifies problems based on their inherent",Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What method is used to intuitively assess or quantify the amount of resources required to solve a computational problem? ",GB,32768.0,1.0,0.999899136,"['mathematical models of computation' 'mathematical models of computation'
+ 'mathematical models of computation']",4831.838208
+6781.0,32768,4.798365696,qa_1,0.791616729664116,6781.0,147.456,999.899136,32, instance,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is another name for any given measure of input associated with a problem? ",GB,32541.0,1.0,0.999899136,['instances' 'the instance' 'instance'],4798.365696
+6781.0,32768,4.809129984,qa_1,0.7920831544735389,6781.0,147.456,999.899136,32," Denmark, Iceland, and Norway.",Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: From which countries did the Norse originate? ",GB,32614.0,1.0,0.999899136,"['Denmark, Iceland and Norway' 'Denmark, Iceland and Norway'
+ 'Denmark, Iceland and Norway' 'Denmark, Iceland and Norway']",4809.129984
+6781.0,32768,4.780818432,qa_1,0.7908518906915057,6781.0,147.456,999.899136,32, Two.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: How many customaries does Norman customary law have? ",GB,32422.0,1.0,0.999899136,['two' 'two' 'two'],4780.818432
+6781.0,32768,4.675239936,qa_1,0.7861288084274269,6781.0,147.456,999.899136,32, 1169,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In what year did the Norman's invade at Bannow Bay? ",GB,31706.0,1.0,0.999899136,['1169' '1169' '1169'],4675.239936
+6781.0,32768,4.721836032,qa_1,0.7882393354568734,6781.0,147.456,999.899136,32, Big O notation,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What expression is generally used to convey upper or lower bounds? ",GB,32022.0,1.0,0.999899136,['big O notation' 'big O notation' 'big O notation'],4721.836032
+6781.0,32768,4.450811904,qa_1,0.7753445534057779,6781.0,147.456,999.899136,32, Some complexity classes have complicated definitions that prevent classification into a framework.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What has complicated definitions that prevent classification into a framework? ",GB,30184.0,1.0,0.999899136,['complexity classes' 'complexity classes' 'some complexity classes'],4450.811904
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, The French Wars of Religion were in the 16th century.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When were the French wars of religion? ",GB,32768.0,1.0,0.999899136,['16th century' 'the 16th century' 'in the 16th century'],4831.838208
+6781.0,32768,4.7628288,qa_1,0.790061919504644,6781.0,147.456,999.899136,32, They are all equally powerful in principle.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What commonality do alternate machine models, such as random access machines, share with Turing machines? ",GB,32300.0,1.0,0.999899136,"['the machines operate deterministically' 'deterministically'
+ 'the machines operate deterministically']",4762.8288
+6781.0,32768,4.534419456,qa_1,0.7794868459562291,6781.0,147.456,999.899136,32, Normandy.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: To where did Ethelred flee? ",GB,30751.0,1.0,0.999899136,['Normandy' 'Normandy' 'Normandy'],4534.419456
+6781.0,32768,4.762681344,qa_1,0.7900554196724356,6781.0,147.456,999.899136,32, computational models,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Big O notation provides autonomy to upper and lower bounds with relationship to what?  ",GB,32299.0,1.0,0.999899136,"['the computational model'
+ 'specific details of the computational model used'
+ 'the specific details of the computational model used']",4762.681344
+6781.0,32768,4.825792512,qa_1,0.7928010511198704,6781.0,147.456,999.899136,32, The Siege of Antioch took place in 1097.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did the Siege of Antioch take place? ",GB,32727.0,1.0,0.999899136,['1097' '1097' '1097'],4825.792512
+6781.0,32768,4.589273088,qa_1,0.782122546027054,6781.0,147.456,999.899136,32, Raimbaud,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was the leader when the Franks entered the Euphrates valley? ",GB,31123.0,1.0,0.999899136,['Oursel' 'Oursel' 'Oursel'],4589.273088
+6781.0,32768,4.683350016,qa_1,0.7864991656433992,6781.0,147.456,999.899136,32, Cobham's thesis.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Whose thesis states that the solution to a problem is solvable with reasonable resources assuming it allows for a polynomial time algorithm? ",GB,31761.0,1.0,0.999899136,"[""Cobham's thesis"" ""Cobham's"" 'Cobham']",4683.350016
+6781.0,32768,4.571578368,qa_1,0.7812792310421572,6781.0,147.456,999.899136,32, time and space,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What are two basic primary resources used to guage complexity? ",GB,31003.0,1.0,0.999899136,['time and storage' 'time and storage' 'time and storage'],4571.578368
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, Dyrrachium was located in the region of present-day Albania.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Where was Dyrrachium located? ",GB,32768.0,1.0,0.999899136,['the Adriatic' 'the Adriatic' 'Adriatic'],4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, King Charles III of West Francia.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who did Rollo sign the treaty of Saint-Clair-sur-Epte with? ",GB,32768.0,1.0,0.999899136,['King Charles III' 'King Charles III' 'King Charles III'],4831.838208
+6781.0,32768,4.71932928,qa_1,0.7881268551788783,6781.0,147.456,999.899136,32, the chosen machine model,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Concrete bounding of computation time frequently produces complexity classes contingent upon what? ",GB,32005.0,1.0,0.999899136,"['chosen machine model' 'the chosen machine model'
+ 'the chosen machine model']",4719.32928
+6781.0,32768,4.727144448,qa_1,0.7884771351924637,6781.0,147.456,999.899136,32, The measurement of time complexity left unaffected by conversion between machine models.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In considering Turing machines and alternate variables, what measurement left unaffected by conversion between machine models?  ",GB,32058.0,1.0,0.999899136,['computational power' 'computational power' 'computational power'],4727.144448
+6781.0,32768,4.802199552,qa_1,0.7917830933153192,6781.0,147.456,999.899136,32," The duchy of Normandy was ruled by the Normans, who were descended from Norse raiders and pirates from Denmark, Iceland, and Norway. The",Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who ruled the duchy of Normandy ",GB,32567.0,1.0,0.999899136,['Richard I' 'Richard I' 'Richard I'],4802.199552
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32," 8,000",Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: How many men were in Robert's army? ",GB,32768.0,1.0,0.999899136,"['30,000' '30,000' '30,000']",4831.838208
+6781.0,32768,4.831838208,qa_1,0.793060302734375,6781.0,147.456,999.899136,32, Graphs can be encoded directly via their adjacency matrices.,Answer:,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is one way in which graphs can be encoded?  ",GB,32768.0,1.0,0.999899136,['adjacency matrices' 'directly via their adjacency matrices'],4831.838208
