@@ -110,3 +110,130 @@ Found the latest cached dataset configuration 'default' at /home/rethinkingai-se
 2026-07-21 04:04:13,528 - INFO - Starting inference...
 Running Inference:   0%|          | 0/1 [00:00<?, ?it/s]/home/rethinkingai-self/25m0820/miniconda3/envs/kvpress/lib/python3.11/site-packages/bitsandbytes/autograd/_functions.py:123: UserWarning: MatMul8bitLt: inputs will be cast from torch.bfloat16 to float16 during quantization
   warnings.warn(f"MatMul8bitLt: inputs will be cast from {A.dtype} to float16 during quantization")
+Running Inference: 100%|██████████| 1/1 [36:57<00:00, 2217.41s/it]Running Inference: 100%|██████████| 1/1 [36:57<00:00, 2217.41s/it]
+2026-07-21 04:41:10,955 - INFO - Inference completed.
+2026-07-21 04:41:10,964 - INFO - Results saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget256MB__int8/predictions.csv
+2026-07-21 04:41:10,964 - INFO - Calculating metrics for dataset: loft
+2026-07-21 04:41:10,979 - INFO - Average retained context KV memory: 255.98 MB (0.2560 GB); average compression ratio: 0.965056
+2026-07-21 04:41:10,980 - INFO - Metrics saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget256MB__int8/metrics.json
+2026-07-21 04:41:10,980 - INFO - Metrics:
+{
+  "em": 0.045454545454545456,
+  "subspan_em": 0.1,
+  "f1": 0.07771158792897924,
+  "num_samples": 110,
+  "average_compression_ratio": 0.9650556573199943,
+  "average_original_context_tokens": 49679.0,
+  "average_retained_context_tokens": 1736.0,
+  "kv_memory_per_token_kb": 147.456,
+  "average_retained_kv_memory_mb": 255.983616,
+  "average_retained_kv_memory_gb": 0.255983616,
+  "average_uncompressed_kv_memory_mb": 7325.466624,
+  "average_uncompressed_kv_memory_gb": 7.325466624,
+  "memory_budget": 256.0,
+  "memory_budget_unit": "MB",
+  "token_budget": 1736
+}
+2026-07-21 04:41:10,984 - INFO - Result summary saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget256MB__int8/README.md
+2026-07-21 04:41:10,984 - INFO - Completed task=hotpotqa_32k, memory_budget=256.0MB
+2026-07-21 04:41:10,984 - INFO - Set KVzipPress compression_ratio to 0.01
+2026-07-21 04:41:10,984 - INFO - KV Press 'kvzip' setup.
+2026-07-21 04:41:10,986 - INFO - Set deterministic seeds to 42
+2026-07-21 04:41:10,986 - INFO - Running task=hotpotqa_32k, logical KVzip budget=512MB
+2026-07-21 04:41:11,005 - INFO - Starting inference...
+Running Inference:   0%|          | 0/1 [00:00<?, ?it/s]/home/rethinkingai-self/25m0820/miniconda3/envs/kvpress/lib/python3.11/site-packages/bitsandbytes/autograd/_functions.py:123: UserWarning: MatMul8bitLt: inputs will be cast from torch.bfloat16 to float16 during quantization
+  warnings.warn(f"MatMul8bitLt: inputs will be cast from {A.dtype} to float16 during quantization")
+Running Inference: 100%|██████████| 1/1 [11:13<00:00, 673.44s/it]Running Inference: 100%|██████████| 1/1 [11:13<00:00, 673.44s/it]
+2026-07-21 04:52:24,485 - INFO - Inference completed.
+2026-07-21 04:52:24,492 - INFO - Results saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget512MB__int8/predictions.csv
+2026-07-21 04:52:24,492 - INFO - Calculating metrics for dataset: loft
+2026-07-21 04:52:24,506 - INFO - Average retained context KV memory: 511.97 MB (0.5120 GB); average compression ratio: 0.930111
+2026-07-21 04:52:24,507 - INFO - Metrics saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget512MB__int8/metrics.json
+2026-07-21 04:52:24,507 - INFO - Metrics:
+{
+  "em": 0.07272727272727272,
+  "subspan_em": 0.10909090909090909,
+  "f1": 0.12339393939393939,
+  "num_samples": 110,
+  "average_compression_ratio": 0.9301113146399888,
+  "average_original_context_tokens": 49679.0,
+  "average_retained_context_tokens": 3472.0,
+  "kv_memory_per_token_kb": 147.456,
+  "average_retained_kv_memory_mb": 511.967232,
+  "average_retained_kv_memory_gb": 0.511967232,
+  "average_uncompressed_kv_memory_mb": 7325.466624,
+  "average_uncompressed_kv_memory_gb": 7.325466624,
+  "memory_budget": 512.0,
+  "memory_budget_unit": "MB",
+  "token_budget": 3472
+}
+2026-07-21 04:52:24,511 - INFO - Result summary saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget512MB__int8/README.md
+2026-07-21 04:52:24,511 - INFO - Completed task=hotpotqa_32k, memory_budget=512.0MB
+2026-07-21 04:52:24,511 - INFO - Set KVzipPress compression_ratio to 0.01
+2026-07-21 04:52:24,511 - INFO - KV Press 'kvzip' setup.
+2026-07-21 04:52:24,513 - INFO - Set deterministic seeds to 42
+2026-07-21 04:52:24,513 - INFO - Running task=hotpotqa_32k, logical KVzip budget=1GB
+2026-07-21 04:52:24,533 - INFO - Starting inference...
+Running Inference:   0%|          | 0/1 [00:00<?, ?it/s]/home/rethinkingai-self/25m0820/miniconda3/envs/kvpress/lib/python3.11/site-packages/bitsandbytes/autograd/_functions.py:123: UserWarning: MatMul8bitLt: inputs will be cast from torch.bfloat16 to float16 during quantization
+  warnings.warn(f"MatMul8bitLt: inputs will be cast from {A.dtype} to float16 during quantization")
+Running Inference: 100%|██████████| 1/1 [05:30<00:00, 330.25s/it]Running Inference: 100%|██████████| 1/1 [05:30<00:00, 330.25s/it]
+2026-07-21 04:57:54,803 - INFO - Inference completed.
+2026-07-21 04:57:54,811 - INFO - Results saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget1GB__int8/predictions.csv
+2026-07-21 04:57:54,811 - INFO - Calculating metrics for dataset: loft
+2026-07-21 04:57:54,824 - INFO - Average retained context KV memory: 999.90 MB (0.9999 GB); average compression ratio: 0.863504
+2026-07-21 04:57:54,825 - INFO - Metrics saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget1GB__int8/metrics.json
+2026-07-21 04:57:54,825 - INFO - Metrics:
+{
+  "em": 0.34545454545454546,
+  "subspan_em": 0.43636363636363634,
+  "f1": 0.4288435199452149,
+  "num_samples": 110,
+  "average_compression_ratio": 0.8635036937136416,
+  "average_original_context_tokens": 49679.0,
+  "average_retained_context_tokens": 6781.0,
+  "kv_memory_per_token_kb": 147.456,
+  "average_retained_kv_memory_mb": 999.899136,
+  "average_retained_kv_memory_gb": 0.999899136,
+  "average_uncompressed_kv_memory_mb": 7325.466624,
+  "average_uncompressed_kv_memory_gb": 7.325466624,
+  "memory_budget": 1.0,
+  "memory_budget_unit": "GB",
+  "token_budget": 6781
+}
+2026-07-21 04:57:54,829 - INFO - Result summary saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget1GB__int8/README.md
+2026-07-21 04:57:54,829 - INFO - Completed task=hotpotqa_32k, memory_budget=1.0GB
+2026-07-21 04:57:54,829 - INFO - Set KVzipPress compression_ratio to 0.01
+2026-07-21 04:57:54,829 - INFO - KV Press 'kvzip' setup.
+2026-07-21 04:57:54,836 - INFO - Set deterministic seeds to 42
+2026-07-21 04:57:54,836 - INFO - Running task=hotpotqa_32k, logical KVzip budget=2GB
+2026-07-21 04:57:54,855 - INFO - Starting inference...
+Running Inference:   0%|          | 0/1 [00:00<?, ?it/s]/home/rethinkingai-self/25m0820/miniconda3/envs/kvpress/lib/python3.11/site-packages/bitsandbytes/autograd/_functions.py:123: UserWarning: MatMul8bitLt: inputs will be cast from torch.bfloat16 to float16 during quantization
+  warnings.warn(f"MatMul8bitLt: inputs will be cast from {A.dtype} to float16 during quantization")
+Running Inference: 100%|██████████| 1/1 [04:24<00:00, 264.43s/it]Running Inference: 100%|██████████| 1/1 [04:24<00:00, 264.43s/it]
+2026-07-21 05:02:19,309 - INFO - Inference completed.
+2026-07-21 05:02:19,316 - INFO - Results saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget2GB__int8/predictions.csv
+2026-07-21 05:02:19,316 - INFO - Calculating metrics for dataset: loft
+2026-07-21 05:02:19,329 - INFO - Average retained context KV memory: 1999.95 MB (1.9999 GB); average compression ratio: 0.726987
+2026-07-21 05:02:19,330 - INFO - Metrics saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget2GB__int8/metrics.json
+2026-07-21 05:02:19,330 - INFO - Metrics:
+{
+  "em": 0.42727272727272725,
+  "subspan_em": 0.5454545454545454,
+  "f1": 0.5154624163715072,
+  "num_samples": 110,
+  "average_compression_ratio": 0.7269872581976288,
+  "average_original_context_tokens": 49679.0,
+  "average_retained_context_tokens": 13563.0,
+  "kv_memory_per_token_kb": 147.456,
+  "average_retained_kv_memory_mb": 1999.945728,
+  "average_retained_kv_memory_gb": 1.999945728,
+  "average_uncompressed_kv_memory_mb": 7325.466624,
+  "average_uncompressed_kv_memory_gb": 7.325466624,
+  "memory_budget": 2.0,
+  "memory_budget_unit": "GB",
+  "token_budget": 13563
+}
+2026-07-21 05:02:19,334 - INFO - Result summary saved to results_loft32k_qwen_int8/new_loft__hotpotqa_32k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget2GB__int8/README.md
+2026-07-21 05:02:19,334 - INFO - Completed task=hotpotqa_32k, memory_budget=2.0GB
+2026-07-21 05:02:19,335 - INFO - === Completed matrix task: 'hotpotqa_32k' ===
+2026-07-21 05:02:19,335 - INFO - Memory-budget matrix evaluation completed successfully with one model load.

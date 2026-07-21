@@ -1,0 +1,16 @@
+{
+    "niah_multiquery": {
+        "string_match": 18.25
+    },
+    "average_compression_ratio": 0.9581316009130227,
+    "average_original_context_tokens": 32387.195,
+    "average_retained_context_tokens": 1356.0,
+    "kv_memory_per_token_kb": 147.456,
+    "average_retained_kv_memory_mb": 199.95033599999996,
+    "average_retained_kv_memory_gb": 0.19995033600000006,
+    "average_uncompressed_kv_memory_mb": 4775.68622592,
+    "average_uncompressed_kv_memory_gb": 4.7756862259199995,
+    "memory_budget": 0.2,
+    "memory_budget_unit": "GB",
+    "token_budget": 1356
+}

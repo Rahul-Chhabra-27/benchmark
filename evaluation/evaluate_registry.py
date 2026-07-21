@@ -13,6 +13,7 @@ from benchmarks.ruler.calculate_metrics import calculate_metrics as ruler_scorer
 from benchmarks.zero_scrolls.calculate_metrics import calculate_metrics as zero_scrolls_scorer
 from benchmarks.loft.calculate_metrics import calculate_metrics as loft_scorer
 from benchmarks.ruler32k.calculate_metrics import calculate_metrics as ruler32k_scorer
+from benchmarks.synthetic_kv.calculate_metrics import calculate_metrics as synthetic_kv_scorer
 
 from kvpress import (
     AdaKVPress,
@@ -64,6 +65,7 @@ DATASET_REGISTRY = {
     "loft": "f20180301/loft-rag",
     "ruler32k": "xAlg-AI/att-hub-ruler-32k",
     "ruler64k": "ollamaweights/Ruler-64k",
+    "synthetic_kv": "ollamaweights/synthetic-kv-qwen3-8b",
 }
 
 SCORER_REGISTRY = {
@@ -80,6 +82,7 @@ SCORER_REGISTRY = {
     "loft": loft_scorer,
     "ruler32k": ruler32k_scorer,
     "ruler64k": ruler32k_scorer,
+    "synthetic_kv": synthetic_kv_scorer,
 }
 
 

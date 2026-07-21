@@ -20,6 +20,7 @@ from fire import Fire
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, FineGrainedFP8Config, Pipeline, pipeline
 from verify_int8_model import verify_int8_model
+from verify_int4_model import verify_int4_model
 
 from kvpress import (
     ComposedPress,
@@ -80,6 +81,7 @@ class EvaluationConfig:
     # Quantization
     fp8: bool = False
     int8: bool = False
+    int4: bool = False
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -115,7 +117,8 @@ class EvaluationConfig:
         if self.model_kwargs is None:
             self.model_kwargs = {}
 
-        assert not (self.fp8 and self.int8), "fp8 and int8 quantization cannot both be enabled"
+        enabled_quantization_modes = sum([self.fp8, self.int8, self.int4])
+        assert enabled_quantization_modes <= 1, "Only one of fp8, int8, or int4 may be enabled"
 
         if self.dataset == "needle_in_haystack":
             assert self.needle_depth is not None, "needle_depth must be set for needle_in_haystack"
@@ -164,6 +167,8 @@ class EvaluationConfig:
             components.append(f"max_context{self.max_context_length}")
         if self.int8:
             components.append("int8")
+        if self.int4:
+            components.append("int4_nf4")
         if self.query_aware:
             components.append("query_aware")
         if self.key_channel_compression_ratio is not None:
@@ -427,6 +432,51 @@ class EvaluationRunner:
         task_df["context_length"] = 65536
         print(f"  ✓ Loaded {len(task_df)} samples from {task} || target context length = 65536")
         return task_df
+
+    def _load_dataset_synthetic_kv(self, task: str) -> pd.DataFrame:
+        """Expand one compact synthetic-KV context into question/answer rows."""
+        if task != "64k":
+            raise ValueError(f"Unknown synthetic-KV configuration {task!r}; expected '64k'")
+
+        dataset = load_dataset(
+            DATASET_REGISTRY["synthetic_kv"],
+            split="test",
+        )
+        expanded_rows: list[dict[str, Any]] = []
+        for compact_row in dataset:
+            context = compact_row["context"]
+            questions = compact_row["questions"]
+            answers = compact_row["answers"]
+            if len(questions) != len(answers):
+                raise ValueError(
+                    f"Mismatched questions/answers for {compact_row['context_id']}: "
+                    f"{len(questions)} != {len(answers)}"
+                )
+
+            max_new_tokens = int(compact_row.get("max_new_tokens", 32))
+            for question, answer in zip(questions, answers):
+                expanded_rows.append(
+                    {
+                        "context_id": compact_row["context_id"],
+                        "context": context,
+                        "question": question,
+                        "answer": [answer],
+                        "task": "synthetic_kv_64k",
+                        "answer_prefix": "",
+                        "max_new_tokens": max_new_tokens,
+                        "context_length": int(compact_row.get("context_tokens", 65536)),
+                    }
+                )
+
+        if not expanded_rows:
+            raise ValueError("The synthetic-KV dataset contains no questions")
+
+        df = pd.DataFrame(expanded_rows)
+        print(
+            f"  ✓ Expanded {len(dataset)} compact context(s) into {len(df)} questions "
+            f"|| target context length = 65536"
+        )
+        return df
      ### TODO : specially used for loft rag dataset
     def _load_datasets(self, task_data_dir: List[str]) -> pd.DataFrame:
         """Load LOFT RAG datasets from HuggingFace Hub.
@@ -521,6 +571,14 @@ class EvaluationRunner:
             except Exception as e:
                 logger.error(f"Failed to load RULER 64K task {task_data_dir!r}: {e}")
                 raise
+        elif dataset_name == "synthetic_kv":
+            if task_data_dir is None:
+                raise ValueError("Synthetic-KV requires a configuration name in data_dir")
+            try:
+                df = self._load_dataset_synthetic_kv(task_data_dir)
+            except Exception as e:
+                logger.error(f"Failed to load synthetic-KV configuration {task_data_dir!r}: {e}")
+                raise
         else:
         # data_dir = str(self.config.data_dir) if self.config.data_dir else None
             data_dir = task_data_dir if task_data_dir is not None else (
@@ -581,6 +639,15 @@ class EvaluationRunner:
             )
             logger.info("INT8 bitsandbytes quantization enabled.")
 
+        if self.config.int4:
+            model_kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_use_double_quant=True,
+            )
+            logger.info("4-bit bitsandbytes NF4 quantization enabled.")
+
         if isinstance(self.press, ObservedAttentionPress):
             model_kwargs["attn_implementation"] = "eager"
             logger.info("ObservedAttentionPress detected, setting attn_implementation to 'eager'.")
@@ -609,6 +676,9 @@ class EvaluationRunner:
         if self.config.int8:
             int8_verification = verify_int8_model(self.pipeline.model)
             logger.info("INT8 model verification passed: %s", int8_verification)
+        if self.config.int4:
+            int4_verification = verify_int4_model(self.pipeline.model)
+            logger.info("4-bit NF4 model verification passed: %s", int4_verification)
 
         self.pipeline.model.eval()
         logger.info("Model pipeline loaded.")

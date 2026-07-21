@@ -1,0 +1,654 @@
+predicted_answer,retained_kv_memory_mb,answer,token_budget,memory_budget,question,max_new_tokens,kv_memory_per_token_kb,answer_prefix,uncompressed_kv_memory_mb,context_length,context_tokens,retained_kv_memory_gb,uncompressed_kv_memory_gb,task,memory_budget_unit,compression_ratio,retained_context_tokens
+ France,399.900672,['France' 'France' 'France' 'France'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In what country is Normandy located? ",32,147.456,Answer:,4586.471424,32768,31104.0,0.399900672,4.586471424,qa_1,GB,0.9128086419753086,2712.0
+" The Normans were in Normandy from the 10th century onwards, with their presence and influence growing through the centuries.",399.900672,"['10th and 11th centuries' 'in the 10th and 11th centuries'
+ '10th and 11th centuries' '10th and 11th centuries']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When were the Normans in Normandy? ",32,147.456,Answer:,4956.880896,32768,33616.0,0.399900672,4.956880896,qa_1,GB,0.9193241313660162,2712.0
+" The Norse originated from Denmark, Iceland, and Norway.",399.900672,"['Denmark, Iceland and Norway' 'Denmark, Iceland and Norway'
+ 'Denmark, Iceland and Norway' 'Denmark, Iceland and Norway']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: From which countries did the Norse originate? ",32,147.456,Answer:,4809.129984,32768,32614.0,0.399900672,4.809129984,qa_1,GB,0.916845526461029,2712.0
+ Rollo.,399.900672,['Rollo' 'Rollo' 'Rollo' 'Rollo'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was the Norse leader? ",32,147.456,Answer:,4922.671104,32768,33384.0,0.399900672,4.922671104,qa_1,GB,0.918763479511143,2712.0
+ 10th century,399.900672,['10th century' 'the first half of the 10th century' '10th' '10th'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What century did the Normans first gain their separate identity? ",32,147.456,Answer:,4912.644096,32768,33316.0,0.399900672,4.912644096,qa_1,GB,0.9185976707888102,2712.0
+ William the Conqueror.,399.900672,['William the Conqueror' 'William the Conqueror' 'William the Conqueror'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was the duke in the battle of Hastings? ",32,147.456,Answer:,4697.063424,32768,31854.0,0.399900672,4.697063424,qa_1,GB,0.9148615558485591,2712.0
+" The duchy of Normandy was ruled by the Normans, who were a people and a ruling class that originated from the Viking settlements and later became a",399.900672,['Richard I' 'Richard I' 'Richard I'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who ruled the duchy of Normandy ",32,147.456,Answer:,4802.199552,32768,32567.0,0.399900672,4.802199552,qa_1,GB,0.9167255196978537,2712.0
+" The Normans were originally pagan, but they later converted to Christianity.",399.900672,['Catholic' 'Catholic orthodoxy' 'Catholic'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What religion were the Normans ",32,147.456,Answer:,4982.095872,32768,33787.0,0.399900672,4.982095872,qa_1,GB,0.919732441471572,2712.0
+" The original meaning of the word Norman is ""Northman.""",399.900672,"['Viking' 'Norseman, Viking' 'Norseman, Viking']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the original meaning of the word Norman? ",32,147.456,Answer:,4903.354368,32768,33253.0,0.399900672,4.903354368,qa_1,GB,0.9184434487113945,2712.0
+ The Latin version of the word Norman was first recorded in the 9th century.,399.900672,['9th century' '9th century' '9th century'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When was the Latin version of the word Norman first recorded? ",32,147.456,Answer:,4844.814336,32768,32856.0,0.399900672,4.844814336,qa_1,GB,0.9174579985390796,2712.0
+ The Duchy of Normandy was founded in 911.,399.900672,['911' '911' '911'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When was the Duchy of Normandy founded? ",32,147.456,Answer:,4847.026176,32768,32871.0,0.399900672,4.847026176,qa_1,GB,0.9174956648717715,2712.0
+ The French crown.,399.900672,['King Charles III' 'King Charles III' 'King Charles III'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who did Rollo sign the treaty of Saint-Clair-sur-Epte with? ",32,147.456,Answer:,4953.341952,32768,33592.0,0.399900672,4.953341952,qa_1,GB,0.91926649202191,2712.0
+ The river that originally bounded the Duchy of Normandy was the river Epte.,399.900672,['Seine' 'Epte' 'Seine'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What river originally bounded the Duchy ",32,147.456,Answer:,4803.3792,32768,32575.0,0.399900672,4.8033792,qa_1,GB,0.9167459708365311,2712.0
+ The Norman settlers gave the original Viking settlers a common identity.,399.900672,['Rollo' 'Rollo' 'Rollo'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who upon arriving gave the original viking settlers a common identity? ",32,147.456,Answer:,4698.832896,32768,31866.0,0.399900672,4.698832896,qa_1,GB,0.9148936170212766,2712.0
+ Christianity.,399.900672,['Catholicism' 'Catholicism' 'Catholicism'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What was the Norman religion? ",32,147.456,Answer:,4804.558848,32768,32583.0,0.399900672,4.804558848,qa_1,GB,0.9167664119326029,2712.0
+ Normandy,399.900672,['north' 'the north' 'north'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What part of France were the Normans located? ",32,147.456,Answer:,4804.411392,32768,32582.0,0.399900672,4.804411392,qa_1,GB,0.916763857344546,2712.0
+ The Norman's major exports included the unique Romanesque architecture and their military accomplishments.,399.900672,['fighting horsemen' 'fighting horsemen' 'fighting horsemen'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What was one of the Norman's major exports? ",32,147.456,Answer:,4584.40704,32768,31090.0,0.399900672,4.58440704,qa_1,GB,0.9127693792216147,2712.0
+" The main enemy of the Normans in Italy, the Byzantine Empire, and Armenia was the Seljuk Turks.",399.900672,"['Seljuk Turks'
+ 'the Pechenegs, the Bulgars, and especially the Seljuk Turks'
+ 'the Seljuk Turks']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was the Normans' main enemy in Italy, the Byzantine Empire and Armenia? ",32,147.456,Answer:,4779.933696,32768,32416.0,0.399900672,4.779933696,qa_1,GB,0.9163376110562685,2712.0
+ In the 1050s.,399.900672,['1050s' 'in the 1050s' 'in the 1050s'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did Herve serve as a Byzantine general? ",32,147.456,Answer:,4840.685568,32768,32828.0,0.399900672,4.840685568,qa_1,GB,0.9173875959546729,2712.0
+ 1060s.,399.900672,['1060s' 'In the 1060s' 'In the 1060s'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did Robert Crispin go up against the Turks? ",32,147.456,Answer:,4968.087552,32768,33692.0,0.399900672,4.968087552,qa_1,GB,0.9195061142110887,2712.0
+ Jean de Bethencourt.,399.900672,['Alexius Komnenos' 'Alexius Komnenos' 'Alexius Komnenos'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who ruined Roussel de Bailleul's plans for an independent state? ",32,147.456,Answer:,4955.25888,32768,33605.0,0.399900672,4.95525888,qa_1,GB,0.9192977235530427,2712.0
+" The name of the Norman castle is not explicitly mentioned in the provided documents. However, it is noted that the Normans established a castle in Cyprus, which was",399.900672,['Afranji' 'Afranji' 'Afranji'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What was the name of the Norman castle? ",32,147.456,Answer:,4974.870528,32768,33738.0,0.399900672,4.974870528,qa_1,GB,0.9196158634181042,2712.0
+ The leader was William of Montreuil.,399.900672,['Oursel' 'Oursel' 'Oursel'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was the leader when the Franks entered the Euphrates valley? ",32,147.456,Answer:,4589.273088,32768,31123.0,0.399900672,4.589273088,qa_1,GB,0.9128618706422903,2712.0
+" The Normans teamed up with the local population, who were referred to as ""the people of Anatolia"" and included various groups such as the Turks.",399.900672,['Turkish forces' 'Turkish forces' 'Turkish forces'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who did the Normans team up with in Anatolia? ",32,147.456,Answer:,4629.970944,32768,31399.0,0.399900672,4.629970944,qa_1,GB,0.9136278225421192,2712.0
+ The Raoulii family originated from the French region of Gascony.,399.900672,"['Norman mercenary' 'an Italo-Norman named Raoul'
+ 'descended from an Italo-Norman named Raoul']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What were the origins of the Raouliii family? ",32,147.456,Answer:,4717.85472,32768,31995.0,0.399900672,4.71785472,qa_1,GB,0.9152367557430848,2712.0
+ The count of Apulia was named Robert de Montreuil.,399.900672,['Robert Guiscard' 'Robert Guiscard' 'Robert Guiscard'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What was the name of the count of Apulia  ",32,147.456,Answer:,4815.17568,32768,32655.0,0.399900672,4.81517568,qa_1,GB,0.9169499310978411,2712.0
+ 1081,399.900672,['1082' 'February 1082' 'February 1082'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did Dyrrachium  fall to the Normans? ",32,147.456,Answer:,4769.46432,32768,32345.0,0.399900672,4.76946432,qa_1,GB,0.9161539650641521,2712.0
+" 20,000",399.900672,"['30,000' '30,000' '30,000']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: How many men were in Robert's army? ",32,147.456,Answer:,4895.686656,32768,33201.0,0.399900672,4.895686656,qa_1,GB,0.918315713382127,2712.0
+ The peace treaty was signed in the city of Deabolis.,399.900672,['Deabolis' 'Deabolis' 'Deabolis'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Where did the Normans and Byzantines sign the peace treaty? ",32,147.456,Answer:,4962.484224,32768,33654.0,0.399900672,4.962484224,qa_1,GB,0.9194152255303976,2712.0
+" The question is unclear. If referring to Robert of Jumièges, his son was not mentioned in the provided documents. If referring to other Roberts, such",399.900672,['Bohemond' 'Bohemond' 'Bohemond'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Robert's son? ",32,147.456,Answer:,4692.639744,32768,31824.0,0.399900672,4.692639744,qa_1,GB,0.9147812971342383,2712.0
+ The river that Petrela was located by is the Deabolis.,399.900672,['Deabolis' 'the river Deabolis' 'Deabolis'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What river was Petrela located by? ",32,147.456,Answer:,4760.322048,32768,32283.0,0.399900672,4.760322048,qa_1,GB,0.915992937459344,2712.0
+ 1081,399.900672,['1185' 'in 1185' '1185'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did the Normans attack Dyrrachium? ",32,147.456,Answer:,4900.995072,32768,33237.0,0.399900672,4.900995072,qa_1,GB,0.9184041881036195,2712.0
+" The naval base was called the ""Arbanon"" in the document.",399.900672,['Dyrrachium' 'Dyrrachium' 'Dyrrachium'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What was the naval base called? ",32,147.456,Answer:,4968.235008,32768,33693.0,0.399900672,4.968235008,qa_1,GB,0.9195085032499333,2712.0
+" Dyrrachium was located in the region of the Balkans, specifically in what is now Albania.",399.900672,['the Adriatic' 'the Adriatic' 'Adriatic'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Where was Dyrrachium located? ",32,147.456,Answer:,4971.036672,32768,33712.0,0.399900672,4.971036672,qa_1,GB,0.9195538680588514,2712.0
+ Emma married Richard II of England.,399.900672,['King Ethelred II' 'Ethelred II' 'King Ethelred II'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who did Emma Marry? ",32,147.456,Answer:,4906.156032,32768,33272.0,0.399900672,4.906156032,qa_1,GB,0.9184900216398173,2712.0
+ Richard I of Normandy.,399.900672,['Duke Richard II' 'Duke Richard II' 'Duke Richard II'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Emma's brother? ",32,147.456,Answer:,4954.963968,32768,33603.0,0.399900672,4.954963968,qa_1,GB,0.9192929202749754,2712.0
+ To Normandy.,399.900672,['Normandy' 'Normandy' 'Normandy'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: To where did Ethelred flee? ",32,147.456,Answer:,4534.419456,32768,30751.0,0.399900672,4.534419456,qa_1,GB,0.9118077460895581,2712.0
+ The Normans.,399.900672,['Sweyn Forkbeard' 'Sweyn Forkbeard' 'Sweyn Forkbeard'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who kicked Ethelred out? ",32,147.456,Answer:,4772.118528,32768,32363.0,0.399900672,4.772118528,qa_1,GB,0.9162005994499892,2712.0
+ Máel Coluim mac Alaxandair.,399.900672,['Harthacnut' 'Harthacnut' 'Harthacnut'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Edward the Confessor's half-brother? ",32,147.456,Answer:,4747.935744,32768,32199.0,0.399900672,4.747935744,qa_1,GB,0.9157737817944657,2712.0
+" In 1066, Edward the Confessor returned from his refuge in 1013 when he was forced from his kingdom by Sweyn Fork",399.900672,['1041' 'in 1041' '1041'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did Edward return? ",32,147.456,Answer:,4857.20064,32768,32940.0,0.399900672,4.85720064,qa_1,GB,0.9176684881602915,2712.0
+ Thomas Becket.,399.900672,['Robert of Jumièges' 'Robert of Jumièges' 'Robert of Jumièges'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who did Edward make archbishop of Canterbury? ",32,147.456,Answer:,4810.752,32768,32625.0,0.399900672,4.810752,qa_1,GB,0.9168735632183909,2712.0
+ Harold II died at the Battle of Hastings.,399.900672,['Battle of Hastings' 'the Battle of Hastings' 'at the Battle of Hastings'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Where did Harold II die? ",32,147.456,Answer:,4860.592128,32768,32963.0,0.399900672,4.860592128,qa_1,GB,0.9177259351393987,2712.0
+ William of Normandy.,399.900672,['William II' 'Duke William II' 'Duke William II'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who killed Harold II?  ",32,147.456,Answer:,4914.266112,32768,33327.0,0.399900672,4.914266112,qa_1,GB,0.9186245386623458,2712.0
+ 1066,399.900672,['1066' 'In 1066' '1066'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When was the Battle of Hastings? ",32,147.456,Answer:,4934.320128,32768,33463.0,0.399900672,4.934320128,qa_1,GB,0.9189552640229507,2712.0
+ The ruling class ahead of the Normans was the Frankish people.,399.900672,['Anglo-Saxons' 'the Anglo-Saxons' 'Anglo-Saxons'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was the ruling class ahead of the Normans? ",32,147.456,Answer:,4983.422976,32768,33796.0,0.399900672,4.983422976,qa_1,GB,0.9197538170197657,2712.0
+" The Anglo-Norman language's final form is a blend of the French language and the Old English language, resulting in a unique form of the language that was used",399.900672,['Modern English' 'Modern English' 'Modern English'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What was the Anglo-Norman language's final form? ",32,147.456,Answer:,4672.88064,32768,31690.0,0.399900672,4.67288064,qa_1,GB,0.9144209529820133,2712.0
+ 1066,399.900672,['1169' '1169' '1169'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In what year did the Norman's invade at Bannow Bay? ",32,147.456,Answer:,4675.239936,32768,31706.0,0.399900672,4.675239936,qa_1,GB,0.9144641392796317,2712.0
+ Cyprus,399.900672,['Ireland' 'Ireland' 'Ireland'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What country did the Normans invade in 1169? ",32,147.456,Answer:,4848.058368,32768,32878.0,0.399900672,4.848058368,qa_1,GB,0.9175132307317964,2712.0
+ The Normans combined with the Anglo-Saxon culture in Ireland.,399.900672,['Irish' 'Irish' 'Irish'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What culture did the Normans combine with in Ireland? ",32,147.456,Answer:,4877.549568,32768,33078.0,0.399900672,4.877549568,qa_1,GB,0.9180119717032469,2712.0
+ King David I of Scotland.,399.900672,['Edgar' 'Edgar' 'Edgar Atheling'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Margaret's brother? ",32,147.456,Answer:,4819.59936,32768,32685.0,0.399900672,4.81959936,qa_1,GB,0.9170261587884351,2712.0
+ Earl of Hereford.,399.900672,['King Malcolm III of Scotland' 'King Malcolm III' 'King Malcolm III'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Margaret's husband? ",32,147.456,Answer:,4787.15904,32768,32465.0,0.399900672,4.78715904,qa_1,GB,0.9164638841829663,2712.0
+ 1066,399.900672,['1072' '1072' '1072'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When was Scotland invaded by William? ",32,147.456,Answer:,4911.02208,32768,33305.0,0.399900672,4.91102208,qa_1,GB,0.9185707851673923,2712.0
+ King Harold II.,399.900672,['Duncan' 'Duncan' 'Duncan'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was the hostage? ",32,147.456,Answer:,4500.062208,32768,30518.0,0.399900672,4.500062208,qa_1,GB,0.911134412477882,2712.0
+ Alexander I married a woman named Margaret.,399.900672,['Sybilla of Normandy' 'Sybilla of Normandy' 'Sybilla'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who did Alexander I marry? ",32,147.456,Answer:,4866.78528,32768,33005.0,0.399900672,4.86678528,qa_1,GB,0.9178306317224663,2712.0
+ Norman,399.900672,['Norman' 'Norman' 'Norman'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What culture's arrival in Scotland is know as the ""Davidian Revolution""? ",32,147.456,Answer:,4991.680512,32768,33852.0,0.399900672,4.991680512,qa_1,GB,0.9198865650478554,2712.0
+ Ralph was the earl of Hereford.,399.900672,['Hereford' 'Hereford' 'Hereford'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Where was Ralph earl of? ",32,147.456,Answer:,4835.524608,32768,32793.0,0.399900672,4.835524608,qa_1,GB,0.9172994236574878,2712.0
+ Ralph was in charge of being at war with the Welsh.,399.900672,['the Welsh' 'the Welsh' 'the Welsh'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Ralph in charge of being at war with? ",32,147.456,Answer:,4392.861696,32768,29791.0,0.399900672,4.392861696,qa_1,GB,0.9089657950387701,2712.0
+ King Harthacnut.,399.900672,['Edward the Confessor' 'Edward the Confessor' 'Edward the Confessor'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who made Ralph earl? ",32,147.456,Answer:,4990.64832,32768,33845.0,0.399900672,4.99064832,qa_1,GB,0.9198699955680307,2712.0
+ England.,399.900672,['Wales' 'Wales' 'Wales'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What country was under the control of Norman barons? ",32,147.456,Answer:,4886.839296,32768,33141.0,0.399900672,4.886839296,qa_1,GB,0.9181678283696931,2712.0
+ 1018,399.900672,['1018' '1064' '1018'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What year did Roger de Tosny fail to accomplish what he set out to do? ",32,147.456,Answer:,4661.968896,32768,31616.0,0.399900672,4.661968896,qa_1,GB,0.9142206477732794,2712.0
+ William of Montreuil.,399.900672,['William of Montreuil' 'William of Montreuil' 'William of Montreuil'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was in charge of the papal army in the War of Barbastro? ",32,147.456,Answer:,4725.22752,32768,32045.0,0.399900672,4.72522752,qa_1,GB,0.915369012326416,2712.0
+ 1097,399.900672,['1097' '1097' '1097'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did the Siege of Antioch take place? ",32,147.456,Answer:,4825.792512,32768,32727.0,0.399900672,4.825792512,qa_1,GB,0.9171326427720231,2712.0
+ Ralph,399.900672,['Tancred' 'Tancred' 'Tancred'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What was the name of Bohemond's nephew? ",32,147.456,Answer:,4633.509888,32768,31423.0,0.399900672,4.633509888,qa_1,GB,0.9136937911720714,2712.0
+ The conquest of Jerusalem.,399.900672,['Jerusalem' 'Jerusalem' 'Jerusalem'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What major conquest did Tancred play a roll in? ",32,147.456,Answer:,4668.014592,32768,31657.0,0.399900672,4.668014592,qa_1,GB,0.9143317433742932,2712.0
+ Cyprus was under Western European control for about 18 years.,399.900672,['380 years' '380 years' '380 years'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: How long did Western Europe control Cyprus? ",32,147.456,Answer:,4897.898496,32768,33216.0,0.399900672,4.897898496,qa_1,GB,0.9183526011560694,2712.0
+" The lack of supplies, disease, and Byzantine resistance forced Richard to retreat from his campaign and sign a peace treaty with the Byzantines.",399.900672,['a storm' 'a storm' 'a storm'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What ruined Richard's plans to reach Acre? ",32,147.456,Answer:,4900.110336,32768,33231.0,0.399900672,4.900110336,qa_1,GB,0.9183894556287804,2712.0
+ Richard's fiancée was Berengaria.,399.900672,['Berengaria' 'Berengaria' 'Berengaria'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Richard's fiancee? ",32,147.456,Answer:,4785.094656,32768,32451.0,0.399900672,4.785094656,qa_1,GB,0.9164278450587039,2712.0
+ 1191,399.900672,['1191' '1191' '1191'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What year did the storm hit Richard's fleet? ",32,147.456,Answer:,4839.063552,32768,32817.0,0.399900672,4.839063552,qa_1,GB,0.9173599049273242,2712.0
+ Richard the Lion-hearted.,399.900672,['Isaac Komnenos' 'Isaac' 'Isaac Komnenos'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who ruled Cyprus in 1191? ",32,147.456,Answer:,4808.54016,32768,32610.0,0.399900672,4.80854016,qa_1,GB,0.9168353265869366,2712.0
+" The question is unclear. If you are referring to the rivalry between Guy de Lusignan and the forces of the Byzantine Empire, then the Byzantine",399.900672,['Conrad of Montferrat' 'Conrad of Montferrat' 'Conrad of Montferrat'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who was Guy's Rival? ",32,147.456,Answer:,4887.871488,32768,33148.0,0.399900672,4.887871488,qa_1,GB,0.918185109207192,2712.0
+ Isaac's chains were made out of silver.,399.900672,['silver' 'silver' 'silver'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What were Isaac's chains made out of? ",32,147.456,Answer:,4979.294208,32768,33768.0,0.399900672,4.979294208,qa_1,GB,0.9196872778962332,2712.0
+ Richard de Camville.,399.900672,['Guy de Lusignan' 'Guy de Lusignan' 'Guy de Lusignan'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who led Richard's troops when Cyprus was conquered? ",32,147.456,Answer:,4857.93792,32768,32945.0,0.399900672,4.85793792,qa_1,GB,0.9176809834572772,2712.0
+ Africa,399.900672,['Africa' 'Africa' 'Africa'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What continent are the Canarian Islands off the coast of? ",32,147.456,Answer:,4946.116608,32768,33543.0,0.399900672,4.946116608,qa_1,GB,0.919148555585368,2712.0
+ Jean de Bethencourt.,399.900672,['Bethencourt' 'Bethencourt' 'Bethencourt'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who became the King of the Canary Islands? ",32,147.456,Answer:,4938.153984,32768,33489.0,0.399900672,4.938153984,qa_1,GB,0.9190181850756964,2712.0
+ The Normans bought the rights.,399.900672,"['Enrique Pérez de Guzmán' 'Enrique Pérez de Guzmán'
+ 'Enrique Pérez de Guzmán']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who bought the rights? ",32,147.456,Answer:,4491.952128,32768,30463.0,0.399900672,4.491952128,qa_1,GB,0.9109739684207071,2712.0
+" The Norman noble Jean de Bethencourt sold the rights to the Canarian islands of Lanzarote, Fuerteventura, and El Hierro.",399.900672,['Maciot de Bethencourt' 'Maciot de Bethencourt' 'Maciot de Bethencourt'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who sold the rights? ",32,147.456,Answer:,4679.51616,32768,31735.0,0.399900672,4.67951616,qa_1,GB,0.9145423034504491,2712.0
+ Jersey and Guernsey are Channel Islands.,399.900672,['Channel Islands' 'the Channel Islands' 'the Channel Islands'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Where are Jersey and Guernsey ",32,147.456,Answer:,4692.344832,32768,31822.0,0.399900672,4.692344832,qa_1,GB,0.9147759411727736,2712.0
+ 1,399.900672,['two' 'two' 'two'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: How many customaries does Norman customary law have? ",32,147.456,Answer:,4780.818432,32768,32422.0,0.399900672,4.780818432,qa_1,GB,0.9163530935784344,2712.0
+" The Norman architecture idiom is a style that was developed and spread by the Normans, characterized by rounded arches, particularly over windows and doorways, and",399.900672,['Romanesque' 'Romanesque' 'Romanesque'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the Norman architecture idiom? ",32,147.456,Answer:,4921.491456,32768,33376.0,0.399900672,4.921491456,qa_1,GB,0.9187440076701822,2712.0
+ Norman architecture has rounded arches.,399.900672,['rounded' 'rounded' 'rounded'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What kind of arches does Norman architecture have? ",32,147.456,Answer:,4564.353024,32768,30954.0,0.399900672,4.564353024,qa_1,GB,0.9123861213413452,2712.0
+ Gothic,399.900672,['Early Gothic' 'Early Gothic' 'Early Gothic'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What architecture type came after Norman in England? ",32,147.456,Answer:,4819.304448,32768,32683.0,0.399900672,4.819304448,qa_1,GB,0.9170210812960866,2712.0
+ Anglo-Saxon,399.900672,['Anglo-Saxon' 'Anglo-Saxon' 'Anglo-Saxon'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What architecture type came before Norman in England? ",32,147.456,Answer:,4941.692928,32768,33513.0,0.399900672,4.941692928,qa_1,GB,0.9190761793930713,2712.0
+ Normandy.,399.900672,['Sicily' 'Sicily' 'Kingdom of Sicily'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What place had the Norman Arab architectural style? ",32,147.456,Answer:,4966.907904,32768,33684.0,0.399900672,4.966907904,qa_1,GB,0.9194869967937299,2712.0
+ In the early 11th century.,399.900672,['early 11th century' '11th century' 'in the early 11th century'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When did the church reform begin? ",32,147.456,Answer:,4986.22464,32768,33815.0,0.399900672,4.98622464,qa_1,GB,0.9197989058110306,2712.0
+ The English nobility used the church to unify themselves.,399.900672,['dukes' 'the dukes' 'dukes'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who used the church to unify themselves? ",32,147.456,Answer:,4929.159168,32768,33428.0,0.399900672,4.929159168,qa_1,GB,0.9188704080411632,2712.0
+ The French Wars of Religion were in the 16th century.,399.900672,['16th century' 'the 16th century' 'in the 16th century'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When were the French wars of religion? ",32,147.456,Answer:,4938.596352,32768,33492.0,0.399900672,4.938596352,qa_1,GB,0.9190254389107847,2712.0
+ The Bayeux Tapestry was created using embroidery.,399.900672,['embroidery' 'embroidery' 'embroidery'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What kind of needlework was used in the creation of the Bayeux Tapestry? ",32,147.456,Answer:,4853.219328,32768,32913.0,0.399900672,4.853219328,qa_1,GB,0.9176009479536961,2712.0
+ The Bayeux Tapestry.,399.900672,['Bayeux Tapestry' 'the Bayeux Tapestry' 'the Bayeux Tapestry'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is Norman art's most well known piece? ",32,147.456,Answer:,4787.15904,32768,32465.0,0.399900672,4.78715904,qa_1,GB,0.9164638841829663,2712.0
+" Odo, the Bishop of Amalfi.",399.900672,['Odo' 'Odo' 'Odo'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who commissioned the Tapestry? ",32,147.456,Answer:,4933.14048,32768,33455.0,0.399900672,4.93314048,qa_1,GB,0.9189358840233149,2712.0
+ The most important type of Norman art preserved in churches is the unique Romanesque architecture.,399.900672,['mosaics' 'mosaics' 'mosaics'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the most important type of Norman art preserved in churches? ",32,147.456,Answer:,4661.231616,32768,31611.0,0.399900672,4.661231616,qa_1,GB,0.9142070798139887,2712.0
+ 11th century,399.900672,['11th' 'the 11th' '11th'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In what century did important classical music developments occur in Normandy? ",32,147.456,Answer:,4859.41248,32768,32955.0,0.399900672,4.85941248,qa_1,GB,0.9177059626763768,2712.0
+ The two abbots at Fécamp Abbey were William of Volpiano and John of Ravenna.,399.900672,"['William of Volpiano and John of Ravenna'
+ 'William of Volpiano and John of Ravenna'
+ 'William of Volpiano and John of Ravenna']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who were the two abbots at Fécamp Abbey? ",32,147.456,Answer:,4721.983488,32768,32023.0,0.399900672,4.721983488,qa_1,GB,0.9153108703119632,2712.0
+ The monks fled to the Holy Land.,399.900672,['southern Italy' 'southern Italy' 'southern Italy'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Where did the monks flee to? ",32,147.456,Answer:,4975.312896,32768,33741.0,0.399900672,4.975312896,qa_1,GB,0.9196230105805993,2712.0
+ The Saint-Evroul monks established the Latin monastery at Sant'Eufemia in Italy.,399.900672,"[""Latin monastery at Sant'Eufemia."" ""a Latin monastery at Sant'Eufemia""
+ ""Sant'Eufemia""]",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What monastery did the Saint-Evroul monks establish in Italy? ",32,147.456,Answer:,4578.361344,32768,31049.0,0.399900672,4.578361344,qa_1,GB,0.9126541917614094,2712.0
+" The monks in Italy were patronized by the Duke of Normandy, specifically by Robert of Normandy.",399.900672,['Robert Guiscard' 'Robert Guiscard' 'Robert Guiscard'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Who patronized the monks in Italy?  ",32,147.456,Answer:,4725.9648,32768,32050.0,0.399900672,4.7259648,qa_1,GB,0.9153822152886115,2712.0
+ The Saint-Evroul monks were known for their unique Romanesque architectural style.,399.900672,['singing' 'singing' 'singing'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What tradition were the Saint-Evroul monks known for? ",32,147.456,Answer:,4557.12768,32768,30905.0,0.399900672,4.55712768,qa_1,GB,0.9122472091894516,2712.0
+ Computational complexity theory,399.900672,"['Computational complexity theory' 'Computational complexity theory'
+ 'Computational complexity theory']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What branch of theoretical computer science deals with broadly classifying computational problems by difficulty and class of relationship? ",32,147.456,Answer:,4916.18304,32768,33340.0,0.399900672,4.91618304,qa_1,GB,0.9186562687462507,2712.0
+" computational complexity theory classifies computational problems based on their inherent difficulty, which is measured by the amount of resources (such as time and space) required to solve them",399.900672,['inherent difficulty' 'their inherent difficulty' 'inherent difficulty'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: By what main attribute are computational problems classified utilizing computational complexity theory?  ",32,147.456,Answer:,4788.338688,32768,32473.0,0.399900672,4.788338688,qa_1,GB,0.9164844640162597,2712.0
+ A task that generally lends itself to being solved by a computer is referred to as a computational problem.,399.900672,"['computational problems' 'A computational problem'
+ 'computational problem']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the term for a task that generally lends itself to being solved by a computer? ",32,147.456,Answer:,4910.137344,32768,33299.0,0.399900672,4.910137344,qa_1,GB,0.9185561127961801,2712.0
+ computational complexity,399.900672,"['if its solution requires significant resources'
+ 'its solution requires significant resources'
+ 'if its solution requires significant resources']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What measure of a computational problem broadly defines the inherent difficulty of the solution? ",32,147.456,Answer:,4861.919232,32768,32972.0,0.399900672,4.861919232,qa_1,GB,0.9177483925755187,2712.0
+ The method used to intuitively assess or quantify the amount of resources required to solve a computational problem is the analysis of algorithms.,399.900672,"['mathematical models of computation' 'mathematical models of computation'
+ 'mathematical models of computation']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What method is used to intuitively assess or quantify the amount of resources required to solve a computational problem? ",32,147.456,Answer:,4843.339776,32768,32846.0,0.399900672,4.843339776,qa_1,GB,0.917432868538026,2712.0
+ Time and space.,399.900672,['time and storage' 'time and storage' 'time and storage'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What are two basic primary resources used to guage complexity? ",32,147.456,Answer:,4571.578368,32768,31003.0,0.399900672,4.571578368,qa_1,GB,0.912524594394091,2712.0
+ The unit measured to determine circuit complexity is the number of gates.,399.900672,"['number of gates in a circuit' 'number of gates in a circuit'
+ 'number of gates']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What unit is measured to determine circuit complexity? ",32,147.456,Answer:,4977.524736,32768,33756.0,0.399900672,4.977524736,qa_1,GB,0.9196587273373622,2712.0
+" Defining the complexity of problems helps in understanding the resources required to solve them efficiently, which is crucial for designing algorithms and systems that can handle tasks within practical limits",399.900672,"['determine the practical limits on what computers can and cannot do'
+ 'what computers can and cannot do'
+ 'determine the practical limits on what computers can and cannot do']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What practical role does defining the complexity of problems play in everyday computing? ",32,147.456,Answer:,4784.799744,32768,32449.0,0.399900672,4.784799744,qa_1,GB,0.9164226940737773,2712.0
+" Theoretical computer science, computational complexity theory, and the fields of analysis of algorithms and computational complexity theory.",399.900672,"['analysis of algorithms and computability theory'
+ 'analysis of algorithms and computability theory'
+ 'analysis of algorithms and computability theory']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What two fields of theoretical computer science closely mirror computational complexity theory? ",32,147.456,Answer:,4617.142272,32768,31312.0,0.399900672,4.617142272,qa_1,GB,0.9133878385283597,2712.0
+ Computational complexity theory.,399.900672,"['analysis of algorithms' 'analysis of algorithms'
+ 'analysis of algorithms']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What field of computer science analyzes the resource requirements of a specific algorithm isolated unto itself within a given problem? ",32,147.456,Answer:,4600.184832,32768,31197.0,0.399900672,4.600184832,qa_1,GB,0.9130685642850274,2712.0
+ Computational complexity theory.,399.900672,"['computational complexity theory' 'computational complexity theory'
+ 'computational complexity theory']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What field of computer science analyzes all possible algorithms in aggregate to determine the resource requirements needed to solve to a given problem?   ",32,147.456,Answer:,4670.078976,32768,31671.0,0.399900672,4.670078976,qa_1,GB,0.9143696125793312,2712.0
+ Computational complexity theory,399.900672,['computability theory' 'computability theory' 'computability theory'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What field of computer science is primarily concerned with determining the likelihood of whether or not a problem can ultimately be solved using algorithms? ",32,147.456,Answer:,4586.323968,32768,31103.0,0.399900672,4.586323968,qa_1,GB,0.9128058386650806,2712.0
+" The name given to the input string of a computational problem is a ""problem instance.""",399.900672,['problem instance' 'a problem instance' 'problem instance'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the name given to the input string of a computational problem? ",32,147.456,Answer:,4724.49024,32768,32040.0,0.399900672,4.72449024,qa_1,GB,0.9153558052434457,2712.0
+ A computational problem.,399.900672,['the problem' 'a problem' 'problem'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In computational complexity theory, what is the term given to describe the baseline abstract question needing to be solved?  ",32,147.456,Answer:,4898.930688,32768,33223.0,0.399900672,4.898930688,qa_1,GB,0.9183698040514101,2712.0
+ concrete,399.900672,['concrete' 'concrete' 'abstract'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Is a problem instance typically characterized as abstract or concrete? ",32,147.456,Answer:,4840.095744,32768,32824.0,0.399900672,4.840095744,qa_1,GB,0.9173775286375823,2712.0
+ instance,399.900672,['instances' 'the instance' 'instance'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is another name for any given measure of input associated with a problem? ",32,147.456,Answer:,4798.365696,32768,32541.0,0.399900672,4.798365696,qa_1,GB,0.9166589840508896,2712.0
+" The general term used to describe the output to any given input in a problem instance is ""solution.""",399.900672,['solution' 'the solution' 'solution'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the general term used to describe the output to any given input in a problem instance? ",32,147.456,Answer:,4831.985664,32768,32769.0,0.399900672,4.831985664,qa_1,GB,0.917238853794745,2712.0
+ 15,399.900672,['2000' '2000' '2000'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: By how many kilometers does the traveling salesman problem seek to classify a route between the 15 largest cities in Germany? ",32,147.456,Answer:,4904.239104,32768,33259.0,0.399900672,4.904239104,qa_1,GB,0.9184581617005924,2712.0
+ The quantitative answer to the traveling salesman problem fails to answer the specific route or path that minimizes the total distance traveled.,399.900672,"['round trip through all sites in Milan'
+ 'asking for a round trip through all sites in Milan whose total length is at most 10 km'
+ 'a round trip through all sites in Milan whose total length is at most 10 km']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is one example of an instance that the quantitative answer to the traveling salesman problem fails to answer? ",32,147.456,Answer:,4859.854848,32768,32958.0,0.399900672,4.859854848,qa_1,GB,0.9177134534862552,2712.0
+ Computational complexity theory most specifically seeks to answer how computational problems scale with an increase in the input size.,399.900672,"['computational problems' 'computational problems'
+ 'computational problems']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What does computational complexity theory most specifically seek to answer?  ",32,147.456,Answer:,4732.010496,32768,32091.0,0.399900672,4.732010496,qa_1,GB,0.9154903243900159,2712.0
+ A problem instance.,399.900672,['problem instance' 'a problem instance' 'problem instance'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In a computational problem, what can be described as a string over an alphabet? ",32,147.456,Answer:,4658.577408,32768,31593.0,0.399900672,4.658577408,qa_1,GB,0.9141581996011775,2712.0
+ The most commonly used alphabet in a problem instance is the binary alphabet.,399.900672,['binary alphabet' 'binary' 'binary'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the name of the alphabet is most commonly used in a problem instance? ",32,147.456,Answer:,4603.57632,32768,31220.0,0.399900672,4.60357632,qa_1,GB,0.9131326073030109,2712.0
+ The string of a problem instance is also referred to as the input.,399.900672,['bitstrings' 'bitstrings' 'bitstrings'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is another term for the string of a problem instance? ",32,147.456,Answer:,4842.012672,32768,32837.0,0.399900672,4.842012672,qa_1,GB,0.9174102384505284,2712.0
+" In the encoding of mathematical objects, integers are commonly expressed as bitstrings.",399.900672,['binary notation' 'binary notation' 'binary notation'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In the encoding of mathematical objects, what is the way in which integers are commonly expressed? ",32,147.456,Answer:,4734.81216,32768,32110.0,0.399900672,4.73481216,qa_1,GB,0.915540330115229,2712.0
+ Graphs can be encoded via their adjacency matrices.,399.900672,['adjacency matrices' 'directly via their adjacency matrices'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is one way in which graphs can be encoded?  ",32,147.456,Answer:,4947.001344,32768,33549.0,0.399900672,4.947001344,qa_1,GB,0.9191630152910668,2712.0
+ problems that can be solved in theory but which in practice take too long for their solutions to be useful,399.900672,['Decision problems' 'Decision problems' 'Decision'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What kind of problems are one of the main topics studied in computational complexity theory? ",32,147.456,Answer:,4858.380288,32768,32948.0,0.399900672,4.858380288,qa_1,GB,0.9176884788151026,2712.0
+ Yes and No.,399.900672,['yes or no' 'yes or no' 'yes or no'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What are the two simple word responses to a decision problem? ",32,147.456,Answer:,4932.255744,32768,33449.0,0.399900672,4.932255744,qa_1,GB,0.9189213429399982,2712.0
+ The two integer responses to a decision problem are the number of steps required to solve the problem and the amount of memory or space needed.,399.900672,['1 or 0' '1 or 0' '1 or 0'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What are the two integer responses to a decision problem? ",32,147.456,Answer:,4798.513152,32768,32542.0,0.399900672,4.798513152,qa_1,GB,0.916661545080204,2712.0
+" The output will be either ""yes"" or ""no"".",399.900672,['yes' 'yes' 'yes'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What will the output be for a member of the language of a decision problem? ",32,147.456,Answer:,4886.986752,32768,33142.0,0.399900672,4.886986752,qa_1,GB,0.9181702975076942,2712.0
+" The answer that denotes that an algorithm has accepted an input string is ""yes"".",399.900672,['yes' 'yes' 'yes'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What answer denotes that an algorithm has accepted an input string? ",32,147.456,Answer:,4526.014464,32768,30694.0,0.399900672,4.526014464,qa_1,GB,0.9116439695054408,2712.0
+ A graph is an example of an input used in a decision problem.,399.900672,['arbitrary graph' 'arbitrary' 'arbitrary'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What kind of graph is an example of an input used in a decision problem? ",32,147.456,Answer:,4915.593216,32768,33336.0,0.399900672,4.915593216,qa_1,GB,0.9186465082793377,2712.0
+" The term for the set of all connected graphs related to this decision problem is not explicitly mentioned in the provided documents. However, the document does refer to the concept",399.900672,"['formal language' 'The formal language'
+ 'The formal language associated with this decision problem']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the term for the set of all connected graphs related to this decision problem? ",32,147.456,Answer:,4738.203648,32768,32133.0,0.399900672,4.738203648,qa_1,GB,0.9156007842405004,2712.0
+ The encoding decision needs to be made in order to determine an exact definition of the formal language.,399.900672,"['how graphs are encoded as binary strings'
+ 'how graphs are encoded as binary strings'
+ 'how graphs are encoded as binary strings']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What encoding decision needs to be made in order to determine an exact definition of the formal language? ",32,147.456,Answer:,4815.323136,32768,32656.0,0.399900672,4.815323136,qa_1,GB,0.9169524742773151,2712.0
+ A function problem is an example of a computational problem.,399.900672,"['a computational problem' 'a computational problem'
+ 'a computational problem']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: A function problem is an example of what? ",32,147.456,Answer:,4596.056064,32768,31169.0,0.399900672,4.596056064,qa_1,GB,0.9129904713016138,2712.0
+ One.,399.900672,['a single output' 'single' 'single'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: How many outputs are expected for each input in a function problem? ",32,147.456,Answer:,4645.748736,32768,31506.0,0.399900672,4.645748736,qa_1,GB,0.9139211578746905,2712.0
+ The traveling salesman problem is an example of a complexity problem.,399.900672,['A function problem' 'function' 'function problem'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: The traveling salesman problem is an example of what type of problem? ",32,147.456,Answer:,4945.969152,32768,33542.0,0.399900672,4.945969152,qa_1,GB,0.919146145131477,2712.0
+ The integer factorization problem.,399.900672,"['the integer factorization problem' 'integer factorization'
+ 'integer factorization problem']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In addition to the traveling salesman problem, what is another example of a function problem? ",32,147.456,Answer:,4893.32736,32768,33185.0,0.399900672,4.89332736,qa_1,GB,0.9182763296670182,2712.0
+ complex,399.900672,['complex' 'complex' 'complex'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Is the output of a functional problem typically characterized by a simple or complex answer? ",32,147.456,Answer:,4756.783104,32768,32259.0,0.399900672,4.756783104,qa_1,GB,0.9159304380172975,2712.0
+ Function problems can typically be restated as decision problems.,399.900672,['decision problems' 'as decision problems' 'as decision problems'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: How can function problems typically be restated? ",32,147.456,Answer:,4489.150464,32768,30444.0,0.399900672,4.489150464,qa_1,GB,0.9109184075679937,2712.0
+" The expression set is called a ""relation"" or more specifically, a ""set of pairs"" where each pair consists of the two input integers and the output value",399.900672,"['set of triples' 'triple'
+ 'the set of triples (a, b, c) such that the relation a × b = c holds']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: If two integers are multiplied and output a value, what is this expression set called? ",32,147.456,Answer:,4471.160832,32768,30322.0,0.399900672,4.471160832,qa_1,GB,0.9105599894466064,2712.0
+" A commonly used measurement used to determine the complexity of a computational problem is the time complexity, which is often expressed using the big O notation.",399.900672,"['how much time the best algorithm requires to solve the problem' 'time'
+ 'time']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is a commonly used measurement used to determine the complexity of a computational problem? ",32,147.456,Answer:,4696.178688,32768,31848.0,0.399900672,4.696178688,qa_1,GB,0.9148455162019593,2712.0
+ The running time may be contingent on the size of the input.,399.900672,['the instance' 'the instance' 'the size of the instance'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is one variable on which the running time may be contingent? ",32,147.456,Answer:,4636.459008,32768,31443.0,0.399900672,4.636459008,qa_1,GB,0.9137486881022803,2712.0
+" The time needed to obtain the solution to a problem is calculated as a function of the size of the instance, typically the input size in bits, and it is",399.900672,"['as a function of the size of the instance'
+ 'as a function of the size of the instance'
+ 'a function of the size of the instance']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: How is the time needed to obtain the solution to a problem calculated? ",32,147.456,Answer:,4909.694976,32768,33296.0,0.399900672,4.909694976,qa_1,GB,0.9185487746275829,2712.0
+ The size of the input is measured in bits.,399.900672,['bits' 'bits' 'bits'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In what unit is the size of the input measured? ",32,147.456,Answer:,4891.262976,32768,33171.0,0.399900672,4.891262976,qa_1,GB,0.9182418377498417,2712.0
+ the size of the input,399.900672,['an increase in the input size' 'input size' 'input size'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Complexity theory seeks to define the relationship between the scale of algorithms with respect to what other variable? ",32,147.456,Answer:,4816.207872,32768,32662.0,0.399900672,4.816207872,qa_1,GB,0.9169677300838895,2712.0
+ Cobham's thesis.,399.900672,"[""Cobham's thesis"" ""Cobham's"" 'Cobham']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Whose thesis states that the solution to a problem is solvable with reasonable resources assuming it allows for a polynomial time algorithm? ",32,147.456,Answer:,4683.350016,32768,31761.0,0.399900672,4.683350016,qa_1,GB,0.9146122603192595,2712.0
+" The function of n can be assumed to be the time complexity of the problem, which is calculated as a function of the size of the input.",399.900672,['the time taken' 'the time taken' 'the time taken'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: If input size is is equal to n, what can respectively be assumed is the function of n? ",32,147.456,Answer:,4549.165056,32768,30851.0,0.399900672,4.549165056,qa_1,GB,0.9120936112281611,2712.0
+" The term that corresponds to the maximum measurement of time across all functions of n is ""EXPTIME"".",399.900672,"['worst-case time complexity' 'worst-case time complexity'
+ 'the worst-case time complexity']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What term corresponds to the maximum measurement of time across all functions of n?  ",32,147.456,Answer:,4621.123584,32768,31339.0,0.399900672,4.621123584,qa_1,GB,0.9134624589170044,2712.0
+" Worst-case time complexity is written as an expression using the big O notation, which hides constant factors and smaller terms. For instance, if T(n) = ",399.900672,['T(n)' 'T(n)' 'T(n)'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: How is worst-case time complexity written as an expression? ",32,147.456,Answer:,4666.540032,32768,31647.0,0.399900672,4.666540032,qa_1,GB,0.914304673428761,2712.0
+ Polynomial-time algorithm.,399.900672,['polynomial time algorithm' 'polynomial time' 'polynomial time algorithm'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Assuming that T represents a polynomial in T(n), what is the term given to the corresponding algorithm? ",32,147.456,Answer:,4903.354368,32768,33253.0,0.399900672,4.903354368,qa_1,GB,0.9184434487113945,2712.0
+ Turing machine,399.900672,['A Turing machine' 'A Turing machine' 'Turing machine'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the term for a mathematical model that theoretically represents a general computing machine? ",32,147.456,Answer:,4929.601536,32768,33431.0,0.399900672,4.929601536,qa_1,GB,0.9188776883730669,2712.0
+ an algorithm,399.900672,['an algorithm' 'an algorithm' 'an algorithm'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: It is generally assumed that a Turing machine can solve anything capable of also being solved using what? ",32,147.456,Answer:,4897.161216,32768,33211.0,0.399900672,4.897161216,qa_1,GB,0.918340308933787,2712.0
+ The most commonplace model utilized in complexity theory is the deterministic Turing machine.,399.900672,['the Turing machine' 'the Turing machine' 'Turing machine'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the most commonplace model utilized in complexity theory? ",32,147.456,Answer:,4903.206912,32768,33252.0,0.399900672,4.903206912,qa_1,GB,0.9184409960303139,2712.0
+ symbols,399.900672,['symbols' 'symbols' 'symbols'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What does a Turing machine handle on a strip of tape? ",32,147.456,Answer:,4826.087424,32768,32729.0,0.399900672,4.826087424,qa_1,GB,0.9171377066210394,2712.0
+ The most basic iteration of a Turing machine is the deterministic Turing machine.,399.900672,"['A deterministic Turing machine' 'deterministic'
+ 'deterministic Turing machine']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is generally considered to be the most basic iteration of a Turing machine? ",32,147.456,Answer:,4809.719808,32768,32618.0,0.399900672,4.809719808,qa_1,GB,0.9168557238334661,2712.0
+" The fixed set of factors that determine the actions of a deterministic Turing machine is the computation rules or transition function, which specifies the next state, symbol to write,",399.900672,['rules' 'rules' 'a fixed set of rules to determine its future actions'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What fixed set of factors determine the actions of a deterministic Turing machine ",32,147.456,Answer:,4699.275264,32768,31869.0,0.399900672,4.699275264,qa_1,GB,0.9149016285418432,2712.0
+" A deterministic Turing machine with additional random bits is not a standard term, but the concept is described as a ""probabilistic Turing machine.""",399.900672,"['A probabilistic Turing machine' 'probabilistic'
+ 'probabilistic Turing machine']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the term used to identify a deterministic Turing machine that has additional random bits? ",32,147.456,Answer:,4742.479872,32768,32162.0,0.399900672,4.742479872,qa_1,GB,0.9156768857658106,2712.0
+ Non-deterministic Turing machine.,399.900672,"['A non-deterministic Turing machine' 'non-deterministic'
+ 'non-deterministic Turing machine']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What type of Turing machine is capable of multiple actions and extends into a variety of computational paths? ",32,147.456,Answer:,4723.01568,32768,32030.0,0.399900672,4.72301568,qa_1,GB,0.9153293787074618,2712.0
+ Randomized algorithms.,399.900672,['randomized algorithms' 'randomized algorithms' 'randomized algorithms'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the term given to algorithms that utilize random bits? ",32,147.456,Answer:,4825.055232,32768,32722.0,0.399900672,4.825055232,qa_1,GB,0.9171199804412933,2712.0
+ Turing machines are commonly employed to define complexity classes.,399.900672,['complexity classes' 'complexity classes' 'complexity classes'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Turing machines are commonly employed to define what?  ",32,147.456,Answer:,4845.846528,32768,32863.0,0.399900672,4.845846528,qa_1,GB,0.9174755804400085,2712.0
+ The two factors that directly affect how powerful a Turing machine may or may not be are the type of reduction used and the specific complexity measures such as time and space,399.900672,['time or space' 'time or space' 'time or space'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What are two factors that directly effect how powerful a Turing machine may or may not be? ",32,147.456,Answer:,4663.296,32768,31625.0,0.399900672,4.663296,qa_1,GB,0.9142450592885376,2712.0
+ deterministic Turing machines and quantum Turing machines.,399.900672,"['probabilistic Turing machines, non-deterministic Turing machines'
+ 'probabilistic Turing machines, non-deterministic Turing machines']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In the determination of complexity classes, what are two examples of types of Turing machines? ",32,147.456,Answer:,4902.764544,32768,33249.0,0.399900672,4.902764544,qa_1,GB,0.9184336371018678,2712.0
+ A computational model that deviates from a generally accepted multi-tape Turing machine is the single-tape Turing machine.,399.900672,"['random access machines' 'random access machines'
+ 'random access machines']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is an example of a machine model that deviates from a generally accepted multi-tape Turing machine? ",32,147.456,Answer:,4968.382464,32768,33694.0,0.399900672,4.968382464,qa_1,GB,0.9195108921469698,2712.0
+ The measurement of time complexity.,399.900672,['computational power' 'computational power' 'computational power'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: In considering Turing machines and alternate variables, what measurement left unaffected by conversion between machine models?  ",32,147.456,Answer:,4727.144448,32768,32058.0,0.399900672,4.727144448,qa_1,GB,0.9154033314617256,2712.0
+ time and space,399.900672,"['time and memory' 'time and memory consumption'
+ 'time and memory consumption']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What two resources commonly consumed by alternate models are typically known to vary? ",32,147.456,Answer:,4929.896448,32768,33433.0,0.399900672,4.929896448,qa_1,GB,0.9188825412018066,2712.0
+ They are all equally powerful in principle.,399.900672,"['the machines operate deterministically' 'deterministically'
+ 'the machines operate deterministically']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What commonality do alternate machine models, such as random access machines, share with Turing machines? ",32,147.456,Answer:,4762.8288,32768,32300.0,0.399900672,4.7628288,qa_1,GB,0.9160371517027863,2712.0
+ A non-deterministic Turing machine.,399.900672,"['non-deterministic' 'non-deterministic'
+ 'non-deterministic Turing machine']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What type of Turing machine can be characterized by checking multiple possibilities at the same time? ",32,147.456,Answer:,4705.173504,32768,31909.0,0.399900672,4.705173504,qa_1,GB,0.9150083048669655,2712.0
+ The computational model used often affects or facilitates ease of analysis in computational problems.,399.900672,['unusual resources' 'more unusual resources' 'more unusual resources'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What often affects or facilitates ease of analysis in computational problems? ",32,147.456,Answer:,4872.093696,32768,33041.0,0.399900672,4.872093696,qa_1,GB,0.9179201598014588,2712.0
+" the ability to capture the facet of useful analysis that involves solving problems with multiple possible paths or decisions, such as the complexity of problems that can be solved efficiently with",399.900672,['mathematical models' 'mathematical models' 'branching'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: A non-deterministic Turing machine has the ability to capture what facet of useful analysis? ",32,147.456,Answer:,4573.642752,32768,31017.0,0.399900672,4.573642752,qa_1,GB,0.912564077763807,2712.0
+ The most critical resource in the analysis of computational problems associated with non-deterministic Turing machines is time.,399.900672,['time' 'non-deterministic time' 'non-deterministic time'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the most critical resource in the analysis of computational problems associated with non-deterministic Turing machines? ",32,147.456,Answer:,4603.871232,32768,31222.0,0.399900672,4.603871232,qa_1,GB,0.9131381718019346,2712.0
+" The time required to output an answer on a deterministic Turing machine is expressed as a function of the size of the input, specifically as the maximum time taken over all",399.900672,"['state transitions' 'the total number of state transitions, or steps'
+ 'total number of state transitions, or steps, the machine makes before it halts and outputs the answer']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: The time required to output an answer on a deterministic Turing machine is expressed as what? ",32,147.456,Answer:,4515.692544,32768,30624.0,0.399900672,4.515692544,qa_1,GB,0.9114420062695925,2712.0
+ Complexity theory classifies problems based on their inherent difficulty.,399.900672,['difficulty' 'difficulty' 'difficulty'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Complexity theory classifies problems based on what primary attribute? ",32,147.456,Answer:,4690.280448,32768,31808.0,0.399900672,4.690280448,qa_1,GB,0.914738430583501,2712.0
+" The expression used to identify any given series of problems capable of being solved within time on a deterministic Turing machine is ""polynomial time"".",399.900672,['DTIME(f(n))' 'DTIME(f(n)).' 'DTIME(f(n))'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the expression used to identify any given series of problems capable of being solved within time on a deterministic Turing machine? ",32,147.456,Answer:,4828.151808,32768,32743.0,0.399900672,4.828151808,qa_1,GB,0.917173136242861,2712.0
+ Time and space.,399.900672,['time' 'time' 'time'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the most critical resource measured to in assessing the determination of a Turing machine's ability to solve any given set of problems? ",32,147.456,Answer:,4769.46432,32768,32345.0,0.399900672,4.76946432,qa_1,GB,0.9161539650641521,2712.0
+ computational,399.900672,['complexity resources' 'complexity resources' 'complexity'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Time and space are both examples of what type of resource? ",32,147.456,Answer:,4938.891264,32768,33494.0,0.399900672,4.938891264,qa_1,GB,0.9190302740789396,2712.0
+ A complexity resource can also be described as a computational resource.,399.900672,['computational resource' 'computational' 'computational'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: A complexity resource can also be described as what other type of resource? ",32,147.456,Answer:,4499.767296,32768,30516.0,0.399900672,4.499767296,qa_1,GB,0.9111285882815572,2712.0
+ computational models,399.900672,"['Blum complexity axioms' 'the Blum complexity axioms'
+ 'the Blum complexity axioms']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is typically used to broadly define complexity measures? ",32,147.456,Answer:,4590.747648,32768,31133.0,0.399900672,4.590747648,qa_1,GB,0.9128898596344714,2712.0
+ Communication complexity is an example of a complexity measure.,399.900672,['Complexity measures' 'complexity measures' 'complexity'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Communication complexity is an example of what type of measure? ",32,147.456,Answer:,4757.078016,32768,32261.0,0.399900672,4.757078016,qa_1,GB,0.9159356498558631,2712.0
+ Decision tree is an example of a complexity measure.,399.900672,['Complexity measures' 'complexity measures' 'complexity'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Decision tree is an example of what type of measure? ",32,147.456,Answer:,4722.2784,32768,32025.0,0.399900672,4.7222784,qa_1,GB,0.9153161592505855,2712.0
+" The three primary expressions used to represent case complexity are decision problems, function problems, and counting problems.",399.900672,"['best, worst and average' 'best, worst and average case'
+ 'best, worst and average case complexity']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What are the three primary expressions used to represent case complexity? ",32,147.456,Answer:,4660.789248,32768,31608.0,0.399900672,4.660789248,qa_1,GB,0.9141989369779803,2712.0
+ Case complexity likelihoods provide variable probabilities of the computational measure of time.,399.900672,['complexity measure' 'complexity' 'complexity'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Case complexity likelihoods provide variable probabilities of what general measure?  ",32,147.456,Answer:,4806.32832,32768,32595.0,0.399900672,4.80632832,qa_1,GB,0.9167970547630004,2712.0
+ The common complexity measure is time complexity.,399.900672,['time' 'time complexity' 'time complexity'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is one common example of a critical complexity measure? ",32,147.456,Answer:,4858.822656,32768,32951.0,0.399900672,4.858822656,qa_1,GB,0.917695972808109,2712.0
+ Case complexities provide three likelihoods of differing input size that remains the same size.,399.900672,['inputs' 'inputs' 'inputs'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Case complexities provide three likelihoods of what differing variable that remains the same size?  ",32,147.456,Answer:,4794.53184,32768,32515.0,0.399900672,4.79453184,qa_1,GB,0.9165923419960018,2712.0
+ A deterministic Turing machine provides a solution to a list of integers provided as input that need to be sorted.,399.900672,"['deterministic sorting algorithm quicksort' 'quicksort'
+ 'the deterministic sorting algorithm quicksort']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What provides a solution to a list of integers provided as input that ned to be sorted? ",32,147.456,Answer:,4752.801792,32768,32232.0,0.399900672,4.752801792,qa_1,GB,0.9158600148920327,2712.0
+ worst-case complexity,399.900672,['worst-case' 'worst' 'worst-case'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: When extensive time is required to sort integers, this represents what case complexity? ",32,147.456,Answer:,4798.660608,32768,32543.0,0.399900672,4.798660608,qa_1,GB,0.9166641059521249,2712.0
+" The expression used to denote a worst case complexity as expressed by time taken is ""time complexity"".",399.900672,['O(n2)' 'O(n2)' 'O(n2)'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the expression used to denote a worst case complexity as expressed by time taken? ",32,147.456,Answer:,4672.290816,32768,31686.0,0.399900672,4.672290816,qa_1,GB,0.9144101495928801,2712.0
+ the most efficient algorithm,399.900672,"['the most efficient algorithm' 'the most efficient algorithm'
+ 'the most efficient algorithm solving a given problem']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Classification of resources is contingent on determining the upper and lower bounds of minimum time required by what?   ",32,147.456,Answer:,4892.147712,32768,33177.0,0.399900672,4.892147712,qa_1,GB,0.9182566235645175,2712.0
+ The analysis of a specific algorithm is typically assigned to the field of computational complexity theory.,399.900672,"['analysis of algorithms' 'analysis of algorithms'
+ 'analysis of algorithms']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: The analysis of a specific algorithm is typically assigned to what field of computational science? ",32,147.456,Answer:,4914.855936,32768,33331.0,0.399900672,4.914855936,qa_1,GB,0.9186343044013081,2712.0
+ The lower bound of time is more difficult to establish.,399.900672,['lower bounds' 'lower' 'lower bounds'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Which bound of time is more difficult to establish? ",32,147.456,Answer:,4648.108032,32768,31522.0,0.399900672,4.648108032,qa_1,GB,0.9139648499460694,2712.0
+ T(n) represents the time complexity measure of an algorithm.,399.900672,['upper bound' 'upper and lower bounds' 'upper bound'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: A specific algorithm demonstrating T(n) represents what measure of time complexity? ",32,147.456,Answer:,4661.673984,32768,31614.0,0.399900672,4.661673984,qa_1,GB,0.914215221104574,2712.0
+" The colloquial phrase used to convey the continuum of algorithms with unlimited availability irrespective of time is ""the time complexities in any two reasonable and general models of computation",399.900672,"['all possible algorithms' 'all possible algorithms'
+ 'all possible algorithms']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What is the colloquial phrase used to convey the continuum of algorithms with unlimited availability irrespective of time?  ",32,147.456,Answer:,4600.332288,32768,31198.0,0.399900672,4.600332288,qa_1,GB,0.9130713507276107,2712.0
+" The expression ""at least"" is generally used to convey upper or lower bounds.",399.900672,['big O notation' 'big O notation' 'big O notation'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What expression is generally used to convey upper or lower bounds? ",32,147.456,Answer:,4721.836032,32768,32022.0,0.399900672,4.721836032,qa_1,GB,0.9153082255949035,2712.0
+ the constant factors and smaller terms,399.900672,"['constant factors and smaller terms' 'constant factors and smaller terms'
+ 'constant factors and smaller terms']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What does a big O notation hide? ",32,147.456,Answer:,4798.808064,32768,32544.0,0.399900672,4.798808064,qa_1,GB,0.9166666666666666,2712.0
+ T(n) = O(n²),399.900672,['T(n) = O(n2)' 'T(n) = O(n2)' 'T(n) = O(n2)'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: How would one write T(n) = 7n2 + 15n + 40 in big O notation?  ",32,147.456,Answer:,4857.643008,32768,32943.0,0.399900672,4.857643008,qa_1,GB,0.9176759857936436,2712.0
+ computational complexity,399.900672,"['the computational model'
+ 'specific details of the computational model used'
+ 'the specific details of the computational model used']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Big O notation provides autonomy to upper and lower bounds with relationship to what?  ",32,147.456,Answer:,4762.681344,32768,32299.0,0.399900672,4.762681344,qa_1,GB,0.9160345521533174,2712.0
+ Complexity classes.,399.900672,['complexity classes' 'complexity classes' 'some complexity classes'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What has complicated definitions that prevent classification into a framework? ",32,147.456,Answer:,4450.811904,32768,30184.0,0.399900672,4.450811904,qa_1,GB,0.9101510734163796,2712.0
+ Complexity classes are generally classified into computational problems based on their inherent difficulty.,399.900672,['framework' 'framework' 'framework'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Complexity classes are generally classified into what? ",32,147.456,Answer:,4648.108032,32768,31522.0,0.399900672,4.648108032,qa_1,GB,0.9139648499460694,2712.0
+ the variable of the computational model.,399.900672,['complicated definitions' 'complicated definitions' 'definitions'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Difficulty in establishing a framework for complexity classes can be caused by what variable? ",32,147.456,Answer:,4850.860032,32768,32897.0,0.399900672,4.850860032,qa_1,GB,0.9175608718120193,2712.0
+ Concrete bounding of computation time frequently produces complexity classes contingent upon the computational model used.,399.900672,"['chosen machine model' 'the chosen machine model'
+ 'the chosen machine model']",2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Concrete bounding of computation time frequently produces complexity classes contingent upon what? ",32,147.456,Answer:,4719.32928,32768,32005.0,0.399900672,4.71932928,qa_1,GB,0.9152632401187315,2712.0
+ Polynomial time.,399.900672,['linear time' 'linear' 'linear'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: A multi-tape Turing machine requires what type of time for a solution? ",32,147.456,Answer:,4667.572224,32768,31654.0,0.399900672,4.667572224,qa_1,GB,0.9143236241865167,2712.0
+ A Turing machine.,399.900672,['single-tape Turing machines' 'single-tape' 'single-tape'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: A language solved in quadratic time implies the use of what type of Turing machine? ",32,147.456,Answer:,4830.953472,32768,32762.0,0.399900672,4.830953472,qa_1,GB,0.9172211708686894,2712.0
+ Cobham–Edmonds thesis,399.900672,['Cobham-Edmonds thesis' 'Cobham-Edmonds' 'Cobham-Edmonds thesis'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What thesis specifies that a polynomial relationship exists within time complexities in a computational model?  ",32,147.456,Answer:,4776.247296,32768,32391.0,0.399900672,4.776247296,qa_1,GB,0.916273038807076,2712.0
+ P,399.900672,['complexity class P' 'P' 'complexity class P'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: Decision problems capable of being solved by a deterministic Turing machine while maintaining adherence to polynomial time belong to what class? ",32,147.456,Answer:,4791.877632,32768,32497.0,0.399900672,4.791877632,qa_1,GB,0.9165461427208665,2712.0
+ The two examples of measurements bound within algorithms to establish complexity classes are time complexity and space complexity.,399.900672,['time or space' 'time or space' 'time or space'],2712.0,0.4,"Answer the question based on the given documents. Only give me the answer and do not output any other words.
+
+Question: What are two examples of measurements are bound within algorithms to establish complexity classes? ",32,147.456,Answer:,4821.516288,32768,32698.0,0.399900672,4.821516288,qa_1,GB,0.9170591473484617,2712.0

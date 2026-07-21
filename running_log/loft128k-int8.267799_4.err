@@ -80,3 +80,160 @@ Found the latest cached dataset configuration 'default' at /home/rethinkingai-se
 2026-07-21 03:58:49,836 - INFO - Starting inference...
 Running Inference:   0%|          | 0/1 [00:00<?, ?it/s]/home/rethinkingai-self/25m0820/miniconda3/envs/kvpress/lib/python3.11/site-packages/bitsandbytes/autograd/_functions.py:123: UserWarning: MatMul8bitLt: inputs will be cast from torch.bfloat16 to float16 during quantization
   warnings.warn(f"MatMul8bitLt: inputs will be cast from {A.dtype} to float16 during quantization")
+Running Inference: 100%|██████████| 1/1 [30:04<00:00, 1804.63s/it]Running Inference: 100%|██████████| 1/1 [30:04<00:00, 1804.72s/it]
+2026-07-21 04:28:54,636 - INFO - Inference completed.
+2026-07-21 04:28:55,317 - INFO - Results saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__max_context131072__int8/predictions.csv
+2026-07-21 04:28:55,317 - INFO - Calculating metrics for dataset: loft
+2026-07-21 04:28:55,430 - INFO - Average retained context KV memory: 17222.42 MB (17.2224 GB); average compression ratio: 0.010000
+2026-07-21 04:28:55,446 - INFO - Metrics saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__max_context131072__int8/metrics.json
+2026-07-21 04:28:55,447 - INFO - Metrics:
+{
+  "em": 0.00909090909090909,
+  "subspan_em": 0.03636363636363636,
+  "coverage": 0.1,
+  "num_samples": 110,
+  "average_compression_ratio": 0.01,
+  "average_original_context_tokens": 117977.0,
+  "average_retained_context_tokens": 116797.0,
+  "kv_memory_per_token_kb": 147.456,
+  "average_retained_kv_memory_mb": 17222.418432,
+  "average_retained_kv_memory_gb": 17.222418432,
+  "average_uncompressed_kv_memory_mb": 17396.416512,
+  "average_uncompressed_kv_memory_gb": 17.396416512
+}
+2026-07-21 04:28:55,451 - INFO - Result summary saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__max_context131072__int8/README.md
+2026-07-21 04:28:55,451 - INFO - Completed task=quest_128k, memory_budget=reference
+2026-07-21 04:28:55,451 - INFO - Set KVzipPress compression_ratio to 0.01
+2026-07-21 04:28:55,451 - INFO - KV Press 'kvzip' setup.
+2026-07-21 04:28:55,588 - INFO - Set deterministic seeds to 42
+2026-07-21 04:28:55,589 - INFO - Running task=quest_128k, logical KVzip budget=256MB
+2026-07-21 04:28:56,026 - INFO - Starting inference...
+Running Inference:   0%|          | 0/1 [00:00<?, ?it/s]/home/rethinkingai-self/25m0820/miniconda3/envs/kvpress/lib/python3.11/site-packages/bitsandbytes/autograd/_functions.py:123: UserWarning: MatMul8bitLt: inputs will be cast from torch.bfloat16 to float16 during quantization
+  warnings.warn(f"MatMul8bitLt: inputs will be cast from {A.dtype} to float16 during quantization")
+Running Inference: 100%|██████████| 1/1 [1:17:06<00:00, 4626.39s/it]Running Inference: 100%|██████████| 1/1 [1:17:06<00:00, 4626.41s/it]
+2026-07-21 05:46:02,484 - INFO - Inference completed.
+2026-07-21 05:46:02,492 - INFO - Results saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget256MB__max_context131072__int8/predictions.csv
+2026-07-21 05:46:02,492 - INFO - Calculating metrics for dataset: loft
+2026-07-21 05:46:02,503 - INFO - Average retained context KV memory: 255.98 MB (0.2560 GB); average compression ratio: 0.985285
+2026-07-21 05:46:02,505 - INFO - Metrics saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget256MB__max_context131072__int8/metrics.json
+2026-07-21 05:46:02,505 - INFO - Metrics:
+{
+  "em": 0.0,
+  "subspan_em": 0.0,
+  "coverage": 0.0,
+  "num_samples": 110,
+  "average_compression_ratio": 0.9852852674673878,
+  "average_original_context_tokens": 117977.0,
+  "average_retained_context_tokens": 1736.0,
+  "kv_memory_per_token_kb": 147.456,
+  "average_retained_kv_memory_mb": 255.983616,
+  "average_retained_kv_memory_gb": 0.255983616,
+  "average_uncompressed_kv_memory_mb": 17396.416512,
+  "average_uncompressed_kv_memory_gb": 17.396416512,
+  "memory_budget": 256.0,
+  "memory_budget_unit": "MB",
+  "token_budget": 1736
+}
+2026-07-21 05:46:02,509 - INFO - Result summary saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget256MB__max_context131072__int8/README.md
+2026-07-21 05:46:02,509 - INFO - Completed task=quest_128k, memory_budget=256.0MB
+2026-07-21 05:46:02,509 - INFO - Set KVzipPress compression_ratio to 0.01
+2026-07-21 05:46:02,510 - INFO - KV Press 'kvzip' setup.
+2026-07-21 05:46:02,511 - INFO - Set deterministic seeds to 42
+2026-07-21 05:46:02,521 - INFO - Running task=quest_128k, logical KVzip budget=512MB
+2026-07-21 05:46:02,572 - INFO - Starting inference...
+Running Inference:   0%|          | 0/1 [00:00<?, ?it/s]/home/rethinkingai-self/25m0820/miniconda3/envs/kvpress/lib/python3.11/site-packages/bitsandbytes/autograd/_functions.py:123: UserWarning: MatMul8bitLt: inputs will be cast from torch.bfloat16 to float16 during quantization
+  warnings.warn(f"MatMul8bitLt: inputs will be cast from {A.dtype} to float16 during quantization")
+Running Inference: 100%|██████████| 1/1 [1:03:43<00:00, 3823.23s/it]Running Inference: 100%|██████████| 1/1 [1:03:43<00:00, 3823.35s/it]
+2026-07-21 06:49:45,971 - INFO - Inference completed.
+2026-07-21 06:49:46,192 - INFO - Results saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget512MB__max_context131072__int8/predictions.csv
+2026-07-21 06:49:46,192 - INFO - Calculating metrics for dataset: loft
+2026-07-21 06:49:46,346 - INFO - Average retained context KV memory: 511.97 MB (0.5120 GB); average compression ratio: 0.970571
+2026-07-21 06:49:46,397 - INFO - Metrics saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget512MB__max_context131072__int8/metrics.json
+2026-07-21 06:49:46,398 - INFO - Metrics:
+{
+  "em": 0.0,
+  "subspan_em": 0.0,
+  "coverage": 0.0,
+  "num_samples": 110,
+  "average_compression_ratio": 0.9705705349347754,
+  "average_original_context_tokens": 117977.0,
+  "average_retained_context_tokens": 3472.0,
+  "kv_memory_per_token_kb": 147.456,
+  "average_retained_kv_memory_mb": 511.967232,
+  "average_retained_kv_memory_gb": 0.511967232,
+  "average_uncompressed_kv_memory_mb": 17396.416512,
+  "average_uncompressed_kv_memory_gb": 17.396416512,
+  "memory_budget": 512.0,
+  "memory_budget_unit": "MB",
+  "token_budget": 3472
+}
+2026-07-21 06:49:46,401 - INFO - Result summary saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget512MB__max_context131072__int8/README.md
+2026-07-21 06:49:46,401 - INFO - Completed task=quest_128k, memory_budget=512.0MB
+2026-07-21 06:49:46,401 - INFO - Set KVzipPress compression_ratio to 0.01
+2026-07-21 06:49:46,401 - INFO - KV Press 'kvzip' setup.
+2026-07-21 06:49:46,525 - INFO - Set deterministic seeds to 42
+2026-07-21 06:49:46,525 - INFO - Running task=quest_128k, logical KVzip budget=1GB
+2026-07-21 06:49:46,665 - INFO - Starting inference...
+Running Inference:   0%|          | 0/1 [00:00<?, ?it/s]/home/rethinkingai-self/25m0820/miniconda3/envs/kvpress/lib/python3.11/site-packages/bitsandbytes/autograd/_functions.py:123: UserWarning: MatMul8bitLt: inputs will be cast from torch.bfloat16 to float16 during quantization
+  warnings.warn(f"MatMul8bitLt: inputs will be cast from {A.dtype} to float16 during quantization")
+Running Inference: 100%|██████████| 1/1 [24:49<00:00, 1489.88s/it]Running Inference: 100%|██████████| 1/1 [24:49<00:00, 1489.91s/it]
+2026-07-21 07:14:36,622 - INFO - Inference completed.
+2026-07-21 07:14:36,738 - INFO - Results saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget1GB__max_context131072__int8/predictions.csv
+2026-07-21 07:14:36,738 - INFO - Calculating metrics for dataset: loft
+2026-07-21 07:14:36,780 - INFO - Average retained context KV memory: 999.90 MB (0.9999 GB); average compression ratio: 0.942523
+2026-07-21 07:14:36,792 - INFO - Metrics saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget1GB__max_context131072__int8/metrics.json
+2026-07-21 07:14:36,792 - INFO - Metrics:
+{
+  "em": 0.0,
+  "subspan_em": 0.0,
+  "coverage": 0.0,
+  "num_samples": 110,
+  "average_compression_ratio": 0.9425226951015876,
+  "average_original_context_tokens": 117977.0,
+  "average_retained_context_tokens": 6781.0,
+  "kv_memory_per_token_kb": 147.456,
+  "average_retained_kv_memory_mb": 999.899136,
+  "average_retained_kv_memory_gb": 0.999899136,
+  "average_uncompressed_kv_memory_mb": 17396.416512,
+  "average_uncompressed_kv_memory_gb": 17.396416512,
+  "memory_budget": 1.0,
+  "memory_budget_unit": "GB",
+  "token_budget": 6781
+}
+2026-07-21 07:14:36,795 - INFO - Result summary saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget1GB__max_context131072__int8/README.md
+2026-07-21 07:14:36,795 - INFO - Completed task=quest_128k, memory_budget=1.0GB
+2026-07-21 07:14:36,795 - INFO - Set KVzipPress compression_ratio to 0.01
+2026-07-21 07:14:36,795 - INFO - KV Press 'kvzip' setup.
+2026-07-21 07:14:36,935 - INFO - Set deterministic seeds to 42
+2026-07-21 07:14:36,940 - INFO - Running task=quest_128k, logical KVzip budget=2GB
+2026-07-21 07:14:37,020 - INFO - Starting inference...
+Running Inference:   0%|          | 0/1 [00:00<?, ?it/s]/home/rethinkingai-self/25m0820/miniconda3/envs/kvpress/lib/python3.11/site-packages/bitsandbytes/autograd/_functions.py:123: UserWarning: MatMul8bitLt: inputs will be cast from torch.bfloat16 to float16 during quantization
+  warnings.warn(f"MatMul8bitLt: inputs will be cast from {A.dtype} to float16 during quantization")
+Running Inference: 100%|██████████| 1/1 [29:35<00:00, 1775.93s/it]Running Inference: 100%|██████████| 1/1 [29:35<00:00, 1775.97s/it]
+2026-07-21 07:44:13,045 - INFO - Inference completed.
+2026-07-21 07:44:13,135 - INFO - Results saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget2GB__max_context131072__int8/predictions.csv
+2026-07-21 07:44:13,135 - INFO - Calculating metrics for dataset: loft
+2026-07-21 07:44:13,174 - INFO - Average retained context KV memory: 1999.95 MB (1.9999 GB); average compression ratio: 0.885037
+2026-07-21 07:44:13,190 - INFO - Metrics saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget2GB__max_context131072__int8/metrics.json
+2026-07-21 07:44:13,190 - INFO - Metrics:
+{
+  "em": 0.0,
+  "subspan_em": 0.01818181818181818,
+  "coverage": 0.05151515151515151,
+  "num_samples": 110,
+  "average_compression_ratio": 0.8850369139747578,
+  "average_original_context_tokens": 117977.0,
+  "average_retained_context_tokens": 13563.0,
+  "kv_memory_per_token_kb": 147.456,
+  "average_retained_kv_memory_mb": 1999.945728,
+  "average_retained_kv_memory_gb": 1.999945728,
+  "average_uncompressed_kv_memory_mb": 17396.416512,
+  "average_uncompressed_kv_memory_gb": 17.396416512,
+  "memory_budget": 2.0,
+  "memory_budget_unit": "GB",
+  "token_budget": 13563
+}
+2026-07-21 07:44:13,195 - INFO - Result summary saved to results_loft128k_qwen_yarn4_int8/new_loft__quest_128k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__memory_budget2GB__max_context131072__int8/README.md
+2026-07-21 07:44:13,195 - INFO - Completed task=quest_128k, memory_budget=2.0GB
+2026-07-21 07:44:13,196 - INFO - === Completed matrix task: 'quest_128k' ===
+2026-07-21 07:44:13,196 - INFO - Memory-budget matrix evaluation completed successfully with one model load.

@@ -1,0 +1,549 @@
+question,retained_kv_memory_mb,task,kv_memory_per_token_kb,predicted_answer,retained_kv_memory_gb,compression_ratio,max_new_tokens,context_tokens,token_budget,uncompressed_kv_memory_mb,uncompressed_kv_memory_gb,memory_budget,memory_budget_unit,retained_context_tokens,answer_prefix,answers,split
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Capua Films
+",999.899136,quest_128k,147.456,"1. **The Midnight Zoo** (ID: 196)  
+2. **Tot Watchers** (ID: 87)",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Spartacus (film)'],dev
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1990s Indian and folklore romance films.
+",999.899136,quest_128k,147.456,"1. **The Midnight Zoo** (ID: 196)  
+2. **The Midnight Zoo** (ID: 196)  
+3. **The Midnight Zoo** (ID: 196)  
+
+The 1990s Indian and folklore romance films include:  
+- **The Midnight Zoo** (ID: 196) – a 2016 film based on the 1990s Indian folklore and inspired by the",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Laal Paree' 'Roja (film)' 'Sahasa Veerudu Sagara Kanya'],dev
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films shot in Gauteng or New Zealand action thrillers or Western films from South Africa
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers', 'The Adventures of Jinbao']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['6 Days (2017 film)' 'Glory Glory (2000 film)' 'The Jackals'],dev
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1860 novels or 1860 American novels or Ivan Turgenev novellas
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Bewitched', 'The Midnight Zoo', 'The Bewitched']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Max Havelaar' 'The Marble Faun' 'The Mill on the Floss'],dev
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Horror anthology films about time travel that were shot in the US
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Southbound (2015 film)' 'Twilight Zone: The Movie'],dev
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based on European myths and legends and young adult literature
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Percy Jackson & the Olympians: The Lightning Thief'],dev
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Supernatural horror films in the Artic
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Kajutaijuq: The Spirit That Comes' 'The Abandoned (2006 film)'
+ 'The Last Winter (2006 film)']",dev
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Northern Mariana Islands set films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Anatahan (film)' 'Oba: The Last Samurai'],dev
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1980 books that are non fiction and, about British thriller.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Invincible Constable', 'The Story Without a Name (novel)']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Man on Fire (Quinnell novel)' 'Sweet Adelaide'],dev
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Australian novels from 1991
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Cloudstreet' 'Mandragora (novel)' 'Our Sunshine'],dev
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels about families set in Boston and New England.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['A Case of Need'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2009 Indian, or by Chetan Bhagat, novels
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Five Point Someone' 'One Night @ the Call Center'
+ 'The 3 Mistakes of My Life']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are some Hungarian Revolution of 1956 or Austrian war films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Duel with Death' 'Fly Away Home (2016 film)' 'Sunshine (1999 film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Finnish television and animated films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Moomins and the Comet Chase' 'Quest for a Heart'
+ 'Santa Claus and the Magic Drum']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Hispanic and Latino American novels set anywhere besides North America
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['At Night We Walk in Circles' 'La reina de América' 'Lost City Radio'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Swiss Films about stalking
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['One Way Trip 3D'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2010s supernatural children's animated films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Lego Scooby-Doo! Blowout Beach Bash'
+ 'Scooby-Doo! and the Curse of the 13th Ghost' 'The Magic Snowflake']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1971 British thriller novels
+",999.899136,quest_128k,147.456," ['The Bewitched', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo',",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Firecrest (novel)' 'Lament for Leto'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Critical Jehovah's Witness books.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Crisis of Conscience'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are some Novels set in Jiangsu, 1750s, or Novels by Charlotte Lennox?
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Demi-Gods and Semi-Devils' 'The Adventures of Peregrine Pickle'
+ 'The History of Sir Charles Grandison']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Gene DeWeese novels
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Chain of Attack' 'The Final Nexus' 'The Peacekeepers'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1980s political films about science and the United States Armed Forces
+",999.899136,quest_128k,147.456,"1. **Title:** The Midnight Zoo, **ID:** 196  
+2. **Title:** The Last Mistress, **ID:** 320  
+
+**Answer List:**  
+1. **The Midnight Zoo** (ID: 196) - This document is a 2016 animated film about a character who interacts with a mystical creature and a military setting, though it is not explicitly a political film, it is set in a dystopian context that may reflect",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Best Defense' 'Red Dawn'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2010s speculative fiction novels about Washington (state) and the United States.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']  
+
+**Answer:**
+
+1. **The Midnight Zoo** (ID: 167) - This novella is set in the Pacific Northwest, which includes Washington state, and features elements of speculative fiction. It is part of the ""speculative fiction"" category as it involves supernatural and mythological elements, and it is set in a region that includes Washington.
+
+2. **The Midnight Zoo** (ID: ",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Seveneves'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Cebu films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Alega Gang: Public Enemy No.1 of Cebu' 'Lapu-Lapu (2002 film)'
+ 'Patay na si Hesus']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Crime novels set in Japan
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['All She Was Worth' 'Crossfire (novel)' 'Out (novel)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1990's historical films about security and surveillance that are set in England
+",999.899136,quest_128k,147.456," ['Tot Watchers', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Elizabeth (film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1890s historical books and novels published by Harper & Brothers
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Bewitched', 'The Mystery of the Frenchman']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Personal Recollections of Joan of Arc'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2021 films about action and comedy.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"[""Hitman's Wife's Bodyguard"" 'Red Notice (film)' ""The King's Man""]",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: History/Adventure books about France from 1933
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['The Way of the Scarlet Pimpernel'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based on works by Bill Finger that are any genre except Animated action films
+",999.899136,quest_128k,147.456," ['The Adventures of Jinbao', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Batman & Bill' 'Batman & Robin (film)' 'Batman (serial)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based on works by Alan Moore or Wildstorm titles, or that are Czech superhero films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Batman: The Killing Joke (film)' 'Pérák: The Shadow over Prague'
+ 'The League of Extraordinary Gentlemen (film)']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Crime novels that are both American crime novels and 1932 novels
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Poison in Jest' 'The Waxworks Murder'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Debut novels released in 1953.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Une vieille maîtresse', 'The Bewitched']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Battle Cry (Uris novel)' 'Go Tell It on the Mountain (novel)'
+ 'Junkie (novel)']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Penal system documentary films that are not about law enforcement in the United States
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['P4W: Prison for Women' 'The Phantom (2021 film)' 'Waseskun'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1984 Fantasy novels about the United Kingdom
+",999.899136,quest_128k,147.456,"1. **The Midnight Zoo** (ID: 1984)  
+2. **The Midnight Zoo** (ID: 1984)  
+
+**Answer:**  
+1. **The Midnight Zoo** (ID: 1984) – This is a 2000 Czech surreal fantasy novel that features a story involving a magical zoo and elements of the United Kingdom. It is not an American novel and is part of the 1984 fantasy genre",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Mythago Wood' 'Nights at the Circus'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels published by Hutchinson about film director and producers
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Laughing Gas (novel)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: American medical novels set in the 1940's
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Hannibal Rising' 'Jewel (novel)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Canadian documentaries about homelessness and LGBT
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Ryan (film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films set in Italy that are 1982 television films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Cavalleria rusticana (1982 film)' 'The Deadly Game (1982 film)'
+ 'The Life of Verdi (miniseries)']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Animated non-children films set in New York (state)
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo'] 
+
+**Answer:**  
+- **The Midnight Zoo** (ID: 196) is a 2016 animated film set in New York (state), featuring a surreal and darkly comedic narrative. It is not specifically targeted at children and is part of the broader animated film category.",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Hulk: Where Monsters Dwell' 'Resident Evil: Vendetta'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: mystery drama films that are Chinese
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['A Lingering Face' 'Looking Up (film)' 'Ni Jing: Thou Shalt Not Steal'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: exploitation films from the 1940s
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Child Bride' 'I Accuse My Parents' ""The Devil's Sleep""]",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Erico Verissimo works adapted into films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Time and the Wind'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Contemporary fantasy romance novels, that aren't Urban fantasy
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Midnight Sun (Meyer novel)' 'New Moon (novel)' 'Twilight (Meyer novel)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Young adult novels set in Oceania that are not Australian or for children
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo'] 
+
+The Midnight Zoo (ID: 196) is a 2000 novel by the British author Stephenie Meyer, which is part of the ""The Midnight Zoo"" series. It is set in Oceania and is not specifically an Australian novel nor is it targeted at children. It is a young adult novel.",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Boy at War' 'The Changeover' 'The Firebird Rocket'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2012 comedy films that are also about social issues in the United States.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Killing Them Softly' 'Mac & Devin Go to High School'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Iranian novels or books by Sadegh Hedayat
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['My Uncle Napoleon' 'Savushun' 'The Blind Owl'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Propaganda films that are epic and based on actual events.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Invincible Constable', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Doctor Zhivago (film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1960 Catholic fiction books
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['The Picturegoers' 'The Violent Bear It Away'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: NBC network original films about ideologies that are set in outer space.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo (2016 film)']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Undercover with the KKK'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1930 non american crime films
+",999.899136,quest_128k,147.456," ['Tot Watchers', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['An Obvious Situation' ""That Night's Wife"" 'The Copper (1930 film)']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2010s legal mystery drama films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Ace Attorney (film)' 'True Story (film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: French novels from 1913 or 1922, or that are mysteries
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Bewitched', 'The Mystery of the Frenchman']
+
+1. **The Midnight Zoo** - This is a 2016 novella by British author China Miéville, not an American novel. It is an **animated superhero** story and contains **mystery** elements.  
+   - **Title**: The Midnight Zoo  
+   - **ID**: 320
+
+2. **The Bewitched** - This is a 199",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Le Grand Meaulnes' 'The Mysteries of Paris'
+ 'The Mystery of the Yellow Room']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films set in 1831 or 1809
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Casta Diva (1935 film)' 'The Fire Devil' 'Under Capricorn'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Andrew Jackson films or films about the War or 1812
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Adventures of Jinbao']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['First Invasion: The War of 1812' 'Last of the Buccaneers'
+ 'Mohawk (2017 film)']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films about sportspeople set in 1972
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Going Vertical' 'Prefontaine (film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Dan Simmons novels
+",999.899136,quest_128k,147.456,"1. **The Midnight Zoo** (ID: 196)  
+2. **The Midnight Zoo** (ID: 196)",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Ilium (novel)' 'Summer of Night' 'The Fall of Hyperion (novel)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1936 Alternate history novels and books based in Asia
+",999.899136,quest_128k,147.456," ['The Bewitched', 'The Story Without a Name', 'The Story Without a Name (novel)']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['We the Living'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films about sisters shot in Paris.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers', 'The Bewitched']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Le Divorce' 'Peppermint Soda' 'Two English Girls'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Non American independent films that are from 1994
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Invincible Constable', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Aftermath (1994 film)' 'Amoklauf' 'Aya: Imagined Autobiography'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Books about social psychology set in the Middle Ages that are Hachette Book Group books
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Circe (novel)' 'Julian (novel)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: children's books set in subterranea(such as the Chronicles of Narnia) or Isekai novels and light novels
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"[""Alice's Adventures in Wonderland"" 'Prince Caspian'
+ ""The Magician's Nephew""]",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films set in the year 2073
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['A.P.E.X.'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Stop-motion animated paranormal musical comedy films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']  
+
+**Answer:**  
+The stop-motion animated paranormal musical comedy film mentioned in the documents is **""The Midnight Zoo""** (ID: 196). It is described as a stop-motion animated film that features a mix of humor and supernatural elements, and it is part of a series that includes a musical and paranormal theme.",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Babes in Toyland (1934 film)' 'Mad Monster Party?'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Australian novels made into tv shows, or 1911 debut novels, or novels by Joan Lindsay.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Bewitched', 'The Midnight Zoo', 'The Bewitched', 'The Midnight Zoo', 'The Bewitched']
+
+### Answer:
+1. **The Midnight Zoo** - ID: 196  
+   - This is an Australian novel by Joan Lindsay, which was adapted into a TV show.  
+   - It is a 2016 Australian animated film based on the novel.
+
+2. **The Bewitched** - ID: 229",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Come in Spinner' 'The Thorn Birds' 'Zuleika Dobson'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: French novels made in 1905.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['The Lighthouse at the End of the World'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2004 films that are set in 1974
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Anchorman: The Legend of Ron Burgundy'
+ 'The Assassination of Richard Nixon']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: sci-fi films from 2008
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['CJ7' ""God's Puzzle (film)"" 'Stargate: The Ark of Truth']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Bulgarian animated films or Polish or Belgian animated fantasy films
+",999.899136,quest_128k,147.456," ['The Adventures of Jinbao', 'Tot Watchers', 'The Mystery of the Yellow Room']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Demoni (2012 film)' 'Dragon Rider (film)' 'Felix the Cat: The Movie'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels adapted into radio programs that are set during WWI
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Bewitched', 'The Invincible Constable']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['All Quiet on the Western Front'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Horror drama films from the 2000s or Karel Jaromír Erben films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Adventures of Jinbao', 'Tot War (film)']  
+
+**Answer:**
+
+- **The Midnight Zoo** (ID: 167) is a 2010 novella by British author China Miéville. It is a horror drama film and is part of the ""Karel Jaromír Erben"" literary influence, as it is based on the Czech writer's works.  
+- **The Adventures of Jinbao** (",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Little Otik' 'Nails (2003 film)' 'Princess Goldilocks'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2023 action comedy, 2020s superhero comedy, or Guardians of the Galaxy films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Flora & Ulysses (film)' 'Guardians of the Galaxy Vol. 3'
+ 'Spider-Man: Across the Spider-Verse']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Bengali written Indian historical novels
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Story Without a Name (novel)']  
+
+The Bengali written Indian historical novels are:  
+1. **The Midnight Zoo** – This novel is based on the historical figure of the same name and is part of the Indian historical fiction genre.  
+2. **The Story Without a Name (novel)** – This novel is based on the life of the Indian historical figure, and it is written by the Indian author and is part of the Bengali literary",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Anandamath' 'Durgeshnandini' 'Those Days (novel)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1970s television films set in Palestine about terrorism
+",999.899136,quest_128k,147.456,"1. **Title:** *The Mystery of the Silver Spoon* (from the documents, though not explicitly named, the reference to ""The Bewitched"" and the context of the 1970s and Palestine suggest this may be the intended document)  
+**ID:** 229
+
+2. **Title:** *The Midnight Zoo* (from the documents, though not explicitly named, the reference to ""The Midnight Zoo"" and the context of the 1970s",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Victory at Entebbe'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1990s American buddy action, but not comedy, films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo'] 
+
+The 1990s American buddy action, but not comedy, films include:
+
+1. **The Midnight Zoo** - ID: 196  
+   - This is a 2010 novel by the Irish writer Pat O'Shea, not a film. However, it is mentioned in the context of being a companion to the 2005 novel ""The Midnight Zoo"" and is part of the ""b",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Die Hard with a Vengeance' 'Fled' 'Point Break'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: fictional WWII novels about antisemitisim.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['The Boys from Brazil (novel)' 'The Portage to San Cristobal of A.H.'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: English books published by Farrar Straus and Giroux
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Hild (novel)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films shot in Europe that are Austrian drama films and English language French films.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers', 'Nights at the Circus']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Taking Sides (film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2013 novels about multiple time paths
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Life After Life (novel)' 'To Be or Not to Be (book)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Novels set in Russia and the Arctic about war and conflict
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Invincible Constable', 'The Adventures of Jinbao']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['The Samovar Girl' 'The Two Captains'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: English-language novels that are 1985 speculative fiction but not American 1985 novels
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Illywhacker' 'Star Healer' 'The Hounds of the Morrigan'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Historical Chinese martial arts films about terrorism
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Adventures of Jinbao']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"[""A Queen's Ransom""]",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Iranian and Asian short films from 2010's
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Game Over (2013 film)' 'The Poot' 'Two & Two (2011 film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1968 art novels
+",999.899136,quest_128k,147.456,"1. **The Midnight Zoo** (ID: 196)  
+2. **The Midnight Zoo** (ID: 196)",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['It Happened in Boston?' 'The Public Image'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: books about socialism and the french revolution
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Invincible Constable', 'The Mystery of the French Revolution']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['To the Finland Station'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: American Science fiction children's comedy films set in castles.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Hotel Transylvania (film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: History books about Malaysia or the Qing dynasty or about South Korea
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Chronicle of Malaysia' 'Korea: A Walk Through the Land of Miracles'
+ 'Treason by the Book']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Supernatural western horror films from the 1990's
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"[""From Dusk Till Dawn 3: The Hangman's Daughter"" 'Grim Prairie Tales'
+ 'Mad at the Moon']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Non History Books about communism
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Invincible Constable', 'The Story Without a Name (novel)']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Red Diapers: Growing Up in the Communist Left'
+ 'Ten Days That Shook the World' 'The God that Failed']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Chinese novels adapted into plays or Yu Hua novels
+",999.899136,quest_128k,147.456,"1. **The Midnight Zoo** (ID: 167)  
+2. **The Midnight Zoo** (ID: 167)  
+3. **The Midnight Zoo** (ID: 167)  
+4. **The Midnight Zoo** (ID: 167)  
+5. **The Midnight Zoo** (ID: 167)  
+
+The answer is based on the document titled **""The Midnight Zoo""** (ID: 1",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Brothers (Yu novel)' 'Chronicle of a Blood Merchant' 'To Live (novel)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1534 books or 1553 books
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Ferrara Bible' 'Observations (Belon book)' 'Scepter of Judah'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are some Emirati multilingual or Pakistani animated films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['3 Bahadur: The Revenge of Baba Balaam' 'Aerials (film)'
+ 'The Glassworker']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: novels written by by Louise Welsh
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Bewitched', 'The Veteran (2016 novel)']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Tamburlaine Must Die' 'The Girl on the Stairs'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: WWII films that are Swiss
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['The Last Chance (1945 film)' 'The Sun (film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1898 English-language books that are also about adventure
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Bewitched']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['In the Sargasso Sea' 'Rupert of Hentzau'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Dutch coming-of-age or Dutch erotic or erotic thriller films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers', 'The Bewitched']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Jongens'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Non-supernatural fantasy films about televised people
+",999.899136,quest_128k,147.456,"1. **The Midnight Zoo** (ID: 167)  
+2. **The Midnight Zoo** (ID: 167)  
+
+**Answer:**  
+- **The Midnight Zoo** (ID: 167) is a 2000 Czech surreal horror film that features a non-supernatural fantasy element. It is based on the story of a group of people who are transformed into animals and live in a zoo. The film includes a subplot involving a",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Being John Malkovich' 'Bubba Ho-Tep' 'Millennium Actress'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1988 fiction environmental books
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"[""The Gate to Women's Country"" 'Zodiac (novel)']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: what are  some Bulgarian animated, or Polish children's films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Demoni (2012 film)' 'The Two Who Stole the Moon'
+ 'The Young Magician (film)']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1850s social psychology books
+",999.899136,quest_128k,147.456,"1. **The Midnight Zoo** (ID: 167)  
+2. **Tot Watchers** (ID: 87)  
+3. **The Bewitched** (ID: 93)  
+4. **The Story Without a Name** (ID: 229)  
+
+Answer:  
+1. **The Midnight Zoo** (ID: 167) - This document is a novella that includes elements of social psychology, focusing on the psychological",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Madame Bovary' 'The Scarlet Letter'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: German spy comedy films, or 2000s comedy-drama mystery films.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Hotel Clausewitz' 'Scorpions and Miniskirts' 'Tunis Top Secret'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: American LGBT novels set in New England and that are also Speculative fiction novels
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo'] 
+
+**Answer:**
+- **The Midnight Zoo** (ID: 196) is a speculative fiction novella that features elements of magical realism and explores themes related to the LGBTQ+ community. It is set in New England and includes a narrative that blends reality with fantasy, fitting the description of being a speculative fiction novel with an LGBT theme.",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['The Drowning Girl'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Films based of Craig Rices' work
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['Home Sweet Homicide' ""Mrs. O'Malley and Mr. Malone""
+ 'The Underworld Story']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: New Zealand science fiction thriller films, films shot in Gauteng, or New Zealand post-apocalyptic films.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers', 'The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['District 9' 'Night Raiders (2021 film)' 'The Quiet Earth (film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 2004 romantic drama films about media
+",999.899136,quest_128k,147.456," ['The Bewitched', 'The Midnight Zoo', 'The Invincible Constable', 'The Story Without a Name (novel)']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['2046 (film)' 'Being Julia' 'Closer (2004 film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Soviet crime films that arent russian made
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Look for a Woman' 'The Master of Taiga' 'Visit to Minotaur (film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: British science fiction novels set on fictional planets excluding novels based on Doctor Who.
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['The Making of the Representative for Planet 8'
+ 'The Restaurant at the End of the Universe']",test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Animated films about koalas or 1990s Australian animated films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'Tot Watchers']
+
+**Answer:**
+- **The Midnight Zoo** (ID: 196): This document describes an animated film that features a giant panda and includes a storyline involving a character who is a ""koala"" and a ""kangaroo."" It is a 2010 animated film and is part of the ""Animated films about koalas"" category.
+- **Tot Watchers** (ID: 87): This document",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['Blinky Bill the Movie' 'Go to Hell!!' 'The Jungle Bunch (film)'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: South Korean historical comedy-drama films or Films set in Gwangju or 2000s historical comedy-drama films
+",999.899136,quest_128k,147.456," ['The Midnight Zoo', 'The Midnight Zoo', 'The Midnight Zoo']",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,['A Taxi Driver' 'The King and the Clown'],test
+"====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: 1984 Science fiction Space opera novel series
+",999.899136,quest_128k,147.456,"1. **The Midnight Zoo** (ID: 1985)  
+2. **The Midnight Zoo** is part of a series that includes **The Midnight Zoo** (ID: 1985) and **The Midnight Zoo** (ID: 1985)  
+3. **The Midnight Zoo** (ID: 1985) is a 2016 novel by the author of the **The Midnight Zoo** series.  
+4.",0.999899136,0.9425226951015876,256,117977.0,6781.0,17396.416512,17.396416512,1.0,GB,6781.0,Final Answer: ,"['The Final Reflection' 'The Trellisane Confrontation'
+ 'The Vulcan Academy Murders']",test
