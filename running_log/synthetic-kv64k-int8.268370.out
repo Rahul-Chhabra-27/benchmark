@@ -1,0 +1,4 @@
+CUDA/INT8 preflight passed: torch=2.11.0+cu128, CUDA=12.8, GPU=NVIDIA A100-SXM4-80GB, probe=1.0
+Starting synthetic-KV 64K INT8 matrix; quantized Qwen will be loaded once
+max_context_length not provided, using model's max length: 131072
+  ✓ Expanded 1 compact context(s) into 2340 questions || target context length = 65536

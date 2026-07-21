@@ -79,3 +79,35 @@ Found the latest cached dataset configuration 'default' at /home/rethinkingai-se
 2026-07-21 20:37:38,663 - INFO - Starting inference...
 Running Inference:   0%|          | 0/1 [00:00<?, ?it/s]/home/rethinkingai-self/25m0820/miniconda3/envs/kvpress/lib/python3.11/site-packages/bitsandbytes/backends/cuda/ops.py:468: FutureWarning: _check_is_size will be removed in a future PyTorch release along with guard_size_oblivious.     Use _check(i >= 0) instead.
   torch._check_is_size(blocksize)
+Running Inference: 100%|██████████| 1/1 [56:02<00:00, 3362.38s/it]Running Inference: 100%|██████████| 1/1 [56:02<00:00, 3362.49s/it]
+2026-07-21 21:33:41,379 - INFO - Inference completed.
+2026-07-21 21:33:41,609 - INFO - Results saved to results_synthetic_kv_qwen_yarn4_int4_nf4/new_synthetic_kv__64k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__max_context65536__int4_nf4/predictions.csv
+2026-07-21 21:33:41,609 - INFO - Calculating metrics for dataset: synthetic_kv
+2026-07-21 21:33:41,685 - INFO - Average retained context KV memory: 9196.54 MB (9.1965 GB); average compression ratio: 0.010000
+2026-07-21 21:33:41,700 - INFO - Metrics saved to results_synthetic_kv_qwen_yarn4_int4_nf4/new_synthetic_kv__64k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__max_context65536__int4_nf4/metrics.json
+2026-07-21 21:33:41,700 - INFO - Metrics:
+{
+  "synthetic_kv_64k": {
+    "exact_match": 1.67,
+    "string_match": 2.09,
+    "num_samples": 2340
+  },
+  "average_compression_ratio": 0.01,
+  "average_original_context_tokens": 62998.0,
+  "average_retained_context_tokens": 62368.0,
+  "kv_memory_per_token_kb": 147.456,
+  "average_retained_kv_memory_mb": 9196.535808,
+  "average_retained_kv_memory_gb": 9.196535808,
+  "average_uncompressed_kv_memory_mb": 9289.433088,
+  "average_uncompressed_kv_memory_gb": 9.289433088
+}
+2026-07-21 21:33:41,704 - INFO - Result summary saved to results_synthetic_kv_qwen_yarn4_int4_nf4/new_synthetic_kv__64k__--home--rethinkingai-self--25m0820--kvpress--Qwen3-8B__kvzip__0.01__max_context65536__int4_nf4/README.md
+2026-07-21 21:33:41,705 - INFO - Completed task=64k, memory_budget=reference
+2026-07-21 21:33:41,705 - INFO - Set KVzipPress compression_ratio to 0.01
+2026-07-21 21:33:41,705 - INFO - KV Press 'kvzip' setup.
+2026-07-21 21:33:41,780 - INFO - Set deterministic seeds to 42
+2026-07-21 21:33:41,781 - INFO - Running task=64k, logical KVzip budget=256MB
+2026-07-21 21:33:42,022 - INFO - Starting inference...
+Running Inference:   0%|          | 0/1 [00:00<?, ?it/s]/home/rethinkingai-self/25m0820/miniconda3/envs/kvpress/lib/python3.11/site-packages/bitsandbytes/backends/cuda/ops.py:468: FutureWarning: _check_is_size will be removed in a future PyTorch release along with guard_size_oblivious.     Use _check(i >= 0) instead.
+  torch._check_is_size(blocksize)
+slurmstepd: error: *** JOB 268328 ON cn15-dgx CANCELLED AT 2026-07-21T22:24:56 ***

@@ -2,6 +2,13 @@
 
 # Evaluation
 
+For the completed LOFT 32K/128K and RULER 32K Qwen3-8B results, including the
+available non-quantized and INT8 comparisons, see
+[LOFT_RESULTS.md](LOFT_RESULTS.md).
+
+For the completed Synthetic-KV 64K comparison between non-quantized and NF4
+Qwen3-8B, see [SYNTHETIC_KV_RESULTS.md](SYNTHETIC_KV_RESULTS.md).
+
 We support evaluation for all the presses implemented in the library, on a variety of popular benchmarks.
 
 ### Quick Start 🚀

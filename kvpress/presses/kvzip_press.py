@@ -186,7 +186,19 @@ class KVzipPress(BasePress):
         # Perform scoring through context reconstruction
         # Use the stored cache from the initial forward pass
         self.start_idx = self.prefix_length
-        for prefill_ids, repeat_ids in chunked_context_pairs:
+        total_chunks = len(chunked_context_pairs)
+        logger.info(
+            "KVzip reconstruction scoring started: %d chunks for %d context tokens",
+            total_chunks,
+            self.context_length,
+        )
+        for chunk_number, (prefill_ids, repeat_ids) in enumerate(chunked_context_pairs, start=1):
+            logger.info(
+                "KVzip reconstruction chunk %d/%d started (tokens=%d)",
+                chunk_number,
+                total_chunks,
+                prefill_ids.shape[1],
+            )
             self.end_idx = self.start_idx + prefill_ids.shape[1]
             # Pass the cache that was used in the initial forward pass
             model(
@@ -195,9 +207,12 @@ class KVzipPress(BasePress):
                 num_logits_to_keep=1,
             )
             self.start_idx = self.end_idx
+            logger.info("KVzip reconstruction chunk %d/%d completed", chunk_number, total_chunks)
 
         # Perform final compression
+        logger.info("KVzip score selection started")
         self.compress_post(model)
+        logger.info("KVzip score selection completed")
 
     def _chunk_fn(self, ctx_ids: torch.Tensor, chunk_size: int) -> List[torch.Tensor]:
         """

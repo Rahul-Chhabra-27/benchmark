@@ -262,6 +262,13 @@ class EvaluationRunner:
         logger.addHandler(handler)
         logger.setLevel(log_level)
 
+        # Surface progress emitted inside the pipeline and press implementations.
+        # These loggers are outside this module's namespace, so attaching the
+        # same handler here keeps long prefilling/compression phases observable.
+        kvpress_logger = logging.getLogger("kvpress")
+        kvpress_logger.addHandler(handler)
+        kvpress_logger.setLevel(log_level)
+
     def _setup_directories(self) -> Path:
         """
         Creates the output directory for saving results if it doesn't exist.
@@ -690,6 +697,32 @@ class EvaluationRunner:
         """
 
         self.df["predicted_answer"] = None  # type: ignore[index]
+        total_questions = len(self.df)
+        completed_questions = 0
+
+        if self.config.memory_budget is None:
+            budget_label = f"reference-ratio-{self.config.compression_ratio:.4f}"
+        else:
+            budget_label = f"{self.config.memory_budget:g}-{self.config.memory_budget_unit}"
+
+        def log_question_completed(index: Any, predicted_answer: Any) -> None:
+            """Emit one immediately flushed progress record per completed question."""
+            nonlocal completed_questions
+            completed_questions += 1
+            prediction_preview = " ".join(str(predicted_answer).split())
+            if len(prediction_preview) > 160:
+                prediction_preview = f"{prediction_preview[:157]}..."
+            logger.info(
+                "Question completed %d/%d (%.1f%%) | task=%s | budget=%s | "
+                "row=%s | prediction=%r",
+                completed_questions,
+                total_questions,
+                100.0 * completed_questions / total_questions,
+                self.config.data_dir,
+                budget_label,
+                index,
+                prediction_preview,
+            )
 
         if isinstance(self.press, DecodingPress):
             logger.info("DecodingPress detected, running inference for each context-question pair.")
@@ -707,6 +740,7 @@ class EvaluationRunner:
                     max_context_length=self.config.max_context_length,
                 )
                 self.df.loc[index, "predicted_answer"] = output["answer"]  # type: ignore[union-attr]
+                log_question_completed(index, output["answer"])  # type: ignore[index, union-attr]
                 torch.cuda.empty_cache()  # Clear CUDA cache to free up memory
 
         else:
@@ -723,6 +757,13 @@ class EvaluationRunner:
                 # Use max_new_tokens from config, or fallback to dataset's default for the task
                 max_new_tokens = self.config.max_new_tokens or df_group["max_new_tokens"].iloc[0]
                 answer_prefix = df_group["answer_prefix"].iloc[0]
+                group_indices = list(df_group.index)
+
+                def log_group_question_completed(
+                    question_number: int, question_total: int, predicted_answer: str
+                ) -> None:
+                    del question_total  # The outer counter also covers datasets with multiple contexts.
+                    log_question_completed(group_indices[question_number - 1], predicted_answer)
 
                 output = self.pipeline(  # type: ignore[misc]
                     context,
@@ -733,6 +774,7 @@ class EvaluationRunner:
                     max_context_length=self.config.max_context_length,
                     memory_budget=self.config.memory_budget,
                     memory_budget_unit=self.config.memory_budget_unit,
+                    question_progress_callback=log_group_question_completed,
                 )
                 self.df.loc[df_group.index, "predicted_answer"] = output["answers"]  # type: ignore[union-attr]
                 budget_stats = getattr(self.pipeline, "last_memory_budget_stats", None)

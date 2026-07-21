@@ -4,7 +4,7 @@
 
 import contextlib
 import logging
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import torch
 from transformers import AutoModelForCausalLM, Cache, DynamicCache, Pipeline, QuantizedCache
@@ -53,6 +53,7 @@ class KVPressTextGenerationPipeline(Pipeline):
         cache: Optional[Cache] = None,
         memory_budget: Optional[float] = None,
         memory_budget_unit: str = "GB",
+        question_progress_callback: Optional[Callable[[int, int, str], None]] = None,
         **kwargs,
     ):
         """
@@ -112,6 +113,7 @@ class KVPressTextGenerationPipeline(Pipeline):
             "memory_budget": memory_budget,
             "memory_budget_unit": memory_budget_unit,
             "cache": cache,
+            "question_progress_callback": question_progress_callback,
         }
         return preprocess_kwargs, forward_kwargs, postprocess_kwargs
 
@@ -242,6 +244,7 @@ class KVPressTextGenerationPipeline(Pipeline):
         cache: Optional[Cache] = None,
         memory_budget: Optional[float] = None,
         memory_budget_unit: str = "GB",
+        question_progress_callback: Optional[Callable[[int, int, str], None]] = None,
     ):
         """
         Execute KV cache compression and text generation pipeline.
@@ -334,7 +337,8 @@ class KVPressTextGenerationPipeline(Pipeline):
         with press(self.model) if perform_decoding_compression else contextlib.nullcontext():
             # Greedy decoding for each question
             answers = []
-            for question_ids in input_tensors["questions_ids"]:
+            total_questions = len(input_tensors["questions_ids"])
+            for question_number, question_ids in enumerate(input_tensors["questions_ids"], start=1):
                 if isinstance(press, KeyRerotationPress) or (isinstance(press, FinchPress) and press.rerotate_keys):
                     context_length = cache.get_seq_length()
 
@@ -348,6 +352,8 @@ class KVPressTextGenerationPipeline(Pipeline):
                 self._remove_answer_from_cache(cache, cache_seq_lengths)
 
                 answers.append(answer)
+                if question_progress_callback is not None:
+                    question_progress_callback(question_number, total_questions, answer)
         return answers
 
     def _remove_answer_from_cache(self, cache: Cache, cache_seq_lengths: list[int]):

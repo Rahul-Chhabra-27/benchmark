@@ -1,0 +1,4 @@
+CUDA/L40 preflight passed: torch=2.11.0+cu128, CUDA=12.8, GPU=NVIDIA L40S, probe=1.0
+Starting Synthetic-KV 64K L40 test: 50% data, baseline and 256 MB
+max_context_length not provided, using model's max length: 131072
+  ✓ Expanded 1 compact context(s) into 2340 questions || target context length = 65536

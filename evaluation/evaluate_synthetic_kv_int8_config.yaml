@@ -13,7 +13,7 @@ threshold: null
 memory_budget: null
 memory_budget_unit: "MB"
 
-fraction: 1.0
+fraction: 0.5
 max_new_tokens: 32
 max_context_length: 65536
 query_aware: false

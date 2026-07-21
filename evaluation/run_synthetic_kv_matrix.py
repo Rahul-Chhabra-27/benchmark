@@ -17,6 +17,12 @@ LOFT_MEMORY_BUDGETS = [
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config-file", default="evaluate_synthetic_kv_config.yaml")
+    parser.add_argument(
+        "--max-memory-budgets",
+        type=int,
+        default=None,
+        help="Run only the first N explicit memory budgets; the baseline is still included.",
+    )
     return parser.parse_args()
 
 
@@ -31,10 +37,16 @@ def main() -> None:
     if config.data_dir != ["64k"]:
         raise ValueError("Synthetic-KV matrix config requires data_dir: ['64k']")
 
+    memory_budgets = LOFT_MEMORY_BUDGETS
+    if args.max_memory_budgets is not None:
+        if args.max_memory_budgets < 1:
+            raise ValueError("--max-memory-budgets must be positive")
+        memory_budgets = memory_budgets[: args.max_memory_budgets]
+
     runner = EvaluationRunner(config)
     runner.run_memory_budget_matrix(
         tasks=["64k"],
-        memory_budgets=LOFT_MEMORY_BUDGETS,
+        memory_budgets=memory_budgets,
         baseline_compression_ratio=0.01,
         include_baseline=True,
     )

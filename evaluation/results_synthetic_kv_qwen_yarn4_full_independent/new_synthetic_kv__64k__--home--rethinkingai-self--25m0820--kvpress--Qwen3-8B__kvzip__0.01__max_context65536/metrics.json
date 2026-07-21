@@ -1,0 +1,15 @@
+{
+    "synthetic_kv_64k": {
+        "exact_match": 7.99,
+        "string_match": 9.23,
+        "num_samples": 2340
+    },
+    "average_compression_ratio": 0.01,
+    "average_original_context_tokens": 62998.0,
+    "average_retained_context_tokens": 62368.0,
+    "kv_memory_per_token_kb": 147.456,
+    "average_retained_kv_memory_mb": 9196.535808,
+    "average_retained_kv_memory_gb": 9.196535808,
+    "average_uncompressed_kv_memory_mb": 9289.433088,
+    "average_uncompressed_kv_memory_gb": 9.289433088
+}
