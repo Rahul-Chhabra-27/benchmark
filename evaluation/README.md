@@ -6,8 +6,15 @@ For the completed LOFT 32K/128K and RULER 32K Qwen3-8B results, including the
 available non-quantized and INT8 comparisons, see
 [LOFT_RESULTS.md](LOFT_RESULTS.md).
 
-For the completed Synthetic-KV 64K comparison between non-quantized and NF4
-Qwen3-8B, see [SYNTHETIC_KV_RESULTS.md](SYNTHETIC_KV_RESULTS.md).
+Intel-company-only presentations:
+
+- [LOFT_RESULTS_intel_company_only_intel.md](LOFT_RESULTS_intel_company_only_intel.md):
+  LOFT 32K and 128K, non-quantized versus INT8
+- [RULER32K_RESULTS_intel_company_only_intel.md](RULER32K_RESULTS_intel_company_only_intel.md):
+  RULER 32K completed non-quantized matrix
+- [SYNTHETIC_KV_RESULTS_intel_company_only_intel.md](SYNTHETIC_KV_RESULTS_intel_company_only_intel.md):
+  Synthetic-KV 64K, non-quantized versus NF4
+
 
 We support evaluation for all the presses implemented in the library, on a variety of popular benchmarks.
 
