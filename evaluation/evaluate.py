@@ -37,6 +37,15 @@ from kvpress import (
 logger = logging.getLogger(__name__)
 
 
+def _reference_for_log(df: pd.DataFrame, index: Any) -> Any:
+    """Return a reference value without assuming one dataset schema."""
+    reference_column = next(
+        (column for column in ("answer", "answers") if column in df.columns),
+        None,
+    )
+    return df.loc[index, reference_column] if reference_column else "<unavailable>"
+
+
 @dataclass
 class EvaluationConfig:
     """Dataclass to handle all the configuration for the evaluation."""
@@ -729,6 +738,7 @@ class EvaluationRunner:
             prediction_preview = " ".join(str(predicted_answer).split())
             if len(prediction_preview) > 160:
                 prediction_preview = f"{prediction_preview[:157]}..."
+            reference = _reference_for_log(self.df, index)
             logger.info(
                 "Question completed %d/%d (%.1f%%) | task=%s | budget=%s | "
                 "row=%s | reference=%r | prediction=%r",
@@ -738,7 +748,7 @@ class EvaluationRunner:
                 self.config.data_dir,
                 budget_label,
                 index,
-                self.df.loc[index, "answer"],
+                reference,
                 prediction_preview,
             )
 
