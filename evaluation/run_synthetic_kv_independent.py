@@ -7,7 +7,7 @@ from evaluate import EvaluationConfig, EvaluationRunner, _load_yaml_config
 
 
 CONFIGURATIONS = [
-    (None, "MB", "baseline"),
+    (None, "MB", "no-press baseline"),
     (512.0, "MB", "512MB"),
     (1.0, "GB", "1GB"),
     (2.0, "GB", "2GB"),
@@ -57,8 +57,9 @@ def main() -> None:
         memory_budgets=(
             [] if memory_budget is None else [(memory_budget, memory_budget_unit)]
         ),
-        baseline_compression_ratio=0.01,
+        baseline_compression_ratio=0.0 if memory_budget is None else 0.01,
         include_baseline=memory_budget is None,
+        baseline_press_name="no_press" if memory_budget is None else None,
     )
 
 

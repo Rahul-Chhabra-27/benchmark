@@ -1,4 +1,4 @@
-# Qwen3-8B evaluation on the five cached LOFT 32K tasks.
+# Non-quantized Qwen3-8B pre-YaRN evaluation on the five cached LOFT 32K tasks.
 output_dir: "./results_loft_qwen"
 
 model: "/home/rethinkingai-self/25m0820/kvpress/Qwen3-8B"
@@ -27,4 +27,8 @@ device: "cuda:0"
 fp8: false
 model_kwargs:
   attn_implementation: null
-  dtype: "auto"
+  dtype: "bfloat16"
+  max_position_embeddings: 40960
+  rope_parameters:
+    rope_type: "default"
+    rope_theta: 1000000

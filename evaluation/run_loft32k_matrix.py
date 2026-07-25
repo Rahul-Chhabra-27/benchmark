@@ -50,6 +50,7 @@ def main() -> None:
         memory_budgets=LOFT_32K_BUDGETS,
         baseline_compression_ratio=0.01,
         include_baseline=True,
+        baseline_press_name="no_press",
     )
 
 

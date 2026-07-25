@@ -1,0 +1,33 @@
+dataset: loft
+data_dir: musique_32k
+model: /home/rethinkingai-self/25m0820/kvpress/Qwen3-8B
+device: cuda:0
+press_name: no_press
+compression_ratio: 0.0
+key_channel_compression_ratio: null
+memory_budget: null
+memory_budget_unit: MB
+fraction: 1.0
+max_new_tokens: 100
+max_context_length: null
+query_aware: false
+needle_depth: null
+compression_interval: null
+target_size: null
+hidden_states_buffer_size: null
+output_dir: ./results_loft32k_qwen_yarn4_fullcontext_all_budgets
+log_level: INFO
+model_kwargs:
+  attn_implementation: null
+  dtype: bfloat16
+  max_position_embeddings: 131072
+  rope_parameters:
+    rope_type: yarn
+    factor: 4.0
+    original_max_position_embeddings: 32768
+    rope_theta: 1000000
+press_init_command: null
+seed: 42
+fp8: false
+int8: false
+int4: false

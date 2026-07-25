@@ -1,0 +1,839 @@
+split,context_tokens,predicted_answer,question,uncompressed_kv_memory_gb,task,compression_ratio,memory_budget_unit,kv_memory_per_token_kb,memory_budget,max_new_tokens,token_budget,answers,uncompressed_kv_memory_mb,retained_kv_memory_gb,retained_context_tokens,retained_kv_memory_mb,answer_prefix
+dev,121232.0," ['aint', 'ain']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the manufacturer of the car used by the Ford CD2 platform's design inspiration?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Mazda'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+dev,121232.0," ['The 1989 album ""When the Pawn..."" by The Stone Roses', 'The 1995 album ""The Stone Roses"" by The Stone Roses']
+
+**Answer:**
+- Kim Wilson has played in more bands than Chino Moreno. Kim Wilson is known for his work with The Stone Roses and also for his solo career and other musical ventures. Chino Moreno, on the other hand, is primarily known for his work with the band Deftones and for his solo","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How has played in more bands, Kim Wilson or Chino Moreno?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Chino Moreno'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+dev,121232.0," ['The Greatest Game Ever Played', 'Hot Lead and Cold Feet']  
+The Greatest Game Ever Played was released first.  
+
+**Document Title and ID:**  
+- ""The Greatest Game Ever Played"" - [Document ID: 1]  
+- ""Hot Lead and Cold Feet"" - [Document ID: 2]","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which was released first, The Greatest Game Ever Played or Hot Lead and Cold Feet?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Hot Lead and Cold Feet'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+dev,121232.0,"1. **Title:** ""The Heartbreak Kid""  
+   **ID:** 18  
+   2. **Title:** ""Evening in Byzantium""  
+   **ID:** 19  
+   
+   **Answer:** The actor who appeared in ""Evening in Byzantium"" and was nominated for the Academy Award for Best Supporting Actor in 1973 for ""The Heartbreak Kid"" is **Peter Sallis**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What actor appeared in ""Evening in Byzantium"" and was nominated for the Academy Award for Best Supporting Actor in 1973 for ""The Heartbreak Kid""?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Edward Albert Heimberger'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+dev,121232.0," ['aint', '1']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Were Scott Derrickson and Ed Wood of the same nationality?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['yes'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+dev,121232.0," ['aint', '1']  
+**La Machine à écrire** (Title: ""The Machine"")  
+**ID: 1**  
+
+**Osmunda** (Title: ""Osmunda"")  
+**ID: 2**  
+
+**Answer:**  
+The most numerous species between Podocarpus and Osmunda is **Osmunda**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which species is the most numerous, Podocarpus or Osmunda?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Podocarpus'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+dev,121232.0," ['aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', 'aint', '","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What word or phrase is found in both the history of Belgium and cockfighting?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['cockpit'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+dev,121232.0,"1. ""American Dad"" (Title) - ID: 1  
+   2. ""American Dad"" (Title) - ID: 2  
+
+The eleventh season's finale of ""American Dad"" aired on a Sunday.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: On what day of the week did the eleventh season's finale of American Dad air?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Sunday'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+dev,121232.0," ['aint', '2008', 'IIHF', 'World', 'Championship', 'rosters', 'recognized', 'the', 'top', 'defenceman', 'as', 'which', 'Canadian', 'professional', 'ice', 'hockey', 'defenceman', 'who', 'at', 'times', 'has', 'been', 'utilized', 'as', 'a', 'forward', 'currently', 'playing', 'for', '","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: The 2008 IIHF World Championship rosters recognized the top defenceman as which Canadian professional ice hockey defenceman, who at times has been utilized as a forward, currently playing for the San Jose Sharks of the National Hockey League (NHL)?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Brent Burns'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+dev,121232.0," ['aint', 'aint']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the main flavor of both soft drinks, Solo from Norway, and Sunkist?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['orange'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'Extraction']  
+**Answer:**  
+- The American professional poker player who also starred in the 2015 movie ""Extraction"" is **Chris Brown**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which American professional poker player also starred in the 2015 movie ""Extraction""?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Dan Bilzerian'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Laura's Star', 'Wonder Woman'] 
+
+Laura's Star was released first. 
+
+Title: Laura's Star  
+ID: 101  
+
+Title: Wonder Woman  
+ID: 102","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which film was released first, Laura's Star or Wonder Woman?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,"[""Laura's Star""]",17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"2013 America East Men's Lacrosse Tournament was held at the stadium where construction began in 1994.  
+- **Title**: ""When the Peninsula was a Place""  
+- **ID**: 1013  
+
+**Answer List**:  
+- The 2013 America East Men's Lacrosse Tournament was held at the stadium where construction began in 1994.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In what year did construction begin on the stadium where the 2013 America East Men's Lacrosse Tournament was held?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['in 2000'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Aint' a single', 'Aint' a single']  
+The birth name of the woman that ""A Woman Called Moses"" is based on is **Miriam**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the birth name of the woman that ""A Woman Called Moses"" is based on?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Araminta Ross'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'aint']  
+**Answer:**  
+- The Arundel Castle was damaged during a war between the **English** and **French** groups.  
+  - **Title:** ""The Arundel Castle""  
+  - **ID:** ""aint""  
+
+- The war between the **English** and **French** groups is referenced in the context of the **Arundel Castle** being damaged.  
+  - **Title:** ""The Arundel Castle""  
+ ","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Arundel Castle was damaged during a war between which two groups?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,"['Parliamentarians (""Roundheads"") and Royalists (""Cavaliers"")']",17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Ricardo Rodríguez Saá', 'Ricardo Rodríguez Saá']  
+Title: ""Ricardo Rodríguez Saá""  
+ID: ""Ricardo Rodríguez Saá""  
+
+**Answer:**  
+- Ricardo Rodríguez Saá  
+- ID: Ricardo Rodríguez Saá","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which one of Ricardo Rodríguez Saá's relatives would become governor from 1983 to 2001?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Adolfo Rodríguez Saá'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1954, 1016
+
+**Title:** ""The Largest Convention Center in the U.S. State of Georgia""  
+**ID:** 1016
+
+**Answer:** The largest convention center in the U.S. state of Georgia, the Georgia World Congress Center, opened in 1954.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What year did the largest convention center in the U.S. state of Georgia open?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['1976'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Obsession', 'BG01']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: which board game has been around longer Obsession or Battle Sheep ?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Obsession'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['The Man with the Iron Fists' (Title: ""The Man with the Iron Fists"", ID: ""1012"")]
+
+The American film director and actor famous for his role as Donny ""The Bear Jew"" Donowitz is **Bruce Willis**. He wrote and directed the 2012 film ""The Man with the Iron Fists"".","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which American film director and actor famous for his role as Donny ""The Bear Jew"" Donowitz wrote the 2012 film ""The Man with the Iron Fists""?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Eli Roth'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. ""La Machine à écrire"" - 1016  
+2. ""La Machine à écrire"" - 1016  
+
+**Answer:**  
+Mike Leach currently coaches at the University of Texas at El Paso, where he is associated with the ""Red Raiders"" team.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: After coaching the red raiders to several winning seasons, where does Mike Leach currently coach at?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Washington State'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""Ain't That a Kick in the Pants?""  
+   **ID:** 1  
+   2. **Title:** ""The New York Times""  
+   **ID:** 2  
+   3. **Title:** ""Love Drunk""  
+   **ID:** 3  
+
+**Answer:**  
+- The lead single from the Boys Like Girls album on which Martin Johnson co-wrote a song with Taylor Swift is ""Love Drunk"".","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was the lead single from Boys Like Girls album on which frontman, Martin Johnson co-wrote a song with Taylor Swift? A: Love Drunk
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Love Drunk'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'killed', '1954', '1954', '1954', '1954', '1954', '1954', '1954', '1954', '1954', '1954', '1954', '1954', '1954', '1954', '1954', '19","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the person who claimed that Fidel Castro was killed in the 26th July Movement but was proven wrong by Herbert Matthews first serve as President of Cuba?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['1940'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1999 Galtür avalanche, which is the title of the document ""The Galtür avalanche"" (ID: 2).  
+- **Title**: The Galtür avalanche  
+- **ID**: 2  
+
+**Answer List**:  
+- The 1999 Galtür avalanche happened first.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which Avalanche happened first, Rigopiano avalanche or 1999 Galtür avalanche ?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['The Galtür avalanche'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""Ibn Tufail""  
+   **ID:** 1  
+   2. **Title:** ""Ibn Tufail""  
+   **ID:** 1  
+   3. **Title:** ""Ibn Tufail""  
+   **ID:** 1  
+   4. **Title:** ""Ibn Tufail""  
+   **ID:** 1  
+   5. **Title:** ""Ibn Tufail""","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which man, Ibn Tufail or Ali Qushji, is best known for the development of astronomical physics independent from natural philosophy?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Ali Qushji'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. ""The Incal"" (Title) - ID: 1  
+2. ""The Incal"" (Title) - ID: 2  
+
+The anthology, in which the first pages of ""The Incal"" were released, was created in 1995.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When was the anthology, in which fisrt pages of The Incal"" were released, created?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['December 1974'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', '1']  
+**Answer:**  
+- The international football team that has had a player endorse the ""Nike Hypervenom"" football boot is the **English national team** (as mentioned in the context of the ""Soccer"" section of the document).","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which internationl football team has had a player endorse the ""Nike Hypervenom"" football boot?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['England'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'the', 'aint', 'the']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who was born first,  Morgan Llywelyn or Robert Jordan?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Morgan Llywelyn'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Laurentian Records', 'Lithuanian producer: ""Laurentian Records""']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What Lithuanian producer is best known for a song that was one of the most popular songs in Ibiza in 2014?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Ten Walls'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Laurent Street', '12']  
+**Title:** ""Laurent Street""  
+**ID:** ""12""  
+
+**Answer:**  
+- Former race car driver Jeff Wood made his CART debut at the 1983 Nissan/Datsun-sponsored race at the **Laurent Street**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Former race car driver Jeff Wood made his CART debut at which 1983 Nissan/Datsun-sponsored race?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Caesars Palace Grand Prix'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1989 - ""When the Pawn...""; 1995 - ""The Big Bang Theory""  
+- **Title**: ""When the Pawn...""  
+- **ID**: 1995  
+- **Title**: ""The Big Bang Theory""  
+- **ID**: 1995","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Candace Flynn was voiced by the actress who achieved mainstream success on what show?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['The Suite Life of Zack & Cody'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""Where did the architect of the Governor's House, located in Knutsford, graduate from college?""  
+   **ID:** 1
+
+**Answer:**  
+The architect of the Governor's House, located in Knutsford, graduated from the **University of Cambridge**. This information is derived from the document that mentions the ""University of Cambridge"" as the institution where the architect studied.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Where did the architect of the Governor's House, located in Knutsford, graduate from college?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Cambridge University'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Aint' a single, but the question is about the series that has sold more than how many copies. The document mentions that ""the series was created by the ... and has been sold in the millions."" However, the exact number is not specified in the provided text. Therefore, the answer cannot be determined from the given information.']
+
+TITLE: The series was created by the ... and has been sold in the millions.
+ID: 1016","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: A Big Daddy is a fictional character in a series that has sold more than how many copies?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['25 million copies'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['The title role is starred by Tina Fey.', 'The document mentions that the actress is ""Tina Fey"" and that she is the lead in the title role.']  
+**Title:** ""The title role is starred by Tina Fey.""  
+**ID:** 1016  
+
+**Title:** ""The document mentions that the actress is 'Tina Fey' and that she is the lead in the title role.""  
+**ID:** 1016  
+
+**Answer:**  
+-","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which actress does this Netflix's project by Nick Bernardone and Tina Fey star in the title role?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Ellie Kemper'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', '1989', '32', 'notes', 'simultaneously', 'drum', 'machine', 'introduced']  
+- **Title:** The Human Drummer  
+- **ID:** 1989  
+
+**Answer List:**  
+- The Human Drummer (ID: 1989)","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What drum machine was introduced in 1989 and allowed 32 notes to be played simultaneously?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['The R-8 Human Rhythm Composer'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['The Vanishing', 'The Vanishing']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the name of the 1988 film starring Gene Bervoets that was based on the Dutch to English translated novel, ""The Vanishing""?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['The Vanishing'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', '1']  
+**Answer:**  
+The player who played for the Nova Southeastern Sharks, Milwaukee Brewers, and Houston Astros is **Chris Brown**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which player played for Nova Southeastern Sharks, MIlwaukee Brewers and Houston Astros?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Michael Bruce Fiers'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Laurentian Mountains', '12']  
+**Answer:**  
+- The summit located in the county whose county seat is Helena is ""Laurentian Mountains"" with the ID ""12"".","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What summit is located in the county who's county seat is Helena?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Scapegoat Mountain'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['The Bill', 'The Bill']  
+The NBC sitcom that Johnny Pemberton appears in as the character Bo Thompson is ""The Bill"". The show was created by the writer and producer who is also known as the creator of the sitcom ""The Office"" (UK version), which is not explicitly named in the provided text. However, based on the context, it can be inferred that the sitcom was created by the same person who wrote ""The Bill"" and directed it. 
+
+Answer:  
+-","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who created the NBC sitcom that Johnny Pemberton appears in as the character Bo Thompson?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Justin Spitzer'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** Götterdämmerung  
+   **ID:** 1016  
+   **Answer:** Yes, ""Götterdämmerung"" is considered an opera. It is a German-language opera by Richard Wagner, part of his ""Ring Cycle"" operatic series.
+
+2. **Title:** Dafne  
+   **ID:** 1017  
+   **Answer:** Yes, ""Dafne"" is considered an opera. It","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Are both Götterdämmerung and Dafne considered operas?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['no'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', '19']  
+**Title:** ""aint""  
+**ID:** 19  
+
+**Answer:** The ""Prince of tenors"" starred in a film based on an opera by Giacomo Puccini in the city of **Rome**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In what city did the ""Prince of tenors"" star in a film based on an opera by Giacomo Puccini?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Rome'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel's', 'Laurel","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What retailer did Albert Heijn start up that eventually merged with the Delhaize Group?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Koninklijke Ahold N.V.'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['The Devil's Advocate', '1997-001']
+
+**Answer:**
+- The 2000 film starring Bruce Willis produced by Blinding Edge Pictures is ""The Devil's Advocate"".","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Blinding Edge Pictures produced which 2000 film starring Bruce Willis?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Unbreakable'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""The 2006 film that Stephen Graham starred in""  
+   **ID:** 1016  
+   **Answer:** Stephen Graham starred in the film ""The New World"" (2006), which was directed by **Lars von Trier**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Stephen Graham starred in a film in 2006, directed by whom?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['directed by Shane Meadows'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Wing Chun', '1017']
+
+**Answer:**
+- The Hong Kong actor, martial artist, and film director who won the tournament multiple times is Bruce Lee. He is associated with the Wing Chun film and is known for winning the ""Tournament of Champions"" in the 1970s.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Wing Chun starred Michelle Yeoh and a Hong Kong actor, martial artist, and film director who won what tournament multiple times?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['world wushu tournament'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Gültendam', '1016']  
+The name of the city in Istanbul which has both the Column of the Goths and Gül Mosque is **Gültendam**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is name of the city in Istanbul which has both Column of the Goths and Gül Mosque?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Turkey'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Biel/Bienne', '101']  
+- The name of the company managed by Joseph Reiser based in Biel/Bienne, Switzerland is **""The Company""** (the exact name is not specified in the provided text, but the location and manager are mentioned).","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the name of the company manged by Joseph Reiser based in Biel/Bienne, Switzerland?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Omega SA'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Luisa Miller is an opera with three acts, whereas Don Quichotte is an opera with how many acts?']
+- **Title**: Luisa Miller  
+  **ID**: 1016  
+- **Title**: The title of the opera ""Don Quichotte""  
+  **ID**: 1016  
+
+The opera ""Don Quichotte"" is known to have **three acts**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Luisa Miller is an opera with three acts, whereas Don Quichotte is an opera with how many acts?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['five'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', 'the', 'aint', '","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: jean Sagbo, considered ""Russia's Obama"" is considered to belong to what ethnic group based on his having African heritage or dark skin?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Afro-Russian'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'aint']  
+- **Title**: ""The New York Times""  
+- **ID**: 101  
+- **Title**: ""The New York Times""  
+- **ID**: 101  
+
+**Answer:**  
+The American politician who served as United States Senator from 1971 to 1989 and was Governor of Florida before Buddy MacKay is **Bob Graham**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which American politician who served as United States Senator from 1971 to 1989 was Governor of Florida before Buddy MacKay?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Lawton Chiles'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. ""La Machine à écrire"" (Title: La Machine à écrire, ID: 1016)  
+2. ""La Machine à écrire"" (Title: La Machine à écrire, ID: 1016)  
+
+**Answer:**  
+The younger brother of Farshid Karimi, known as the ""Farshad Karimi,"" was born on 10 May 1942.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When was the younger brother of Farshid Karimi born ?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['8 November 1978'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['La Vallee', '101']  
+- The site where Operation Buster–Jangle was conducted is located in the county of La Vallee.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In which county is this site located where Operation Buster–Jangle was conducted?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Nye County'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Phaedranassa', 'Mitella', 'species', 'level', 'classification']
+
+TITLE: Advances in the classification of plant species
+ID: 101
+
+TITLE: Classification of plant species
+ID: 102","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Both Phaedranassa and Mitella are considered the classification of what level of species?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['genus'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. ""La Machine à écrire"" (Title) - ID: 1016  
+2. ""The 1984 film directed by Rod Lurie"" (Title) - ID: 1016  
+
+**Answer List:**  
+- Yes, Anja Salomonowitz and Rod Lurie are both directors.  
+  - Anja Salomonowitz is mentioned as a director in the context of the 1984 film ""La Machine à","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Are Anja Salomonowitz and Rod Lurie both directors?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['yes'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', '1']  
+**Title:** The county seat of the county in which Keokuk Falls, Oklahoma is located is **Oklahoma County**. The county seat for Oklahoma County is **Oklahoma City**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the county seat of the county in which Keokuk Falls, Oklahoma is loated?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Shawnee'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Gujarat Legislative Assembly', 'Gujarat']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What country is the member of Gujarat Legislative Assembly and parliament representing?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Jamnagar'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'aint']  
+- **Title**: ""aint""  
+- **ID**: ""aint""  
+
+**Answer:**  
+William Pery served as Captain of the Yeomen of the Guard under the lord who served as the Chief Secretary to the Treasury from 1865 to 1868.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: William Pery served as Captain of the Yeomen of the Guard under the lord who served in what position from 1865 to 1868?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Viscount Cranborne'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""The Hounds of Zaroff""  
+   **ID:** 1016  
+2. **Title:** ""The Hound of the Baskervilles""  
+   **ID:** 1016  
+
+**Answer List:**  
+- ""The Hounds of Zaroff"" (ID: 1016)  
+- ""The Hound of the Baskervilles"" (ID: 1016)","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was Richard Connell's best known work The Hounds of Zaroff also published as?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['The Most Dangerous Game'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', '1']  
+**Title:** The Aint (1989)  
+**ID:** 1  
+
+**Answer:**  
+The lawyer who took the main role in the report that helped land Pete Rose a lifetime suspension from baseball was **Pete Rose's attorney, who was involved in the investigation and report**. The specific name of the lawyer is not directly mentioned in the provided documents, but the report was conducted by a team that included legal experts. The report's title","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was the name of the lawyer who took the main role in the report that helped land Pete Rose a lifetime suspension from baseball?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['John M. Dowd'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""Howell Conant""  
+   **ID:** 12345  
+   **Answer:** Howell Conant was a creative artist known for his work as a producer and director, particularly for his collaboration with the renowned actress and filmmaker Grace Kelly. He was involved in the production of films and contributed to the creative direction of projects, showcasing his skills in the entertainment industry.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What kind of creative artist was Howell Conant, famed for his work with Grace Kelly?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['photographer'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"0
+
+**Documents Used:**
+- **Title:** ""Scorpiones und Pedipalpi""  
+  **ID:** 1
+
+**Answer:**
+- The document ""Scorpiones und Pedipalpi"" mentions a ""Scorpiones"" (scorpion) which typically has eight legs. However, the specific question about the animal discussed by Karl Kraepelin is not directly addressed in the provided text. Therefore, the answer is based on general knowledge of scorpions.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How many legs does the animal, in which Karl Kraepelin discusses in ""Scorpiones und Pedipalpi,"" have?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['eight'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Not Richard, But Dick', 'Not Richard, But Dick']  
+The album ""Not Richard, But Dick"" was by the band formed in **London**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Not Richard, But Dick was an album by the band formed in what city?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Philadelphia'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. ""Are Isaac Asimov and Michael Cunningham both American writers?""  
+   - **Title:** Are Isaac Asimov and Michael Cunningham both American writers?  
+   - **ID:** 1
+
+**Answer:**  
+Yes, both Isaac Asimov and Michael Cunningham are American writers. Isaac Asimov was a renowned science fiction author and writer, while Michael Cunningham is a contemporary American writer known for his novel ""The Hours,"" which is based on the life of Virginia Woolf.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Are Isaac Asimov and Michael Cunningham both American writers?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['no'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. ""Ten Who Dared"" - ID: 101  
+2. ""Tonka"" - ID: 102  
+
+**Answer:**  
+No, the films ""Ten Who Dared"" and ""Tonka"" were not distributed by the same company. ""Ten Who Dared"" was distributed by the company mentioned in the document, while ""Tonka"" was associated with a different distribution company.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Were the films ""Ten Who Dared"" and ""Tonka"" distributed by the same company?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['yes'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', '1016']  
+**Answer:**  
+Steve Uzelac played football for the **Preston League** located in Preston, Lancashire.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Steve Uzelac played football for which league located in Preston, Lancashire?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['North End Football Club'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'hold', 'on', 'song', 'features', 'vocals', 'british', 'singer', 'debut', 'album', 'won', 'prize', '2017']
+
+**Title:** ""aint hold on song features vocals of british singer whose debut album won what prize in 2017""  
+**ID:** 1
+
+**Answer:**
+The song ""Hold On"" features the vocals of a British singer whose debut","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: ""Hold On"" is a song that features the vocals of a British singer whose debut album won what prize in 2017?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Mercury Prize'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. ""Marty Raybon"" (ID: 1)  
+2. ""Greg Graffin"" (ID: 2)  
+
+**Answer:**  
+- Marty Raybon had more solo albums than Greg Graffin.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Q: Who had more solo albums, Marty Raybon or Greg Graffin?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Gregory Walter Graffin'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Is there fruit juice in both a Fizz and a Painkiller cocktail?']
+- **Title**: The History of the Painkiller Cocktail
+- **ID**: 1
+
+**Answer**: Yes, there is fruit juice in both a Fizz and a Painkiller cocktail. The Painkiller cocktail typically includes fruit juice such as pineapple or orange, while the Fizz cocktail also incorporates fruit juice, often pineapple or citrus, as part of its ingredients.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Is there fruit juice in both a Fizz and a Painkiller cocktail?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['yes'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"0
+
+TITLE: ""The Public Domain"" (document title)
+ID: The_Public_Domain
+
+The document titled ""The Public Domain"" mentions that the film was based on the ""1941"" story of a ""dramatic"" film, but it does not provide specific information about the number of people killed in the collapse of the bridge. Therefore, the answer is not available in the provided documents.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How many people were killed in the collapse of the bridge featured in the drama film, The Public Domain ?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['13 people'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'aint']  
+The most populous city in the county where Caleb Stegall served as District attorney is not directly mentioned in the provided documents. However, based on the information that Caleb Stegall was a District attorney in the county of ""St. Louis"" (from the context of the document ""Caleb Stegall"" and the mention of ""St. Louis"" in the document ""Caleb Stegall (1952 in ...)"" and ""Caleb","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What is the most populous city in the county where Caleb Stegall served as District attorney?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Valley Falls'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"0
+
+TITLE: ""The Wall Running Between the West Gate Lodge and Cardiff Castle""
+ID: 1016
+
+TITLE: ""The Wall Running Between the West Gate Lodge and Cardiff Castle""
+ID: 1016
+
+**Answer:**
+- The wall running between the West Gate Lodge and Cardiff Castle depicts **0** animals.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: How many animals does the wall running between the West Gate Lodge and Cardiff Castle depict?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['15'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""Where is the American honky tonk country band, whose first studio album was Honky Tonks and Cheap Motels, based?""  
+   **ID:** 1
+
+**Answer:**  
+The American honky tonk country band, whose first studio album was ""Honky Tonks and Cheap Motels,"" is based in **Los Angeles, California**. This information is derived from the document titled ""The New York Times"" which mentions the band's connection to","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Where is the American honky tonk country band, whose first studio album was Honky Tonks and Cheap Motels, based?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,"['Flint, Michigan, United States']",17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', '1']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Anna Aglatova made her first public appearance at which Moscow theatre in 2005?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Bolshoi Theatre'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'aint']  
+The title of the document is: ""Moor Park Mansion"" and the ID is: ""Moor Park Mansion"".  
+The document mentions that the Moor Park Mansion is also known as ""The Arthur F. ..."". However, the exact name is not fully provided in the given text. Based on the context, it is likely referring to ""The Arthur F. ..."", but the full name is not available in the provided text.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What other name is the Moor Park Mansion known as?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['The More'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""Laurus""  
+   **ID:** 1  
+   **Title:** ""Liriodendron""  
+   **ID:** 2  
+
+The document states that ""Liriodendron"" has around 10 species, while ""Laurus"" has only one species. Therefore, Liriodendron has more species.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which has more species Laurus or Liriodendron?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Laurus'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""The Discovery of the Elliptical Galaxy NGC 3610""  
+   **ID:** 1  
+   **Answer:** The discoverer of the elliptical galaxy NGC 3610 was an English astronomer who played a significant role in the study of celestial objects. However, the specific military role mentioned in the provided documents is not directly stated. The document does not provide information about the military role of the discoverer before reaching Britain.
+
+","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What role in the military did the discoverer of the elliptical galaxy NGC 3610 have before reaching Britain ?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,"['Military Band of Hanover,']",17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""The Hatter"" (from the document ""Hatter and March Hare are characters in which book?"")  
+   **ID:** 1
+
+2. **Title:** ""The Hound of the Baskervilles"" (from the document ""The Hound of the Baskervilles"")  
+   **ID:** 2
+
+**Answer List:**
+- ""The Hatter"" (ID: 1)
+- ""The Hound of the B","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Both Hatter and March Hare are characters in which book?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,"[""Alice's Adventures in Wonderland""]",17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1989, ""The New York Times""  
+**Title:** ""Maggie May""  
+**ID:** 183  
+
+**Answer:**  
+Maggie May is a musical based on a folk song about a prostitute who robbed a man.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Maggie May is a musical based on a folk song about a prostitute who robbed whom?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['sailor'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['La Machine à écrire', '1016']  
+The document mentions that Kim English was selected by the Pistons during the draft, and the location of the draft is implied to be the same as the location of the ""La Machine à écrire"" document, which is associated with the ""Séance de la NBA"" (NBA draft session). However, the exact location is not explicitly stated in the provided text. Based on the context, it is likely referring to a specific","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Kim English was selected by the Pistons during the draft held at what location?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Prudential Center'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'aint']  
+**Answer:**  
+The descendant of the Red Setter originates from the Red Setter's lineage, which is traced back to the Red Setter breed. The Red Setter is a breed of dog that originated in the UK, specifically from the breed known as the ""Red Setter"" which was developed in the 19th century. The descendant of the Red Setter would therefore come from this breed's lineage.  
+
+**Document References:**  
+- **TITLE:** ""aint""  
+","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Where does the descendant of the Red Setter originate?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Scotland'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"0
+**Title:** Advances in Science and Technology
+**ID:** 0
+
+The document titled ""Advances in Science and Technology"" mentions that ""Dwell"" is a publication that ""was published in 1973"" and that ""Dwell"" is a ""magazine"" that ""was published in 1973"". It also states that ""Dwell"" is a ""magazine"" that ""was published in 1973"" and that ""D","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Was American Scientist or Dwell published first?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['American Scientist'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['La Machine à Écrire', 'M1']  
+- **La Machine à Écrire** (ID: M1)","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What was the former name of the company which operates Hunterston Terminal?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Peel Holdings'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""Millennium Greens were funded in part by a what type of lottery?""  
+   **ID:** 1
+
+**Answer List:**
+- The Millennium Greens were funded in part by a **National Lottery**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Millennium Greens were funded in part by a what type of lottery?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['state-franchised'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'cant', 'dove', 'drama', 'dramma', 'dramma', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama', 'drama',","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Are both Don Giovanni and Cardillac operas with three acts?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['no'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""The Animated Series Kent Scott Wrote""  
+   **ID:** 1016  
+   **Answer:** The animated series ""The Animated Series Kent Scott Wrote"" (also known as ""The Big Show"") began in September 2002 on ""Nick on CBS"" and ended in 2004.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the animated series Kent Scott wrote end after beginning in September of 2002 on ""Nick on CBS""?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['November'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1959
+
+TITLE: ""The figure skater who was coached to Olympic, World, and national titles by Richard Callaghan was born in what year?""
+ID: 1013
+
+TITLE: ""La Machine à écrire""
+ID: 1014","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: The figure skater who was coached to Olympic, World, and national titles by Richard Callaghan was born in what year?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['1982'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', '1']  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:** The Bronze  
+**Title:**","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who starred in The Bronze and also showed up on the CBS sitcom ""The Big Bang Theory""?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Melissa Rauch'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""Are Mick Jagger and Brett Scallions both musicians?""  
+   **ID:** 1
+
+- Mick Jagger is a musician, known as the lead singer of the Rolling Stones.  
+- Brett Scallions is also a musician, having been a member of the band The Offspring and later working as a producer and musician in other capacities.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Are Mick Jagger and Brett Scallions both musicians?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['yes'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['NHL team: Detroit Red Wings', 'Title: The 2003 Stanley Cup Champions']
+
+**Documents Used:**
+- Title: ""The 2003 Stanley Cup Champions""
+- ID: ""1003""","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What NHL team drafted Kaspars Astasenko in 1999 and won the Stanley Cup in 2003-04?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Tampa Bay Lightning'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"0
+
+**Title:** ""Computing Machinery and Intelligence""  
+**ID:** 1  
+
+**Answer:**  
+The author of ""Computing Machinery and Intelligence"" is Alan Turing. Alan Turing died on June 7, 1954.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When did the author of ""Computing Machinery and Intelligence"" die?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['1954'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'ain\'t']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What cartel drug lord with the reputation as ""The King of Cocaine"" partnered with Jack Carlton Reed to provide drugs to the United States in the 20th century?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Pablo Escobar'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""The New York Times"" - ""The New York Times""  
+   **ID:** 1  
+   **Answer:** Charles Coughlin started the rumor of ""The New York Times"" being involved in the ""New York City"" events.  
+
+2. **Title:** ""The New York Times"" - ""The New York Times""  
+   **ID:** 2  
+   **Answer:** Charles Coughlin started the rumor of ""The New York Times""","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Charles Coughlin was a controversial Canadian-American Roman Catholic who also started what rumor?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Boston Herald'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', '1']  
+**[1]**: aint - ""aint"" is a reference to the character ""Indiana Jones"" from the movie ""Raiders of the Lost Ark"" and the actor who played him, Harrison Ford.  
+**[2]**: 1 - The document ""1"" refers to the movie ""The Lodger"" and the actor Harrison Ford, who starred in both ""Raiders of the Lost Ark"" and ""The Lodger"".
+
+**Answer","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What English-American actor known for his role in ""Raiders of the Lost Ark"" starred in The Lodger?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,"['Alfredo ""Alfred"" Molina']",17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['The Golden Egg', 'GMA-001']  
+The film directed by David Greene that Merrell Jackson played an apostle in is ""The Golden Egg"".","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What film directed by David Greene did Merrell Jackson play an apostle in?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Godspell'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'ain't']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: In the Glee episode ""Bad Reputation,"" Sue Sylvester dances to this song, by a four-time Grammy winner and star of musical film ""Grease.""
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Physical'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['The Boston Strong']
+  
+**Title:** The Boston Strong  
+**ID:** 1016","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What film, based on the book “Boston Strong”, featured the actress Alex McKenna?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Patriots Day'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['La Valera', '101']  
+- La Valera is the apartment complex that was originally constructed in 1927 and is included in Manhattan Community Board 6.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What apartment complex originally constructed in 1927 is included in Manhattan Community Board 6?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Tudor City'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **TITLE**: The Ready Set  
+   **ID**: 1  
+   **TITLE**: Cell  
+   **ID**: 2  
+
+**Answer List**:  
+1. The Ready Set - ID: 1  
+2. Cell - ID: 2","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What are The Ready Set and Cell?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['band'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['The 43d Air Mobility Operations Group is stationed at the largest military installation, which is the U.S. Air Force's Joint Base Lewis-McChord (JBLM) in Washington State.']
+
+TITLE: ""The 43d Air Mobility Operations Group""  
+ID: 1016","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: The 43d Air Mobility Operations Group is stationed at which largest military installation?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Fort Bragg'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Ivan Simson was under the command of the officer who was most noted for a defeat at the Battle of the Bulge.']
+- **Title**: Ivan Simson
+- **ID**: 1016","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Ivan Simson was under the command of the officer who was most noted for a defeat at what WWII battle?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Battle of Singapore'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. ""La Machine à écrire"" (Title: La Machine à écrire, ID: 1016)  
+2. ""The 1989 album by Chris Brown"" (Title: The 1989 album by Chris Brown, ID: 1016)  
+
+**Answer List:**  
+- Ian Brown is a former member of the band The 1989 and has been involved in music, but he is not primarily known as an","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Are Ian Brown and Dee Snider both actors?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['no'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Cason, CA', '12345']  
+**Answer:**  
+- The soccer team that features the son of Roy Lassiter is ""Cason, CA"".","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What Cason, CA soccer team features the son of Roy Lassiter?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['LA Galaxy'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Laundry', '1023']  
+**[1023]**
+- **Title:** ""Laundry""  
+- **ID:** 1023
+
+**Answer:**
+- The dish that emerged in the late 1950s and is a long-standing tradition in New Jersey is associated with the ""Laundry"" (a type of establishment or tradition). However, the specific dish is not directly named in the provided text. The reference to ""La","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Where did this dish emerge in the late 1950s that is a long-standing tradition in New Jersey?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Centre-du-Québec'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['Red Mountain is a film that centers on an attempt by a group of what group of Civil War rangers?']
+- **Title**: The answer is derived from the information provided in the document titled ""The Red Mountain"" (from the query's context).
+- **ID**: The specific document ID is not provided, but the reference is to the ""Red Mountain"" film and its connection to the Civil War rangers.
+
+**Answer List:**
+- The film ""Red Mountain"" centers on an","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Red Mountain is a film that centers on an attempt by a group of what group of Civil War rangers?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['pro-Confederate'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Le roi malgré lui** (ID: 1016)  
+2. **Louise** (ID: 1009)  
+
+**Answer:**  
+- **Le roi malgré lui** has more acts than **Louise**.  
+- **Le roi malgré lui** is an opera with more acts, as it is described as having ""a number of acts"" and is a ""two-act"" opera.  
+- **Louise**","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Which opera has more acts, Louise or Le roi malgré lui?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Louise'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'the', 'penny', 'single', 'certified', 'what', 'the', 'song', 'by', 'a', 'rapper', 'whose', 'first', 'album', 'was', 'certified', 'what']
+
+**Title:** ""The Aint' the Penny Single""  
+**ID:** 101
+
+**Title:** ""The Aint' the Penny Single""  
+**ID:** 102
+
+**Title:** ""","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: ""JK Wedding Entrance Dance"" is a viral video that uses a song by a rapper whose first album was certified what?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['double platinum'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['**Title**: The Chef of the Japanese Restaurant in Tribeca, **ID**: 1034567890']
+
+**Answer:**
+- The chef who is the owner of a Japanese restaurant in the Tribeca neighborhood and also owns two Bar Masas in New York and Nevada is **Chris Brown**.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What chef is the owner of a Japanese restaurant in the Tribeca neighborhood and also owns two Bar Masas in New York and Nevada?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,"['Masayoshi ""Masa"" Takayama']",17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['La Machine à écrire', 'M1001']  
+- The club for which Adam Johnson played, as well as Middlesbrough and Watford, was formed in 1921.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: When was the club formed, for which Adam  Johnson played as well as Middlesbrough and Watford ?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['1919'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'aint']","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Who co-wrote Taylor Swift's song that had its music video premiere during the pre-show of the 2015 MTV Video Music Awards?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['Max Martin and Shellback'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0," ['aint', 'aint']  
+**Answer:**  
+The star actor from ""Jeremy"" performed as a character in the movie ""The Bill"" and was portrayed by the actor who played the role of ""The Bill"" in the show.","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: What other notable role did the star actor from Jeremy perform?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['the voice of The Beast'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 
+test,121232.0,"1. **Title:** ""Isabella Kelly was born at a ruined castle characterized as one of the most isolated fortifications in Britain by who?""  
+   **ID:** 1
+
+2. **Title:** ""Isabella Kelly was born at a ruined castle characterized as one of the most isolated fortifications in Britain by who?""  
+   **ID:** 1
+
+**Answer List:**
+- The document states that Isabella Kelly was born at a ruined castle characterized as one of the most isolated","====== Now let's start! ======
+Based on the documents above, can you answer the following query? Print out the TITLE and ID of the documents you use to answer. Then format the answers into a list.
+query: Isabella Kelly was born at a ruined castle characterized as one of the most isolated fortifications in Britain by who?
+",17.876385792,hotpotqa_128k,0.9713606968457174,MB,147.456,512.0,256,3472.0,['The Changing Scottish Landscape'],17876.385792,0.511967232,3472.0,511.967232,Final Answer: 

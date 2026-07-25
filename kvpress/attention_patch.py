@@ -8,8 +8,9 @@ from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS
 def search_hyperplane(X, max_iter: int = 1000):
     """
     Given a tensor X of shape (bsz, seq_len, head_dim), search for a hyperplane Y (bsz, head_dim)
-    such that for every i, <X[:, i], Y> <= 0. Returns - 1e5 * Y / ||Y|| ** 2 to ensure exp(<X, Y>) = 0
-    Raises a ValueError if no such hyperplane is found
+    such that for every i, <X[:, i], Y> <= 0. Returns a large, finite vector in
+    the input dtype that makes exp(<X, Y>) underflow to zero. Raises a ValueError
+    if no such hyperplane is found.
 
     Parameters
     ----------
@@ -23,8 +24,8 @@ def search_hyperplane(X, max_iter: int = 1000):
     Returns
     -------
     torch.Tensor
-        Hyperplane tensor with shape (batch_size, head_dim) scaled by -1e5 / ||Y||²
-        to ensure that exp(<X, Y>) ≈ 0 for all queries in X.
+        Hyperplane tensor with shape (batch_size, head_dim), computed in FP32 and
+        safely rescaled for the input dtype, such that exp(<X, Y>) ≈ 0.
 
     Raises
     ------
@@ -35,7 +36,21 @@ def search_hyperplane(X, max_iter: int = 1000):
     for _ in range(max_iter):
         mask = torch.bmm(X, Y.unsqueeze(-1)) <= 0
         if not mask.any():
-            return -1e5 * Y / Y.norm(dim=-1, keepdim=True) ** 2
+            # Computing ``-1e5 * Y`` directly in FP16 overflows before the
+            # division because FP16's largest finite value is 65504. Perform
+            # the calculation in FP32, then rescale the complete vector (rather
+            # than clipping individual components) to preserve its direction.
+            Y_float = Y.float()
+            fake_keys = -1e5 * Y_float / Y_float.norm(dim=-1, keepdim=True).square().clamp_min(1e-12)
+
+            if X.is_floating_point():
+                dtype_limit = torch.finfo(X.dtype).max
+                safe_limit = min(1e5, dtype_limit / 8)
+                largest_component = fake_keys.abs().amax(dim=-1, keepdim=True).clamp_min(1.0)
+                scale = (safe_limit / largest_component).clamp_max(1.0)
+                fake_keys = fake_keys * scale
+
+            return fake_keys.to(dtype=X.dtype)
         Y += (X * mask).sum(1) / mask.sum(1).clamp(min=1)
     raise ValueError("Could not find fake keys such that for every query q, exp(<q, k>) = 0")
 

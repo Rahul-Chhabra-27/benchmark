@@ -4,6 +4,7 @@
 import json
 import logging
 import random
+import re
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -59,6 +60,7 @@ class EvaluationConfig:
     max_context_length: Optional[int] = None
     query_aware: bool = False
     needle_depth: Optional[int] = None
+    synthetic_kv_prefix_mode: str = "keep"
 
     # Decoding parameters
     compression_interval: Optional[int] = None
@@ -123,6 +125,9 @@ class EvaluationConfig:
         if self.dataset == "needle_in_haystack":
             assert self.needle_depth is not None, "needle_depth must be set for needle_in_haystack"
             assert self.max_context_length is not None, "max_context_length must be set for needle_in_haystack"
+        assert self.synthetic_kv_prefix_mode in {"keep", "strip"}, (
+            "synthetic_kv_prefix_mode must be 'keep' or 'strip'"
+        )
 
     def get_results_dir(self, output_dir: Path,data_dir: Optional[str] = None) -> Path:
         """
@@ -175,6 +180,8 @@ class EvaluationConfig:
             components.append(f"key_channel_cr{self.key_channel_compression_ratio:.2f}")
         if self.needle_depth is not None and self.dataset == "needle_in_haystack":
             components.append(f"needle_depth{self.needle_depth}")
+        if self.dataset == "synthetic_kv" and self.synthetic_kv_prefix_mode == "strip":
+            components.append("no_prefix")
 
         dir_name = "__".join(filter(None, components))  # Filter None/empty strings
         dir_name = f"new_{dir_name}" 
@@ -454,6 +461,16 @@ class EvaluationRunner:
             context = compact_row["context"]
             questions = compact_row["questions"]
             answers = compact_row["answers"]
+            if self.config.synthetic_kv_prefix_mode == "strip":
+                strip_prefix = lambda value: re.sub(
+                    r"(?<![A-Z0-9])[KV]_([A-F0-9]{12})(?![A-Z0-9])",
+                    r"\1",
+                    str(value),
+                    flags=re.IGNORECASE,
+                )
+                context = strip_prefix(context)
+                questions = [strip_prefix(value) for value in questions]
+                answers = [strip_prefix(value) for value in answers]
             if len(questions) != len(answers):
                 raise ValueError(
                     f"Mismatched questions/answers for {compact_row['context_id']}: "
@@ -714,13 +731,14 @@ class EvaluationRunner:
                 prediction_preview = f"{prediction_preview[:157]}..."
             logger.info(
                 "Question completed %d/%d (%.1f%%) | task=%s | budget=%s | "
-                "row=%s | prediction=%r",
+                "row=%s | reference=%r | prediction=%r",
                 completed_questions,
                 total_questions,
                 100.0 * completed_questions / total_questions,
                 self.config.data_dir,
                 budget_label,
                 index,
+                self.df.loc[index, "answer"],
                 prediction_preview,
             )
 
@@ -866,7 +884,13 @@ class EvaluationRunner:
     def _save_results_readme(self, readme_filename: Path, task: str, metrics: Dict[str, Any]):
         """Write a self-contained summary as soon as one task finishes."""
         if self.config.memory_budget is None:
-            configuration = f"KVzip baseline (compression ratio {self.config.compression_ratio:.4f})"
+            if self.config.press_name == "no_press":
+                configuration = "True no-press baseline (full KV cache)"
+            else:
+                configuration = (
+                    f"{self.config.press_name} baseline "
+                    f"(compression ratio {self.config.compression_ratio:.4f})"
+                )
         else:
             configuration = f"KVzip memory budget: {self.config.memory_budget:g} {self.config.memory_budget_unit}"
 
@@ -923,15 +947,21 @@ Files in this directory:
         memory_budgets: list[tuple[float, str]],
         baseline_compression_ratio: float = 0.01,
         include_baseline: bool = True,
+        baseline_press_name: Optional[str] = None,
     ) -> None:
         """Run multiple tasks and KV budgets while loading the model only once."""
         if not tasks:
             raise ValueError("At least one task is required for a matrix evaluation")
 
         output_dir = self._setup_directories()
+        budget_press_name = self.config.press_name
+        if baseline_press_name is not None and baseline_press_name != "no_press":
+            raise ValueError("baseline_press_name currently supports only 'no_press'")
         self.config.compression_ratio = baseline_compression_ratio
         self.config.memory_budget = None
-        self._setup_press()
+        # Model construction does not require a press. Individual compressed
+        # configurations initialize their press immediately before inference.
+        self.press = None
         self._setup_model_pipeline()
 
         configurations: list[tuple[Optional[float], str]] = list(memory_budgets)
@@ -944,7 +974,9 @@ Files in this directory:
 
             for memory_budget, memory_budget_unit in configurations:
                 self.config.data_dir = task
-                self.config.compression_ratio = baseline_compression_ratio
+                is_no_press_baseline = memory_budget is None and baseline_press_name == "no_press"
+                self.config.press_name = "no_press" if is_no_press_baseline else budget_press_name
+                self.config.compression_ratio = 0.0 if is_no_press_baseline else baseline_compression_ratio
                 self.config.memory_budget = memory_budget
                 self.config.memory_budget_unit = memory_budget_unit.upper()
                 results_dir = self.config.get_results_dir(output_dir, data_dir=task)
@@ -968,24 +1000,36 @@ Files in this directory:
             self.config.memory_budget = None
             self.config.memory_budget_unit = "MB"
             self.config.compression_ratio = baseline_compression_ratio
-            self._setup_press()
+            self.config.press_name = budget_press_name
             self._load_and_prepare_dataset(task_data_dir=task)
             source_df = self.df.copy(deep=True)  # type: ignore[union-attr]
 
             for memory_budget, memory_budget_unit, results_dir in pending_configurations:
                 self.config.data_dir = task
-                self.config.compression_ratio = baseline_compression_ratio
+                is_no_press_baseline = memory_budget is None and baseline_press_name == "no_press"
+                self.config.press_name = "no_press" if is_no_press_baseline else budget_press_name
+                self.config.compression_ratio = 0.0 if is_no_press_baseline else baseline_compression_ratio
                 self.config.memory_budget = memory_budget
                 self.config.memory_budget_unit = memory_budget_unit.upper()
-                self._setup_press()
+                if is_no_press_baseline:
+                    # True full-attention reference: do not construct, configure,
+                    # enter, or otherwise invoke a press for this inference.
+                    self.press = None
+                    self.config.press_init_command = None
+                    logger.info("Using true no-press baseline (press=None; setup skipped)")
+                else:
+                    self._setup_press()
                 self._reset_reused_model_state()
                 self.df = source_df.copy(deep=True)
 
                 if memory_budget is None:
-                    logger.info(
-                        f"Running task={task}, KVzip reference "
-                        f"compression_ratio={baseline_compression_ratio:.4f}"
-                    )
+                    if is_no_press_baseline:
+                        logger.info(f"Running task={task}, true no-press baseline")
+                    else:
+                        logger.info(
+                            f"Running task={task}, {budget_press_name} reference "
+                            f"compression_ratio={baseline_compression_ratio:.4f}"
+                        )
                 else:
                     logger.info(
                         f"Running task={task}, logical KVzip budget="
@@ -1013,6 +1057,7 @@ Files in this directory:
             torch.cuda.empty_cache()
             logger.info(f"=== Completed matrix task: '{task}' ===")
 
+        self.config.press_name = budget_press_name
         logger.info("Memory-budget matrix evaluation completed successfully with one model load.")
 
     def run_evaluation(self):

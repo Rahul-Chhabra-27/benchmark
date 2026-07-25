@@ -3,6 +3,7 @@
 
 
 import contextlib
+import os
 import logging
 from typing import Any, Callable, Optional
 
@@ -396,6 +397,19 @@ class KVPressTextGenerationPipeline(Pipeline):
         position_ids = torch.arange(
             context_length, context_length + question_ids.shape[1], device=self.model.device
         ).unsqueeze(0)
+        debug_generation = os.environ.get("KV_PRESS_DEBUG_GENERATION") == "1"
+        if debug_generation:
+            cache_lengths = [cache.get_seq_length(layer_idx) for layer_idx in range(len(cache))]
+            logger.info(
+                "GEN_DEBUG before_question original_context_length=%d question_tokens=%d "
+                "cache_length_min=%d cache_length_max=%d position_start=%d position_end=%d",
+                context_length,
+                question_ids.shape[1],
+                min(cache_lengths),
+                max(cache_lengths),
+                position_ids[0, 0].item(),
+                position_ids[0, -1].item(),
+            )
 
         # if the user doesn't provide a question, skip forward pass
         outputs = self.model(
@@ -404,6 +418,21 @@ class KVPressTextGenerationPipeline(Pipeline):
             position_ids=position_ids,
             num_logits_to_keep=1,
         )
+
+        if debug_generation:
+            logits = outputs.logits[0, -1].float()
+            top_values, top_ids = torch.topk(logits, k=5)
+            top_tokens = [self.tokenizer.decode([token_id.item()]) for token_id in top_ids]
+            logger.info(
+                "GEN_DEBUG first_logits finite=%s min=%.6f max=%.6f "
+                "top_ids=%s top_tokens=%r top_logits=%s",
+                bool(torch.isfinite(logits).all()),
+                logits.min().item(),
+                logits.max().item(),
+                top_ids.tolist(),
+                top_tokens,
+                [round(value.item(), 6) for value in top_values],
+            )
 
         position_ids = position_ids[:, -1:] + 1
         generated_ids = [outputs.logits[0, -1].argmax()]

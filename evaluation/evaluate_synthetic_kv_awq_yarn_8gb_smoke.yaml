@@ -1,0 +1,29 @@
+# 8 GB KVzip smoke test for the YaRN-enabled Qwen3-8B AWQ checkpoint.
+output_dir: "./results_synthetic_kv_qwen_awq_yarn_8gb_smoke"
+
+model: "/home/rethinkingai-self/25m0820/kvpress/Qwen3-8B-AWQ"
+dataset: "synthetic_kv"
+data_dir:
+  - "64k"
+
+press_name: "kvzip"
+compression_ratio: 0.01
+key_channel_compression_ratio: null
+threshold: null
+memory_budget: 8
+memory_budget_unit: "GB"
+
+fraction: 0.01
+max_new_tokens: 32
+max_context_length: 65536
+query_aware: false
+needle_depth: null
+seed: 42
+
+device: "cuda:0"
+fp8: false
+int8: false
+int4: false
+model_kwargs:
+  attn_implementation: null
+  dtype: "auto"
