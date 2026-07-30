@@ -1,0 +1,28 @@
+dataset: synthetic_kv
+data_dir: 64k
+model: /home/rethinkingai-self/25m0820/kvpress/Qwen3-8B
+device: cuda:0
+press_name: no_press
+compression_ratio: 0.0
+key_channel_compression_ratio: null
+memory_budget: null
+memory_budget_unit: MB
+fraction: 1.0
+max_new_tokens: null
+max_context_length: null
+query_aware: false
+needle_depth: null
+synthetic_kv_prefix_mode: strip
+compression_interval: null
+target_size: null
+hidden_states_buffer_size: null
+output_dir: ./results_synthetic_kv_with_metadata_direct_no_prefix
+log_level: INFO
+model_kwargs:
+  attn_implementation: null
+  dtype: auto
+press_init_command: null
+seed: 42
+fp8: false
+int8: false
+int4: false

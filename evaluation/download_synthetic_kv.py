@@ -3,11 +3,15 @@
 from datasets import load_dataset
 
 
-DATASET_ID = "ollamaweights/synthetic-kv-qwen3-8b"
+DATASET_ID = "ollamaweights/synthetic-kv-qwen3-8b-with-metadata"
 
 
 def main() -> None:
-    dataset = load_dataset(DATASET_ID, split="test")
+    dataset = load_dataset(
+        DATASET_ID,
+        split="test",
+        download_mode="force_redownload",
+    )
     if len(dataset) != 1:
         raise RuntimeError(f"Expected one compact context, found {len(dataset)}")
 

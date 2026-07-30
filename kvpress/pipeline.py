@@ -99,9 +99,15 @@ class KVPressTextGenerationPipeline(Pipeline):
         postprocess_kwargs = {"single_question": questions is None}
         assert question is None or questions is None, "Either question or questions should be provided, not both."
         questions = questions or ([question] if question else [""])
+        requested_max_context_length = max_context_length
         if max_context_length is None:
             max_context_length = min(self.tokenizer.model_max_length, int(1e10))  # 1e10 to avoid overflow
-            print(f"max_context_length not provided, using model's max length: {max_context_length}")
+        logger.info(
+            "Context length limit: requested=%s, effective=%d, tokenizer_model_max_length=%s",
+            requested_max_context_length,
+            max_context_length,
+            self.tokenizer.model_max_length,
+        )
         preprocess_kwargs = {
             "questions": questions,
             "answer_prefix": answer_prefix,
@@ -228,12 +234,19 @@ class KVPressTextGenerationPipeline(Pipeline):
             self.tokenizer.encode(question, return_tensors="pt", add_special_tokens=False) for question in questions
         ]
 
+        original_context_length = context_ids.shape[1]
         # Truncate context
         if context_ids.shape[1] > max_context_length:
             logger.warning(
                 f"Context length has been truncated from {context_ids.shape[1]} to {max_context_length} tokens."
             )
             context_ids = context_ids[:, :max_context_length]
+        logger.info(
+            "Prepared context tokens: original=%d, final=%d, effective_max_context_length=%d",
+            original_context_length,
+            context_ids.shape[1],
+            max_context_length,
+        )
 
         return {"context_ids": context_ids, "questions_ids": question_ids}
 

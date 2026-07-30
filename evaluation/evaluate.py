@@ -36,6 +36,17 @@ from kvpress import (
 
 logger = logging.getLogger(__name__)
 
+SYNTHETIC_KV_CONTEXT_METADATA = """Context metadata:
+- task: exact key-value retrieval
+- record format: [KEY: VALUE]
+- question format: What is the value associated with key <KEY>? Return only the value.
+- lookup procedure: find the one record whose KEY exactly matches the requested key
+- required answer: return exactly that record's 12-character VALUE
+- output constraints: do not include an explanation, label, punctuation, quotes, or markdown
+- keys and values are arbitrary identifiers; do not guess, transform, or substitute another record
+Data records:
+"""
+
 
 def _reference_for_log(df: pd.DataFrame, index: Any) -> Any:
     """Return a reference value without assuming one dataset schema."""
@@ -70,6 +81,7 @@ class EvaluationConfig:
     query_aware: bool = False
     needle_depth: Optional[int] = None
     synthetic_kv_prefix_mode: str = "keep"
+    synthetic_kv_metadata_override: bool = False
 
     # Decoding parameters
     compression_interval: Optional[int] = None
@@ -470,6 +482,13 @@ class EvaluationRunner:
             context = compact_row["context"]
             questions = compact_row["questions"]
             answers = compact_row["answers"]
+            if self.config.synthetic_kv_metadata_override:
+                _, separator, records = context.partition("Data records:")
+                if not separator:
+                    raise ValueError(
+                        "Synthetic-KV metadata override requires a 'Data records:' marker"
+                    )
+                context = SYNTHETIC_KV_CONTEXT_METADATA + records.lstrip("\n")
             if self.config.synthetic_kv_prefix_mode == "strip":
                 strip_prefix = lambda value: re.sub(
                     r"(?<![A-Z0-9])[KV]_([A-F0-9]{12})(?![A-Z0-9])",

@@ -1,0 +1,6 @@
+task,uncompressed_kv_memory_gb,kv_memory_per_token_kb,uncompressed_kv_memory_mb,max_new_tokens,compression_ratio,answer_prefix,context_tokens,context_id,retained_context_tokens,context_length,retained_kv_memory_mb,retained_kv_memory_gb,question,answer,predicted_answer
+synthetic_kv_64k,9.288105984,147.456,9288.105984,32,0.0,,62989.0,context_0000,62989.0,62986,9288.105984,9.288105984,What is the value associated with key F8EA2F999B2A? Return only the value.,['48381A2E9864'],48381A2E9864
+synthetic_kv_64k,9.288105984,147.456,9288.105984,32,0.0,,62989.0,context_0000,62989.0,62986,9288.105984,9.288105984,What is the value associated with key 6198CFB87E6F? Return only the value.,['FD0862D60E93'],774C688811CD
+synthetic_kv_64k,9.288105984,147.456,9288.105984,32,0.0,,62989.0,context_0000,62989.0,62986,9288.105984,9.288105984,What is the value associated with key 0FF1915CB31B? Return only the value.,['A9956F5B09A6'],A9956F5B09A6
+synthetic_kv_64k,9.288105984,147.456,9288.105984,32,0.0,,62989.0,context_0000,62989.0,62986,9288.105984,9.288105984,What is the value associated with key 49AC46015028? Return only the value.,['92CF1F33242D'],5AFA5A16F9D9
+synthetic_kv_64k,9.288105984,147.456,9288.105984,32,0.0,,62989.0,context_0000,62989.0,62986,9288.105984,9.288105984,What is the value associated with key 68C2B8B818CF? Return only the value.,['41191B61D453'],97A498611260

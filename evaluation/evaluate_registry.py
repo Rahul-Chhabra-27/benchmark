@@ -65,7 +65,7 @@ DATASET_REGISTRY = {
     "loft": "f20180301/loft-rag",
     "ruler32k": "xAlg-AI/att-hub-ruler-32k",
     "ruler64k": "ollamaweights/Ruler-64k",
-    "synthetic_kv": "ollamaweights/synthetic-kv-qwen3-8b",
+    "synthetic_kv": "ollamaweights/synthetic-kv-qwen3-8b-with-metadata",
 }
 
 SCORER_REGISTRY = {
