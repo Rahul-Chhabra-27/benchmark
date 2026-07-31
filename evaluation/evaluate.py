@@ -4,7 +4,6 @@
 import json
 import logging
 import random
-import re
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -15,6 +14,7 @@ import pandas as pd
 import torch
 import yaml
 from benchmarks.needle_in_haystack.utils import insert_needle_in_haystack
+from benchmarks.loaders import load_benchmark_dataset
 from datasets import load_dataset
 from evaluate_registry import DATASET_REGISTRY, PRESS_REGISTRY, SCORER_REGISTRY
 from fire import Fire
@@ -35,18 +35,6 @@ from kvpress import (
 )
 
 logger = logging.getLogger(__name__)
-
-SYNTHETIC_KV_CONTEXT_METADATA = """Context metadata:
-- task: exact key-value retrieval
-- record format: [KEY: VALUE]
-- question format: What is the value associated with key <KEY>? Return only the value.
-- lookup procedure: find the one record whose KEY exactly matches the requested key
-- required answer: return exactly that record's 12-character VALUE
-- output constraints: do not include an explanation, label, punctuation, quotes, or markdown
-- keys and values are arbitrary identifiers; do not guess, transform, or substitute another record
-Data records:
-"""
-
 
 def _reference_for_log(df: pd.DataFrame, index: Any) -> Any:
     """Return a reference value without assuming one dataset schema."""
@@ -80,7 +68,6 @@ class EvaluationConfig:
     max_context_length: Optional[int] = None
     query_aware: bool = False
     needle_depth: Optional[int] = None
-    synthetic_kv_prefix_mode: str = "keep"
     synthetic_kv_metadata_override: bool = False
 
     # Decoding parameters
@@ -146,10 +133,6 @@ class EvaluationConfig:
         if self.dataset == "needle_in_haystack":
             assert self.needle_depth is not None, "needle_depth must be set for needle_in_haystack"
             assert self.max_context_length is not None, "max_context_length must be set for needle_in_haystack"
-        assert self.synthetic_kv_prefix_mode in {"keep", "strip"}, (
-            "synthetic_kv_prefix_mode must be 'keep' or 'strip'"
-        )
-
     def get_results_dir(self, output_dir: Path,data_dir: Optional[str] = None) -> Path:
         """
         Generates the unique save directory and filenames based on configuration parameters.
@@ -201,9 +184,6 @@ class EvaluationConfig:
             components.append(f"key_channel_cr{self.key_channel_compression_ratio:.2f}")
         if self.needle_depth is not None and self.dataset == "needle_in_haystack":
             components.append(f"needle_depth{self.needle_depth}")
-        if self.dataset == "synthetic_kv" and self.synthetic_kv_prefix_mode == "strip":
-            components.append("no_prefix")
-
         dir_name = "__".join(filter(None, components))  # Filter None/empty strings
         dir_name = f"new_{dir_name}" 
         config_dir = output_dir / dir_name
@@ -227,14 +207,39 @@ class EvaluationConfig:
             yaml.dump(config_dict, f, default_flow_style=False, indent=2, sort_keys=False)
 
 
-def _load_yaml_config(path: str | Path) -> dict:
-    """Loads a YAML file. Returns an empty dict if it doesn't exist."""
+def _load_yaml_config(path: str | Path, _seen: Optional[set[Path]] = None) -> dict:
+    """Load a YAML config, including an optional relative ``extends`` file."""
+    config_path = Path(path).expanduser().resolve()
+    seen = set() if _seen is None else _seen
+    if config_path in seen:
+        raise ValueError(f"Circular YAML config reference detected at {config_path}")
+    seen.add(config_path)
+
     try:
-        with open(path, "r") as f:
-            return yaml.safe_load(f) or {}
+        with open(config_path, "r") as f:
+            config = yaml.safe_load(f) or {}
     except FileNotFoundError:
-        logger.warning(f"Config file not found at {path}. Using only command-line arguments and defaults.")
+        logger.warning(
+            f"Config file not found at {config_path}. "
+            "Using only command-line arguments and defaults."
+        )
         return {}
+
+    if not isinstance(config, dict):
+        raise ValueError(f"Expected a YAML mapping in {config_path}")
+
+    reference = config.pop("extends", None)
+    if reference is None:
+        return config
+    if not isinstance(reference, str):
+        raise ValueError(f"The 'extends' value in {config_path} must be a path string")
+
+    reference_path = Path(reference).expanduser()
+    if not reference_path.is_absolute():
+        reference_path = config_path.parent / reference_path
+    merged_config = _load_yaml_config(reference_path, seen)
+    merged_config.update(config)
+    return merged_config
 
 
 class EvaluationRunner:
@@ -373,283 +378,59 @@ class EvaluationRunner:
         # Set the press info in the config for saving to YAML
         self.config.press_init_command = str(press)
         logger.info(f"KV Press '{press_name}' setup.")
-    def _load_datasets_infinite_bench(self,task_data_dir: List[str]) -> pd.DataFrame:
-        """Load InfiniteBench datasets by individual configs.
-        
-        InfiniteBench requires loading each subset as a separate config.
-        
-        Returns:
-            Combined pandas DataFrame with all samples from subsets_to_run.
-        """
-        benchmark_name: str = "infinite_bench"
-        huggingface_dataset_id: str = "MaxJeblick/InfiniteBench"
-        print(f"Loading InfiniteBench datasets: {task_data_dir}")
-        dfs = []
-        
-        for subset in task_data_dir:
-            try:
-                from datasets import load_dataset
-                subset_dataset = load_dataset(huggingface_dataset_id, subset, split="test")
-                subset_df = subset_dataset.to_pandas()
-                subset_df["task"] = subset  # Ensure task column exists
-                dfs.append(subset_df)
-                print(f"  ✓ Loaded {len(subset_df)} samples from {subset}")
-            except Exception as subset_error:
-                print(f"  ❌ Failed to load {subset}: {str(subset_error)}")
-                continue
-        
-        if not dfs:
-            raise Exception("No InfiniteBench subsets could be loaded successfully")
-        
-        # Combine all subset DataFrames
-        import pandas as pd
-        combined_df = pd.concat(dfs, ignore_index=True)
-        print(f"Combined {len(combined_df)} total samples from {len(dfs)} subsets")
-        return combined_df
-    def _load_datasets_ruler32k(self, task_data_dir: List[str]) -> pd.DataFrame:
-        """Load Ruler datasets by individual configs.
 
-        Ruler requires loading each context length as a separate config.
-
-        Returns:
-            Combined pandas DataFrame with all samples from subsets_to_run.
-        """
-        print(f"Loading Ruler datasets: {task_data_dir}")
-        dfs = []
-        benchmark_name: str = "ruler32k"
-        huggingface_dataset_id: str = "xAlg-AI/att-hub-ruler-32k"
-        for subset in task_data_dir:
-            try:
-                from datasets import load_dataset
-
-                subset_dataset = load_dataset(
-                    huggingface_dataset_id, subset, split=subset
-                )
-                subset_df = subset_dataset.to_pandas()
-                # Add context length as a column for analysis
-                subset_df["context_length"] = 32768
-                dfs.append(subset_df)
-                print(
-                    f"  ✓ Loaded {len(subset_df)} samples from {subset} || context_length = 32768"
-                )
-            except Exception as subset_error:
-                print(f"  ❌ Failed to load {subset}: {str(subset_error)}")
-                continue
-
-        if not dfs:
-            raise Exception("No Ruler subsets could be loaded successfully")
-
-        # Combine all subset DataFrames
-        import pandas as pd
-
-        combined_df = pd.concat(dfs, ignore_index=True)
-        print(
-            f"Combined {len(combined_df)} total samples from {len(dfs)} subsets || context_length = 32768"
-        )
-        return combined_df
-
-    def _load_dataset_ruler64k(self, task: str) -> pd.DataFrame:
-        """Load one task from the cached Qwen-tokenized RULER 64K dataset."""
-        huggingface_dataset_id = DATASET_REGISTRY["ruler64k"]
-        dataset = load_dataset(
-            huggingface_dataset_id,
-            "65536",
-            split="test",
-        )
-
-        available_tasks = set(dataset.unique("task"))
-        if task not in available_tasks:
-            available = ", ".join(sorted(available_tasks))
-            raise ValueError(f"Unknown RULER 64K task {task!r}. Available tasks: {available}")
-
-        task_dataset = dataset.filter(lambda example: example["task"] == task)
-        task_df = task_dataset.to_pandas()
-        task_df["context_length"] = 65536
-        print(f"  ✓ Loaded {len(task_df)} samples from {task} || target context length = 65536")
-        return task_df
-
-    def _load_dataset_synthetic_kv(self, task: str) -> pd.DataFrame:
-        """Expand one compact synthetic-KV context into question/answer rows."""
-        if task != "64k":
-            raise ValueError(f"Unknown synthetic-KV configuration {task!r}; expected '64k'")
-
-        dataset = load_dataset(
-            DATASET_REGISTRY["synthetic_kv"],
-            split="test",
-        )
-        expanded_rows: list[dict[str, Any]] = []
-        for compact_row in dataset:
-            context = compact_row["context"]
-            questions = compact_row["questions"]
-            answers = compact_row["answers"]
-            if self.config.synthetic_kv_metadata_override:
-                _, separator, records = context.partition("Data records:")
-                if not separator:
-                    raise ValueError(
-                        "Synthetic-KV metadata override requires a 'Data records:' marker"
-                    )
-                context = SYNTHETIC_KV_CONTEXT_METADATA + records.lstrip("\n")
-            if self.config.synthetic_kv_prefix_mode == "strip":
-                strip_prefix = lambda value: re.sub(
-                    r"(?<![A-Z0-9])[KV]_([A-F0-9]{12})(?![A-Z0-9])",
-                    r"\1",
-                    str(value),
-                    flags=re.IGNORECASE,
-                )
-                context = strip_prefix(context)
-                questions = [strip_prefix(value) for value in questions]
-                answers = [strip_prefix(value) for value in answers]
-            if len(questions) != len(answers):
-                raise ValueError(
-                    f"Mismatched questions/answers for {compact_row['context_id']}: "
-                    f"{len(questions)} != {len(answers)}"
-                )
-
-            max_new_tokens = int(compact_row.get("max_new_tokens", 32))
-            for question, answer in zip(questions, answers):
-                expanded_rows.append(
-                    {
-                        "context_id": compact_row["context_id"],
-                        "context": context,
-                        "question": question,
-                        "answer": [answer],
-                        "task": "synthetic_kv_64k",
-                        "answer_prefix": "",
-                        "max_new_tokens": max_new_tokens,
-                        "context_length": int(compact_row.get("context_tokens", 65536)),
-                    }
-                )
-
-        if not expanded_rows:
-            raise ValueError("The synthetic-KV dataset contains no questions")
-
-        df = pd.DataFrame(expanded_rows)
-        print(
-            f"  ✓ Expanded {len(dataset)} compact context(s) into {len(df)} questions "
-            f"|| target context length = 65536"
-        )
-        return df
-     ### TODO : specially used for loft rag dataset
-    def _load_datasets(self, task_data_dir: List[str]) -> pd.DataFrame:
-        """Load LOFT RAG datasets from HuggingFace Hub.
-
-        Returns:
-            Combined pandas DataFrame with all samples from subsets_to_run.
-        """
-        
-        print(f"Loading LOFT RAG datasets: {task_data_dir}")
-        dfs: List[pd.DataFrame] = []
-
-        for subset in task_data_dir:
-            parts: List[str] = subset.split("_")
-            if len(parts) < 2:
-                raise ValueError(
-                    f"Invalid subset format: {subset} (expected: dataset_length)"
-                )
-
-            length: str = parts[-1]
-            dataset: str = "_".join(parts[:-1])
-            hf_dataset_id: str = f"f20180301/loft-rag-{dataset}-{length}"
-
-            dataset_dict = load_dataset(hf_dataset_id)
-
-            subset_dfs: List[pd.DataFrame] = []
-            for split_name in ["dev", "test"]:
-                if split_name in dataset_dict:
-                    split_df: pd.DataFrame = dataset_dict[split_name].to_pandas()
-                    split_df["split"] = split_name
-                    subset_dfs.append(split_df)
-
-            if not subset_dfs:
-                raise ValueError(f"No splits found for {subset} ({hf_dataset_id})")
-
-            subset_df: pd.DataFrame = pd.concat(subset_dfs, ignore_index=True)
-            subset_df["task"] = subset
-            dfs.append(subset_df)
-            print(f"  ✓ Loaded {len(subset_df)} samples from {subset}")
-
-        if not dfs:
-            raise ValueError("No LOFT RAG subsets could be loaded")
-
-        combined_df: pd.DataFrame = pd.concat(dfs, ignore_index=True)
-        print(f"Combined {len(combined_df)} total samples from {len(dfs)} subsets")
-
-        required_columns: List[str] = [
-            "context",
-            "question",
-            "answers",
-            "task",
-            "answer_prefix",
-            "max_new_tokens",
-        ]
-        missing_columns: List[str] = [
-            col for col in required_columns if col not in combined_df.columns
-        ]
-        if missing_columns:
-            raise ValueError(f"Missing required columns: {missing_columns}")
-
-        return combined_df
-    def _load_and_prepare_dataset(self,task_data_dir: Optional[str] = None):
+    def _load_and_prepare_dataset(self, task_data_dir: Optional[str] = None):
         """
         Loads the dataset specified in the config and applies sampling/filtering.
         """
         dataset_name = self.config.dataset
-        if dataset_name == "infinitebench":
-            try:
-                task_data_dir = [task_data_dir]
-                df = self._load_datasets_infinite_bench(task_data_dir)
-            except Exception as e:
-                logger.error(f"Failed to load InfiniteBench dataset: {e}")
-                raise
-        elif dataset_name == "loft":
-            try:
-                task_data_dir = [task_data_dir]
-                df = self._load_datasets(task_data_dir)
-            except Exception as e:
-                logger.error(f"Failed to load LOFT RAG dataset: {e}")
-                raise
-        elif dataset_name == "ruler32k":
-            try:
-                task_data_dir = [task_data_dir]
-                df = self._load_datasets_ruler32k(task_data_dir)
-            except Exception as e:
-                logger.error(f"Failed to load Ruler32k dataset: {e}")
-                raise
-        elif dataset_name == "ruler64k":
-            if task_data_dir is None:
-                raise ValueError("RULER 64K requires a task name in data_dir")
-            try:
-                df = self._load_dataset_ruler64k(task_data_dir)
-            except Exception as e:
-                logger.error(f"Failed to load RULER 64K task {task_data_dir!r}: {e}")
-                raise
-        elif dataset_name == "synthetic_kv":
-            if task_data_dir is None:
-                raise ValueError("Synthetic-KV requires a configuration name in data_dir")
-            try:
-                df = self._load_dataset_synthetic_kv(task_data_dir)
-            except Exception as e:
-                logger.error(f"Failed to load synthetic-KV configuration {task_data_dir!r}: {e}")
-                raise
-        else:
-        # data_dir = str(self.config.data_dir) if self.config.data_dir else None
-            data_dir = task_data_dir if task_data_dir is not None else (
-                str(self.config.data_dir) if self.config.data_dir else None
+        data_dir = task_data_dir
+        if data_dir is None and isinstance(self.config.data_dir, str):
+            data_dir = self.config.data_dir
+        try:
+            if dataset_name in {"loft", "synthetic_kv", "synthetic_kv_32k"}:
+                df = load_benchmark_dataset(
+                    dataset_name=dataset_name,
+                    task=data_dir,
+                    dataset_registry=DATASET_REGISTRY,
+                    synthetic_metadata_override=(
+                        self.config.synthetic_kv_metadata_override
+                    ),
+                )
+            else:
+                logger.info(
+                    "Loading dataset: %s (data_dir: %s)",
+                    DATASET_REGISTRY[dataset_name],
+                    data_dir,
+                )
+                df = load_dataset(
+                    DATASET_REGISTRY[dataset_name],
+                    data_dir=data_dir,
+                    split="test",
+                ).to_pandas()
+        except Exception:
+            logger.exception(
+                "Failed to load dataset=%s task=%r", dataset_name, data_dir
             )
-            logger.info(f"Loading dataset: {DATASET_REGISTRY[dataset_name]} (data_dir: {data_dir})")
-            df = load_dataset(DATASET_REGISTRY[dataset_name], data_dir=data_dir, split="test").to_pandas()
+            raise
         fraction = self.config.fraction
         if fraction < 1.0:
             original_len = len(df)
             df = df.sample(frac=fraction, random_state=self.config.seed)
-            logger.info(f"Sampled {len(df)} samples ({fraction:.2f}) from original {original_len} samples.")
+            logger.info(
+                f"Sampled {len(df)} samples ({fraction:.2f}) "
+                f"from original {original_len} samples."
+            )
 
         logger.info(f"Dataset loaded with {len(df)} entries.")
 
         # if we have needle in a haystack, we need to insert it in the context
         if self.config.dataset == "needle_in_haystack":
             df = insert_needle_in_haystack(
-                df, self.pipeline.tokenizer, self.config.max_context_length, self.config.needle_depth
+                df,
+                self.pipeline.tokenizer,
+                self.config.max_context_length,
+                self.config.needle_depth,
             )
 
         if isinstance(self.press, FinchPress):
@@ -658,7 +439,9 @@ class EvaluationRunner:
                 raise ValueError("FinchPress requires query_aware to be set to True")
             # FinchPress uses a delimiter token to separate context and question
             # So we need to update the tokenizer and the model embeddings.
-            logger.info("FinchPress detected, updating model and tokenizer with delimiter token.")
+            logger.info(
+                "FinchPress detected, updating model and tokenizer with delimiter token."
+            )
             self.press.update_model_and_tokenizer(self.pipeline.model, self.pipeline.tokenizer)  # type: ignore[attr-defined]
             df["context"] = df["context"] + self.press.delimiter_token  # type: ignore[attr-defined, index]
 

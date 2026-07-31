@@ -2,20 +2,6 @@
 
 # Evaluation
 
-For the completed LOFT 32K/128K and RULER 32K Qwen3-8B results, including the
-available non-quantized and INT8 comparisons, see
-[LOFT_RESULTS.md](LOFT_RESULTS.md).
-
-Intel-company-only presentations:
-
-- [LOFT_RESULTS_intel_company_only_intel.md](LOFT_RESULTS_intel_company_only_intel.md):
-  LOFT 32K and 128K, non-quantized versus INT8
-- [RULER32K_RESULTS_intel_company_only_intel.md](RULER32K_RESULTS_intel_company_only_intel.md):
-  RULER 32K completed non-quantized matrix
-- [SYNTHETIC_KV_RESULTS_intel_company_only_intel.md](SYNTHETIC_KV_RESULTS_intel_company_only_intel.md):
-  Synthetic-KV 64K, non-quantized versus NF4
-
-
 We support evaluation for all the presses implemented in the library, on a variety of popular benchmarks.
 
 ### Quick Start 🚀
@@ -23,28 +9,46 @@ We support evaluation for all the presses implemented in the library, on a varie
 
 Running evaluation is straightforward! Make sure you are in the `evaluation` directory, then:
 
-1. **Configure your evaluation** - Edit `evaluate_config.yaml` to specify your *method*, *press*, and *dataset*
+1. **Configure your evaluation** - Edit the global `evaluate_config.yaml`.
 2. **Run the evaluation** - Execute the script: ```python evaluate.py```
 
-The script will read from `evaluate_config.yaml` and run inference accordingly. 
+Model-running commands read `evaluate_config.yaml`. The active default is the
+non-quantized Synthetic-KV 32K native-context baseline. Local reference
+templates can be kept in `yml/`, which is intentionally ignored by Git.
 If you want, you can override the settings via command line, for instance:
 
 ```bash
 python evaluate.py --dataset loogle --data_dir shortdep_qa --model meta-llama/Meta-Llama-3.1-8B-Instruct --press_name expected_attention --compression_ratio 0.5
 ```
 
-or pass a custom configuration file:
-
-```bash
-python evaluate.py --config_file <your_config.yaml>
-```
-
-💡 Results (predictions & metrics) are automatically saved to the `output_dir` directory .
+💡 Results (predictions and metrics) are automatically saved to the configured
+`output_dir`. Repository configurations keep every generated run under
+`evaluation/results/`, with one subdirectory per experiment. This directory is
+ignored by Git so local predictions and logs are not accidentally committed.
 
 
 ### Configuration 
 
-Customize your evaluation by editing `evaluate_config.yaml`. This allows you to flexibly configure a variety of settings, like the `fraction` of dataset to use (for quick testing) and the model arguments (e.g. for scaling RoPE). For complete parameter details, see the `evaluation_config.yaml`
+Use `evaluate_config.yaml` as the single, self-contained global entry point.
+Change settings such as the dataset fraction or model arguments directly in
+this file. The ignored `yml/` directory is only for local reference copies.
+
+Memory-budget matrices use one shared runner and one constants module. After
+setting the matching dataset in `evaluate_config.yaml`, select a profile:
+
+```bash
+python run_matrix.py --profile synthetic-kv-64k
+```
+
+Profiles for LOFT, RULER, and Synthetic-KV are defined in
+`matrix_constants.py`. The same runner supports full matrices,
+`--baseline-only`, one `--memory-budget VALUE UNIT`, or one
+`--configuration-id` for Slurm arrays. Distributed jobs can additionally pass
+`--worker-id` and `--worker-count`.
+
+Dataset loading and benchmark-specific schema normalization are centralized in
+`benchmarks/loaders.py`. The evaluation runner calls its single dispatcher,
+then applies only shared sampling and model-dependent preparation.
 
 💡 Set `query_aware: true` to include the question in the context during compression. This enables query-aware compression as used in methods like SnapKV and FinchPress.
 
@@ -64,6 +68,7 @@ At the moment, we support the following standard popular benchmarks:
 - [longbench](benchmarks/longbench/README.md)([hf link](https://huggingface.co/datasets/Xnhyacinth/LongBench))
 - [longbench-v2](benchmarks/longbenchv2/README.md)([hf link](https://huggingface.co/datasets/simonjegou/LongBench-v2))
 - [Needle in a Haystack](benchmarks/needle_in_haystack/README.md)([hf link][Paul Graham's essays](https://huggingface.co/datasets/alessiodevoto/paul_graham_essays))
+- [Synthetic-KV](benchmarks/synthetic_kv/README.md)
 
 Each dataset directory is structured as follows:
 

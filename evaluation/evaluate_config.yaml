@@ -1,82 +1,37 @@
-# SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-output_dir: "./results_loft_qwen"
+# This is the only YAML file passed to model-running commands. Local reference
+# configurations under yml/ are intentionally excluded from Git.
+output_dir: "./results/results_synthetic_kv_32k_native_no_yarn"
 
-# Local Qwen model; compute nodes run with Hugging Face offline mode.
 model: "/home/rethinkingai-self/25m0820/kvpress/Qwen3-8B"
-# dataset: "infinitebench"
-# data_dir:
-#   - "kv_retrieval"
-#   - "code_run"
-#   - "math_find"
-#   - "longdialogue_qa_eng"
-
-                              # see DATASET_REGISTRY in evaluate_registry.py
-# dataset: "ruler32k"
-# data_dir:
-  # - "cwe"
-  # - "fwe"
-  # - "niah_multikey_1"
-  # - "niah_multikey_2"
-  # - "niah_multikey_3"
-  # - "niah_multiquery"
-  # - "niah_multivalue"
-  # - "niah_single_1"
-  # - "niah_single_2"
-  # - "niah_single_3"
-  # - "qa_1"
-  # - "qa_2"
-  # - "vt"  
-# model: "/home/rethinkingai-self/25m0820/kvpress/meta-llama/Llama-3.1-8B-Instruct"
-dataset: "loft"                              # see DATASET_REGISTRY in evaluate_registry.py
+dataset: "synthetic_kv_32k"
 data_dir:
-  - "nq_32k"
-  - "nq_128k"
-  - "hotpotqa_32k"
-  - "hotpotqa_128k"
-  - "musique_32k"
-  - "musique_128k"
-  - "qampari_32k"
-  - "qampari_128k"
-  - "quest_32k"
-  - "quest_128k"
+  - "32k"
 
-# dataset: "ruler"                                  # see DATASET_REGISTRY in evaluate_registry.py
-# data_dir: "4096"                                  # Subdirectory of the dataset (if applicable) else leave "null"
-# dataset: "longbench"
-# data_dir: null
-# data_dir: 
-#   - "lsht"
-#   - "passage_count"
-#   - "passage_retrieval_en"
-#   - "passage_retrieval_zh"
-#   - "lcc"
-  # - "repobench-p"
-  # - "passage_count"
-  # - "narrativeqa"
-#   - "qasper"
-#   - "multifieldqa_en"
-#   - "multifieldqa_zh"
-#   - "hotpotqa"
-#   - "2wikimqa"                               # Subdirectory of the dataset (if applicable) else leave it will run for all subdirectories
-press_name: "kvzip"                               # see PRESS_REGISTRY in evaluate_registry.py
-compression_ratio: 0.01                            # KVzip baseline; budgeted runs override this dynamically
-key_channel_compression_ratio: null               # For ThinKPress and ComposedPress (0.0 to 1.0)
-threshold: null                                   # For DMSPress
-memory_budget: null                                # Context KV-cache budget; null disables budget-based compression
-memory_budget_unit: "GB"                          # Supported units: MB or GB (decimal)
-fraction: 1.0                                     # Fraction of dataset to evaluate (0.0 to 1.0), for quick testing
-max_new_tokens: 100                              # Maximum new tokens to generate (null = use dataset default)
-max_context_length: null                          # Maximum context length (null = use model maximum)
-query_aware: false                                # Whether to include question in context for query-aware compression
-needle_depth: null                                # Depth (int or list of ints) percentage of the needle in the haystack (0 to 100), only for needle_in_haystack dataset
+press_name: "no_press"
+compression_ratio: 0.0
+memory_budget: null
+memory_budget_unit: "MB"
 
-device: "cuda:0"  # Device to use (null = auto-detect, "cuda:0", "cpu", etc.)
-fp8: false        # Whether to use FP8 quantization (FineGrainedFP8Config() from transformers)
+fraction: 1.0
+max_new_tokens: null
+max_context_length: 32768
+query_aware: false
+needle_depth: null
+synthetic_kv_metadata_override: false
+seed: 42
 
-# You can add any model kwargs here.
+device: "cuda:0"
+fp8: false
+int8: false
+int4: false
 model_kwargs:
-  attn_implementation: null  
+  attn_implementation: null
   dtype: "auto"
-  
+  rope_scaling: null
+  rope_parameters:
+    rope_type: "default"
+    rope_theta: 1000000.0
+  max_position_embeddings: 32768

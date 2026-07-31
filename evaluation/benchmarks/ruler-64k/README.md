@@ -24,7 +24,7 @@ The compute-node job uses the same `HF_HOME` with Hugging Face offline mode.
 
 ## Evaluation
 
-The dedicated configuration is `evaluation/evaluate_ruler64k_config.yaml`.
+The dedicated configuration is `evaluation/yml/evaluate_ruler64k_config.yaml`.
 Each array task evaluates one RULER task six times:
 
 1. KVzip reference run with compression ratio `0.01`.
