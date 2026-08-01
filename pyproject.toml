@@ -31,6 +31,8 @@ eval = [
     "bert-score>=0.3.13,<0.4",
     "jieba>=0.42.1",
     "fuzzywuzzy>=0.18.0",
+    "openai>=1.40",
+    "tiktoken>=0.7",
 ]
 flash-attn = [
     "flash-attn"

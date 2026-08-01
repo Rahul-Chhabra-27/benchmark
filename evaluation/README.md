@@ -4,6 +4,9 @@
 
 We support evaluation for all the presses implemented in the library, on a variety of popular benchmarks.
 
+The same repository also contains a standalone Recursive Language Model baseline
+for vanilla-vs-RLM long-context comparisons. See the [RLM benchmark guide](rlm/README.md).
+
 ### Quick Start 🚀
 > Evaluation requires some additional packages. You can install them with `uv sync --extra eval`
 
