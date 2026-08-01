@@ -5,7 +5,7 @@
 All completed dataset benchmarks, memory-budget sweeps, model variants, metrics,
 and downloadable prediction files are available here:
 
-**[Open the benchmark results dashboard](https://rahul-chhabra-27.github.io/benchmark-dashboard/)**
+**[Open the benchmark results dashboard](https://effortless-cupcake-470e7a.netlify.app/)**
 
 This repository contains the benchmark implementation and supporting documentation.
 The dashboard is the canonical view of the combined results across LOFT, RULER,
