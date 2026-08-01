@@ -1,6 +1,15 @@
-# Qwen3-8B — LongBench Benchmark Results
+# Qwen3-8B — Long-Context Benchmark Results
 
-This README tracks benchmark results for **Qwen3-8B** evaluated on the [LongBench](https://github.com/THUDM/LongBench) dataset across different memory budgets (e.g., KV-cache / GPU memory constraints).
+## Interactive results dashboard
+
+All completed dataset benchmarks, memory-budget sweeps, model variants, metrics,
+and downloadable prediction files are available here:
+
+**[Open the benchmark results dashboard](https://rahul-chhabra-27.github.io/benchmark-dashboard/)**
+
+This repository contains the benchmark implementation and supporting documentation.
+The dashboard is the canonical view of the combined results across LOFT, RULER,
+Synthetic-KV, and LongBench evaluations.
 
 See [Ruler-32k-README.md](Ruler-32k-README.md) for the separate Qwen3-8B RULER-32K results table.
 
