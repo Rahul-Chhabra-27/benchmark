@@ -3,6 +3,7 @@
 
 
 import logging
+from types import SimpleNamespace
 
 import pytest
 import torch
@@ -15,6 +16,64 @@ from tests.fixtures import danube_500m_model  # noqa: F401
 from tests.fixtures import kv_press_danube_pipeline  # noqa: F401
 from tests.fixtures import unit_test_model  # noqa: F401
 from tests.fixtures import kv_press_llama3_2_flash_attn_pipeline, kv_press_unit_test_pipeline  # noqa: F401
+
+
+def make_memory_budget_pipeline():
+    pipe = KVPressTextGenerationPipeline.__new__(KVPressTextGenerationPipeline)
+    pipe.model = SimpleNamespace(
+        config=SimpleNamespace(
+            num_hidden_layers=32,
+            num_key_value_heads=8,
+            num_attention_heads=32,
+            hidden_size=4096,
+        ),
+        dtype=torch.bfloat16,
+    )
+    return pipe
+
+
+@pytest.mark.parametrize(
+    ("budget", "unit", "expected_tokens", "expected_bytes"),
+    [
+        (200, "MB", 1525, 200_000_000),
+        (1, "GB", 7629, 1_000_000_000),
+    ],
+)
+def test_compute_token_budget_from_memory(budget, unit, expected_tokens, expected_bytes):
+    pipe = make_memory_budget_pipeline()
+
+    token_budget, bytes_per_token, budget_bytes = pipe._compute_token_budget_from_memory(budget, unit)
+
+    assert bytes_per_token == 131_072
+    assert token_budget == expected_tokens
+    assert budget_bytes == expected_bytes
+
+
+@pytest.mark.parametrize(
+    ("budget", "unit"),
+    [(0, "MB"), (-1, "GB"), (1, "invalid"), (1, "MiB"), (1, "GiB")],
+)
+def test_compute_token_budget_rejects_invalid_budget(budget, unit):
+    pipe = make_memory_budget_pipeline()
+
+    with pytest.raises(ValueError):
+        pipe._compute_token_budget_from_memory(budget, unit)
+
+
+@pytest.mark.parametrize(
+    ("context_tokens", "token_budget", "expected_retained", "expected_ratio"),
+    [
+        (10_000, 1_525, 1_525, 0.8475),
+        (1_000, 1_525, 1_000, 0.0),
+    ],
+)
+def test_compute_context_compression_ratio(context_tokens, token_budget, expected_retained, expected_ratio):
+    retained_tokens, compression_ratio = KVPressTextGenerationPipeline._compute_context_compression_ratio(
+        context_tokens, token_budget
+    )
+
+    assert retained_tokens == expected_retained
+    assert compression_ratio == pytest.approx(expected_ratio)
 
 
 def test_pipeline(kv_press_unit_test_pipeline, caplog):  # noqa: F811

@@ -14,11 +14,14 @@ import pandas as pd
 import torch
 import yaml
 from benchmarks.needle_in_haystack.utils import insert_needle_in_haystack
+from benchmarks.loaders import load_benchmark_dataset
 from datasets import load_dataset
 from evaluate_registry import DATASET_REGISTRY, PRESS_REGISTRY, SCORER_REGISTRY
 from fire import Fire
 from tqdm import tqdm
-from transformers import FineGrainedFP8Config, Pipeline, pipeline
+from transformers import BitsAndBytesConfig, FineGrainedFP8Config, Pipeline, pipeline
+from verify_int8_model import verify_int8_model
+from verify_int4_model import verify_int4_model
 
 from kvpress import (
     ComposedPress,
@@ -32,6 +35,14 @@ from kvpress import (
 )
 
 logger = logging.getLogger(__name__)
+
+def _reference_for_log(df: pd.DataFrame, index: Any) -> Any:
+    """Return a reference value without assuming one dataset schema."""
+    reference_column = next(
+        (column for column in ("answer", "answers") if column in df.columns),
+        None,
+    )
+    return df.loc[index, reference_column] if reference_column else "<unavailable>"
 
 
 @dataclass
@@ -50,12 +61,14 @@ class EvaluationConfig:
     head_compression_ratio: Optional[float] = None
     threshold: Optional[float] = None
     memory_budget: Optional[float] = None
+    memory_budget_unit: str = "GB"
     # Dataset and generation parameters
     fraction: float = 1.0
     max_new_tokens: Optional[int] = None
     max_context_length: Optional[int] = None
     query_aware: bool = False
     needle_depth: Optional[int] = None
+    synthetic_kv_metadata_override: bool = False
 
     # Decoding parameters
     compression_interval: Optional[int] = None
@@ -77,6 +90,8 @@ class EvaluationConfig:
 
     # Quantization
     fp8: bool = False
+    int8: bool = False
+    int4: bool = False
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -101,14 +116,23 @@ class EvaluationConfig:
         # Validate fraction
         assert 0.0 < self.fraction <= 1.0, f"fraction must be between 0.0 and 1.0, got {self.fraction}"
 
+        if self.memory_budget is not None:
+            assert self.memory_budget > 0, f"memory_budget must be positive, got {self.memory_budget}"
+            self.memory_budget_unit = self.memory_budget_unit.upper()
+            assert self.memory_budget_unit in {"MB", "GB"}, (
+                f"memory_budget_unit must be MB or GB, got {self.memory_budget_unit}"
+            )
+
         # Initialize model_kwargs if None
         if self.model_kwargs is None:
             self.model_kwargs = {}
 
+        enabled_quantization_modes = sum([self.fp8, self.int8, self.int4])
+        assert enabled_quantization_modes <= 1, "Only one of fp8, int8, or int4 may be enabled"
+
         if self.dataset == "needle_in_haystack":
             assert self.needle_depth is not None, "needle_depth must be set for needle_in_haystack"
             assert self.max_context_length is not None, "max_context_length must be set for needle_in_haystack"
-
     def get_results_dir(self, output_dir: Path,data_dir: Optional[str] = None) -> Path:
         """
         Generates the unique save directory and filenames based on configuration parameters.
@@ -145,30 +169,26 @@ class EvaluationConfig:
         elif self.head_compression_ratio is not None:
             components[-1] = f"{self.head_compression_ratio:.2f}"
         if self.memory_budget is not None:
-            components.append(f"memory_budget{self.memory_budget:.1f}GB")
+            components.append(f"memory_budget{self.memory_budget:g}{self.memory_budget_unit}")
         if self.fraction < 1.0:
             components.append(f"fraction{self.fraction:.3f}")
         if self.max_context_length is not None:
             components.append(f"max_context{self.max_context_length}")
+        if self.int8:
+            components.append("int8")
+        if self.int4:
+            components.append("int4_nf4")
         if self.query_aware:
             components.append("query_aware")
         if self.key_channel_compression_ratio is not None:
             components.append(f"key_channel_cr{self.key_channel_compression_ratio:.2f}")
         if self.needle_depth is not None and self.dataset == "needle_in_haystack":
             components.append(f"needle_depth{self.needle_depth}")
-
         dir_name = "__".join(filter(None, components))  # Filter None/empty strings
         dir_name = f"new_{dir_name}" 
         config_dir = output_dir / dir_name
 
-        # Make sure the directory does not exist, if it does, add a number to the end
-        # This is to avoid overwriting results
-        if config_dir.exists():
-            i = 1
-            while (config_dir / f"{i}").exists():
-                i += 1
-            config_dir = config_dir / f"{i}"
-
+        # Use a deterministic directory so interrupted matrix runs can resume.
         config_dir.mkdir(parents=True, exist_ok=True)
         return config_dir
 
@@ -187,14 +207,39 @@ class EvaluationConfig:
             yaml.dump(config_dict, f, default_flow_style=False, indent=2, sort_keys=False)
 
 
-def _load_yaml_config(path: str | Path) -> dict:
-    """Loads a YAML file. Returns an empty dict if it doesn't exist."""
+def _load_yaml_config(path: str | Path, _seen: Optional[set[Path]] = None) -> dict:
+    """Load a YAML config, including an optional relative ``extends`` file."""
+    config_path = Path(path).expanduser().resolve()
+    seen = set() if _seen is None else _seen
+    if config_path in seen:
+        raise ValueError(f"Circular YAML config reference detected at {config_path}")
+    seen.add(config_path)
+
     try:
-        with open(path, "r") as f:
-            return yaml.safe_load(f) or {}
+        with open(config_path, "r") as f:
+            config = yaml.safe_load(f) or {}
     except FileNotFoundError:
-        logger.warning(f"Config file not found at {path}. Using only command-line arguments and defaults.")
+        logger.warning(
+            f"Config file not found at {config_path}. "
+            "Using only command-line arguments and defaults."
+        )
         return {}
+
+    if not isinstance(config, dict):
+        raise ValueError(f"Expected a YAML mapping in {config_path}")
+
+    reference = config.pop("extends", None)
+    if reference is None:
+        return config
+    if not isinstance(reference, str):
+        raise ValueError(f"The 'extends' value in {config_path} must be a path string")
+
+    reference_path = Path(reference).expanduser()
+    if not reference_path.is_absolute():
+        reference_path = config_path.parent / reference_path
+    merged_config = _load_yaml_config(reference_path, seen)
+    merged_config.update(config)
+    return merged_config
 
 
 class EvaluationRunner:
@@ -249,6 +294,13 @@ class EvaluationRunner:
         handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
         logger.addHandler(handler)
         logger.setLevel(log_level)
+
+        # Surface progress emitted inside the pipeline and press implementations.
+        # These loggers are outside this module's namespace, so attaching the
+        # same handler here keeps long prefilling/compression phases observable.
+        kvpress_logger = logging.getLogger("kvpress")
+        kvpress_logger.addHandler(handler)
+        kvpress_logger.setLevel(log_level)
 
     def _setup_directories(self) -> Path:
         """
@@ -326,145 +378,59 @@ class EvaluationRunner:
         # Set the press info in the config for saving to YAML
         self.config.press_init_command = str(press)
         logger.info(f"KV Press '{press_name}' setup.")
-    def _load_datasets_ruler32k(self, task_data_dir: List[str]) -> pd.DataFrame:
-        """Load Ruler datasets by individual configs.
 
-        Ruler requires loading each context length as a separate config.
-
-        Returns:
-            Combined pandas DataFrame with all samples from subsets_to_run.
-        """
-        print(f"Loading Ruler datasets: {task_data_dir}")
-        dfs = []
-        benchmark_name: str = "ruler32k"
-        huggingface_dataset_id: str = "xAlg-AI/att-hub-ruler-32k"
-        for subset in task_data_dir:
-            try:
-                from datasets import load_dataset
-
-                subset_dataset = load_dataset(
-                    huggingface_dataset_id, subset, split=subset
-                )
-                subset_df = subset_dataset.to_pandas()
-                # Add context length as a column for analysis
-                subset_df["context_length"] = 32768
-                dfs.append(subset_df)
-                print(
-                    f"  ✓ Loaded {len(subset_df)} samples from {subset} || context_length = 32768"
-                )
-            except Exception as subset_error:
-                print(f"  ❌ Failed to load {subset}: {str(subset_error)}")
-                continue
-
-        if not dfs:
-            raise Exception("No Ruler subsets could be loaded successfully")
-
-        # Combine all subset DataFrames
-        import pandas as pd
-
-        combined_df = pd.concat(dfs, ignore_index=True)
-        print(
-            f"Combined {len(combined_df)} total samples from {len(dfs)} subsets || context_length = 32768"
-        )
-        return combined_df
-     ### TODO : specially used for loft rag dataset
-    def _load_datasets(self, task_data_dir: List[str]) -> pd.DataFrame:
-        """Load LOFT RAG datasets from HuggingFace Hub.
-
-        Returns:
-            Combined pandas DataFrame with all samples from subsets_to_run.
-        """
-        
-        print(f"Loading LOFT RAG datasets: {task_data_dir}")
-        dfs: List[pd.DataFrame] = []
-
-        for subset in task_data_dir:
-            parts: List[str] = subset.split("_")
-            if len(parts) < 2:
-                raise ValueError(
-                    f"Invalid subset format: {subset} (expected: dataset_length)"
-                )
-
-            length: str = parts[-1]
-            dataset: str = "_".join(parts[:-1])
-            hf_dataset_id: str = f"f20180301/loft-rag-{dataset}-{length}"
-
-            dataset_dict = load_dataset(hf_dataset_id)
-
-            subset_dfs: List[pd.DataFrame] = []
-            for split_name in ["dev", "test"]:
-                if split_name in dataset_dict:
-                    split_df: pd.DataFrame = dataset_dict[split_name].to_pandas()
-                    split_df["split"] = split_name
-                    subset_dfs.append(split_df)
-
-            if not subset_dfs:
-                raise ValueError(f"No splits found for {subset} ({hf_dataset_id})")
-
-            subset_df: pd.DataFrame = pd.concat(subset_dfs, ignore_index=True)
-            subset_df["task"] = subset
-            dfs.append(subset_df)
-            print(f"  ✓ Loaded {len(subset_df)} samples from {subset}")
-
-        if not dfs:
-            raise ValueError("No LOFT RAG subsets could be loaded")
-
-        combined_df: pd.DataFrame = pd.concat(dfs, ignore_index=True)
-        print(f"Combined {len(combined_df)} total samples from {len(dfs)} subsets")
-
-        required_columns: List[str] = [
-            "context",
-            "question",
-            "answers",
-            "task",
-            "answer_prefix",
-            "max_new_tokens",
-        ]
-        missing_columns: List[str] = [
-            col for col in required_columns if col not in combined_df.columns
-        ]
-        if missing_columns:
-            raise ValueError(f"Missing required columns: {missing_columns}")
-
-        return combined_df
-    def _load_and_prepare_dataset(self,task_data_dir: Optional[str] = None):
+    def _load_and_prepare_dataset(self, task_data_dir: Optional[str] = None):
         """
         Loads the dataset specified in the config and applies sampling/filtering.
         """
         dataset_name = self.config.dataset
-        if dataset_name == "loft":
-            try:
-                task_data_dir = [task_data_dir]
-                df = self._load_datasets(task_data_dir)
-            except Exception as e:
-                logger.error(f"Failed to load LOFT RAG dataset: {e}")
-                raise
-        elif dataset_name == "ruler32k":
-            try:
-                task_data_dir = [task_data_dir]
-                df = self._load_datasets_ruler32k(task_data_dir)
-            except Exception as e:
-                logger.error(f"Failed to load Ruler32k dataset: {e}")
-                raise
-        else:
-        # data_dir = str(self.config.data_dir) if self.config.data_dir else None
-            data_dir = task_data_dir if task_data_dir is not None else (
-                str(self.config.data_dir) if self.config.data_dir else None
+        data_dir = task_data_dir
+        if data_dir is None and isinstance(self.config.data_dir, str):
+            data_dir = self.config.data_dir
+        try:
+            if dataset_name in {"loft", "synthetic_kv", "synthetic_kv_32k"}:
+                df = load_benchmark_dataset(
+                    dataset_name=dataset_name,
+                    task=data_dir,
+                    dataset_registry=DATASET_REGISTRY,
+                    synthetic_metadata_override=(
+                        self.config.synthetic_kv_metadata_override
+                    ),
+                )
+            else:
+                logger.info(
+                    "Loading dataset: %s (data_dir: %s)",
+                    DATASET_REGISTRY[dataset_name],
+                    data_dir,
+                )
+                df = load_dataset(
+                    DATASET_REGISTRY[dataset_name],
+                    data_dir=data_dir,
+                    split="test",
+                ).to_pandas()
+        except Exception:
+            logger.exception(
+                "Failed to load dataset=%s task=%r", dataset_name, data_dir
             )
-            logger.info(f"Loading dataset: {DATASET_REGISTRY[dataset_name]} (data_dir: {data_dir})")
-            df = load_dataset(DATASET_REGISTRY[dataset_name], data_dir=data_dir, split="test").to_pandas()
+            raise
         fraction = self.config.fraction
         if fraction < 1.0:
             original_len = len(df)
             df = df.sample(frac=fraction, random_state=self.config.seed)
-            logger.info(f"Sampled {len(df)} samples ({fraction:.2f}) from original {original_len} samples.")
+            logger.info(
+                f"Sampled {len(df)} samples ({fraction:.2f}) "
+                f"from original {original_len} samples."
+            )
 
         logger.info(f"Dataset loaded with {len(df)} entries.")
 
         # if we have needle in a haystack, we need to insert it in the context
         if self.config.dataset == "needle_in_haystack":
             df = insert_needle_in_haystack(
-                df, self.pipeline.tokenizer, self.config.max_context_length, self.config.needle_depth
+                df,
+                self.pipeline.tokenizer,
+                self.config.max_context_length,
+                self.config.needle_depth,
             )
 
         if isinstance(self.press, FinchPress):
@@ -473,7 +439,9 @@ class EvaluationRunner:
                 raise ValueError("FinchPress requires query_aware to be set to True")
             # FinchPress uses a delimiter token to separate context and question
             # So we need to update the tokenizer and the model embeddings.
-            logger.info("FinchPress detected, updating model and tokenizer with delimiter token.")
+            logger.info(
+                "FinchPress detected, updating model and tokenizer with delimiter token."
+            )
             self.press.update_model_and_tokenizer(self.pipeline.model, self.pipeline.tokenizer)  # type: ignore[attr-defined]
             df["context"] = df["context"] + self.press.delimiter_token  # type: ignore[attr-defined, index]
 
@@ -498,6 +466,22 @@ class EvaluationRunner:
         if self.config.fp8:
             model_kwargs["quantization_config"] = FineGrainedFP8Config()
             logger.info("FP8 quantization enabled.")
+
+        if self.config.int8:
+            model_kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_8bit=True,
+                llm_int8_threshold=6.0,
+            )
+            logger.info("INT8 bitsandbytes quantization enabled.")
+
+        if self.config.int4:
+            model_kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.bfloat16,
+                bnb_4bit_use_double_quant=True,
+            )
+            logger.info("4-bit bitsandbytes NF4 quantization enabled.")
 
         if isinstance(self.press, ObservedAttentionPress):
             model_kwargs["attn_implementation"] = "eager"
@@ -524,6 +508,13 @@ class EvaluationRunner:
             pipeline_kwargs["device"] = device
         self.pipeline = pipeline("kv-press-text-generation", **pipeline_kwargs)
 
+        if self.config.int8:
+            int8_verification = verify_int8_model(self.pipeline.model)
+            logger.info("INT8 model verification passed: %s", int8_verification)
+        if self.config.int4:
+            int4_verification = verify_int4_model(self.pipeline.model)
+            logger.info("4-bit NF4 model verification passed: %s", int4_verification)
+
         self.pipeline.model.eval()
         logger.info("Model pipeline loaded.")
 
@@ -534,6 +525,34 @@ class EvaluationRunner:
         """
 
         self.df["predicted_answer"] = None  # type: ignore[index]
+        total_questions = len(self.df)
+        completed_questions = 0
+
+        if self.config.memory_budget is None:
+            budget_label = f"reference-ratio-{self.config.compression_ratio:.4f}"
+        else:
+            budget_label = f"{self.config.memory_budget:g}-{self.config.memory_budget_unit}"
+
+        def log_question_completed(index: Any, predicted_answer: Any) -> None:
+            """Emit one immediately flushed progress record per completed question."""
+            nonlocal completed_questions
+            completed_questions += 1
+            prediction_preview = " ".join(str(predicted_answer).split())
+            if len(prediction_preview) > 160:
+                prediction_preview = f"{prediction_preview[:157]}..."
+            reference = _reference_for_log(self.df, index)
+            logger.info(
+                "Question completed %d/%d (%.1f%%) | task=%s | budget=%s | "
+                "row=%s | reference=%r | prediction=%r",
+                completed_questions,
+                total_questions,
+                100.0 * completed_questions / total_questions,
+                self.config.data_dir,
+                budget_label,
+                index,
+                reference,
+                prediction_preview,
+            )
 
         if isinstance(self.press, DecodingPress):
             logger.info("DecodingPress detected, running inference for each context-question pair.")
@@ -551,6 +570,7 @@ class EvaluationRunner:
                     max_context_length=self.config.max_context_length,
                 )
                 self.df.loc[index, "predicted_answer"] = output["answer"]  # type: ignore[union-attr]
+                log_question_completed(index, output["answer"])  # type: ignore[index, union-attr]
                 torch.cuda.empty_cache()  # Clear CUDA cache to free up memory
 
         else:
@@ -567,6 +587,13 @@ class EvaluationRunner:
                 # Use max_new_tokens from config, or fallback to dataset's default for the task
                 max_new_tokens = self.config.max_new_tokens or df_group["max_new_tokens"].iloc[0]
                 answer_prefix = df_group["answer_prefix"].iloc[0]
+                group_indices = list(df_group.index)
+
+                def log_group_question_completed(
+                    question_number: int, question_total: int, predicted_answer: str
+                ) -> None:
+                    del question_total  # The outer counter also covers datasets with multiple contexts.
+                    log_question_completed(group_indices[question_number - 1], predicted_answer)
 
                 output = self.pipeline(  # type: ignore[misc]
                     context,
@@ -575,13 +602,19 @@ class EvaluationRunner:
                     press=self.press,
                     max_new_tokens=max_new_tokens,
                     max_context_length=self.config.max_context_length,
-                    memory_budget = self.config.memory_budget
+                    memory_budget=self.config.memory_budget,
+                    memory_budget_unit=self.config.memory_budget_unit,
+                    question_progress_callback=log_group_question_completed,
                 )
                 self.df.loc[df_group.index, "predicted_answer"] = output["answers"]  # type: ignore[union-attr]
-                # Store the actual compression ratio used (if the press has one)
-                self.df.loc[df_group.index, "compression_ratio"] = (
-                    self.press.compression_ratio if self.press is not None else 0.0  # type: ignore[attr-defined]
-                )  # type: ignore[union-attr, attr-defined]
+                budget_stats = getattr(self.pipeline, "last_memory_budget_stats", None)
+                if budget_stats is not None:
+                    for column, value in budget_stats.items():
+                        self.df.loc[df_group.index, column] = value
+                else:
+                    self.df.loc[df_group.index, "compression_ratio"] = (
+                        self.press.compression_ratio if self.press is not None else 0.0  # type: ignore[attr-defined]
+                    )  # type: ignore[union-attr, attr-defined]
                 torch.cuda.empty_cache()  # Clear CUDA cache to free up memory
 
         logger.info("Inference completed.")
@@ -616,13 +649,228 @@ class EvaluationRunner:
         scorer = SCORER_REGISTRY[dataset_name]
 
         logger.info(f"Calculating metrics for dataset: {dataset_name}")
-        metrics = scorer(self.df)  # type: ignore[call-arg]
+        score = scorer(self.df)  # type: ignore[call-arg]
+        metrics = score if isinstance(score, dict) else {"score": score}
+
+        if "compression_ratio" in self.df.columns:
+            # A shared context may have multiple questions. Count that context once in the summary.
+            context_stats = self.df.drop_duplicates(subset=["context"])
+            metrics["average_compression_ratio"] = float(context_stats["compression_ratio"].mean())
+            metrics["average_original_context_tokens"] = float(context_stats["context_tokens"].mean())
+            metrics["average_retained_context_tokens"] = float(
+                context_stats["retained_context_tokens"].mean()
+            )
+            metrics["kv_memory_per_token_kb"] = float(context_stats["kv_memory_per_token_kb"].iloc[0])
+            metrics["average_retained_kv_memory_mb"] = float(
+                context_stats["retained_kv_memory_mb"].mean()
+            )
+            metrics["average_retained_kv_memory_gb"] = float(
+                context_stats["retained_kv_memory_gb"].mean()
+            )
+            metrics["average_uncompressed_kv_memory_mb"] = float(
+                context_stats["uncompressed_kv_memory_mb"].mean()
+            )
+            metrics["average_uncompressed_kv_memory_gb"] = float(
+                context_stats["uncompressed_kv_memory_gb"].mean()
+            )
+
+            if self.config.memory_budget is not None:
+                metrics["memory_budget"] = self.config.memory_budget
+                metrics["memory_budget_unit"] = self.config.memory_budget_unit
+                metrics["token_budget"] = int(context_stats["token_budget"].iloc[0])
+
+            logger.info(
+                "Average retained context KV memory: "
+                f"{metrics['average_retained_kv_memory_mb']:.2f} MB "
+                f"({metrics['average_retained_kv_memory_gb']:.4f} GB); "
+                f"average compression ratio: {metrics['average_compression_ratio']:.6f}"
+            )
 
         with open(str(save_filename), "w") as f:
             json.dump(metrics, f, indent=4)  # Pretty print JSON
 
         logger.info(f"Metrics saved to {save_filename}")
         logger.info(f"Metrics:\n{json.dumps(metrics, indent=2)}")
+        return metrics
+
+    def _save_results_readme(self, readme_filename: Path, task: str, metrics: Dict[str, Any]):
+        """Write a self-contained summary as soon as one task finishes."""
+        if self.config.memory_budget is None:
+            if self.config.press_name == "no_press":
+                configuration = "True no-press baseline (full KV cache)"
+            else:
+                configuration = (
+                    f"{self.config.press_name} baseline "
+                    f"(compression ratio {self.config.compression_ratio:.4f})"
+                )
+        else:
+            configuration = f"KVzip memory budget: {self.config.memory_budget:g} {self.config.memory_budget_unit}"
+
+        metric_rows = "\n".join(
+            f"| `{name}` | {value:.6f} |" if isinstance(value, float) else f"| `{name}` | {value} |"
+            for name, value in metrics.items()
+        )
+        contents = f"""# {self.config.dataset.upper()} Benchmark Result
+
+- Model: `{self.config.model}`
+- Task: `{task}`
+- Configuration: {configuration}
+- Press: `{self.config.press_name}`
+- Dataset fraction: `{self.config.fraction}`
+
+## Metrics and KV-cache statistics
+
+| Field | Value |
+|---|---:|
+{metric_rows}
+
+Files in this directory:
+
+- `predictions.csv`: per-sample predictions and KV-cache statistics
+- `metrics.json`: machine-readable metrics and averages
+- `config.yaml`: complete evaluation configuration
+"""
+        readme_filename.write_text(contents)
+        logger.info(f"Result summary saved to {readme_filename}")
+
+    def _reset_reused_model_state(self) -> None:
+        """Clear state that must not leak between matrix configurations."""
+        if self.pipeline is None:
+            return
+
+        self.pipeline.last_memory_budget_stats = None  # type: ignore[attr-defined]
+        language_model = (
+            self.pipeline.model.model.language_model
+            if hasattr(self.pipeline.model.model, "language_model")
+            else self.pipeline.model.model
+        )
+        for layer in language_model.layers:
+            layer.self_attn.masked_key_indices = None
+
+        if self.press is not None and hasattr(self.press, "_reset_internal_parameters"):
+            self.press._reset_internal_parameters()  # type: ignore[attr-defined]
+
+        self._setup_deterministic_seeds()
+        torch.cuda.empty_cache()
+
+    def run_memory_budget_matrix(
+        self,
+        tasks: list[str],
+        memory_budgets: list[tuple[float, str]],
+        baseline_compression_ratio: float = 0.01,
+        include_baseline: bool = True,
+        baseline_press_name: Optional[str] = None,
+    ) -> None:
+        """Run multiple tasks and KV budgets while loading the model only once."""
+        if not tasks:
+            raise ValueError("At least one task is required for a matrix evaluation")
+
+        output_dir = self._setup_directories()
+        budget_press_name = self.config.press_name
+        if baseline_press_name is not None and baseline_press_name != "no_press":
+            raise ValueError("baseline_press_name currently supports only 'no_press'")
+        self.config.compression_ratio = baseline_compression_ratio
+        self.config.memory_budget = None
+        # Model construction does not require a press. Individual compressed
+        # configurations initialize their press immediately before inference.
+        self.press = None
+        self._setup_model_pipeline()
+
+        configurations: list[tuple[Optional[float], str]] = list(memory_budgets)
+        if include_baseline:
+            configurations.insert(0, (None, "MB"))
+
+        for task in tasks:
+            logger.info(f"=== Starting matrix task: '{task}' ===")
+            pending_configurations: list[tuple[Optional[float], str, Path]] = []
+
+            for memory_budget, memory_budget_unit in configurations:
+                self.config.data_dir = task
+                is_no_press_baseline = memory_budget is None and baseline_press_name == "no_press"
+                self.config.press_name = "no_press" if is_no_press_baseline else budget_press_name
+                self.config.compression_ratio = 0.0 if is_no_press_baseline else baseline_compression_ratio
+                self.config.memory_budget = memory_budget
+                self.config.memory_budget_unit = memory_budget_unit.upper()
+                results_dir = self.config.get_results_dir(output_dir, data_dir=task)
+                predictions_filename = results_dir / "predictions.csv"
+                metrics_filename = results_dir / "metrics.json"
+
+                if predictions_filename.exists() and metrics_filename.exists():
+                    logger.info(
+                        f"Completed results already exist for task={task}, "
+                        f"memory_budget={memory_budget}{memory_budget_unit}; skipping."
+                    )
+                    continue
+                pending_configurations.append((memory_budget, memory_budget_unit, results_dir))
+
+            if not pending_configurations:
+                logger.info(f"All matrix configurations already exist for task '{task}'; skipping dataset load.")
+                continue
+
+            # Dataset text is loaded and prepared once, then copied before every
+            # inference configuration because scoring mutates predicted_answer.
+            self.config.memory_budget = None
+            self.config.memory_budget_unit = "MB"
+            self.config.compression_ratio = baseline_compression_ratio
+            self.config.press_name = budget_press_name
+            self._load_and_prepare_dataset(task_data_dir=task)
+            source_df = self.df.copy(deep=True)  # type: ignore[union-attr]
+
+            for memory_budget, memory_budget_unit, results_dir in pending_configurations:
+                self.config.data_dir = task
+                is_no_press_baseline = memory_budget is None and baseline_press_name == "no_press"
+                self.config.press_name = "no_press" if is_no_press_baseline else budget_press_name
+                self.config.compression_ratio = 0.0 if is_no_press_baseline else baseline_compression_ratio
+                self.config.memory_budget = memory_budget
+                self.config.memory_budget_unit = memory_budget_unit.upper()
+                if is_no_press_baseline:
+                    # True full-attention reference: do not construct, configure,
+                    # enter, or otherwise invoke a press for this inference.
+                    self.press = None
+                    self.config.press_init_command = None
+                    logger.info("Using true no-press baseline (press=None; setup skipped)")
+                else:
+                    self._setup_press()
+                self._reset_reused_model_state()
+                self.df = source_df.copy(deep=True)
+
+                if memory_budget is None:
+                    if is_no_press_baseline:
+                        logger.info(f"Running task={task}, true no-press baseline")
+                    else:
+                        logger.info(
+                            f"Running task={task}, {budget_press_name} reference "
+                            f"compression_ratio={baseline_compression_ratio:.4f}"
+                        )
+                else:
+                    logger.info(
+                        f"Running task={task}, logical KVzip budget="
+                        f"{memory_budget:g}{self.config.memory_budget_unit}"
+                    )
+
+                predictions_filename = results_dir / "predictions.csv"
+                metrics_filename = results_dir / "metrics.json"
+                config_filename = results_dir / "config.yaml"
+                readme_filename = results_dir / "README.md"
+
+                self._run_inference()
+                self._save_results(predictions_filename)
+                metrics = self._calculate_and_save_metrics(metrics_filename)
+                self.config.save_config(config_filename)
+                self._save_results_readme(readme_filename, task, metrics)
+                logger.info(
+                    f"Completed task={task}, memory_budget="
+                    f"{memory_budget if memory_budget is not None else 'reference'}"
+                    f"{self.config.memory_budget_unit if memory_budget is not None else ''}"
+                )
+
+            self.df = None
+            del source_df
+            torch.cuda.empty_cache()
+            logger.info(f"=== Completed matrix task: '{task}' ===")
+
+        self.config.press_name = budget_press_name
+        logger.info("Memory-budget matrix evaluation completed successfully with one model load.")
 
     def run_evaluation(self):
         """
@@ -658,6 +906,7 @@ class EvaluationRunner:
             predictions_filename = results_dir / "predictions.csv"
             metrics_filename = results_dir / "metrics.json"
             config_filename = results_dir / "config.yaml"
+            readme_filename = results_dir / "README.md"
 
             if predictions_filename.exists() and metrics_filename.exists():
                 logger.info(
@@ -670,8 +919,9 @@ class EvaluationRunner:
 
             self._run_inference()
             self._save_results(predictions_filename)
-            self._calculate_and_save_metrics(metrics_filename)
+            metrics = self._calculate_and_save_metrics(metrics_filename)
             self.config.save_config(config_filename)
+            self._save_results_readme(readme_filename, task, metrics)
             logger.info(f"=== Completed task: '{task}' ===")
         logger.info("Evaluation run completed successfully.")
 

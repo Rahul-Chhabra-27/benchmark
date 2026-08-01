@@ -1,0 +1,12 @@
+INT8 preflight passed: torch=2.11.0+cu128, CUDA=12.8, bitsandbytes=0.49.2, GPU=NVIDIA A100-SXM4-80GB, probe=1.0
+Starting LOFT 32K INT8 worker=3; Qwen loads once
+Worker 3/5 assigned tasks: qampari_32k
+max_context_length not provided, using model's max length: 131072
+Loading LOFT RAG datasets: ['qampari_32k']
+  ✓ Loaded 70 samples from qampari_32k
+Combined 70 total samples from 1 subsets
+max_context_length not provided, using model's max length: 131072
+max_context_length not provided, using model's max length: 131072
+max_context_length not provided, using model's max length: 131072
+max_context_length not provided, using model's max length: 131072
+max_context_length not provided, using model's max length: 131072

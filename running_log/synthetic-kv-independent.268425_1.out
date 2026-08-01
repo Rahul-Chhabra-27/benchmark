@@ -1,0 +1,5 @@
+CUDA preflight passed: torch=2.11.0+cu128, CUDA=12.8, GPU=NVIDIA L40S, probe=1.0
+Starting isolated Synthetic-KV configuration 1/5
+Independent configuration 1: 512MB; fraction=1.0
+max_context_length not provided, using model's max length: 131072
+  ✓ Expanded 1 compact context(s) into 2340 questions || target context length = 65536

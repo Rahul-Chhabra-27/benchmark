@@ -1,6 +1,11 @@
 # Qwen3-8B — LongBench Benchmark Results
 
 This README tracks benchmark results for **Qwen3-8B** evaluated on the [LongBench](https://github.com/THUDM/LongBench) dataset across different memory budgets (e.g., KV-cache / GPU memory constraints).
+
+See [Ruler-32k-README.md](Ruler-32k-README.md) for the separate Qwen3-8B RULER-32K results table.
+
+See [Loft-Qwen3-8B-README.md](Loft-Qwen3-8B-README.md) for the combined Qwen3-8B LOFT 32K and 128K results.
+
 # LongBench statistics
 
 | Task          | Task Type | Eval metric |     Avg len                            |Language | \#Sample |
@@ -112,5 +117,3 @@ This README tracks benchmark results for **Qwen3-8B** evaluated on the [LongBenc
 | passage_retrieval_zh | 99.0| 99.0| 99.0| 99.0| 99.00 |
 | lcc | 64.87| 64.87| 64.87| 64.87| 64.87 |
 | repobench-p | 60.41| 60.24| 60.25| 60.25| 60.25 |
-
-

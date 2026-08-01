@@ -88,3 +88,41 @@ This document reports benchmark results for **meta-llama/Llama-3.1-8B and Qwen3-
 | qampari_128k* | 0.0000 | 0.0000 | 0.1021 | 110 |
 | quest_32k* | 0.1857 | 0.3571 | 0.3976 | 70 |
 | quest_128k* | 0.0000 | 0.0000 | 0.0212 | 110 |
+
+---
+## Qwen3-8B
+
+The Qwen runs use KVzip, BF16 KV entries, decimal memory units (`1 MB = 1,000,000 bytes`), and the model's
+actual tokenized context length. For Qwen3-8B, each context token uses `147.456 KB` across the complete KV cache.
+
+### Completed 32K Aggregate
+
+These averages are weighted by the number of evaluated examples (470 total across the five tasks).
+
+| Run | Avg. Original Context | Avg. Retained Context | Avg. Compression | Avg. Retained KV | Avg. Original KV |
+|---|---:|---:|---:|---:|---:|
+| KVzip baseline (`0.01`) | 47,218 tokens | 46,746 tokens | 0.0100 | 6.893 GB | 6.963 GB |
+| 256 MB budget | 47,218 tokens | 1,736 tokens | 0.9632 | 255.984 MB | 6.963 GB |
+
+### KVzip Baseline: Compression Ratio 0.01
+
+| Dataset | EM | Subspan EM | F1/Coverage* | Samples | Avg. Original Context | Avg. Retained Context | Avg. Compression | Retained KV | Original KV |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| nq_32k | 0.4818 | 0.6455 | 0.5796 | 110 | 44,955 tokens | 44,505 tokens | 0.0100 | 6.563 GB | 6.629 GB |
+| hotpotqa_32k | 0.4545 | 0.5727 | 0.5762 | 110 | 49,679 tokens | 49,182 tokens | 0.0100 | 7.252 GB | 7.325 GB |
+| musique_32k | 0.2091 | 0.2455 | 0.3105 | 110 | 47,969 tokens | 47,489 tokens | 0.0100 | 7.003 GB | 7.073 GB |
+| qampari_32k* | 0.2286 | 0.2857 | 0.5376 | 70 | 48,548 tokens | 48,062 tokens | 0.0100 | 7.087 GB | 7.159 GB |
+| quest_32k* | 0.1429 | 0.3286 | 0.3905 | 70 | 44,399 tokens | 43,955 tokens | 0.0100 | 6.481 GB | 6.547 GB |
+
+### Memory Budget: 256 MB
+
+The 256 MB budget retains 1,736 Qwen KV tokens per context. Contexts and compression ratios are measured after
+Qwen tokenization; question and generated-answer tokens are outside the configured context KV budget.
+
+| Dataset | EM | Subspan EM | F1/Coverage* | Samples | Avg. Original Context | Retained Context | Avg. Compression | Retained KV | Original KV |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| nq_32k | 0.0182 | 0.0273 | 0.0283 | 110 | 44,955 tokens | 1,736 tokens | 0.9614 | 255.984 MB | 6.629 GB |
+| hotpotqa_32k | 0.0545 | 0.0909 | 0.0866 | 110 | 49,679 tokens | 1,736 tokens | 0.9651 | 255.984 MB | 7.325 GB |
+| musique_32k | 0.0000 | 0.0000 | 0.0000 | 110 | 47,969 tokens | 1,736 tokens | 0.9638 | 255.984 MB | 7.073 GB |
+| qampari_32k* | 0.0000 | 0.0000 | 0.0057 | 70 | 48,548 tokens | 1,736 tokens | 0.9642 | 255.984 MB | 7.159 GB |
+| quest_32k* | 0.0000 | 0.0000 | 0.0000 | 70 | 44,399 tokens | 1,736 tokens | 0.9609 | 255.984 MB | 6.547 GB |

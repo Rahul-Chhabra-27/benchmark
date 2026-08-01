@@ -1,5 +1,6 @@
 dev_notebooks/
-results*/
+results/
+results_new/
 reports/
 .DS_Store
 uv.lock
@@ -30,6 +31,8 @@ wheels/
 share/python-wheels/
 evaluation/loogle/results/
 evaluation/results/
+evaluation/result_readmes/
+evaluation/yml/
 evaluation/results_new/
 *.egg-info/
 .installed.cfg
