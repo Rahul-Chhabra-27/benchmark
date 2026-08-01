@@ -33,6 +33,15 @@ SYNTHETIC_EXTENDED_BUDGETS: tuple[Budget, ...] = (
     (8192.0, "MB"),
 )
 
+SYNTHETIC_ALL_BUDGETS: tuple[Budget, ...] = (
+    (256.0, "MB"),
+    (512.0, "MB"),
+    (1.0, "GB"),
+    (2.0, "GB"),
+    (4.0, "GB"),
+    (8.0, "GB"),
+)
+
 RULER_32K_BUDGETS: tuple[Budget, ...] = (
     (0.2, "GB"),
     (0.4, "GB"),
@@ -64,6 +73,7 @@ class MatrixProfile:
     exact_tasks: Optional[tuple[str, ...]] = None
     required_fraction: Optional[float] = None
     required_press_name: Optional[str] = None
+    required_model_basename: Optional[str] = None
     require_non_quantized: bool = False
     validate_native_rope: bool = False
     yarn_factor: Optional[float] = None
@@ -156,6 +166,30 @@ MATRIX_PROFILES: dict[str, MatrixProfile] = {
         validate_native_rope=True,
         expected_max_position_embeddings=32768,
     ),
+    "synthetic-kv-32k-native-all-budgets": MatrixProfile(
+        dataset="synthetic_kv_32k",
+        memory_budgets=SYNTHETIC_ALL_BUDGETS,
+        baseline_compression_ratio=0.01,
+        baseline_press_name="no_press",
+        exact_tasks=("32k",),
+        required_fraction=1.0,
+        required_press_name="kvzip",
+        require_non_quantized=True,
+        validate_native_rope=True,
+        expected_max_position_embeddings=32768,
+    ),
+    "synthetic-kv-32k-native-awq-all-budgets": MatrixProfile(
+        dataset="synthetic_kv_32k",
+        memory_budgets=SYNTHETIC_ALL_BUDGETS,
+        baseline_compression_ratio=0.01,
+        baseline_press_name="no_press",
+        exact_tasks=("32k",),
+        required_fraction=1.0,
+        required_press_name="kvzip",
+        required_model_basename="Qwen3-8B-AWQ",
+        validate_native_rope=True,
+        expected_max_position_embeddings=32768,
+    ),
     "synthetic-kv-64k-yarn2": MatrixProfile(
         dataset="synthetic_kv",
         memory_budgets=(),
@@ -165,6 +199,30 @@ MATRIX_PROFILES: dict[str, MatrixProfile] = {
         required_fraction=1.0,
         required_press_name="no_press",
         require_non_quantized=True,
+        yarn_factor=2.0,
+        expected_max_position_embeddings=65536,
+    ),
+    "synthetic-kv-64k-yarn2-all-budgets": MatrixProfile(
+        dataset="synthetic_kv",
+        memory_budgets=SYNTHETIC_ALL_BUDGETS,
+        baseline_compression_ratio=0.01,
+        baseline_press_name="no_press",
+        exact_tasks=("64k",),
+        required_fraction=1.0,
+        required_press_name="kvzip",
+        require_non_quantized=True,
+        yarn_factor=2.0,
+        expected_max_position_embeddings=65536,
+    ),
+    "synthetic-kv-64k-yarn2-awq-all-budgets": MatrixProfile(
+        dataset="synthetic_kv",
+        memory_budgets=SYNTHETIC_ALL_BUDGETS,
+        baseline_compression_ratio=0.01,
+        baseline_press_name="no_press",
+        exact_tasks=("64k",),
+        required_fraction=1.0,
+        required_press_name="kvzip",
+        required_model_basename="Qwen3-8B-AWQ",
         yarn_factor=2.0,
         expected_max_position_embeddings=65536,
     ),

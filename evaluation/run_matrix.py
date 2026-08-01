@@ -80,6 +80,15 @@ def validate_tasks(config: EvaluationConfig, profile: MatrixProfile) -> list[str
             f"Profile requires press_name={profile.required_press_name!r}, "
             f"got {config.press_name!r}"
         )
+    if (
+        profile.required_model_basename is not None
+        and config.model.rstrip("/").split("/")[-1]
+        != profile.required_model_basename
+    ):
+        raise ValueError(
+            f"Profile requires model basename={profile.required_model_basename!r}, "
+            f"got {config.model!r}"
+        )
     if profile.require_non_quantized and (config.int8 or config.int4 or config.fp8):
         raise ValueError("Profile requires a non-quantized model configuration")
     if profile.validate_native_rope:

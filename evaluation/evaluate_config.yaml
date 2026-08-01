@@ -3,21 +3,21 @@
 
 # This is the only YAML file passed to model-running commands. Local reference
 # configurations under yml/ are intentionally excluded from Git.
-output_dir: "./results/results_synthetic_kv_32k_native_no_yarn"
+output_dir: "./results/results_synthetic_kv_64k_yarn2_awq_all_budgets"
 
-model: "/home/rethinkingai-self/25m0820/kvpress/Qwen3-8B"
-dataset: "synthetic_kv_32k"
+model: "/home/rethinkingai-self/25m0820/kvpress/Qwen3-8B-AWQ"
+dataset: "synthetic_kv"
 data_dir:
-  - "32k"
+  - "64k"
 
-press_name: "no_press"
-compression_ratio: 0.0
+press_name: "kvzip"
+compression_ratio: 0.01
 memory_budget: null
 memory_budget_unit: "MB"
 
 fraction: 1.0
 max_new_tokens: null
-max_context_length: 32768
+max_context_length: 65536
 query_aware: false
 needle_depth: null
 synthetic_kv_metadata_override: false
@@ -30,8 +30,9 @@ int4: false
 model_kwargs:
   attn_implementation: null
   dtype: "auto"
-  rope_scaling: null
-  rope_parameters:
-    rope_type: "default"
+  rope_scaling:
+    rope_type: "yarn"
     rope_theta: 1000000.0
-  max_position_embeddings: 32768
+    factor: 2.0
+    original_max_position_embeddings: 32768
+  max_position_embeddings: 65536
