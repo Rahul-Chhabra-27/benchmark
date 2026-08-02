@@ -1,7 +1,7 @@
 #!/bin/bash
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-# Qwen3-32B BF16 requires two 48 GB L40 GPUs with device_map=auto.
+# Qwen3-32B-AWQ runs on one DGX GPU.
 # The matrix includes the no-compression baseline plus 256 MB, 512 MB, 1 GB,
 # 2 GB, and 4 GB KV-memory budgets.
 #SBATCH --job-name=loft128k-qwen3-32b-yarn4-dgx
@@ -10,9 +10,9 @@
 #SBATCH --exclude=cn13-dgx
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --gres=gpu:2
-#SBATCH --mem=128G
+#SBATCH --cpus-per-task=8
+#SBATCH --gres=gpu:1
+#SBATCH --mem=64G
 #SBATCH --time=72:00:00
 #SBATCH --output=/home/rethinkingai-self/25m0820/logs/%x-%j.out
 #SBATCH --error=/home/rethinkingai-self/25m0820/logs/%x-%j.err
