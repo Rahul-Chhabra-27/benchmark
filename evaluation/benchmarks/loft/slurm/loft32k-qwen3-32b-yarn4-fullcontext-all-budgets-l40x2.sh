@@ -13,8 +13,8 @@
 #SBATCH --gres=gpu:2
 #SBATCH --mem=128G
 #SBATCH --time=48:00:00
-#SBATCH --output=/home/rethinkingai-self/25m0820/kvpress/running_log/%x-%j.out
-#SBATCH --error=/home/rethinkingai-self/25m0820/kvpress/running_log/%x-%j.err
+#SBATCH --output=/home/rethinkingai-self/25m0820/logs/%x-%j.out
+#SBATCH --error=/home/rethinkingai-self/25m0820/logs/%x-%j.err
 
 set -euo pipefail
 
@@ -22,7 +22,7 @@ BASE_DIR=/home/rethinkingai-self/25m0820
 EVAL_DIR="${BASE_DIR}/kvpress/evaluation"
 PYTHON="${BASE_DIR}/miniconda3/envs/kvpress/bin/python"
 
-mkdir -p "${BASE_DIR}/kvpress/running_log"
+mkdir -p "${BASE_DIR}/logs"
 cd "${EVAL_DIR}"
 
 export HF_HOME="${BASE_DIR}/.cache/huggingface"
