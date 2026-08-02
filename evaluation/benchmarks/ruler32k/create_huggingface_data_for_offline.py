@@ -1,38 +1,21 @@
-import os
-import shutil
+# SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
 from datasets import load_dataset
 
-huggingface_dataset_id = "xAlg-AI/att-hub-ruler-32k"
+from evaluation.benchmarks.registry import DATASET_REGISTRY, RULER_32K_TASKS
 
-subsets_to_run = [
-    "cwe",
-    "fwe",
-    "niah_multikey_1",
-    "niah_multikey_2",
-    "niah_multikey_3",
-    "niah_multiquery",
-    "niah_multivalue",
-    "niah_single_1",
-    "niah_single_2",
-    "niah_single_3",
-    "qa_1",
-    "qa_2",
-    "vt",
-]
+huggingface_dataset_id = DATASET_REGISTRY["ruler32k"]
 
-base_cache_dir = os.path.expanduser(
-    "~/.cache/huggingface/datasets/xAlg-AI___att-hub-ruler-32k"
-)
-
-for subset in subsets_to_run:
-    # config_name == split == subset for this repo, so no data_dir/rename logic needed
+for subset in RULER_32K_TASKS:
     ds = load_dataset(
         huggingface_dataset_id,
-        subset,
-        split=subset,
+        data_dir=subset,
+        split="test",
     )
     print(f"cached: {subset} ({len(ds)} samples)")
- 
-print("Done. Cache folders are named after the config (e.g. 'cwe', 'fwe', ...) "
-      "which is exactly what load_dataset(repo, subset, split=subset) expects to find.")
- 
+
+print(
+    "Done. Cache folders are named after the config (e.g. 'cwe', 'fwe', ...) "
+    "which is exactly what the shared benchmark loader expects to find."
+)

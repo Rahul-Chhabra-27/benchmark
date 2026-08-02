@@ -42,9 +42,10 @@ ls "$HF_HOME/hub" | grep -i qwen3   # expect: models--Qwen--Qwen3-8B
 ```
 
 ## Step 3 — Download benchmark data (login node)
-niah + multikey are generated in-process (no download). Only longbench_v2 needs data:
+niah + multikey are generated in-process (no download). Shared Hugging Face
+benchmarks such as LongBench-v2 and RULER-32K use the same cache as KVPress:
 ```bash
-bash evaluation/rlm/slurm/download_data.sh  # writes ~/rlm_data/longbench_v2.jsonl
+bash evaluation/rlm/slurm/download_data.sh  # populates $HF_HOME
 ```
 
 ## Step 4 — Smoke test (40-min GPU job)
@@ -71,7 +72,8 @@ Runs {niah, multikey, longbench_v2} × {vanilla, rlm}, 50 examples each. Resumab
 re-submitting skips examples already in the JSONL.
 
 Outputs:
-- `evaluation/results/rlm/<condition>/<task>.<mode>.Qwen_Qwen3-8B.jsonl` — per-example records
+- `evaluation/results/rlm/<condition>/<run>/checkpoint.jsonl` — resumable per-example records
+- `evaluation/results/rlm/<condition>/<run>/{predictions.csv,metrics.json,config.yaml}` — common artifacts
 - `evaluation/results/rlm/<condition>/transcripts/<task>.rlm.Qwen_Qwen3-8B/<id>.json` — full RLM transcripts
 
 ## Step 6 — Score

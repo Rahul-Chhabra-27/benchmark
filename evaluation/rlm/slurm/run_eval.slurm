@@ -28,7 +28,7 @@ for TASK in niah multikey longbench_v2; do
   for MODE in vanilla rlm; do
     echo "=== $(date '+%F %T') :: $TASK / $MODE ==="
     python -m evaluation.rlm.run_benchmark \
-      --task "$TASK" --mode "$MODE" \
+      --dataset "$TASK" --mode "$MODE" \
       --limit 50 --rpm 30 --out evaluation/results/rlm \
       || echo "WARN: $TASK/$MODE failed, continuing with next cell"
   done

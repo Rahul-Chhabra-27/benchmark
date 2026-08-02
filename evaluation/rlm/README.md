@@ -1,9 +1,10 @@
 # RLM Long-Context Benchmarking
 
 This directory contains the Recursive Language Model (RLM) harness within the
-unified KVPress evaluation repository. Run all commands below from the repository
-root. Generated output is shared under `evaluation/results/rlm/` and is ignored by
-Git.
+KVPress evaluation repository. RLM and KVPress keep independent inference paths,
+but share the benchmark registry, Hugging Face loaders, canonical scorers, and
+the `predictions.csv` / `metrics.json` / `config.yaml` result contract. Run all
+commands below from the repository root.
 
 ## Goal
 Quantify how Recursive Language Models (RLMs) compare against vanilla long-context
@@ -44,11 +45,18 @@ download datasets (HF) ──> /scratch ──> SLURM array job: run_benchmark.p
    tiny smoke tests (API orchestration is light, but per Prajna policy real runs
    must not live on login nodes).
 4. **Data prep** (login node, since it needs internet):
-   - `bash evaluation/rlm/slurm/download_data.sh` — pulls benchmark datasets to `$RLM_DATA_DIR`
+   - `bash evaluation/rlm/slurm/download_data.sh` — caches the shared LongBench-v2 and RULER-32K datasets under `$HF_HOME`
    - Synthetic NIAH/RULER-style tasks are generated locally (no download needed).
-5. **Smoke test** (~5 examples): `python -m evaluation.rlm.run_benchmark --task niah --limit 5 --mode both`
+5. **Smoke test** (~5 examples): `python -m evaluation.rlm.run_benchmark --dataset niah --limit 5 --mode both`
+   For a shared RULER-32K subset, use:
+   `python -m evaluation.rlm.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5 --mode both`.
 6. **Full runs**: `sbatch evaluation/rlm/slurm/run_eval.slurm`.
 7. **Score & compare**: `python -m evaluation.rlm.score evaluation/results/rlm`
+
+Each RLM run gets its own directory containing a resumable `checkpoint.jsonl`,
+the three common result artifacts, and (for RLM mode) per-example transcripts.
+The canonical benchmark scorer—not the harness's quick progress-match flag—is
+the authoritative score in `metrics.json`.
 
 ## Benchmarks (in order of effort)
 | Benchmark | Why | Source |

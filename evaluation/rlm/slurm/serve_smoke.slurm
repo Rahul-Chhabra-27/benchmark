@@ -72,7 +72,7 @@ echo
 # --- 1-example RLM + vanilla smoke on synthetic NIAH (generated locally, no HF dataset needed) ---
 echo "=== $(date '+%F %T') :: NIAH limit=1, mode=both ==="
 python -m evaluation.rlm.run_benchmark \
-  --task niah --mode both --limit 1 \
+  --dataset niah --mode both --limit 1 \
   --base-url "http://localhost:$PORT/v1" \
   --root-model "$MODEL" --sub-model "$MODEL" \
   --no-think \

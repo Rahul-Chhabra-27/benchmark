@@ -7,21 +7,21 @@ import random
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, List
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 import torch
 import yaml
-from benchmarks.needle_in_haystack.utils import insert_needle_in_haystack
 from benchmarks.loaders import load_benchmark_dataset
-from datasets import load_dataset
+from benchmarks.needle_in_haystack.utils import insert_needle_in_haystack
+from benchmarks.results import score_prediction_frame
 from evaluate_registry import DATASET_REGISTRY, PRESS_REGISTRY, SCORER_REGISTRY
 from fire import Fire
 from tqdm import tqdm
 from transformers import BitsAndBytesConfig, FineGrainedFP8Config, Pipeline, pipeline
-from verify_int8_model import verify_int8_model
 from verify_int4_model import verify_int4_model
+from verify_int8_model import verify_int8_model
 
 from kvpress import (
     ComposedPress,
@@ -35,6 +35,7 @@ from kvpress import (
 )
 
 logger = logging.getLogger(__name__)
+
 
 def _reference_for_log(df: pd.DataFrame, index: Any) -> Any:
     """Return a reference value without assuming one dataset schema."""
@@ -119,9 +120,10 @@ class EvaluationConfig:
         if self.memory_budget is not None:
             assert self.memory_budget > 0, f"memory_budget must be positive, got {self.memory_budget}"
             self.memory_budget_unit = self.memory_budget_unit.upper()
-            assert self.memory_budget_unit in {"MB", "GB"}, (
-                f"memory_budget_unit must be MB or GB, got {self.memory_budget_unit}"
-            )
+            assert self.memory_budget_unit in {
+                "MB",
+                "GB",
+            }, f"memory_budget_unit must be MB or GB, got {self.memory_budget_unit}"
 
         # Initialize model_kwargs if None
         if self.model_kwargs is None:
@@ -133,7 +135,8 @@ class EvaluationConfig:
         if self.dataset == "needle_in_haystack":
             assert self.needle_depth is not None, "needle_depth must be set for needle_in_haystack"
             assert self.max_context_length is not None, "max_context_length must be set for needle_in_haystack"
-    def get_results_dir(self, output_dir: Path,data_dir: Optional[str] = None) -> Path:
+
+    def get_results_dir(self, output_dir: Path, data_dir: Optional[str] = None) -> Path:
         """
         Generates the unique save directory and filenames based on configuration parameters.
 
@@ -149,7 +152,7 @@ class EvaluationConfig:
         """
         if data_dir is None:
             data_dir = self.data_dir
-        
+
         # Convert list to string for directory name
         if isinstance(data_dir, list):
             data_dir_str = "__".join(data_dir)
@@ -185,7 +188,7 @@ class EvaluationConfig:
         if self.needle_depth is not None and self.dataset == "needle_in_haystack":
             components.append(f"needle_depth{self.needle_depth}")
         dir_name = "__".join(filter(None, components))  # Filter None/empty strings
-        dir_name = f"new_{dir_name}" 
+        dir_name = f"new_{dir_name}"
         config_dir = output_dir / dir_name
 
         # Use a deterministic directory so interrupted matrix runs can resume.
@@ -219,10 +222,7 @@ def _load_yaml_config(path: str | Path, _seen: Optional[set[Path]] = None) -> di
         with open(config_path, "r") as f:
             config = yaml.safe_load(f) or {}
     except FileNotFoundError:
-        logger.warning(
-            f"Config file not found at {config_path}. "
-            "Using only command-line arguments and defaults."
-        )
+        logger.warning(f"Config file not found at {config_path}. " "Using only command-line arguments and defaults.")
         return {}
 
     if not isinstance(config, dict):
@@ -388,39 +388,20 @@ class EvaluationRunner:
         if data_dir is None and isinstance(self.config.data_dir, str):
             data_dir = self.config.data_dir
         try:
-            if dataset_name in {"loft", "synthetic_kv", "synthetic_kv_32k"}:
-                df = load_benchmark_dataset(
-                    dataset_name=dataset_name,
-                    task=data_dir,
-                    dataset_registry=DATASET_REGISTRY,
-                    synthetic_metadata_override=(
-                        self.config.synthetic_kv_metadata_override
-                    ),
-                )
-            else:
-                logger.info(
-                    "Loading dataset: %s (data_dir: %s)",
-                    DATASET_REGISTRY[dataset_name],
-                    data_dir,
-                )
-                df = load_dataset(
-                    DATASET_REGISTRY[dataset_name],
-                    data_dir=data_dir,
-                    split="test",
-                ).to_pandas()
-        except Exception:
-            logger.exception(
-                "Failed to load dataset=%s task=%r", dataset_name, data_dir
+            df = load_benchmark_dataset(
+                dataset_name=dataset_name,
+                task=data_dir,
+                dataset_registry=DATASET_REGISTRY,
+                synthetic_metadata_override=(self.config.synthetic_kv_metadata_override),
             )
+        except Exception:
+            logger.exception("Failed to load dataset=%s task=%r", dataset_name, data_dir)
             raise
         fraction = self.config.fraction
         if fraction < 1.0:
             original_len = len(df)
             df = df.sample(frac=fraction, random_state=self.config.seed)
-            logger.info(
-                f"Sampled {len(df)} samples ({fraction:.2f}) "
-                f"from original {original_len} samples."
-            )
+            logger.info(f"Sampled {len(df)} samples ({fraction:.2f}) " f"from original {original_len} samples.")
 
         logger.info(f"Dataset loaded with {len(df)} entries.")
 
@@ -439,9 +420,7 @@ class EvaluationRunner:
                 raise ValueError("FinchPress requires query_aware to be set to True")
             # FinchPress uses a delimiter token to separate context and question
             # So we need to update the tokenizer and the model embeddings.
-            logger.info(
-                "FinchPress detected, updating model and tokenizer with delimiter token."
-            )
+            logger.info("FinchPress detected, updating model and tokenizer with delimiter token.")
             self.press.update_model_and_tokenizer(self.pipeline.model, self.pipeline.tokenizer)  # type: ignore[attr-defined]
             df["context"] = df["context"] + self.press.delimiter_token  # type: ignore[attr-defined, index]
 
@@ -542,8 +521,7 @@ class EvaluationRunner:
                 prediction_preview = f"{prediction_preview[:157]}..."
             reference = _reference_for_log(self.df, index)
             logger.info(
-                "Question completed %d/%d (%.1f%%) | task=%s | budget=%s | "
-                "row=%s | reference=%r | prediction=%r",
+                "Question completed %d/%d (%.1f%%) | task=%s | budget=%s | " "row=%s | reference=%r | prediction=%r",
                 completed_questions,
                 total_questions,
                 100.0 * completed_questions / total_questions,
@@ -646,33 +624,20 @@ class EvaluationRunner:
             The base filename (e.g., CSV path) to derive the JSON path from.
         """
         dataset_name = self.config.dataset
-        scorer = SCORER_REGISTRY[dataset_name]
-
         logger.info(f"Calculating metrics for dataset: {dataset_name}")
-        score = scorer(self.df)  # type: ignore[call-arg]
-        metrics = score if isinstance(score, dict) else {"score": score}
+        metrics = score_prediction_frame(dataset_name, self.df)
 
         if "compression_ratio" in self.df.columns:
             # A shared context may have multiple questions. Count that context once in the summary.
             context_stats = self.df.drop_duplicates(subset=["context"])
             metrics["average_compression_ratio"] = float(context_stats["compression_ratio"].mean())
             metrics["average_original_context_tokens"] = float(context_stats["context_tokens"].mean())
-            metrics["average_retained_context_tokens"] = float(
-                context_stats["retained_context_tokens"].mean()
-            )
+            metrics["average_retained_context_tokens"] = float(context_stats["retained_context_tokens"].mean())
             metrics["kv_memory_per_token_kb"] = float(context_stats["kv_memory_per_token_kb"].iloc[0])
-            metrics["average_retained_kv_memory_mb"] = float(
-                context_stats["retained_kv_memory_mb"].mean()
-            )
-            metrics["average_retained_kv_memory_gb"] = float(
-                context_stats["retained_kv_memory_gb"].mean()
-            )
-            metrics["average_uncompressed_kv_memory_mb"] = float(
-                context_stats["uncompressed_kv_memory_mb"].mean()
-            )
-            metrics["average_uncompressed_kv_memory_gb"] = float(
-                context_stats["uncompressed_kv_memory_gb"].mean()
-            )
+            metrics["average_retained_kv_memory_mb"] = float(context_stats["retained_kv_memory_mb"].mean())
+            metrics["average_retained_kv_memory_gb"] = float(context_stats["retained_kv_memory_gb"].mean())
+            metrics["average_uncompressed_kv_memory_mb"] = float(context_stats["uncompressed_kv_memory_mb"].mean())
+            metrics["average_uncompressed_kv_memory_gb"] = float(context_stats["uncompressed_kv_memory_gb"].mean())
 
             if self.config.memory_budget is not None:
                 metrics["memory_budget"] = self.config.memory_budget
@@ -700,8 +665,7 @@ class EvaluationRunner:
                 configuration = "True no-press baseline (full KV cache)"
             else:
                 configuration = (
-                    f"{self.config.press_name} baseline "
-                    f"(compression ratio {self.config.compression_ratio:.4f})"
+                    f"{self.config.press_name} baseline " f"(compression ratio {self.config.compression_ratio:.4f})"
                 )
         else:
             configuration = f"KVzip memory budget: {self.config.memory_budget:g} {self.config.memory_budget_unit}"
@@ -880,16 +844,33 @@ Files in this directory:
         output_dir = self._setup_directories()
         # Define all LongBench tasks
         longbench_tasks = [
-            "narrativeqa", "qasper", "multifieldqa_en", "multifieldqa_zh", "hotpotqa",
-            "2wikimqa", "musique", "dureader", "gov_report", "qmsum", "multi_news",
-            "vcsum", "trec", "triviaqa", "samsum", "lsht", "passage_count",
-            "passage_retrieval_en", "passage_retrieval_zh", "lcc", "repobench-p",
+            "narrativeqa",
+            "qasper",
+            "multifieldqa_en",
+            "multifieldqa_zh",
+            "hotpotqa",
+            "2wikimqa",
+            "musique",
+            "dureader",
+            "gov_report",
+            "qmsum",
+            "multi_news",
+            "vcsum",
+            "trec",
+            "triviaqa",
+            "samsum",
+            "lsht",
+            "passage_count",
+            "passage_retrieval_en",
+            "passage_retrieval_zh",
+            "lcc",
+            "repobench-p",
         ]
         # Determine which tasks to run
         if self.config.data_dir is None or (isinstance(self.config.data_dir, list) and len(self.config.data_dir) == 0):
-                # Run all LongBench tasks
-                tasks_to_run = longbench_tasks
-                logger.info(f"No specific tasks provided. Running all {len(tasks_to_run)} LongBench tasks.")
+            # Run all LongBench tasks
+            tasks_to_run = longbench_tasks
+            logger.info(f"No specific tasks provided. Running all {len(tasks_to_run)} LongBench tasks.")
         else:
             # Run specific tasks
             if isinstance(self.config.data_dir, str):
@@ -901,7 +882,7 @@ Files in this directory:
         self._setup_model_pipeline()
 
         for task in tasks_to_run:
-            logger.info(f"Starting evaluation for task: {task}")    
+            logger.info(f"Starting evaluation for task: {task}")
             results_dir = self.config.get_results_dir(output_dir, data_dir=task)
             predictions_filename = results_dir / "predictions.csv"
             metrics_filename = results_dir / "metrics.json"
@@ -914,7 +895,6 @@ Files in this directory:
                 )
                 continue
 
-            
             self._load_and_prepare_dataset(task_data_dir=task)
 
             self._run_inference()
