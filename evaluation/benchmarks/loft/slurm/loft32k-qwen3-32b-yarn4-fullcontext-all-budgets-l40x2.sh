@@ -7,6 +7,7 @@
 #SBATCH --job-name=loft32k-qwen3-32b-yarn4-dgx
 #SBATCH --partition=dgx
 #SBATCH --qos=dgx
+#SBATCH --exclude=cn13-dgx
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=16
