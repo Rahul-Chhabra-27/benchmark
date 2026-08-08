@@ -10,11 +10,12 @@ from typing import Generator, List
 
 import torch
 from torch import nn
-from transformers import AutoTokenizer, Gemma3PreTrainedModel, PreTrainedModel, PreTrainedTokenizer, QuantizedCache
+from transformers import AutoTokenizer, Gemma3PreTrainedModel, PreTrainedModel, PreTrainedTokenizer
 from transformers.models.llama.modeling_llama import rotate_half
 
+from kvpress.model_adapter import get_model_adapter
 from kvpress.presses.base_press import SUPPORTED_MODELS, BasePress
-from kvpress.utils import extract_keys_and_values, get_prerope_query_states
+from kvpress.utils import get_prerope_query_states
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +75,9 @@ class KVzipPress(BasePress):
         self.causal_mask_score = None
         self.start_idx = 0
         self.end_idx = 0
+        self._model_adapter = None
+        self._attention_layer_indices = []
+        self._score_layer_position = {}
 
     @contextmanager
     def __call__(self, model: PreTrainedModel) -> Generator:
@@ -84,13 +88,19 @@ class KVzipPress(BasePress):
         1. First yield: allows initial prefilling with context
         2. After yield: performs KVzip scoring and compression using context reconstruction
         """
-        if not isinstance(model, SUPPORTED_MODELS):
+        adapter = get_model_adapter(model)
+        if not isinstance(model, SUPPORTED_MODELS) and not adapter.is_qwen35:
             logger.warning(f"Model {type(model)} not tested, supported models: {SUPPORTED_MODELS}")
 
         if isinstance(model, Gemma3PreTrainedModel):
             raise ValueError("KVzipPress is not supported for Gemma3ForCausalLM")
 
         # Store model reference for later use
+        self._model_adapter = adapter
+        self._attention_layer_indices = [idx for idx, _ in adapter.iter_kv_attention_layers(model)]
+        self._score_layer_position = {
+            layer_idx: position for position, layer_idx in enumerate(self._attention_layer_indices)
+        }
         tokenizer = AutoTokenizer.from_pretrained(model.config.name_or_path)
 
         # Get suffix_ids directly using tokenizer's chat template (do this once, not in hook)
@@ -134,9 +144,11 @@ class KVzipPress(BasePress):
             # After yield: KVzip scoring and compression phase
             if self.compression_ratio > 0 and self._context_ids is not None:
                 # Now register attention hooks for compression
-                for layer in model.model.layers:
-                    layer.self_attn.rotary_emb = model.model.rotary_emb
-                    hooks.append(layer.self_attn.register_forward_hook(self.forward_hook, with_kwargs=True))
+                language_model = adapter.get_language_model(model)
+                for layer_idx, attention in adapter.iter_kv_attention_layers(model):
+                    attention.rotary_emb = language_model.rotary_emb
+                    attention.layer_idx = layer_idx
+                    hooks.append(attention.register_forward_hook(self.forward_hook, with_kwargs=True))
 
                 self._perform_kvzip_compression(model, tokenizer)
         finally:
@@ -152,25 +164,18 @@ class KVzipPress(BasePress):
         """
 
         hidden_states = kwargs["hidden_states"]
-        cache = kwargs.get("past_key_values", None) or kwargs.get("past_key_value", None)
-        cache_layer = cache.layers[module.layer_idx]
+        cache = kwargs.get("past_key_values", None)
+        if cache is None:
+            cache = kwargs.get("past_key_value", None)
+        adapter = self._model_adapter
 
-        keys, values = extract_keys_and_values(cache, module.layer_idx)
+        keys, values = adapter.get_keys_and_values(cache, module.layer_idx)
 
         # Compute importance scores for KV pairs in the prefilled context,
         # retaining only the originally prefilled KV pairs.
         keys, values = self.score_kvzip(module, hidden_states, keys, values, output[1], kwargs)
 
-        if isinstance(cache, QuantizedCache):
-            # Update cache with compressed keys and values
-            cache_layer._quantized_keys = cache_layer._quantize(keys, axis=cache_layer.axis_key)
-            cache_layer._quantized_values = cache_layer._quantize(values, axis=cache_layer.axis_value)
-            cache_layer.keys = torch.zeros(0, dtype=keys.dtype, device=keys.device)  # type: ignore[index]
-            cache_layer.values = torch.zeros(0, dtype=keys.dtype, device=keys.device)  # type: ignore[index]
-            cache_layer.cumulative_length = keys.shape[2]
-        else:
-            cache_layer.keys = keys
-            cache_layer.values = values
+        adapter.set_keys_and_values(cache, module.layer_idx, keys, values)
 
         return output
 
@@ -248,11 +253,12 @@ class KVzipPress(BasePress):
         ctx_ids = self._context_ids[:, self.prefix_length :].to("cpu")
 
         # initialize score values
+        text_config = self._model_adapter.get_text_config(model)
         self.score_val = torch.zeros(
             (
-                model.config.num_hidden_layers,
+                len(self._attention_layer_indices),
                 1,
-                model.config.num_key_value_heads,
+                text_config.num_key_value_heads,
                 self.context_length,
             ),  # only support batch size of 1
             dtype=model.dtype,
@@ -363,8 +369,8 @@ class KVzipPress(BasePress):
         attn_weights = attn_weights[..., sink : sink + ctx_len]
         scores = attn_weights.amax(dim=(-3, -2))  # max over group, q
 
-        layer_idx = int(module.layer_idx)
-        self.score_val[layer_idx][..., self.start_idx : self.end_idx] = scores  # update score
+        layer_position = self._score_layer_position[int(module.layer_idx)]
+        self.score_val[layer_position][..., self.start_idx : self.end_idx] = scores  # update score
 
         # Retain the originally prefilled context KV pairs and exclude KV pairs from the repeated context
         keys, values = keys[:, :, : self.context_length], values[:, :, : self.context_length]
@@ -388,16 +394,17 @@ class KVzipPress(BasePress):
                 n_tokens_per_layer = bsz * num_key_value_heads * ctx_len
                 n_pruned_layers = torch.bincount(pruned_indices // n_tokens_per_layer, minlength=n_layer).int()
 
-            for layer in model.model.layers:
-                module = layer.self_attn
-                layer_idx = int(module.layer_idx)
+            adapter = self._model_adapter
+            for layer_idx, module in adapter.iter_kv_attention_layers(model):
+                layer_idx = int(layer_idx)
 
                 assert module.config._attn_implementation != "eager", "eager mode not supported"
 
-                scores = self.score_val[layer_idx]
+                scores = self.score_val[self._score_layer_position[layer_idx]]
 
                 # Compute bottom-k across heads
-                n_pruned = n_pruned_layers[layer_idx].cpu()
+                layer_position = self._score_layer_position[layer_idx]
+                n_pruned = n_pruned_layers[layer_position].cpu()
                 indices = torch.topk(-scores.reshape(bsz, -1), n_pruned, dim=1).indices.flatten().cpu()
 
                 # Save indices to mask during the attention mechanism. Please refer to attention_patch.py for details

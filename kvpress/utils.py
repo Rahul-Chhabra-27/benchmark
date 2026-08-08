@@ -8,6 +8,11 @@ from transformers.models.gemma3.modeling_gemma3 import Gemma3Attention
 from transformers.models.phi3.modeling_phi3 import Phi3Attention
 from transformers.models.qwen3.modeling_qwen3 import Qwen3Attention
 
+try:
+    from transformers.models.qwen3_5.modeling_qwen3_5 import Qwen3_5Attention
+except ImportError:  # pragma: no cover - older Transformers releases
+    Qwen3_5Attention = ()
+
 
 def get_prerope_query_states(module: nn.Module, hidden_states: torch.Tensor) -> torch.Tensor:
     """
@@ -47,7 +52,7 @@ def get_prerope_query_states(module: nn.Module, hidden_states: torch.Tensor) -> 
     query_states = query_states.view(bsz, q_len, num_heads, head_dim).transpose(1, 2)
 
     # Support for Qwen3 and Gemma3 QK norm
-    if isinstance(module, (Qwen3Attention, Gemma3Attention)):
+    if isinstance(module, (Qwen3Attention, Gemma3Attention, Qwen3_5Attention)):
         query_states = module.q_norm(query_states)
 
     return query_states
@@ -90,7 +95,7 @@ def get_prerope_key_states(module: nn.Module, hidden_states: torch.Tensor) -> to
     key_states = key_states.view(bsz, k_len, -1, head_dim).transpose(1, 2)
 
     # Support for Qwen3 and Gemma3 QK norm
-    if isinstance(module, (Qwen3Attention, Gemma3Attention)):
+    if isinstance(module, (Qwen3Attention, Gemma3Attention, Qwen3_5Attention)):
         key_states = module.k_norm(key_states)
     return key_states
 

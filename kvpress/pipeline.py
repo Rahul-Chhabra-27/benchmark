@@ -8,7 +8,7 @@ import logging
 from typing import Any, Callable, Optional
 
 import torch
-from transformers import AutoModelForCausalLM, Cache, DynamicCache, Pipeline, QuantizedCache
+from transformers import AutoModelForCausalLM, Cache, Pipeline
 from transformers.pipelines import PIPELINE_REGISTRY
 from transformers.pipelines.base import GenericTensor
 
@@ -18,6 +18,7 @@ from kvpress.presses.dms_press import DMSPress
 from kvpress.presses.finch_press import FinchPress
 from kvpress.presses.key_rerotation_press import KeyRerotationPress
 from kvpress.presses.prefill_decoding_press import PrefillDecodingPress
+from kvpress.model_adapter import get_model_adapter
 
 logger = logging.getLogger(__name__)
 
@@ -126,13 +127,7 @@ class KVPressTextGenerationPipeline(Pipeline):
 
     def _compute_kv_bytes_per_token(self, batch_size: int = 1) -> int:
         """Return the number of bytes used by one token across the model's KV cache."""
-        config = self.model.config
-        num_layers = config.num_hidden_layers
-        num_kv_heads = getattr(config, "num_key_value_heads", config.num_attention_heads)
-        head_dim = getattr(config, "head_dim", config.hidden_size // config.num_attention_heads)
-        dtype = self.model.dtype
-        bytes_per_element = torch.finfo(dtype).bits // 8
-        return num_layers * 2 * num_kv_heads * head_dim * bytes_per_element * batch_size
+        return get_model_adapter(self.model).kv_bytes_per_token(self.model, batch_size)
 
     def _compute_token_budget_from_memory(
         self, memory_budget: float, memory_budget_unit: str = "GB", batch_size: int = 1
@@ -293,8 +288,9 @@ class KVPressTextGenerationPipeline(Pipeline):
         context_length = context_ids.shape[1]
 
         # Prefilling using the press on the context
+        adapter = get_model_adapter(self.model)
         if cache is None:
-            cache = DynamicCache()
+            cache = adapter.create_cache(self.model)
         
         bytes_per_token = self._compute_kv_bytes_per_token()
         compression_ratio = float(getattr(press, "compression_ratio", 0.0)) if press is not None else 0.0
@@ -351,19 +347,19 @@ class KVPressTextGenerationPipeline(Pipeline):
         with press(self.model) if perform_decoding_compression else contextlib.nullcontext():
             # Greedy decoding for each question
             answers = []
+            context_snapshot = adapter.snapshot_cache_state(cache)
             total_questions = len(input_tensors["questions_ids"])
             for question_number, question_ids in enumerate(input_tensors["questions_ids"], start=1):
                 if isinstance(press, KeyRerotationPress) or (isinstance(press, FinchPress) and press.rerotate_keys):
                     context_length = cache.get_seq_length()
 
-                cache_seq_lengths = [cache.get_seq_length(layer_idx) for layer_idx in range(len(cache))]
                 answer = self.generate_answer(
                     question_ids=question_ids.to(self.model.device),
                     cache=cache,
                     context_length=context_length,
                     max_new_tokens=max_new_tokens,
                 )
-                self._remove_answer_from_cache(cache, cache_seq_lengths)
+                adapter.restore_cache_state(cache, context_snapshot)
 
                 answers.append(answer)
                 if question_progress_callback is not None:
@@ -371,19 +367,8 @@ class KVPressTextGenerationPipeline(Pipeline):
         return answers
 
     def _remove_answer_from_cache(self, cache: Cache, cache_seq_lengths: list[int]):
-
-        for layer_idx, sequence_length in enumerate(cache_seq_lengths):
-            cache.layers[layer_idx].keys = cache.layers[layer_idx].keys[:, :, :sequence_length]
-            cache.layers[layer_idx].values = cache.layers[layer_idx].values[:, :, :sequence_length]
-
-        if isinstance(cache, QuantizedCache):
-            for layer_idx, sequence_length in enumerate(cache_seq_lengths):
-                cache.layers[layer_idx]._quantized_keys = cache.layers[layer_idx]._quantized_keys[
-                    :, :, :sequence_length
-                ]
-                cache.layers[layer_idx]._quantized_values = cache.layers[layer_idx]._quantized_values[
-                    :, :, :sequence_length
-                ]
+        # Kept as a compatibility helper for callers outside this pipeline.
+        get_model_adapter(self.model).truncate_cache(cache, cache_seq_lengths)
 
     def generate_answer(
         self, question_ids: torch.Tensor, cache: Cache, context_length: int, max_new_tokens: int

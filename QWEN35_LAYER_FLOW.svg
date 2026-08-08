@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1040" viewBox="0 0 1600 1040">
+  <title>Qwen3.5 hybrid attention and KVPress cache flow</title>
+  <desc>Excalidraw-style diagram showing full attention and linear attention layers, their inputs, outputs, internal processing, cache state, and KVPress retention.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker>
+    <marker id="blueArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+    <marker id="greenArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#15803d"/></marker>
+    <style>
+      .ink { fill:#111827; font-family:Arial,sans-serif; }
+      .title { font-size:30px; font-weight:700; }
+      .subtitle { font-size:17px; fill:#4b5563; }
+      .label { font-size:18px; font-weight:700; }
+      .small { font-size:15px; }
+      .tiny { font-size:13px; }
+      .box { stroke:#374151; stroke-width:2.5; rx:16; ry:16; }
+      .process { fill:#fff; }
+      .full { fill:#dbeafe; stroke:#2563eb; }
+      .linear { fill:#fef3c7; stroke:#d97706; }
+      .cache { fill:#dcfce7; stroke:#15803d; }
+      .skip { fill:#fee2e2; stroke:#dc2626; stroke-dasharray:8 6; }
+      .note { fill:#f3f4f6; stroke:#6b7280; }
+      .arrow { stroke:#374151; stroke-width:2.5; fill:none; marker-end:url(#arrow); }
+      .blue { stroke:#2563eb; stroke-width:2.5; fill:none; marker-end:url(#blueArrow); }
+      .green { stroke:#15803d; stroke-width:2.5; fill:none; marker-end:url(#greenArrow); }
+      .dash { stroke-dasharray:8 6; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1040" fill="#fffdf8"/>
+  <text x="70" y="58" class="ink title">Qwen3.5: what enters each layer, what comes out, and what KVPress keeps</text>
+  <text x="70" y="90" class="ink subtitle">Qwen3.5 alternates two different mechanisms: full attention and linear (DeltaNet) attention.</text>
+
+  <!-- Hybrid stack overview -->
+  <rect x="70" y="125" width="1460" height="125" class="box note"/>
+  <text x="100" y="158" class="ink label">Hybrid decoder stack</text>
+  <text x="100" y="190" class="ink small">hidden states</text>
+  <path d="M215 184 L290 184" class="arrow"/>
+  <rect x="305" y="157" width="170" height="52" class="box full"/>
+  <text x="390" y="190" text-anchor="middle" class="ink label">Full attention</text>
+  <path d="M475 184 L535 184" class="arrow"/>
+  <rect x="550" y="157" width="170" height="52" class="box linear"/>
+  <text x="635" y="190" text-anchor="middle" class="ink label">Linear / DeltaNet</text>
+  <path d="M720 184 L780 184" class="arrow"/>
+  <rect x="795" y="157" width="170" height="52" class="box full"/>
+  <text x="880" y="190" text-anchor="middle" class="ink label">Full attention</text>
+  <path d="M965 184 L1025 184" class="arrow"/>
+  <text x="1040" y="190" class="ink small">… repeated through all layers …</text>
+  <text x="100" y="230" class="ink tiny">The adapter reads text_config.layer_types and exposes only the blue full-attention blocks to KVPress.</text>
+
+  <!-- Full attention lane -->
+  <rect x="70" y="285" width="1460" height="270" class="box full"/>
+  <text x="100" y="320" class="ink label">A. Full-attention layer  (KVPress can hook and compress this layer)</text>
+  <text x="100" y="352" class="ink small">Input: hidden states H [batch, tokens, hidden_size]</text>
+  <path d="M100 390 L220 390" class="blue"/>
+  <rect x="235" y="360" width="135" height="60" class="box process"/>
+  <text x="302" y="385" text-anchor="middle" class="ink small">Q/K/V</text>
+  <text x="302" y="405" text-anchor="middle" class="ink tiny">linear projections</text>
+  <path d="M370 390 L430 390" class="blue"/>
+  <rect x="445" y="360" width="125" height="60" class="box process"/>
+  <text x="507" y="385" text-anchor="middle" class="ink small">QK norm</text>
+  <text x="507" y="405" text-anchor="middle" class="ink tiny">q_norm, k_norm</text>
+  <path d="M570 390 L630 390" class="blue"/>
+  <rect x="645" y="360" width="125" height="60" class="box process"/>
+  <text x="707" y="385" text-anchor="middle" class="ink small">RoPE</text>
+  <text x="707" y="405" text-anchor="middle" class="ink tiny">position rotation</text>
+  <path d="M770 390 L830 390" class="blue"/>
+  <rect x="845" y="350" width="220" height="80" class="box cache"/>
+  <text x="955" y="378" text-anchor="middle" class="ink label">KV cache update</text>
+  <text x="955" y="400" text-anchor="middle" class="ink tiny">K and V append along time</text>
+  <path d="M1065 390 L1125 390" class="blue"/>
+  <rect x="1140" y="360" width="150" height="60" class="box process"/>
+  <text x="1215" y="385" text-anchor="middle" class="ink small">Attention</text>
+  <text x="1215" y="405" text-anchor="middle" class="ink tiny">softmax(QKᵀ)V</text>
+  <path d="M1290 390 L1350 390" class="blue"/>
+  <rect x="1365" y="360" width="125" height="60" class="box process"/>
+  <text x="1427" y="385" text-anchor="middle" class="ink small">O projection</text>
+  <text x="1427" y="405" text-anchor="middle" class="ink tiny">layer output</text>
+  <path d="M1427 425 C1427 480, 1040 500, 940 500" class="arrow"/>
+  <text x="100" y="475" class="ink small">Output: new hidden states H′ → residual connection → next decoder layer</text>
+  <rect x="845" y="455" width="280" height="70" class="box cache"/>
+  <text x="985" y="483" text-anchor="middle" class="ink label">Retained by KVPress</text>
+  <text x="985" y="505" text-anchor="middle" class="ink small">compressed K/V tokens only</text>
+  <path d="M955 430 L955 455" class="green"/>
+  <text x="1160" y="485" class="ink tiny">full-attention layers are counted in KV bytes/token</text>
+
+  <!-- Linear attention lane -->
+  <rect x="70" y="585" width="1460" height="270" class="box linear"/>
+  <text x="100" y="620" class="ink label">B. Linear-attention / DeltaNet layer  (KVPress does not hook this layer)</text>
+  <text x="100" y="652" class="ink small">Input: hidden states H [batch, tokens, hidden_size]</text>
+  <path d="M100 690 L220 690" class="arrow"/>
+  <rect x="235" y="660" width="155" height="60" class="box process"/>
+  <text x="312" y="685" text-anchor="middle" class="ink small">Fused projections</text>
+  <text x="312" y="705" text-anchor="middle" class="ink tiny">Q, K, V, gate, decay</text>
+  <path d="M390 690 L450 690" class="arrow"/>
+  <rect x="465" y="650" width="230" height="80" class="box process"/>
+  <text x="580" y="678" text-anchor="middle" class="ink label">Causal convolution</text>
+  <text x="580" y="700" text-anchor="middle" class="ink tiny">updates recent-window state</text>
+  <path d="M695 690 L755 690" class="arrow"/>
+  <rect x="770" y="650" width="250" height="80" class="box process"/>
+  <text x="895" y="678" text-anchor="middle" class="ink label">Gated Delta recurrence</text>
+  <text x="895" y="700" text-anchor="middle" class="ink tiny">summarizes past into state</text>
+  <path d="M1020 690 L1080 690" class="arrow"/>
+  <rect x="1095" y="650" width="220" height="80" class="box cache"/>
+  <text x="1205" y="678" text-anchor="middle" class="ink label">Hybrid cache state</text>
+  <text x="1205" y="700" text-anchor="middle" class="ink tiny">recurrent_states + conv_states</text>
+  <path d="M1315 690 L1375 690" class="arrow"/>
+  <rect x="1390" y="660" width="100" height="60" class="box process"/>
+  <text x="1440" y="685" text-anchor="middle" class="ink small">Output</text>
+  <text x="1440" y="705" text-anchor="middle" class="ink tiny">H′</text>
+  <rect x="235" y="765" width="520" height="60" class="box skip"/>
+  <text x="495" y="790" text-anchor="middle" class="ink label">No standard K/V sequence cache here</text>
+  <text x="495" y="810" text-anchor="middle" class="ink small">Therefore KVPress does not prune this layer.</text>
+  <path d="M580 730 L580 765" class="arrow dash"/>
+  <rect x="800" y="765" width="520" height="60" class="box cache"/>
+  <text x="1060" y="790" text-anchor="middle" class="ink label">Retained exactly for correctness</text>
+  <text x="1060" y="810" text-anchor="middle" class="ink small">recurrent state + convolution state</text>
+  <path d="M1205 730 L1205 765" class="green"/>
+
+  <!-- Snapshot flow -->
+  <rect x="70" y="890" width="1460" height="110" class="box note"/>
+  <text x="100" y="925" class="ink label">Multiple questions sharing one context</text>
+  <rect x="420" y="900" width="230" height="60" class="box cache"/>
+  <text x="535" y="925" text-anchor="middle" class="ink small">After context prefill</text>
+  <text x="535" y="945" text-anchor="middle" class="ink tiny">snapshot K/V + recurrent + conv</text>
+  <path d="M650 930 L735 930" class="green"/>
+  <rect x="750" y="900" width="170" height="60" class="box process"/>
+  <text x="835" y="925" text-anchor="middle" class="ink small">Question 1</text>
+  <text x="835" y="945" text-anchor="middle" class="ink tiny">generate answer</text>
+  <path d="M920 930 L1000 930" class="green"/>
+  <rect x="1015" y="900" width="210" height="60" class="box cache"/>
+  <text x="1120" y="925" text-anchor="middle" class="ink small">Restore snapshot</text>
+  <text x="1120" y="945" text-anchor="middle" class="ink tiny">before Question 2</text>
+  <path d="M1225 930 L1310 930" class="green"/>
+  <text x="1325" y="935" class="ink small">Question 2 starts from the same context</text>
+
+  <text x="70" y="1025" class="ink tiny">Blue = full-attention KV path; amber = linear/recurrent path; green = retained/restored cache state; red dashed = deliberately skipped by KVPress.</text>
+</svg>

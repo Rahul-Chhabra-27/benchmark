@@ -15,12 +15,11 @@ from transformers import (
     MistralForCausalLM,
     Phi3ForCausalLM,
     PreTrainedModel,
-    QuantizedCache,
     Qwen2ForCausalLM,
     Qwen3ForCausalLM,
 )
 
-from kvpress.utils import extract_keys_and_values
+from kvpress.model_adapter import get_model_adapter
 
 logger = logging.getLogger(__name__)
 
@@ -132,26 +131,21 @@ class BasePress:
 
         hidden_states = kwargs["hidden_states"]
         cache = kwargs["past_key_values"]
-        cache_layer = cache.layers[module.layer_idx]
+        adapter = getattr(self, "_model_adapter", None)
+        if adapter is None:
+            # Direct hook callers predate model adapters and use the standard cache.
+            adapter = get_model_adapter(self._model_for_adapter)
         q_len = hidden_states.shape[1]
 
         # Don't compress after pre-filling
         if kwargs["cache_position"][-1] > q_len:
             return output
 
-        keys, values = extract_keys_and_values(cache, module.layer_idx)
+        keys, values = adapter.get_keys_and_values(cache, module.layer_idx)
 
         keys, values = self.compress(module, hidden_states, keys, values, output[1], kwargs)
 
-        if isinstance(cache, QuantizedCache):
-            cache_layer._quantized_keys = cache_layer._quantize(keys, axis=cache_layer.axis_key)
-            cache_layer._quantized_values = cache_layer._quantize(values, axis=cache_layer.axis_value)
-            cache_layer.keys = torch.zeros(0, dtype=keys.dtype, device=keys.device)  # type: ignore[index]
-            cache_layer.values = torch.zeros(0, dtype=keys.dtype, device=keys.device)  # type: ignore[index]
-            cache_layer.cumulative_length = keys.shape[2]
-        else:
-            cache_layer.keys = keys
-            cache_layer.values = values
+        adapter.set_keys_and_values(cache, module.layer_idx, keys, values)
 
         return output
 
@@ -179,7 +173,15 @@ class BasePress:
         ...     # Forward pass with compression applied
         ...     outputs = model(input_ids, past_key_values=cache)
         """
-        if not isinstance(model, SUPPORTED_MODELS):
+        adapter = get_model_adapter(model)
+        if adapter.is_qwen35:
+            supported_press_names = {"RandomPress", "KnormPress"}
+            if type(self).__name__ not in supported_press_names:
+                raise NotImplementedError(
+                    "Qwen3.5 currently supports only no_press, random, and knorm; "
+                    "query-aware presses need Qwen3.5 query-projection handling."
+                )
+        if not isinstance(model, SUPPORTED_MODELS) and not adapter.is_qwen35:
             logger.warning(f"Model {type(model)} not tested, supported models: {SUPPORTED_MODELS}")
 
         if isinstance(model, Gemma3ForConditionalGeneration):
@@ -187,14 +189,17 @@ class BasePress:
 
         self.post_init_from_model(model)
         hooks = []
+        self._model_adapter = adapter
+        self._model_for_adapter = model
         try:
-            language_model = model.model.language_model if hasattr(model.model, "language_model") else model.model
-            for layer in language_model.layers:
-                if isinstance(model, Gemma3ForConditionalGeneration) and layer.self_attn.is_sliding:
+            language_model = adapter.get_language_model(model)
+            for layer_idx, attention in adapter.iter_kv_attention_layers(model):
+                if isinstance(model, Gemma3ForConditionalGeneration) and attention.is_sliding:
                     # Skip layers with sliding window attention, only for Gemma3
                     continue
-                layer.self_attn.rotary_emb = language_model.rotary_emb
-                hooks.append(layer.self_attn.register_forward_hook(self.forward_hook, with_kwargs=True))
+                attention.rotary_emb = language_model.rotary_emb
+                attention.layer_idx = layer_idx
+                hooks.append(attention.register_forward_hook(self.forward_hook, with_kwargs=True))
             yield
         finally:
             for forward_hook in hooks:

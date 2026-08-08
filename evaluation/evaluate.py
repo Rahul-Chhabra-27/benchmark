@@ -19,9 +19,11 @@ from datasets import load_dataset
 from evaluate_registry import DATASET_REGISTRY, PRESS_REGISTRY, SCORER_REGISTRY
 from fire import Fire
 from tqdm import tqdm
-from transformers import BitsAndBytesConfig, FineGrainedFP8Config, Pipeline, pipeline
+from transformers import AutoConfig, AutoTokenizer, BitsAndBytesConfig, FineGrainedFP8Config, Pipeline, pipeline
 from verify_int8_model import verify_int8_model
 from verify_int4_model import verify_int4_model
+from kvpress.model_adapter import get_model_adapter
+from kvpress.pipeline import KVPressTextGenerationPipeline
 
 from kvpress import (
     ComposedPress,
@@ -497,16 +499,32 @@ class EvaluationRunner:
                 pass
 
         logger.info(f"Loading model pipeline for: {model_name} on device: {device} with model_kwargs: {model_kwargs}")
-        pipeline_kwargs = {
-            "model": model_name,
-            "model_kwargs": model_kwargs,
-            "trust_remote_code": True,
-        }
-        if device == "auto":
-            pipeline_kwargs["device_map"] = "auto"
+        model_config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
+        if model_config.model_type == "qwen3_5":
+            # Qwen3.5 checkpoints advertise a conditional-generation class.  Use
+            # its text-only path explicitly; no image/video tensors are supplied.
+            from transformers import Qwen3_5ForConditionalGeneration
+
+            tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+            load_kwargs = dict(model_kwargs)
+            if device == "auto":
+                load_kwargs["device_map"] = "auto"
+            model = Qwen3_5ForConditionalGeneration.from_pretrained(model_name, **load_kwargs)
+            pipeline_kwargs = {"model": model, "tokenizer": tokenizer}
+            if device != "auto":
+                pipeline_kwargs["device"] = device
+            self.pipeline = KVPressTextGenerationPipeline(**pipeline_kwargs)
         else:
-            pipeline_kwargs["device"] = device
-        self.pipeline = pipeline("kv-press-text-generation", **pipeline_kwargs)
+            pipeline_kwargs = {
+                "model": model_name,
+                "model_kwargs": model_kwargs,
+                "trust_remote_code": True,
+            }
+            if device == "auto":
+                pipeline_kwargs["device_map"] = "auto"
+            else:
+                pipeline_kwargs["device"] = device
+            self.pipeline = pipeline("kv-press-text-generation", **pipeline_kwargs)
 
         if self.config.int8:
             int8_verification = verify_int8_model(self.pipeline.model)
@@ -739,13 +757,9 @@ Files in this directory:
             return
 
         self.pipeline.last_memory_budget_stats = None  # type: ignore[attr-defined]
-        language_model = (
-            self.pipeline.model.model.language_model
-            if hasattr(self.pipeline.model.model, "language_model")
-            else self.pipeline.model.model
-        )
-        for layer in language_model.layers:
-            layer.self_attn.masked_key_indices = None
+        adapter = get_model_adapter(self.pipeline.model)
+        for _, attention in adapter.iter_kv_attention_layers(self.pipeline.model):
+            attention.masked_key_indices = None
 
         if self.press is not None and hasattr(self.press, "_reset_internal_parameters"):
             self.press._reset_internal_parameters()  # type: ignore[attr-defined]
