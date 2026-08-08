@@ -1,19 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-from benchmarks.aime25.calculate_metrics import calculate_metrics as aime25_scorer
-from benchmarks.infinite_bench.calculate_metrics import calculate_metrics as infinite_bench_scorer
-from benchmarks.longbench.calculate_metrics import calculate_metrics as longbench_scorer
-from benchmarks.longbench.calculate_metrics import calculate_metrics_e as longbench_scorer_e
-from benchmarks.longbenchv2.calculate_metrics import calculate_metrics as longbenchv2_scorer
-from benchmarks.loogle.calculate_metrics import calculate_metrics as loogle_scorer
-from benchmarks.math500.calculate_metrics import calculate_metrics as math500_scorer
-from benchmarks.needle_in_haystack.calculate_metrics import calculate_metrics as needle_in_haystack_scorer
-from benchmarks.ruler.calculate_metrics import calculate_metrics as ruler_scorer
-from benchmarks.zero_scrolls.calculate_metrics import calculate_metrics as zero_scrolls_scorer
-from benchmarks.loft.calculate_metrics import calculate_metrics as loft_scorer
-from benchmarks.ruler32k.calculate_metrics import calculate_metrics as ruler32k_scorer
-from benchmarks.synthetic_kv.calculate_metrics import calculate_metrics as synthetic_kv_scorer
+from benchmarks import registry as benchmark_registry
 
 from kvpress import (
     AdaKVPress,
@@ -49,45 +37,10 @@ from kvpress import (
     TOVAPress,
 )
 
-# These dictionaries define the available datasets, scorers, and KVPress methods for evaluation.
-DATASET_REGISTRY = {
-    "loogle": "simonjegou/loogle",
-    "ruler": "simonjegou/ruler",
-    "zero_scrolls": "simonjegou/zero_scrolls",
-    "infinitebench": "MaxJeblick/InfiniteBench",
-    "longbench": "Xnhyacinth/LongBench",
-    "longbench-e": "Xnhyacinth/LongBench",
-    "longbench-v2": "simonjegou/LongBench-v2",
-    "needle_in_haystack": "alessiodevoto/paul_graham_essays",
-    # Datasets used to be used for decoding compression
-    "aime25": "alessiodevoto/aime25",
-    "math500": "alessiodevoto/math500",
-    "loft": "f20180301/loft-rag",
-    "ruler32k": "xAlg-AI/att-hub-ruler-32k",
-    "ruler64k": "ollamaweights/Ruler-64k",
-    "synthetic_kv": "ollamaweights/synthetickv_formated",
-    "synthetic_kv_32k": "ollamaweights/synthetickv_32l",
-}
+DATASET_REGISTRY = benchmark_registry.DATASET_REGISTRY
+SCORER_REGISTRY = benchmark_registry.SCORER_REGISTRY
 
-SCORER_REGISTRY = {
-    "loogle": loogle_scorer,
-    "ruler": ruler_scorer,
-    "zero_scrolls": zero_scrolls_scorer,
-    "infinitebench": infinite_bench_scorer,
-    "longbench": longbench_scorer,
-    "longbench-e": longbench_scorer_e,
-    "longbench-v2": longbenchv2_scorer,
-    "needle_in_haystack": needle_in_haystack_scorer,
-    "aime25": aime25_scorer,
-    "math500": math500_scorer,
-    "loft": loft_scorer,
-    "ruler32k": ruler32k_scorer,
-    "ruler64k": ruler32k_scorer,
-    "synthetic_kv": synthetic_kv_scorer,
-    "synthetic_kv_32k": synthetic_kv_scorer,
-}
-
-
+# Presses remain specific to the KVPress inference path.
 PRESS_REGISTRY = {
     "adakv_snapkv": AdaKVPress(SnapKVPress()),
     "block_keydiff": BlockPress(press=KeyDiffPress(), block_size=128),

@@ -1,10 +1,10 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""Benchmark task loaders.
+"""RLM dataset adapters.
 
-Each loader yields dicts: {"id", "context", "question", "answers": [str, ...]}.
-Synthetic tasks are generated locally (no internet needed on compute nodes);
-HF-backed tasks read from a local cache populated by slurm/download_data.sh.
+Hugging Face-backed tasks use the same registry and normalized DataFrame loader
+as KVPress. Synthetic RLM smoke tasks remain local because they do not exist in
+the shared benchmark registry.
 """
 from __future__ import annotations
 
@@ -13,6 +13,9 @@ import os
 import random
 import string
 from pathlib import Path
+
+from evaluation.benchmarks.loaders import iter_benchmark_examples, load_benchmark_dataset
+from evaluation.benchmarks.registry import DATASET_REGISTRY, RULER_32K_TASKS
 
 DATA_DIR = Path(os.environ.get("RLM_DATA_DIR", os.path.expanduser("~/rlm_data")))
 
@@ -61,7 +64,7 @@ def gen_multikey(n_examples: int = 50, ctx_chars: int = 200_000, n_keys: int = 8
             "id": f"multikey-{ctx_chars}-{i}",
             "context": body,
             "question": f"There are {n_keys} assets (Asset 0..{n_keys-1}), each with a value in credits. "
-                        "What is the SUM of all asset values? Reply with the number only.",
+            "What is the SUM of all asset values? Reply with the number only.",
             "answers": [str(sum(vals))],
         }
 
@@ -102,10 +105,53 @@ def load_oolong(limit: int | None = None):
             }
 
 
-TASKS = {
+SYNTHETIC_TASKS = {
     "niah": lambda limit: gen_niah(n_examples=limit or 50),
     "niah-1m": lambda limit: gen_niah(n_examples=limit or 20, ctx_chars=1_000_000, seed=7),
     "multikey": lambda limit: gen_multikey(n_examples=limit or 50),
-    "longbench_v2": load_longbench_v2,
     "oolong": load_oolong,
 }
+
+DATASET_ALIASES = {"longbench_v2": "longbench-v2"}
+
+
+def available_datasets() -> tuple[str, ...]:
+    """Return shared benchmarks plus backward-compatible RLM task names."""
+    names = set(DATASET_REGISTRY) | set(SYNTHETIC_TASKS) | set(DATASET_ALIASES)
+    # This dataset needs tokenizer-dependent needle insertion in KVPress.
+    names.discard("needle_in_haystack")
+    return tuple(sorted(names))
+
+
+def canonical_dataset_name(dataset_name: str) -> str:
+    return DATASET_ALIASES.get(dataset_name, dataset_name)
+
+
+def load_examples(
+    dataset_name: str,
+    task: str | None = None,
+    limit: int | None = None,
+):
+    """Yield backend-neutral examples from a synthetic or shared benchmark."""
+    if dataset_name in SYNTHETIC_TASKS:
+        yield from SYNTHETIC_TASKS[dataset_name](limit)
+        return
+
+    canonical_name = canonical_dataset_name(dataset_name)
+    if canonical_name not in DATASET_REGISTRY:
+        raise ValueError(f"Unknown RLM dataset: {dataset_name!r}")
+    if canonical_name == "ruler32k":
+        if task is None:
+            raise ValueError("ruler32k requires --data-dir with a RULER subset")
+        if task not in RULER_32K_TASKS:
+            raise ValueError(f"Unknown RULER-32K subset {task!r}; expected one of {RULER_32K_TASKS}")
+    frame = load_benchmark_dataset(
+        dataset_name=canonical_name,
+        task=task,
+        dataset_registry=DATASET_REGISTRY,
+    )
+    yield from iter_benchmark_examples(frame, canonical_name, task, limit)
+
+
+# Kept for callers that only need a list of accepted names.
+TASKS = {name: name for name in available_datasets()}

@@ -48,9 +48,9 @@ echo "vLLM up."
 
 # --- the 2x2 grid (thinking on/off x vanilla/rlm), run over every task ---
 # Results MUST be separated by thinking condition: run_benchmark writes to
-# {task}.{mode}.{slug}.jsonl in APPEND mode and SKIPS ids already in that file.
-# Same task+mode+model for both conditions would collide and the 2nd run would
-# skip everything -> send thinking and no-thinking runs to separate directories.
+# Each run directory contains an append-only checkpoint and skips completed IDs.
+# Keep thinking and no-thinking runs in separate roots so their run directories
+# do not collide.
 for THINK in nothink think; do
   if [ "$THINK" = nothink ]; then THINK_FLAG="--no-think"; else THINK_FLAG=""; fi
   OUTDIR="evaluation/results/rlm/$THINK"
@@ -58,7 +58,7 @@ for THINK in nothink think; do
     for MODE in vanilla rlm; do
       echo "=== $(date '+%F %T') :: $TASK / $MODE / $THINK ==="
       python -m evaluation.rlm.run_benchmark \
-        --task "$TASK" --mode "$MODE" --limit 50 \
+        --dataset "$TASK" --mode "$MODE" --limit 50 \
         --base-url http://localhost:8000/v1 \
         --root-model "$MODEL" --sub-model "$MODEL" \
         $THINK_FLAG \

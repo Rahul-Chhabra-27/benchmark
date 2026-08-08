@@ -1,13 +1,17 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""Centralized Hugging Face loading and normalization for evaluation datasets."""
+"""Centralized Hugging Face loading and normalization for evaluation datasets.
+
+The returned DataFrame is the source of truth for both KVPress and RLM.  The
+``iter_benchmark_examples`` adapter exposes those same rows to orchestration
+backends that do not use pandas during inference.
+"""
 
 import logging
-from typing import Any, Mapping, Optional
+from typing import Any, Iterator, Mapping, Optional
 
 import pandas as pd
 from datasets import load_dataset
-
 
 logger = logging.getLogger(__name__)
 
@@ -64,13 +68,9 @@ def _load_synthetic_kv(
 ) -> pd.DataFrame:
     expected_task = "32k" if dataset_name == "synthetic_kv_32k" else "64k"
     if task != expected_task:
-        raise ValueError(
-            f"Unknown synthetic-KV configuration {task!r}; expected {expected_task!r}"
-        )
+        raise ValueError(f"Unknown synthetic-KV configuration {task!r}; expected {expected_task!r}")
     if metadata_override:
-        raise ValueError(
-            "Synthetic-KV metadata override is disabled: use the Hugging Face context"
-        )
+        raise ValueError("Synthetic-KV metadata override is disabled: use the Hugging Face context")
 
     logger.info("Loading native Synthetic-KV context from %s", dataset_id)
     dataset = load_dataset(dataset_id, split="test")
@@ -81,8 +81,7 @@ def _load_synthetic_kv(
         answers = compact_row["answers"]
         if len(questions) != len(answers):
             raise ValueError(
-                f"Mismatched questions/answers for {compact_row['context_id']}: "
-                f"{len(questions)} != {len(answers)}"
+                f"Mismatched questions/answers for {compact_row['context_id']}: " f"{len(questions)} != {len(answers)}"
             )
 
         max_new_tokens = int(compact_row.get("max_new_tokens", 32))
@@ -117,7 +116,7 @@ def load_benchmark_dataset(
     dataset_registry: Mapping[str, str],
     synthetic_metadata_override: bool = False,
 ) -> pd.DataFrame:
-    """Load and normalize one evaluation task into a pandas DataFrame."""
+    """Load one evaluation task into the shared pandas representation."""
     if dataset_name not in dataset_registry:
         raise ValueError(f"Unknown evaluation dataset: {dataset_name!r}")
     dataset_id = dataset_registry[dataset_name]
@@ -132,8 +131,75 @@ def load_benchmark_dataset(
             synthetic_metadata_override,
         )
     else:
-        raise ValueError(
-            f"No specialized loader for {dataset_name!r}; use the standard KVPress path"
-        )
+        logger.info("Loading dataset: %s (data_dir: %s)", dataset_id, task)
+        df = load_dataset(dataset_id, data_dir=task, split="test").to_pandas()
 
     return df
+
+
+def _answers_from_row(row: Mapping[str, Any]) -> list[str]:
+    answer = row.get("answer")
+    if answer is None:
+        answer = row.get("answers")
+    if answer is None:
+        raise ValueError("Benchmark row has neither 'answer' nor 'answers'")
+    if isinstance(answer, (list, tuple)):
+        return [str(value) for value in answer]
+    if hasattr(answer, "tolist") and not isinstance(answer, str):
+        converted = answer.tolist()
+        if isinstance(converted, list):
+            return [str(value) for value in converted]
+    return [str(answer)]
+
+
+def _scoring_fields_from_row(row: Mapping[str, Any], answers: list[str]) -> dict[str, Any]:
+    """Keep the canonical scorer inputs in a JSON-serializable form."""
+    raw_answer = row.get("answer")
+    if raw_answer is None:
+        raw_answer = answers
+    elif hasattr(raw_answer, "tolist") and not isinstance(raw_answer, str):
+        raw_answer = raw_answer.tolist()
+
+    fields: dict[str, Any] = {"answer": raw_answer, "answers": answers}
+    for name in ("all_classes", "difficulty", "length"):
+        value = row.get(name)
+        if value is None:
+            continue
+        if hasattr(value, "tolist") and not isinstance(value, str):
+            value = value.tolist()
+        elif hasattr(value, "item") and not isinstance(value, str):
+            value = value.item()
+        fields[name] = value
+    return fields
+
+
+def iter_benchmark_examples(
+    df: pd.DataFrame,
+    dataset_name: str,
+    task: Optional[str],
+    limit: Optional[int] = None,
+) -> Iterator[dict[str, Any]]:
+    """Adapt shared benchmark rows to the backend-neutral example contract."""
+    required = {"context", "question"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Missing required benchmark columns: {sorted(missing)}")
+    if limit is not None and limit < 1:
+        raise ValueError("limit must be positive")
+
+    rows = df.head(limit) if limit is not None else df
+    for position, (_, series) in enumerate(rows.iterrows()):
+        row = series.to_dict()
+        source_id = row.get("_id") or row.get("id") or row.get("context_id")
+        example_id = f"{source_id}-{position}" if source_id is not None else str(position)
+        answers = _answers_from_row(row)
+        yield {
+            "id": f"{dataset_name}:{task or 'default'}:{example_id}",
+            "context": str(row["context"]),
+            "question": str(row["question"]),
+            "answers": answers,
+            "task": str(row.get("task") or task or dataset_name),
+            "answer_prefix": str(row.get("answer_prefix") or ""),
+            "max_new_tokens": row.get("max_new_tokens"),
+            "scoring": _scoring_fields_from_row(row, answers),
+        }
