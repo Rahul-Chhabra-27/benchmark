@@ -205,6 +205,7 @@ def size_subcall_chunk(
     sub_window_tokens: Optional[int] = None,
     cli_max_context_tokens: Optional[int] = None,
     gpu_free_bytes: Optional[int] = None,
+    document_tokens: Optional[int] = None,
     reserve_tokens: int = DEFAULT_RESERVE_TOKENS,
     min_tokens: int = DEFAULT_MIN_TOKENS,
     char_overshoot: float = 1.0,
@@ -243,12 +244,22 @@ def size_subcall_chunk(
         "sub_window": None if sub_window_tokens is None else max(0, sub_window_tokens - reserve_tokens),
         "cli_cap": None if cli_max_context_tokens is None else max(0, cli_max_context_tokens - reserve_tokens),
         "gpu_fit": (None if gpu_free_bytes is None else gpu_fit_token_cap(gpu_free_bytes, kv_bytes_per_token)),
+        # A chunk bigger than the document itself is meaningless regardless of
+        # every other cap: there is no more text to expand into. Always live,
+        # not gated by apply_cli_context_cap -- this is a fact about the data,
+        # not a policy knob.
+        "document": document_tokens,
     }
     live = {name: value for name, value in caps.items() if value is not None}
     binding = min(live, key=lambda name: live[name])
     tokens = live[binding]
 
-    if require_budget_binding and binding != "budget":
+    # "document" binding isn't a misconfiguration like the others: it means the
+    # requested chunk was bigger than the document itself, so the whole
+    # document was used instead. That's a legitimate, expected outcome for a
+    # large B*F cell, not a silently-wrong grid cell -- run it capped rather
+    # than refusing.
+    if require_budget_binding and binding not in ("budget", "document"):
         table = ", ".join(f"{name}={value}" for name, value in caps.items())
         raise RuntimeError(
             f"fixed-chunk grid requires the KV budget to bind, but {binding!r} limited "

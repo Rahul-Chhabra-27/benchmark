@@ -263,6 +263,7 @@ class KVzipSubClient:
         chars_per_token, source = calibrate_chars_per_token(
             document, lambda s: self.pipeline.tokenizer.encode(s, add_special_tokens=False)
         )
+        document_tokens = len(self.pipeline.tokenizer.encode(document, add_special_tokens=False))
 
         # The model's own window. No adapter method reports it, so read it off the
         # text config the adapter already knows how to find (multimodal configs
@@ -285,6 +286,7 @@ class KVzipSubClient:
                 (cli_max_context_tokens or self.max_context_tokens) if apply_cli_context_cap else None
             ),
             gpu_free_bytes=free_bytes,
+            document_tokens=document_tokens,
             reserve_tokens=reserve_tokens,
             char_overshoot=char_overshoot,
             require_budget_binding=require_budget_binding,
