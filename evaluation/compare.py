@@ -144,6 +144,21 @@ def describe_configuration(backend: str, config: dict) -> str:
                 label += f"@sub{config.get('max_subcall_chars')}"
             if config.get("fixed_chunk"):
                 label += "+fixed"
+        # Retrieval depth, for the same reason the scratchpad is here: a --search-k 0
+        # and a --search-k 5 run of one subset are the arm and its only fair
+        # comparator, and they rendered as two identical `rlm` rows -- which the
+        # duplicate-configuration checks below then read as one configuration run
+        # twice rather than as two arms.
+        if config.get("search_k"):
+            label += f"+bm25k{config['search_k']}"
+            if config.get("search_ablate"):
+                label += f"-no-{config['search_ablate'].replace(',', '-no-')}"
+        # Which chunks the structured arm was given. `mode` alone says "structured",
+        # so a provided-chunk run and its cheap-selector control collided here.
+        if config.get("chunks_source"):
+            label += f"+chunks-{config['chunks_source']}{config.get('chunks_k')}"
+        if config.get("ids_sha256"):
+            label += f"+ids{config['ids_sha256'][:6]}"
         return label
     press = config.get("press_name", "unknown")
     if config.get("memory_budget") is not None:

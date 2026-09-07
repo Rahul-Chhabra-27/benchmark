@@ -10,6 +10,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import time
 from dataclasses import asdict
@@ -24,6 +25,7 @@ from evaluation.benchmarks.results import score_prediction_frame
 from evaluation.results_layout import RLM_RESULTS_DIR
 
 from . import retrieval
+from .chunkset import ChunkSet, ChunkSetError, file_digest
 from .client import LLMClient
 from .datasets import available_datasets, canonical_dataset_name, load_examples
 from .rlm import RLM, SEARCH_ABLATABLE, MemoryBudget, Scratchpad, vanilla_answer
@@ -44,6 +46,11 @@ DEFAULT_MAX_SUBCALL_CHARS = 32000
 # build_run_dir_components, so they must be one literal each.
 DEFAULT_SEARCH_WINDOW = retrieval.DEFAULT_CHUNK_CHARS
 DEFAULT_SEARCH_OVERLAP = retrieval.DEFAULT_OVERLAP
+
+# Chunks per example for the structured arm. Matches retrieval's DEFAULT_K so a
+# `bm25` structured run and a --search-k 5 agentic run read the same windows, and
+# the only difference between them is the pipeline.
+DEFAULT_CHUNKS_K = retrieval.DEFAULT_K
 
 
 def _subcall_chars(value: str) -> Any:
@@ -107,6 +114,15 @@ RESUME_CRITICAL_KEYS = (
     "search_ablate",
     "sub_max_tokens",
     "data_dir",
+    # The structured arm. `chunks_file_sha256` rather than the path: two runs
+    # pointed at the same filename with different contents would otherwise resume
+    # into one checkpoint and merge two different selections into one score. Same
+    # for `ids_sha256` -- an id set picks WHICH rows are evaluated, exactly the
+    # property --sample-fraction is listed above for.
+    "chunks_source",
+    "chunks_k",
+    "chunks_file_sha256",
+    "ids_sha256",
     # Dicts: comparing them whole covers their nested knobs too
     # (keep_recent_turns inside memory_budget, max_notes_tokens inside
     # scratchpad), which have no top-level key of their own.
@@ -426,9 +442,19 @@ def write_run_artifacts(
     # failure mode of auto sizing, and invisible without both numbers side by side.
     # Outside the kvzip guard: the advertised cap governs the http arms too, and the
     # gap between it and average_sub_payload_chars is the finding, not a kvzip detail.
-    if config.get("mode") == "rlm":
+    if config.get("mode") in ("rlm", "structured"):
         runtime["subcall_chars_advertised"] = config.get("max_subcall_chars")
         runtime["subcall_chars_floor"] = config.get("min_subcall_chars") or 0
+    if config.get("mode") == "structured" and scored:
+        # `chunks_provided` is what the selector offered and `map_calls` what was
+        # actually read; they diverge when the per-example deadline or the sub-call
+        # cap cuts the map short, which is the difference between a thin selection
+        # and a truncated run. `chunks_with_findings` near 0 is this arm's version
+        # of sub_pressed_call_fraction near 0: the pipeline ran and learned nothing.
+        for key in ("chunks_provided", "map_calls", "chunks_with_findings"):
+            values = [(row or {}).get(key) for row in scored_frame.get("metrics", [])]
+            values = [v for v in values if v is not None]
+            runtime[f"average_{key}"] = float(sum(values) / len(values)) if values else 0.0
     if config.get("sub_backend") == "kvzip":
         runtime["subcall_sizing_mode"] = config.get("subcall_sizing_mode")
         runtime["subcall_target_compression_ratio"] = config.get("target_compression_ratio")
@@ -498,6 +524,15 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
         for part in ("locate", "example", "gate"):
             if part in getattr(args, "search_ablate", ()):
                 components.append(f"no-{part}")
+    # Last of all, and only for the structured arm, so every directory written
+    # before this mode existed keeps its exact name and its checkpoint stays
+    # reachable. `mode` already reads "structured"; this says which chunks.
+    if mode == "structured":
+        components.append(f"chunks-{args.chunks_source}{args.chunks_k}")
+        if getattr(args, "ids_sha256", None):
+            # Which rows ran is not otherwise in the name, and an id-restricted run
+            # must never resume into the full run's checkpoint.
+            components.append(f"ids-{args.ids_sha256[:8]}")
     return components
 
 
@@ -516,7 +551,7 @@ def main() -> None:
         default=None,
         help="shared Hugging Face config/subset, e.g. niah_single_1 for ruler32k",
     )
-    ap.add_argument("--mode", default="both", choices=["vanilla", "rlm", "both"])
+    ap.add_argument("--mode", default="both", choices=["vanilla", "rlm", "structured", "both"])
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument(
         "--split",
@@ -742,6 +777,40 @@ def main() -> None:
         help="runaway guard on search() calls per example, in the shape of --max-sub-calls. "
         "Searching is pure Python over a prebuilt index, so this should never bind",
     )
+    # --- Structured (map -> reduce) arm over PROVIDED chunks ---
+    # The search arm let the root FIND things; this hands it the chunks and takes
+    # the REPL away, so "who picked the text" and "was the loop worth it" become two
+    # axes instead of one bundled treatment.
+    ap.add_argument(
+        "--chunks-source",
+        default=None,
+        choices=["bm25", "file"],
+        help="where --mode structured gets its chunks: `bm25` selects the top --chunks-k windows "
+        "in-harness (the cheap-selector control), `file` reads them from --chunks-file, written "
+        "offline by a larger model. Required by --mode structured and rejected by every other mode",
+    )
+    ap.add_argument(
+        "--chunks-file",
+        default=None,
+        help="JSONL of pre-selected chunks, one record per example id (see chunkset.py). The file's "
+        "CONTENT hash is stamped into config.yaml, so editing it invalidates a resume",
+    )
+    ap.add_argument(
+        "--chunks-k",
+        type=int,
+        default=DEFAULT_CHUNKS_K,
+        help="chunks per example for --chunks-source bm25, and the size the `file` source is held "
+        "to: a provided chunk set may not send more than --chunks-k x --search-window characters. "
+        "Without that cap the provided-chunk arm simply reads more than the arm it is compared "
+        "against, and the result measures payload size instead of selection quality",
+    )
+    ap.add_argument(
+        "--ids-file",
+        default=None,
+        help="evaluate only the example ids in this file (one per line; blank lines and #comments "
+        "ignored), so several arms can be scored on exactly the same rows. Applied BEFORE --limit, "
+        "which it is therefore mutually exclusive with",
+    )
     compression_target = ap.add_mutually_exclusive_group()
     compression_target.add_argument(
         "--target-compression-ratio",
@@ -865,6 +934,28 @@ def main() -> None:
             f"--search-overlap ({args.search_overlap}) must satisfy 0 <= overlap < "
             f"--search-window ({args.search_window})"
         )
+    if args.chunks_k < 1:
+        ap.error("--chunks-k must be >= 1")
+    if args.mode == "structured":
+        if args.chunks_source is None:
+            ap.error("--mode structured requires --chunks-source {bm25,file}")
+        if args.search_k:
+            # search() is a REPL primitive and the structured arm has no REPL, so the
+            # flag would change nothing while still stamping `bm25k5` into the run
+            # directory -- naming an agentic retrieval depth the run never had.
+            ap.error("--mode structured has no REPL for search() to live in; use --chunks-k, not --search-k")
+    elif args.chunks_source is not None:
+        ap.error(f"--chunks-source is only meaningful with --mode structured, not --mode {args.mode}")
+    if args.chunks_source == "file" and not args.chunks_file:
+        ap.error("--chunks-source file requires --chunks-file")
+    if args.chunks_source == "bm25" and args.chunks_file:
+        ap.error("--chunks-file is only read by --chunks-source file; bm25 selects in-harness")
+    if args.ids_file and args.limit is not None:
+        # --ids-file is applied BEFORE --limit, so combining them means "the first N
+        # of the named rows" -- which reads like a cap but silently changes which
+        # experiment ran. Make the caller pick one.
+        ap.error("--ids-file and --limit both choose which rows run; pass only one")
+
     # A retrieval payload is k windows wide, and _cap_subcall truncates whatever
     # exceeds --max-subcall-chars. At the 2000-char default window that caps the
     # REAL depth near k=16, so a k=20 and a k=50 cell would both quietly read ~16
@@ -890,6 +981,48 @@ def main() -> None:
             f"--min-subcall-chars ({args.min_subcall_chars}) exceeds --max-subcall-chars "
             f"({args.max_subcall_chars}); the floor would be truncated away by the cap"
         )
+
+    # Hash the SORTED SET, not the file: two id files listing the same rows in a
+    # different order, or with a duplicate, describe the same experiment and must
+    # resume each other.
+    example_ids = None
+    args.ids_sha256 = None
+    if args.ids_file:
+        lines = Path(args.ids_file).read_text().splitlines()
+        wanted = [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
+        if not wanted:
+            ap.error(f"--ids-file {args.ids_file} lists no ids")
+        example_ids = set(wanted)
+        args.ids_sha256 = hashlib.sha256("\n".join(sorted(example_ids)).encode("utf-8")).hexdigest()
+
+    chunk_set = None
+    args.chunks_file_sha256 = None
+    if args.chunks_source == "file":
+        # Loaded and validated before a single example runs, for the same reason
+        # the data pack is checked before the grid loads a model: a malformed chunk
+        # file discovered on example 40 has already spent the run.
+        try:
+            chunk_set = ChunkSet.from_file(
+                args.chunks_file,
+                chunk_chars=args.search_window,
+                overlap=args.search_overlap,
+                max_payload_chars=args.chunks_k * args.search_window,
+            )
+        except ChunkSetError as exc:
+            ap.error(str(exc))
+        args.chunks_file_sha256 = file_digest(Path(args.chunks_file))
+
+    def chunks_for(example: dict) -> list:
+        """The chunks the structured arm reads for this example.
+
+        Both sources return `Hit`s on the same window grid, so the two differ in
+        WHICH windows were chosen and in nothing else -- which is the whole point
+        of having a cheap-selector control at all.
+        """
+        if chunk_set is not None:
+            return chunk_set.hits_for(example["id"], example["context"])
+        index = retrieval.get_index(example["context"], args.search_window, args.search_overlap)
+        return index.search(example["question"], args.chunks_k)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1022,6 +1155,7 @@ def main() -> None:
             # None and kvzip_backend derives it from the memory budget, so the
             # effective value only exists on `sub`, not on `args`.
             getattr(sub, "press_min_tokens", None),
+            ",".join(chunk_set.selectors) if chunk_set is not None else None,
         )
         if done:
             # The run-dir name cannot carry every result-affecting knob, so a resume
@@ -1068,6 +1202,7 @@ def main() -> None:
                 args.split,
                 sample_fraction=args.sample_fraction,
                 sample_seed=args.sample_seed,
+                ids=example_ids,
             ):
                 if ex["id"] in done:
                     continue
@@ -1109,7 +1244,10 @@ def main() -> None:
                         )
                         record.update(pred=pred, steps=1, finished=True, end_reason="")
                     else:
-                        r = rlm.run(ex["context"], question, answer_format=answer_format)
+                        if mode == "structured":
+                            r = rlm.run_structured(ex["context"], question, chunks_for(ex), answer_format=answer_format)
+                        else:
+                            r = rlm.run(ex["context"], question, answer_format=answer_format)
                         if hasattr(sub, "pop_example_stats"):
                             r.metrics["sub_kv"] = sub.pop_example_stats() or None
                         record.update(
@@ -1154,7 +1292,11 @@ def main() -> None:
                 # Check for answer strings in returned windows after the example;
                 # gold answers never reach the model. This loose diagnostic does
                 # not establish whether retrieval supplied sufficient evidence.
-                spans = (record.get("metrics") or {}).pop("search_retrieved_spans", None) if mode == "rlm" else None
+                spans = (
+                    (record.get("metrics") or {}).pop("search_retrieved_spans", None)
+                    if mode in ("rlm", "structured")
+                    else None
+                )
                 if spans:
                     retrieved = "".join(ex["context"][start:end] for start, end in spans)
                     record["gold_in_retrieved"] = is_correct(retrieved, ex["answers"])
@@ -1196,6 +1338,7 @@ def build_run_config(
     scratchpad: Scratchpad | None,
     subcall_sizing: Any,
     resolved_press_min_tokens: int | None = None,
+    chunk_selector: str | None = None,
 ) -> dict:
     """The run's full settings, as written to config.yaml.
 
@@ -1263,6 +1406,16 @@ def build_run_config(
         "search_overlap_chars": args.search_overlap,
         "max_search_calls": args.max_search_calls,
         "search_ablate": ",".join(args.search_ablate),
+        # The structured arm. `selector` is provenance, not a knob: it names what
+        # chose the chunks, which is the one thing about this arm that cannot be
+        # reconstructed from the flags.
+        "chunks_source": args.chunks_source,
+        "chunks_k": args.chunks_k if args.chunks_source else None,
+        "chunks_file": args.chunks_file,
+        "chunks_file_sha256": getattr(args, "chunks_file_sha256", None),
+        "chunks_selector": chunk_selector,
+        "ids_file": args.ids_file,
+        "ids_sha256": getattr(args, "ids_sha256", None),
         # Only zero-overlap RLM retrieval changed; preserve other runs' configs.
         **({"search_index_revision": 2} if mode == "rlm" and args.search_k > 0 and args.search_overlap == 0 else {}),
         # Which semantics produced document_coverage_fraction. Before this, spans

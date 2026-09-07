@@ -7,17 +7,24 @@ Run from the repository root (the module uses absolute `evaluation.*` imports):
 """
 
 import argparse
+import contextlib
 import inspect
+import io
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import yaml
 
 from evaluation.rlm import run_benchmark as rb
+from evaluation.rlm.datasets import _restrict
 from evaluation.rlm.rlm import Scratchpad, vanilla_answer
 from evaluation.rlm.run_benchmark import (
+    RESUME_CRITICAL_KEYS,
+    build_run_config,
     build_run_dir_components,
     load_done,
     resolve_compression_target,
@@ -236,6 +243,12 @@ def _args(**overrides) -> argparse.Namespace:
         search_overlap=400,
         max_search_calls=40,
         search_ablate=(),
+        chunks_source=None,
+        chunks_file=None,
+        chunks_k=5,
+        chunks_file_sha256=None,
+        ids_file=None,
+        ids_sha256=None,
     )
     base.update(overrides)
     return argparse.Namespace(**base)
@@ -505,3 +518,164 @@ class VanillaTruncationTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StructuredArmTest(unittest.TestCase):
+    """The provided-chunk arm: named apart from every other arm, and refusing the
+    flag combinations that would produce a plausible number for a run nobody made."""
+
+    def test_the_chunk_source_and_depth_are_in_the_run_directory_name(self):
+        args = _args(mode="structured", chunks_source="bm25", chunks_k=5)
+        self.assertEqual(
+            build_run_dir_components(args, "structured", None),
+            ["loft", "nq_128k", "Qwen_Qwen3-4B-Instruct-2507", "structured", "chunks-bm255"],
+        )
+
+    def test_a_file_arm_and_a_bm25_arm_of_the_same_depth_land_apart(self):
+        bm25 = build_run_dir_components(_args(mode="structured", chunks_source="bm25"), "structured", None)
+        provided = build_run_dir_components(_args(mode="structured", chunks_source="file"), "structured", None)
+        self.assertNotEqual(bm25, provided)
+
+    def test_an_id_restricted_run_cannot_share_a_directory_with_the_full_one(self):
+        full = build_run_dir_components(_args(mode="structured", chunks_source="bm25"), "structured", None)
+        sliced = build_run_dir_components(
+            _args(mode="structured", chunks_source="bm25", ids_sha256="deadbeefcafe"), "structured", None
+        )
+        self.assertNotEqual(full, sliced)
+        self.assertIn("ids-deadbeef", sliced)
+
+    def test_the_agentic_arms_keep_the_names_they_already_have(self):
+        # Every existing run directory must stay reachable: a renamed one orphans
+        # its checkpoint silently.
+        self.assertEqual(
+            build_run_dir_components(_args(), "rlm", None),
+            ["loft", "nq_128k", "Qwen_Qwen3-4B-Instruct-2507", "rlm"],
+        )
+        self.assertEqual(
+            build_run_dir_components(_args(search_k=5), "rlm", None),
+            ["loft", "nq_128k", "Qwen_Qwen3-4B-Instruct-2507", "rlm", "bm25k5"],
+        )
+
+    def test_the_chunk_file_is_identified_by_content_in_the_config(self):
+        # The path is not in RESUME_CRITICAL_KEYS; the hash is. Two runs pointed at
+        # the same filename with different contents must not resume each other.
+        args = _args(mode="structured", chunks_source="file", chunks_file="a.jsonl", chunks_file_sha256="aa")
+        config = build_run_config(args, "structured", "loft", None, None, None)
+        self.assertEqual(config["chunks_file_sha256"], "aa")
+        self.assertEqual(config["chunks_source"], "file")
+        self.assertEqual(config["chunks_k"], 5)
+        self.assertIn("chunks_file_sha256", RESUME_CRITICAL_KEYS)
+        self.assertIn("ids_sha256", RESUME_CRITICAL_KEYS)
+        self.assertIn("chunks_source", RESUME_CRITICAL_KEYS)
+
+    def test_an_agentic_run_records_no_chunk_source(self):
+        config = build_run_config(_args(), "rlm", "loft", None, None, None)
+        self.assertIsNone(config["chunks_source"])
+        self.assertIsNone(config["chunks_k"])
+
+    def test_a_resume_across_two_different_chunk_files_conflicts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            first = build_run_config(
+                _args(mode="structured", chunks_source="file", chunks_file="a.jsonl", chunks_file_sha256="aa"),
+                "structured",
+                "loft",
+                None,
+                None,
+                None,
+            )
+            (run_dir / "config.yaml").write_text(yaml.safe_dump(first))
+            second = build_run_config(
+                _args(mode="structured", chunks_source="file", chunks_file="a.jsonl", chunks_file_sha256="bb"),
+                "structured",
+                "loft",
+                None,
+                None,
+                None,
+            )
+            conflicts = resume_conflicts(run_dir, second)
+        self.assertTrue(any("chunks_file_sha256" in c for c in conflicts))
+
+
+class StructuredCliTest(unittest.TestCase):
+    def _run(self, *argv):
+        """main() up to its first argparse error. Returns the message."""
+        with mock.patch.object(sys, "argv", ["run_benchmark", *argv]), self.assertRaises(SystemExit):
+            with contextlib.redirect_stderr(io.StringIO()) as err:
+                rb.main()
+        return err.getvalue()
+
+    def test_structured_without_a_chunk_source_is_refused(self):
+        self.assertIn(
+            "--chunks-source", self._run("--dataset", "loft", "--data-dir", "nq_128k", "--mode", "structured")
+        )
+
+    def test_a_chunk_source_outside_structured_mode_is_refused(self):
+        message = self._run("--dataset", "loft", "--data-dir", "nq_128k", "--mode", "rlm", "--chunks-source", "bm25")
+        self.assertIn("only meaningful with --mode structured", message)
+
+    def test_search_k_in_structured_mode_is_refused(self):
+        # There is no REPL for search() to live in, and the flag would still stamp
+        # an agentic retrieval depth into the run directory name.
+        message = self._run(
+            "--dataset",
+            "loft",
+            "--data-dir",
+            "nq_128k",
+            "--mode",
+            "structured",
+            "--chunks-source",
+            "bm25",
+            "--search-k",
+            "5",
+        )
+        self.assertIn("no REPL", message)
+
+    def test_the_file_source_needs_a_file(self):
+        message = self._run(
+            "--dataset", "loft", "--data-dir", "nq_128k", "--mode", "structured", "--chunks-source", "file"
+        )
+        self.assertIn("--chunks-file", message)
+
+    def test_ids_file_and_limit_together_are_refused(self):
+        message = self._run(
+            "--dataset",
+            "loft",
+            "--data-dir",
+            "nq_128k",
+            "--mode",
+            "structured",
+            "--chunks-source",
+            "bm25",
+            "--ids-file",
+            "x.ids",
+            "--limit",
+            "5",
+        )
+        self.assertIn("only one", message)
+
+
+class IdsFilterTest(unittest.TestCase):
+    """--ids-file must be applied BEFORE --limit, or it evaluates whichever of the
+    wanted rows happened to fall inside the first N -- a smaller, silent experiment."""
+
+    ROWS = [{"id": f"ex-{i}", "context": "c", "question": "q", "answers": ["a"]} for i in range(10)]
+
+    def test_the_named_rows_are_kept_whatever_their_position(self):
+        kept = list(_restrict(iter(self.ROWS), frozenset({"ex-7", "ex-9"}), None))
+        self.assertEqual([r["id"] for r in kept], ["ex-7", "ex-9"])
+
+    def test_an_id_the_dataset_does_not_have_is_refused(self):
+        with self.assertRaises(ValueError) as caught:
+            list(_restrict(iter(self.ROWS), frozenset({"ex-1", "nope"}), None))
+        self.assertIn("nope", str(caught.exception))
+
+    def test_the_refusal_fires_before_any_row_is_yielded(self):
+        # Otherwise a mismatched id set is reported only after a full run has been
+        # spent on the rows that did match.
+        generator = _restrict(iter(self.ROWS), frozenset({"ex-1", "nope"}), None)
+        with self.assertRaises(ValueError):
+            next(generator)
+
+    def test_no_ids_passes_everything_through_untouched(self):
+        self.assertEqual(len(list(_restrict(iter(self.ROWS), None, None))), 10)

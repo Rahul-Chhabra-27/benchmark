@@ -277,6 +277,43 @@ SUB_SYSTEM_PROMPT = (
     "provided in the prompt. Be concise and factual."
 )
 
+# --------------------------------------------------------------------------- #
+# The structured (map -> reduce) arm
+# --------------------------------------------------------------------------- #
+# NEW constants rather than edits to the text above: the dense help is pinned
+# byte-for-byte by test_rlm_subcall_context, and every in-flight agentic arm
+# renders it. A structured run must not be able to shift what those arms send.
+#
+# The map question is asked once PER CHUNK, so it has to be answerable from one
+# passage alone -- "answer the question" is the wrong instruction for a chunk
+# that holds one hop of a two-hop question. Asking for the relevant FACTS keeps a
+# partially-relevant chunk useful instead of producing a confident wrong answer
+# the reduce step would then have to overrule.
+STRUCTURED_MAP_QUESTION = (
+    "Question: {task}\n\n"
+    "Read the passage above. Quote every fact in it that helps answer the question, "
+    "including partial information (a name, date, or link to another entity) that "
+    "would only answer part of the question. Do not guess, and do not use knowledge "
+    "from outside the passage. If the passage contains nothing relevant, reply with "
+    "exactly: {nothing}"
+)
+# Matched case-insensitively on a prefix, not compared for equality: a 4B model
+# asked for an exact string returns it with trailing punctuation or a short
+# apology attached often enough that equality would count those chunks as findings.
+STRUCTURED_NOTHING = "NOTHING RELEVANT"
+
+STRUCTURED_REDUCE_SYSTEM = (
+    "You are answering a question from notes taken by a reader who saw the source "
+    "passages. Use ONLY those notes. If they contradict each other, prefer the more "
+    "specific one. If they do not answer the question, say so plainly rather than "
+    "guessing."
+)
+STRUCTURED_REDUCE_TEMPLATE = (
+    "Question: {task}\n\n"
+    "Notes from {n_chunks} passage(s) of the document:\n{findings}\n\n"
+    "Answer the question from these notes. Be concise.{answer_format_note}"
+)
+
 # Sent when a model gives up without having read anything (see
 # min_sub_calls_before_abstain). Names the specific mistake -- searching for the
 # whole question -- because "search harder" alone left the root re-running the
@@ -365,6 +402,12 @@ MAX_SUB_FIT_FAILURES = 3
 # Seconds the exec watchdog is always given back after a sub-call, even if its
 # timer expired mid-call. See the re-arm site in llm_query.
 ALARM_REARM_FLOOR_S = 1.0
+
+# Cap on ONE map finding pasted into the reduce prompt. A sub model told to quote
+# the relevant facts occasionally returns the whole passage; k of those would put
+# the entire payload back into the root's window, which is the one thing the RLM
+# paradigm exists to avoid.
+REDUCE_FINDING_CHARS = 2000
 
 # How many characters one token is worth, for the two places that must convert
 # between the two units without a tokenizer: TokenCounter's no-tiktoken fallback
@@ -1215,7 +1258,13 @@ class RLM:
         return marker + text if truncated else text
 
     # ---------------- main loop ----------------
-    def run(self, context: str, task: str, answer_format: str | None = None) -> RLMResult:
+    def _base_metrics(self, split_capable: bool) -> dict:
+        """The per-example counters every arm reports.
+
+        Shared by `run` and `run_structured` so the two cannot drift: a key one
+        of them forgot would read downstream as a zero rather than as missing,
+        and `average_*` aggregates would quietly average over the wrong arms.
+        """
         metrics: dict = {
             "steps": 0,
             "root_prompt_tokens": 0,
@@ -1237,10 +1286,6 @@ class RLM:
         if self.scratchpad is not None:
             metrics["scratchpad"] = True
             metrics["notes_saved"] = 0
-        # A split-capable sub client (kvzip backend) accepts the context slice as
-        # a separate argument so the press compresses it apart from the question;
-        # the system prompt must teach whichever llm_query form is actually wired.
-        split_capable = hasattr(self.sub, "chat_split")
         if split_capable:
             metrics["sub_split_calls"] = 0
         # Pre-initialized only for a search arm, the same way sub_split_calls is, so
@@ -1250,6 +1295,137 @@ class RLM:
             metrics["search_hits_returned"] = 0
             metrics["search_hits_read"] = 0
             metrics["search_k_clamped_calls"] = 0
+        return metrics
+
+    def run_structured(
+        self,
+        context: str,
+        task: str,
+        chunks: Sequence[Hit],
+        answer_format: str | None = None,
+    ) -> RLMResult:
+        """Read a FIXED set of chunks with a fixed pipeline: map, then reduce.
+
+        The agentic loop is removed, not assisted. `run` gives the root a REPL and
+        lets it decide what to read and when to stop; this reads exactly the chunks
+        it was handed, once each, and then answers from what came back. That is the
+        whole treatment, so a win over `run` is attributable to the pipeline and the
+        chunks rather than to a luckier search.
+
+        The chunks come from outside: BM25 at a fixed k, or a chunk file written by
+        a larger model (see chunkset.py). Either way they arrive as `Hit`s, which is
+        what lets `llm_query` attribute the payload to real document spans -- the
+        same path the search arm uses, reused rather than reimplemented, so
+        coverage, truncation, caching and every sub_* counter mean the same thing
+        here as they do there.
+        """
+        split_capable = hasattr(self.sub, "chat_split")
+        metrics = self._base_metrics(split_capable)
+        metrics["chunks_provided"] = len(chunks)
+        metrics["map_calls"] = 0
+        metrics["chunks_with_findings"] = 0
+        cache: dict = {}
+        notes: list = []
+        self._sub_call_budget = self.max_sub_calls
+        self._deadline = time.monotonic() + self.run_timeout if self.run_timeout else None
+        env = self._make_env(context, metrics, cache, notes)
+        llm_query = env["llm_query"]
+        # Record the provided spans where a search arm records its retrieved ones, so
+        # run_benchmark's gold-in-retrieved diagnostic reads this arm with no new code.
+        # This is what the selector OFFERED; document_coverage_fraction, maintained by
+        # llm_query itself, is what was actually sent.
+        retrieved: list = metrics.setdefault("search_retrieved_spans", [])
+        retrieved.extend((hit.start, hit.end) for hit in chunks)
+
+        transcript: list = []
+        if not chunks:
+            # Distinct from an abstention: nothing was read because nothing was
+            # offered. Scoring it as "the model found nothing" would blame the model
+            # for an empty chunk file.
+            return RLMResult(None, 0, False, transcript, "structured_no_chunks", metrics)
+
+        map_question = STRUCTURED_MAP_QUESTION.format(task=task, nothing=STRUCTURED_NOTHING)
+        findings: list[tuple[int, str]] = []
+        timed_out = False
+        for step, hit in enumerate(chunks, start=1):
+            if self._deadline is not None and time.monotonic() > self._deadline:
+                timed_out = True
+                break
+            answer = (llm_query(map_question, [hit]) or "").strip()
+            metrics["map_calls"] += 1
+            transcript.append(
+                {
+                    "step": step,
+                    "reply": f"[map] chunk {step}/{len(chunks)} at [{hit.start}:{hit.end}]",
+                    "code": f"llm_query(MAP, [hits[{step - 1}]])",
+                    "observation": answer,
+                }
+            )
+            # Prefix match, case-insensitive: asked for an exact sentinel a 4B model
+            # returns it with punctuation or a short apology attached often enough
+            # that equality would count those chunks as real findings and paste
+            # "NOTHING RELEVANT." into the reduce step as evidence.
+            if answer and not answer.upper().lstrip().startswith(STRUCTURED_NOTHING):
+                findings.append((step, answer))
+                metrics["chunks_with_findings"] += 1
+        metrics["steps"] = len(transcript)
+
+        if not findings:
+            if timed_out:
+                return RLMResult(None, len(transcript), False, transcript, "run_timeout", metrics)
+            # Every chunk was read and none of them spoke to the question. That is an
+            # abstention in the same sense FINAL_NONE is, and it is earned by
+            # construction: the map step read everything it was given. The REPL's
+            # effort gate does not apply -- it exists to stop a root claiming absence
+            # without calling llm_query, which cannot happen here.
+            metrics["abstain_reason"] = "no chunk contained relevant information"
+            return RLMResult(None, len(transcript), True, transcript, "abstained", metrics)
+
+        findings_block = "\n\n".join(f"[{i}] {text[:REDUCE_FINDING_CHARS]}" for i, text in findings)
+        reduce_prompt = STRUCTURED_REDUCE_TEMPLATE.format(
+            task=task,
+            n_chunks=len(findings),
+            findings=findings_block,
+            answer_format_note=(f"\nFormat your answer as: {answer_format}" if answer_format else ""),
+        )
+        messages = [
+            {"role": "system", "content": STRUCTURED_REDUCE_SYSTEM},
+            {"role": "user", "content": reduce_prompt},
+        ]
+        ctx_tokens = self.tok.count_messages(messages)
+        reply = self.root.chat(messages)
+        metrics["root_prompt_tokens"] += ctx_tokens
+        metrics["root_completion_tokens"] += self.tok.count(reply or "")
+        # The server's own count, for the same reason root_reply prefers it: this is
+        # the number compared against KVPress's retained-token metric.
+        served = getattr(getattr(self.root, "usage", None), "last_prompt_tokens", None)
+        metrics["peak_context_tokens"] = max(metrics["peak_context_tokens"], served or ctx_tokens)
+        transcript.append(
+            {
+                "step": len(transcript) + 1,
+                "reply": reply,
+                "code": "[reduce]",
+                "observation": "",
+            }
+        )
+        metrics["steps"] = len(transcript)
+
+        answer = (reply or "").strip()
+        # Recorded, not rejected. `run`'s grounding guard exists to catch a root that
+        # answers from parametric memory without reading the document -- a failure
+        # this arm cannot have, since the root is shown nothing but findings quoted
+        # out of real chunks. Rejecting here would also have nowhere to go: there is
+        # no loop to nudge the model back into. So the flag stays as a diagnostic.
+        if answer and not any(_mentions(text, answer) for _, text in findings) and not _mentions(task, answer):
+            metrics["reduce_answer_not_quoted"] = True
+        return RLMResult(answer, len(transcript), True, transcript, "structured_complete", metrics)
+
+    def run(self, context: str, task: str, answer_format: str | None = None) -> RLMResult:
+        # A split-capable sub client (kvzip backend) accepts the context slice as
+        # a separate argument so the press compresses it apart from the question;
+        # the system prompt must teach whichever llm_query form is actually wired.
+        split_capable = hasattr(self.sub, "chat_split")
+        metrics = self._base_metrics(split_capable)
         cache: dict = {}
         notes: list = []
         self._sub_call_budget = self.max_sub_calls
