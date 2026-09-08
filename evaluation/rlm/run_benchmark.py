@@ -1023,14 +1023,15 @@ def main() -> None:
             # directory -- naming an agentic retrieval depth the run never had.
             ap.error("--mode structured has no REPL for search() to live in; use --chunks-k, not --search-k")
     elif args.mode == "rlm" and args.chunks_source is not None:
-        # Chunks chosen offline, read by the AGENTIC root: search() returns the
-        # provided set instead of BM25's, which is the one comparison that separates
-        # chunk quality from the pipeline without touching the loop or the prompt.
-        if args.chunks_source != "file":
-            ap.error(
-                "--mode rlm --chunks-source bm25 is exactly the existing --search-k arm; "
-                "pass --search-k on its own, or --chunks-source file to hand the root a chunk set"
-            )
+        # A FROZEN chunk set read by the AGENTIC root: search() returns the same
+        # windows for every query, so what varies between two such runs is only which
+        # windows were chosen. `bm25` is not a duplicate of --search-k here -- an
+        # adaptive search and a frozen top-k behave very differently in a loop whose
+        # main move is to rephrase and search again (measured: 1.5 search calls per
+        # example adaptive, 17 frozen) -- and it is the only fair control for a
+        # `file` arm, because both sides then pay that cost equally. It also reads
+        # exactly the windows --mode structured --chunks-source bm25 reads, so
+        # file-vs-bm25 means the same thing on both pipelines.
         if not args.search_k:
             ap.error(
                 "--mode rlm --chunks-source file delivers the chunks through search(), which is "

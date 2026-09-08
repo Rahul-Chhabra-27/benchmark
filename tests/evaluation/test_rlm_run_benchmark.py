@@ -684,6 +684,13 @@ class AgenticProvidedChunksTest(unittest.TestCase):
         self.assertNotEqual(full, sliced)
         self.assertIn("ids-deadbeef", sliced)
 
+    def test_a_frozen_bm25_arm_is_named_apart_from_the_adaptive_search_arm(self):
+        # Not a duplicate of --search-k: an adaptive search and a frozen top-k behave
+        # very differently in a loop whose main move is to search again.
+        adaptive = build_run_dir_components(_args(search_k=5), "rlm", None)
+        frozen = build_run_dir_components(_args(search_k=5, chunks_source="bm25"), "rlm", None)
+        self.assertEqual(frozen, [*adaptive, "chunks-bm255"])
+
     def test_the_chunk_source_is_recorded_for_an_agentic_run_too(self):
         config = build_run_config(
             _args(search_k=5, chunks_source="file", chunks_file="a.jsonl", chunks_file_sha256="aa"),
@@ -715,11 +722,6 @@ class StructuredCliTest(unittest.TestCase):
             "--dataset", "loft", "--data-dir", "nq_128k", "--mode", "vanilla", "--chunks-source", "file"
         )
         self.assertIn("only meaningful with --mode structured or --mode rlm", message)
-
-    def test_bm25_chunks_for_the_agentic_root_are_refused_as_a_duplicate_arm(self):
-        # It would be the --search-k arm under a second name, in a second directory.
-        message = self._run("--dataset", "loft", "--data-dir", "nq_128k", "--mode", "rlm", "--chunks-source", "bm25")
-        self.assertIn("exactly the existing --search-k arm", message)
 
     def test_provided_chunks_for_the_agentic_root_need_the_channel_they_arrive_on(self):
         message = self._run(

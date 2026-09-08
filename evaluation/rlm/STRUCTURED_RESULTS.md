@@ -138,9 +138,16 @@ Each run below removes exactly one difference; the harness flags for all four ar
 Runs 1–3 are the structured arm on the full 55 rows of each subset, so they land
 against §1's unselected comparison. Run 4 is the **agentic** root reading C's chunks
 on the hard slice, delivered through `search()` so the system prompt stays
-byte-identical to B's. It is run beside **4c** — the same agentic arm with BM25
-chunks, same slice, same commit — because the historical arm B ran at an older commit
-and scores ≈0 on this slice *by construction*, so it is not a control.
+byte-identical to B's.
+
+**Run 4's control had to be a frozen arm, not B.** A fixed chunk set returns the same
+windows for every query, and the root cannot tell — on nq it rephrased and re-searched
+**17 times per example against 1.5** for adaptive BM25, and at `--max-steps 12` the run
+ended before it read anything. So 4c is the same agentic arm over **frozen BM25 top-5**
+— the very windows B′ reads — at the same step budget. Both sides pay the trap, and
+4-vs-4c differs only in which windows were chosen, exactly as C-vs-B′ does on the
+structured pipeline. Comparing run 4 against the adaptive B would have measured the
+trap instead.
 
 Results: _pending_.
 

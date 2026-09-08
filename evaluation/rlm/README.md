@@ -180,12 +180,25 @@ byte-identical to the `--search-k` arm and the only difference between the two r
 is which windows come back. That is what separates chunk quality from the pipeline:
 `--chunks-source file` in `--mode structured` changes both at once.
 
-Two things travel with it. A fixed retriever **neutralises rephrasing** -- the arm
-answers "does the loop help *given* good chunks", not "does a better retriever help
-the loop" -- and the provided-chunk asymmetry above applies unchanged, so
-`context_tokens_held` is still not comparable across that line. `search_fixed: true`
-and `chunks_provided` are recorded in the metrics so no reader mistakes the arm for
-BM25. `--chunks-source bm25` is refused here: that is the `--search-k` arm already.
+**A frozen retriever traps the loop, and this is the arm's dominant effect.** The
+root's main move is to rephrase and search again; when every rephrasing returns the
+same windows it cannot tell, and it keeps going. Measured on nq: **17 search calls
+per example frozen against 1.5 adaptive**, with the read arriving so late that at
+`--max-steps 12` the run ends before it can answer. Budget the steps accordingly,
+and never compare a frozen arm against an adaptive `--search-k` one -- the
+difference is mostly the trap.
+
+That is why `--chunks-source bm25` is **allowed** in `--mode rlm`: a frozen BM25
+top-k is the only fair control for a frozen `file` arm, since both sides then pay
+the same cost and only the choice of windows differs. It also reads exactly the
+windows `--mode structured --chunks-source bm25` reads, so `file`-vs-`bm25` means
+the same thing on both pipelines. The adaptive arm remains `--search-k` alone, and
+lands in its own directory (`…bm25k5` against `…bm25k5__chunks-bm255`).
+
+The provided-chunk asymmetry above applies unchanged, so `context_tokens_held` is
+still not comparable across that line. `search_fixed: true` and `chunks_provided`
+are recorded so no reader mistakes a frozen arm for an adaptive one; read
+`average_search_calls` beside them.
 
 Read `average_chunks_with_findings` beside the score. Near zero means every chunk
 answered "nothing relevant" and the reduce step had nothing to work with -- this
