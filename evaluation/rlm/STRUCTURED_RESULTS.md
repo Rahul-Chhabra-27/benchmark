@@ -112,6 +112,38 @@ Because both changes shipped together, neither can be credited or blamed alone. 
 ablation that would separate them — clustering on with the old prompt, and the new
 prompt without clustering — has not been run.
 
+## 5. The four runs that would settle it
+
+Reading the transcripts behind §1 showed that **B′ differs from B in three ways, not
+one**, so §1 is a bundle rather than a result about structure:
+
+- the agentic arm reads all five windows in **one** call (45 of 50 nq examples, 40 of
+  49 hotpotqa), while B′ splits the same text across calls;
+- the map prompt interpolates LOFT's `task` verbatim — *"Print out the TITLE and ID of
+  the documents you use to answer…"* — which derails a sub-model looking at one window
+  (`nq:12` answers `TITLE: Philadelphia 76ers | ID: 732` and then `NOTHING RELEVANT`);
+- the reduce step can throw a correct finding away (`nq:4`), which B structurally cannot.
+
+Two of those are defects in this implementation, not properties of a fixed pipeline.
+Each run below removes exactly one difference; the harness flags for all four are in
+[`README.md`](README.md).
+
+| run | flag | separates | comparator |
+|---|---|---|---|
+| 1 | `--structured-map-question query` | the derailed extraction from "structure" | B′ rev2 |
+| 2 | `--structured-map-granularity all` | splitting the text from the pipeline | B′ rev2 |
+| 3 | `--structured-answer-shape offer` | the two revision-2 changes | B′ rev2, B′ rev1 |
+| 4 | `--mode rlm --chunks-source file` | chunk quality from the pipeline entirely | 4c, A |
+
+Runs 1–3 are the structured arm on the full 55 rows of each subset, so they land
+against §1's unselected comparison. Run 4 is the **agentic** root reading C's chunks
+on the hard slice, delivered through `search()` so the system prompt stays
+byte-identical to B's. It is run beside **4c** — the same agentic arm with BM25
+chunks, same slice, same commit — because the historical arm B ran at an older commit
+and scores ≈0 on this slice *by construction*, so it is not a control.
+
+Results: _pending_.
+
 ## Reproducing
 
 ```bash

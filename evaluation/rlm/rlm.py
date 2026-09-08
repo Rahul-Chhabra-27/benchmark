@@ -327,6 +327,59 @@ STRUCTURED_ANSWER_SHAPE = (
     "containing the answer ITSELF -- the bare value or list, with no sentence built "
     "around it, no restatement of the question, and no explanation after it."
 )
+# Revision 1's reduce wording, kept verbatim rather than paraphrased back into
+# existence, so `--structured-answer-shape offer` restores exactly the treatment
+# revision 2 replaced. Revision 2 shipped the shape requirement and the passage
+# clustering in one commit; these two constants are what lets the first be measured
+# apart from the second.
+#
+# ", in document order" stays in BOTH templates. Passages are emitted in document
+# order at every granularity now (see _map_groups), and a header that lied about
+# the order would put a third difference inside a two-way ablation.
+STRUCTURED_REDUCE_TEMPLATE_OFFER = (
+    "Question: {task}\n\n"
+    "Notes from {n_chunks} passage(s) of the document, in document order:\n{findings}\n\n"
+    "Answer the question from these notes. Be concise.{answer_format_note}"
+)
+STRUCTURED_ANSWER_SHAPE_OFFER = "\nFormat your answer as: {answer_format}"
+
+# The structured arm's three axes, in the shape of SEARCH_ABLATABLE above: a
+# bundled treatment gets one knob per component. Every DEFAULT reproduces revision
+# 2 byte-for-byte, so turning these on is the only way to change what the shipped
+# arm sends.
+#   map_question  task     the benchmark's task string, verbatim (revision 2)
+#                 query    only the query inside it, for a benchmark that wraps one
+#   granularity   passage  one call per contiguous passage (revision 2)
+#                 window   one call per provided window (revision 1's granularity)
+#                 all      ONE call over every window, as the agentic root sends
+#   answer_shape  require  the answer shape is demanded (revision 2)
+#                 offer    the answer shape is offered (revision 1)
+STRUCTURED_MAP_QUESTIONS = ("task", "query")
+STRUCTURED_MAP_GRANULARITIES = ("passage", "window", "all")
+STRUCTURED_ANSWER_SHAPES = ("require", "offer")
+
+
+def bare_query(task: str) -> str:
+    """The question inside a benchmark's instruction wrapper, or the task unchanged.
+
+    LOFT's `task` is not a question. It is a page of citation and formatting
+    instructions with the real query on a final `query:` line, and interpolated
+    verbatim into a PER-PASSAGE map prompt it derails a 4B sub-model: on nq:12 the
+    model performed the citation ritual ("TITLE: Philadelphia 76ers | ID: 732") and
+    then reported nothing relevant. Those instructions are aimed at a model that has
+    read the whole corpus, so they are meaningful to the reduce step and noise to the
+    map step -- which is why this is applied to the map question alone.
+
+    Deliberately conservative: a task with no `query:` line comes back untouched, so
+    a benchmark whose task IS the question is unaffected.
+    """
+    lines = str(task).splitlines()
+    for index in range(len(lines) - 1, -1, -1):
+        stripped = lines[index].lstrip()
+        if stripped[:6].lower() == "query:":
+            return "\n".join([stripped[6:], *lines[index + 1 :]]).strip()
+    return str(task).strip()
+
 
 # Sent when a model gives up without having read anything (see
 # min_sub_calls_before_abstain). Names the specific mistake -- searching for the
@@ -508,6 +561,35 @@ def _cluster_hits(hits: Sequence[Hit]) -> list[list[Hit]]:
     return clusters
 
 
+def _map_groups(hits: Sequence[Hit], granularity: str) -> list[list[Hit]]:
+    """The hits the map step reads, grouped one `llm_query` per group.
+
+    Three granularities, so "how many windows go into one call" stops being welded
+    to the pipeline:
+
+      passage  contiguous runs, one call each (revision 2) -- see _cluster_hits
+      window   one call per provided window (revision 1's granularity)
+      all      ONE call over every window, which is the payload the AGENTIC root
+               assembles: it passes the whole hit list to llm_query and _merge_spans
+               folds the overlap. 45 of 50 nq examples and 40 of 49 hotpotqa ones of
+               arm B did exactly that, so B is a single combined read rather than an
+               elaborate search -- and this value is what removes that difference.
+
+    Ordering is document order at EVERY granularity. Revision 1 emitted findings in
+    RANK order, but re-introducing that here would put a third variable inside a
+    two-way ablation, so `window` is revision 1's granularity on revision 2's
+    ordering rather than a byte-exact revision-1 rerun.
+    """
+    if granularity == "passage":
+        return _cluster_hits(hits)
+    ordered = sorted(hits, key=lambda h: (h.start, h.end))
+    if granularity == "window":
+        return [[hit] for hit in ordered]
+    if granularity == "all":
+        return [ordered] if ordered else []
+    raise ValueError(f"unknown map granularity {granularity!r}; choose from {list(STRUCTURED_MAP_GRANULARITIES)}")
+
+
 def _widen_spans(spans: Sequence[tuple[int, int]], target_chars: int, doc_len: int) -> list[tuple[int, int]]:
     """Grow retrieved spans symmetrically until they total `target_chars`.
 
@@ -658,6 +740,9 @@ class RLM:
         search_overlap_chars: int = retrieval.DEFAULT_OVERLAP,
         max_search_calls: int = 200,
         search_ablate: Sequence[str] = (),
+        structured_map_question: str = "task",
+        structured_map_granularity: str = "passage",
+        structured_answer_shape: str = "require",
     ):
         self.root = root_client
         self.sub = sub_client or root_client
@@ -740,6 +825,20 @@ class RLM:
                 f"unknown search_ablate components: {sorted(unknown)}; " f"choose from {sorted(SEARCH_ABLATABLE)}"
             )
         self.search_ablate = frozenset(search_ablate)
+        # The structured arm's three axes. Validated here rather than trusted from the
+        # CLI, because run_structured is also called directly by tests and by anything
+        # that imports this class -- and an unknown value would otherwise fall through
+        # to the revision-2 default and be reported as the arm that was asked for.
+        for name, value, allowed in (
+            ("structured_map_question", structured_map_question, STRUCTURED_MAP_QUESTIONS),
+            ("structured_map_granularity", structured_map_granularity, STRUCTURED_MAP_GRANULARITIES),
+            ("structured_answer_shape", structured_answer_shape, STRUCTURED_ANSWER_SHAPES),
+        ):
+            if value not in allowed:
+                raise ValueError(f"unknown {name} {value!r}; choose from {list(allowed)}")
+        self.structured_map_question = structured_map_question
+        self.structured_map_granularity = structured_map_granularity
+        self.structured_answer_shape = structured_answer_shape
         self._sub_call_budget: Optional[int] = None
         self._deadline: Optional[float] = None
         self.tok = TokenCounter(token_counter)
@@ -870,7 +969,14 @@ class RLM:
         new_start = max(0, new_end - want)
         return document[new_start:new_end], True
 
-    def _make_env(self, context: str, metrics: dict, cache: dict, notes: list) -> dict:
+    def _make_env(
+        self,
+        context: str,
+        metrics: dict,
+        cache: dict,
+        notes: list,
+        provided_chunks: Optional[Sequence[Hit]] = None,
+    ) -> dict:
         final_box: dict = {"value": None, "done": False}
         # `llm_query`'s second parameter is also called `context` and shadows the
         # document inside it, so bind the document under a name the closure keeps.
@@ -1104,11 +1210,19 @@ class RLM:
             env["note"] = note
 
         if self.search_k > 0:
+            # A chunk set handed to the AGENTIC root. `search` is the delivery channel
+            # rather than a new primitive precisely so the system prompt stays
+            # BYTE-IDENTICAL to the BM25 arm's: the only difference between the two
+            # runs is which windows come back, which is what makes "who chose the text"
+            # a clean single variable. The cost is that rephrasing is neutralised --
+            # every query returns the same set -- so this arm answers "does the loop
+            # help GIVEN good chunks", not "does a better retriever help the loop".
+            fixed_hits = list(provided_chunks) if provided_chunks is not None else None
+            if fixed_hits is not None:
+                metrics["chunks_provided"] = len(fixed_hits)
+                metrics["search_fixed"] = True
 
-            def search(query, k=None) -> list:
-                """BM25 over the whole document. Returns the best-matching windows."""
-                if metrics.get("search_calls", 0) >= self.max_search_calls:
-                    return []
+            def _search_limit(k) -> int:
                 # Clamp DOWNWARD only. `k` is the grid's swept axis, and the worked
                 # example in the system prompt is copied verbatim by the root -- if
                 # the example showed `k=5`, every cell would read 5 windows whatever
@@ -1120,13 +1234,25 @@ class RLM:
                     if requested > self.search_k:
                         metrics["search_k_clamped_calls"] = metrics.get("search_k_clamped_calls", 0) + 1
                     limit = min(requested, self.search_k)
-                index = retrieval.get_index(document, self.search_window_chars, self.search_overlap_chars)
-                hits = index.search(str(query), limit)
+                return limit
+
+            def _record_search(hits: list) -> list:
+                """One accounting path for both retrievers, so the counters cannot drift."""
                 metrics["search_calls"] = metrics.get("search_calls", 0) + 1
                 metrics["search_hits_returned"] = metrics.get("search_hits_returned", 0) + len(hits)
                 for hit in hits:
                     retrieved_spans.append((hit.start, hit.end))
                 return hits
+
+            def search(query, k=None) -> list:
+                """The document's best-matching windows for `query` (BM25) -- or, when this
+                run was handed a chunk set, that set: the same windows for any query."""
+                if metrics.get("search_calls", 0) >= self.max_search_calls:
+                    return []
+                if fixed_hits is not None:
+                    return _record_search(fixed_hits[: _search_limit(k)])
+                index = retrieval.get_index(document, self.search_window_chars, self.search_overlap_chars)
+                return _record_search(index.search(str(query), _search_limit(k)))
 
             env["search"] = search
 
@@ -1380,11 +1506,18 @@ class RLM:
             # for an empty chunk file.
             return RLMResult(None, 0, False, transcript, "structured_no_chunks", metrics)
 
-        map_question = STRUCTURED_MAP_QUESTION.format(task=task, nothing=STRUCTURED_NOTHING)
-        # One call per CONTIGUOUS PASSAGE, not per window: see _cluster_hits. This
-        # also puts the passages in document order, which is the order the agentic
-        # path's payload is assembled in and the order the reduce announces.
-        clusters = _cluster_hits(chunks)
+        # The map step sees the QUESTION; the reduce step sees the benchmark's whole
+        # task string. LOFT wraps its query in citation and formatting instructions
+        # that mean something to a model which has read the corpus and derail one
+        # looking at a single window -- and the same string carries the output
+        # contract the scorer matches on, so stripping it at the reduce would confound
+        # accuracy with scoring.
+        map_task = bare_query(task) if self.structured_map_question == "query" else task
+        map_question = STRUCTURED_MAP_QUESTION.format(task=map_task, nothing=STRUCTURED_NOTHING)
+        # One call per CONTIGUOUS PASSAGE by default: see _cluster_hits and _map_groups.
+        # Every granularity puts the passages in document order, which is the order the
+        # agentic path's payload is assembled in and the order the reduce announces.
+        clusters = _map_groups(chunks, self.structured_map_granularity)
         metrics["map_spans"] = len(clusters)
         findings: list[tuple[int, str]] = []
         timed_out = False
@@ -1424,14 +1557,20 @@ class RLM:
             return RLMResult(None, len(transcript), True, transcript, "abstained", metrics)
 
         findings_block = "\n\n".join(f"[{i}] {text[:REDUCE_FINDING_CHARS]}" for i, text in findings)
-        reduce_prompt = STRUCTURED_REDUCE_TEMPLATE.format(
+        # `offer` is revision 1's treatment restored whole: its reduce line ("Be
+        # concise.") and its note ("Format your answer as: ..."), so the answer-shape
+        # change can be scored apart from the clustering change it shipped with.
+        offered = self.structured_answer_shape == "offer"
+        reduce_template = STRUCTURED_REDUCE_TEMPLATE_OFFER if offered else STRUCTURED_REDUCE_TEMPLATE
+        shape_note = STRUCTURED_ANSWER_SHAPE_OFFER if offered else STRUCTURED_ANSWER_SHAPE
+        reduce_prompt = reduce_template.format(
             task=task,
             n_chunks=len(findings),
             findings=findings_block,
             answer_format_note=(
-                STRUCTURED_ANSWER_SHAPE.format(answer_format=answer_format.strip())
+                shape_note.format(answer_format=answer_format.strip())
                 if answer_format
-                else "\nReply with the answer itself and nothing else."
+                else ("" if offered else "\nReply with the answer itself and nothing else.")
             ),
         )
         messages = [
@@ -1466,7 +1605,16 @@ class RLM:
             metrics["reduce_answer_not_quoted"] = True
         return RLMResult(answer, len(transcript), True, transcript, "structured_complete", metrics)
 
-    def run(self, context: str, task: str, answer_format: str | None = None) -> RLMResult:
+    def run(
+        self,
+        context: str,
+        task: str,
+        answer_format: str | None = None,
+        chunks: Sequence[Hit] | None = None,
+    ) -> RLMResult:
+        """The agentic arm. `chunks`, when given, replaces what `search` returns with a
+        set chosen outside the run -- same REPL, same system prompt, different windows.
+        """
         # A split-capable sub client (kvzip backend) accepts the context slice as
         # a separate argument so the press compresses it apart from the question;
         # the system prompt must teach whichever llm_query form is actually wired.
@@ -1476,7 +1624,7 @@ class RLM:
         notes: list = []
         self._sub_call_budget = self.max_sub_calls
         self._deadline = time.monotonic() + self.run_timeout if self.run_timeout else None
-        env = self._make_env(context, metrics, cache, notes)
+        env = self._make_env(context, metrics, cache, notes, provided_chunks=chunks)
 
         system_msg = {
             "role": "system",

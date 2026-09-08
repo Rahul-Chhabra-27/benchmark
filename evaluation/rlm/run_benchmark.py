@@ -28,7 +28,16 @@ from . import retrieval
 from .chunkset import ChunkSet, ChunkSetError, file_digest
 from .client import LLMClient
 from .datasets import available_datasets, canonical_dataset_name, load_examples
-from .rlm import RLM, SEARCH_ABLATABLE, MemoryBudget, Scratchpad, vanilla_answer
+from .rlm import (
+    RLM,
+    SEARCH_ABLATABLE,
+    STRUCTURED_ANSWER_SHAPES,
+    STRUCTURED_MAP_GRANULARITIES,
+    STRUCTURED_MAP_QUESTIONS,
+    MemoryBudget,
+    Scratchpad,
+    vanilla_answer,
+)
 from .sizing import (
     DEFAULT_MIN_TOKENS,
     DEFAULT_RESERVE_TOKENS,
@@ -123,6 +132,13 @@ RESUME_CRITICAL_KEYS = (
     "chunks_k",
     "chunks_file_sha256",
     "ids_sha256",
+    # The three structured axes. In the slug too (only when non-default, so existing
+    # directories keep their names), but listed here for the same reason `search_k`
+    # is: the slug says which components were withheld, and a checkpoint written
+    # before these flags existed carries no value at all for them.
+    "structured_map_question",
+    "structured_map_granularity",
+    "structured_answer_shape",
     # Dicts: comparing them whole covers their nested knobs too
     # (keep_recent_turns inside memory_budget, max_notes_tokens inside
     # scratchpad), which have no top-level key of their own.
@@ -454,7 +470,7 @@ def write_run_artifacts(
     if config.get("mode") in ("rlm", "structured"):
         runtime["subcall_chars_advertised"] = config.get("max_subcall_chars")
         runtime["subcall_chars_floor"] = config.get("min_subcall_chars") or 0
-    if config.get("mode") == "structured" and scored:
+    if scored and (config.get("mode") == "structured" or config.get("chunks_source")):
         # `chunks_provided` is what the selector offered and `map_calls` what was
         # actually read; they diverge when the per-example deadline or the sub-call
         # cap cuts the map short, which is the difference between a thin selection
@@ -463,7 +479,12 @@ def write_run_artifacts(
         # map_calls is now passages, not windows: chunks_provided minus map_spans is
         # how many adjacent windows were coalesced, which is the whole point of the
         # clustering and invisible without both numbers.
-        for key in ("chunks_provided", "map_spans", "map_calls", "chunks_with_findings"):
+        # The agentic provided-chunk arm has no map step, so only the size of the
+        # set it was handed is meaningful there.
+        keys = ("chunks_provided", "map_spans", "map_calls", "chunks_with_findings")
+        if config.get("mode") != "structured":
+            keys = ("chunks_provided",)
+        for key in keys:
             values = [(row or {}).get(key) for row in scored_frame.get("metrics", [])]
             values = [v for v in values if v is not None]
             runtime[f"average_{key}"] = float(sum(values) / len(values)) if values else 0.0
@@ -541,10 +562,26 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
     # reachable. `mode` already reads "structured"; this says which chunks.
     if mode == "structured":
         components.append(f"chunks-{args.chunks_source}{args.chunks_k}")
-        if getattr(args, "ids_sha256", None):
-            # Which rows ran is not otherwise in the name, and an id-restricted run
-            # must never resume into the full run's checkpoint.
-            components.append(f"ids-{args.ids_sha256[:8]}")
+        # The revision-2 axes, stamped only when NON-default, so every directory
+        # written by the revision-2 campaign keeps its exact name and its checkpoint
+        # stays reachable -- the same rule --search-ablate follows above.
+        if getattr(args, "structured_map_question", "task") != "task":
+            components.append(f"mapq-{args.structured_map_question}")
+        if getattr(args, "structured_map_granularity", "passage") != "passage":
+            components.append(f"mapg-{args.structured_map_granularity}")
+        if getattr(args, "structured_answer_shape", "require") != "require":
+            components.append(f"shape-{args.structured_answer_shape}")
+    # The agentic arm reading a chunk set chosen outside the run. It still carries
+    # `bm25k<N>` from the block above, because search() is how the chunks arrive and
+    # k still bounds them; this component is what says the windows are not BM25's.
+    if mode == "rlm" and getattr(args, "chunks_source", None):
+        components.append(f"chunks-{args.chunks_source}{args.chunks_k}")
+    # Last of all, and for EVERY mode: --ids-file picks WHICH rows run and reaches
+    # nothing else in the name, so without this an id-restricted run resumes into the
+    # full run's checkpoint and merges two experiments. Kept last so every structured
+    # directory written before the agentic arm existed keeps its exact name.
+    if getattr(args, "ids_sha256", None):
+        components.append(f"ids-{args.ids_sha256[:8]}")
     return components
 
 
@@ -823,6 +860,35 @@ def main() -> None:
         "ignored), so several arms can be scored on exactly the same rows. Applied BEFORE --limit, "
         "which it is therefore mutually exclusive with",
     )
+    # The three components of the revision-2 structured treatment, one flag each, in
+    # the shape of --search-ablate. Every default reproduces revision 2 exactly, so a
+    # run that passes none of them is byte-identical to the arm already on the NAS.
+    ap.add_argument(
+        "--structured-map-question",
+        default="task",
+        choices=list(STRUCTURED_MAP_QUESTIONS),
+        help="what the map step asks about each passage: `task` interpolates the benchmark's "
+        "task string verbatim (LOFT's is a page of citation instructions, which derails a 4B "
+        "sub-model reading one window), `query` strips it to the query inside. The reduce step "
+        "always sees the full task -- it carries the output contract the scorer matches on",
+    )
+    ap.add_argument(
+        "--structured-map-granularity",
+        default="passage",
+        choices=list(STRUCTURED_MAP_GRANULARITIES),
+        help="how many windows go into one map call: `passage` merges touching windows into "
+        "contiguous runs, `window` reads each provided window alone, `all` reads every window "
+        "in ONE call -- which is the payload the agentic root assembles, and the difference "
+        "that separates `splitting the text` from `the pipeline`",
+    )
+    ap.add_argument(
+        "--structured-answer-shape",
+        default="require",
+        choices=list(STRUCTURED_ANSWER_SHAPES),
+        help="whether the reduce step REQUIRES the benchmark's answer shape (a bare value on a "
+        "final line) or merely OFFERS it as a format. `offer` is revision 1's wording, restored "
+        "so the shape change can be scored apart from the clustering change it shipped with",
+    )
     compression_target = ap.add_mutually_exclusive_group()
     compression_target.add_argument(
         "--target-compression-ratio",
@@ -956,8 +1022,31 @@ def main() -> None:
             # flag would change nothing while still stamping `bm25k5` into the run
             # directory -- naming an agentic retrieval depth the run never had.
             ap.error("--mode structured has no REPL for search() to live in; use --chunks-k, not --search-k")
+    elif args.mode == "rlm" and args.chunks_source is not None:
+        # Chunks chosen offline, read by the AGENTIC root: search() returns the
+        # provided set instead of BM25's, which is the one comparison that separates
+        # chunk quality from the pipeline without touching the loop or the prompt.
+        if args.chunks_source != "file":
+            ap.error(
+                "--mode rlm --chunks-source bm25 is exactly the existing --search-k arm; "
+                "pass --search-k on its own, or --chunks-source file to hand the root a chunk set"
+            )
+        if not args.search_k:
+            ap.error(
+                "--mode rlm --chunks-source file delivers the chunks through search(), which is "
+                "only bound with --search-k > 0. Use the same --search-k as the arm you compare against"
+            )
     elif args.chunks_source is not None:
-        ap.error(f"--chunks-source is only meaningful with --mode structured, not --mode {args.mode}")
+        ap.error(f"--chunks-source is only meaningful with --mode structured or --mode rlm, " f"not --mode {args.mode}")
+    if args.mode != "structured" and (
+        args.structured_map_question != "task"
+        or args.structured_map_granularity != "passage"
+        or args.structured_answer_shape != "require"
+    ):
+        # They change the map and reduce steps, which only exist in the structured
+        # pipeline. Silently ignoring one would stamp an axis into config.yaml that
+        # the run never had.
+        ap.error(f"the --structured-* axes only apply to --mode structured, not --mode {args.mode}")
     if args.chunks_source == "file" and not args.chunks_file:
         ap.error("--chunks-source file requires --chunks-file")
     if args.chunks_source == "bm25" and args.chunks_file:
@@ -1025,7 +1114,8 @@ def main() -> None:
         args.chunks_file_sha256 = file_digest(Path(args.chunks_file))
 
     def chunks_for(example: dict) -> list:
-        """The chunks the structured arm reads for this example.
+        """The chunks this example is read through: the structured arm's map step, or
+        what `search()` returns to an agentic root handed a chunk set.
 
         Both sources return `Hit`s on the same window grid, so the two differ in
         WHICH windows were chosen and in nothing else -- which is the whole point
@@ -1147,6 +1237,9 @@ def main() -> None:
         search_overlap_chars=args.search_overlap,
         max_search_calls=args.max_search_calls,
         search_ablate=args.search_ablate,
+        structured_map_question=args.structured_map_question,
+        structured_map_granularity=args.structured_map_granularity,
+        structured_answer_shape=args.structured_answer_shape,
     )
 
     for mode in modes:
@@ -1259,7 +1352,12 @@ def main() -> None:
                         if mode == "structured":
                             r = rlm.run_structured(ex["context"], question, chunks_for(ex), answer_format=answer_format)
                         else:
-                            r = rlm.run(ex["context"], question, answer_format=answer_format)
+                            r = rlm.run(
+                                ex["context"],
+                                question,
+                                answer_format=answer_format,
+                                chunks=chunks_for(ex) if args.chunks_source else None,
+                            )
                         if hasattr(sub, "pop_example_stats"):
                             r.metrics["sub_kv"] = sub.pop_example_stats() or None
                         record.update(
@@ -1425,6 +1523,18 @@ def build_run_config(
         "chunks_k": args.chunks_k if args.chunks_source else None,
         "chunks_file": args.chunks_file,
         "chunks_file_sha256": getattr(args, "chunks_file_sha256", None),
+        # The three components of the revision-2 treatment, recorded whatever their
+        # value: `structured_revision` names the CODE generation, and these name the
+        # configuration it ran in. A run that leaves them alone is revision 2 exactly.
+        **(
+            {
+                "structured_map_question": args.structured_map_question,
+                "structured_map_granularity": args.structured_map_granularity,
+                "structured_answer_shape": args.structured_answer_shape,
+            }
+            if mode == "structured"
+            else {}
+        ),
         "chunks_selector": chunk_selector,
         "ids_file": args.ids_file,
         "ids_sha256": getattr(args, "ids_sha256", None),

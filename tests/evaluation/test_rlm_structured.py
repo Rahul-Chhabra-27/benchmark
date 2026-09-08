@@ -11,7 +11,7 @@ stay distinguishable from one another.
 import unittest
 
 from evaluation.rlm.retrieval import Hit
-from evaluation.rlm.rlm import RLM, STRUCTURED_NOTHING, _cluster_hits
+from evaluation.rlm.rlm import RLM, STRUCTURED_NOTHING, _cluster_hits, _map_groups, bare_query
 
 DOCUMENT = "".join(f"passage {i} says thing {i}. " for i in range(400))
 
@@ -257,3 +257,122 @@ class AnswerShapeTest(unittest.TestCase):
         root, sub, rlm = build(["fact"])
         rlm.run_structured(DOCUMENT, "q", hits((0, 50)))
         self.assertIn("in document order", root.asked[0])
+
+
+LOFT_TASK = (
+    "====== Now let's start! ======\n"
+    "Based on the documents above, can you answer the following query? Print out the "
+    "TITLE and ID of the documents you use to answer. Then format the answers into a list.\n"
+    "query: when did season 4 of glee come out\n"
+)
+
+
+class MapQuestionTest(unittest.TestCase):
+    """LOFT's `task` is a page of citation instructions with the query on the last
+    line. Interpolated per-window it derails a 4B sub-model; at the reduce step it
+    carries the output contract the scorer matches on."""
+
+    def test_the_loft_wrapper_is_stripped_to_its_query(self):
+        self.assertEqual(bare_query(LOFT_TASK), "when did season 4 of glee come out")
+
+    def test_a_task_that_is_already_a_question_is_untouched(self):
+        self.assertEqual(bare_query("who invented the kazoo?"), "who invented the kazoo?")
+
+    def test_text_with_no_query_line_is_untouched(self):
+        task = "Read the documents.\nThen answer.\nWhat is the capital of Peru?"
+        self.assertEqual(bare_query(task), task)
+
+    def test_the_last_query_line_wins(self):
+        # A document quoted inside the task can contain the word too; the wrapper's
+        # own query is always last.
+        self.assertEqual(bare_query("query: a decoy\nquery: the real one"), "the real one")
+
+    def test_the_map_step_asks_only_the_query_when_told_to(self):
+        root, sub, rlm = build(["fact"], structured_map_question="query")
+        rlm.run_structured(DOCUMENT, LOFT_TASK, hits((0, 50)), answer_format="Final Answer: ")
+        self.assertIn("when did season 4 of glee come out", sub.asked[0])
+        self.assertNotIn("Print out the TITLE", sub.asked[0])
+
+    def test_the_reduce_step_still_sees_the_whole_task(self):
+        root, sub, rlm = build(["fact"], structured_map_question="query")
+        rlm.run_structured(DOCUMENT, LOFT_TASK, hits((0, 50)), answer_format="Final Answer: ")
+        self.assertIn("Print out the TITLE", root.asked[0])
+
+    def test_the_default_interpolates_the_task_verbatim(self):
+        root, sub, rlm = build(["fact"])
+        rlm.run_structured(DOCUMENT, LOFT_TASK, hits((0, 50)))
+        self.assertIn("Print out the TITLE", sub.asked[0])
+
+
+class MapGranularityTest(unittest.TestCase):
+    """How many windows go into one map call, as an axis rather than a property of
+    the pipeline: `all` is the payload the agentic root assembles."""
+
+    def test_window_reads_each_provided_window_alone(self):
+        root, sub, rlm = build(["fact"], structured_map_granularity="window")
+        result = rlm.run_structured(DOCUMENT, "q", hits((0, 2000), (1600, 3600)))
+        self.assertEqual(sub.calls, 2)
+        self.assertEqual(result.metrics["map_spans"], 2)
+
+    def test_all_reads_every_window_in_one_call(self):
+        root, sub, rlm = build(["fact"], structured_map_granularity="all")
+        result = rlm.run_structured(DOCUMENT, "q", hits((0, 2000), (6000, 8000)))
+        self.assertEqual(sub.calls, 1)
+        self.assertEqual(result.metrics["map_spans"], 1)
+        self.assertEqual(result.metrics["chunks_provided"], 2)
+        # Both windows reach the one call, which is what makes it arm B's payload.
+        self.assertIn(DOCUMENT[0:2000], sub.asked[0])
+        self.assertIn(DOCUMENT[6000:8000], sub.asked[0])
+
+    def test_all_still_folds_the_shared_overlap_once(self):
+        root, sub, rlm = build(["fact"], structured_map_granularity="all")
+        rlm.run_structured(DOCUMENT, "q", hits((0, 2000), (1600, 3600)))
+        self.assertEqual(sub.asked[0].count(DOCUMENT[1600:2000]), 1)
+
+    def test_every_granularity_emits_document_order(self):
+        # Ordering is held constant across the axis on purpose: revision 1 emitted
+        # rank order, and restoring that here would put a third variable inside a
+        # two-way ablation.
+        ranked = hits((8000, 10000), (0, 2000), (4000, 6000))
+        for granularity in ("passage", "window", "all"):
+            groups = _map_groups(ranked, granularity)
+            starts = [hit.start for group in groups for hit in group]
+            self.assertEqual(starts, sorted(starts), granularity)
+
+    def test_an_unknown_granularity_is_refused_at_construction(self):
+        with self.assertRaises(ValueError):
+            build(["fact"], structured_map_granularity="paragraph")
+
+    def test_the_default_is_the_shipped_passage_clustering(self):
+        root, sub, rlm = build(["fact"])
+        result = rlm.run_structured(DOCUMENT, "q", hits((0, 2000), (1600, 3600)))
+        self.assertEqual(result.metrics["map_spans"], 1)
+
+
+class AnswerShapeOfferTest(unittest.TestCase):
+    """Revision 1's wording, restored whole, so the shape change can be scored apart
+    from the clustering change it shipped with."""
+
+    def test_offer_restores_the_revision_one_format_note(self):
+        root, sub, rlm = build(["fact"], structured_answer_shape="offer")
+        rlm.run_structured(DOCUMENT, "q", hits((0, 50)), answer_format="Final Answer: ")
+        prompt = root.asked[0]
+        self.assertIn("Format your answer as: Final Answer:", prompt)
+        self.assertIn("Be concise.", prompt)
+        self.assertNotIn("no sentence built around it", prompt)
+
+    def test_offer_without_an_answer_format_adds_no_note_at_all(self):
+        root, sub, rlm = build(["fact"], structured_answer_shape="offer")
+        rlm.run_structured(DOCUMENT, "q", hits((0, 50)))
+        self.assertNotIn("answer itself and nothing else", root.asked[0])
+        self.assertIn("Be concise.", root.asked[0])
+
+    def test_require_is_the_default_and_is_unchanged(self):
+        root, sub, rlm = build(["fact"])
+        rlm.run_structured(DOCUMENT, "q", hits((0, 50)), answer_format="Final Answer: ")
+        self.assertIn("no sentence built around it", root.asked[0])
+        self.assertNotIn("Be concise.", root.asked[0])
+
+    def test_an_unknown_shape_is_refused_at_construction(self):
+        with self.assertRaises(ValueError):
+            build(["fact"], structured_answer_shape="demand")

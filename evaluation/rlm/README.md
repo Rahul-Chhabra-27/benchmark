@@ -146,6 +146,47 @@ attributable to the pipeline rather than to a luckier search.
 | `--chunks-source file` | chunks from `--chunks-file`, chosen offline (see `chunkset.py`). Isolates selection quality, at the cost of the asymmetry above. |
 | `--ids-file` | restrict the run to named example ids, so several arms score the same rows. Applied BEFORE `--limit`, and refuses to combine with it. |
 
+### Taking the revision-2 treatment apart
+
+Revision 2 changed two things in one commit -- the map step began reading one
+contiguous *passage* per call instead of one window, and the reduce step began
+*requiring* the answer shape instead of offering it -- and a third defect was found
+afterwards. Each is now its own flag, in the shape of `--search-ablate`. **Every
+default reproduces revision 2 exactly**, so a run that passes none of them is
+byte-identical to the campaign already on disk, down to the directory name.
+
+| Flag | Default | What the non-default value does |
+|---|---|---|
+| `--structured-map-question` | `task` | `query` strips the benchmark's wrapper down to the query inside it. LOFT's `task` is not a question but a page of citation instructions (*"Print out the TITLE and ID…"*), which derails a 4B sub-model reading one 2,000-char window. The **reduce** step always sees the full task -- it carries the output contract the scorer matches on. |
+| `--structured-map-granularity` | `passage` | `window` reads each provided window alone (revision 1's granularity); `all` reads every window in ONE call, which is the payload the agentic root assembles -- 45 of 50 nq examples of the `--search-k` arm passed the whole hit list to a single `llm_query`. |
+| `--structured-answer-shape` | `require` | `offer` restores revision 1's reduce wording ("Be concise." plus *"Format your answer as: …"*), so the shape change can be scored apart from the clustering change it shipped with. |
+
+Ordering is held constant across the granularity axis: passages are emitted in
+**document order** at every setting. Revision 1 emitted them in rank order, so
+`window` is revision 1's granularity on revision 2's ordering rather than a
+byte-exact revision-1 rerun -- re-introducing rank order would put a third variable
+inside a two-way ablation. The byte-exact revision-1 numbers are the revision-1 runs.
+
+`average_map_spans` is what to read for the granularity axis: `all` pins it at 1,
+and `average_chunks_with_findings` then becomes "did the single call find anything"
+rather than "how many of five did".
+
+## Provided chunks read by the AGENTIC root
+
+`--mode rlm --search-k <k> --chunks-source file --chunks-file <…>` gives the REPL
+arm a chunk set chosen offline. The chunks arrive through `search()`, which returns
+them for **any** query, so the loop, the protocol and the system prompt are all
+byte-identical to the `--search-k` arm and the only difference between the two runs
+is which windows come back. That is what separates chunk quality from the pipeline:
+`--chunks-source file` in `--mode structured` changes both at once.
+
+Two things travel with it. A fixed retriever **neutralises rephrasing** -- the arm
+answers "does the loop help *given* good chunks", not "does a better retriever help
+the loop" -- and the provided-chunk asymmetry above applies unchanged, so
+`context_tokens_held` is still not comparable across that line. `search_fixed: true`
+and `chunks_provided` are recorded in the metrics so no reader mistakes the arm for
+BM25. `--chunks-source bm25` is refused here: that is the `--search-k` arm already.
+
 Read `average_chunks_with_findings` beside the score. Near zero means every chunk
 answered "nothing relevant" and the reduce step had nothing to work with -- this
 arm's version of `sub_pressed_call_fraction` near zero, and the tell that the

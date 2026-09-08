@@ -5,6 +5,7 @@
 import pytest
 
 from evaluation.rlm import retrieval
+from evaluation.rlm.retrieval import Hit
 from evaluation.rlm.rlm import HIT_SEPARATOR, READ_STRATEGY_DEFAULT, RLM, SEARCH_TERMS_FIND, SUB_FIT_FAILURE_PREFIX
 
 DOCUMENT = (
@@ -47,7 +48,7 @@ def _clean_cache():
     retrieval.reset_cache()
 
 
-def build(sub=None, **kw):
+def build(sub=None, provided_chunks=None, **kw):
     """An RLM plus the pieces _make_env needs, without running the loop."""
     root = FakeClient()
     rlm = RLM(root_client=root, sub_client=sub or FakeClient(), search_k=kw.pop("search_k", 3), **kw)
@@ -62,7 +63,7 @@ def build(sub=None, **kw):
         "evictions": 0,
         "overflow_evictions": 0,
     }
-    env = rlm._make_env(DOCUMENT, metrics, {}, [])
+    env = rlm._make_env(DOCUMENT, metrics, {}, [], provided_chunks=provided_chunks)
     return rlm, env, metrics
 
 
@@ -277,3 +278,90 @@ class TestAblation:
     def test_ablation_is_empty_by_default(self):
         rlm, _, _ = build(search_k=5)
         assert rlm.search_ablate == frozenset()
+
+
+# Windows a selector chose offline, on the same grid BM25 indexes. Neither contains
+# a term any test query uses, so a BM25 arm could not return them by accident.
+PROVIDED = [
+    Hit(rank=1, start=100, end=300, score=0.0, text=DOCUMENT[100:300]),
+    Hit(rank=2, start=900, end=1200, score=0.0, text=DOCUMENT[900:1200]),
+    Hit(rank=3, start=2000, end=2400, score=0.0, text=DOCUMENT[2000:2400]),
+]
+
+
+def _system_prompt(chunks=None, **kw):
+    """The system message the root actually receives, for a one-turn run."""
+    root = FakeClient(reply="I will consider it.")  # no code block: the turn ends the run
+    rlm = RLM(root_client=root, sub_client=FakeClient(), max_steps=1, search_k=5, **kw)
+    rlm.run(DOCUMENT, "what happened at Riverside?", chunks=chunks)
+    return root.calls[0][0]["content"]
+
+
+class TestProvidedChunksReachTheAgenticRoot:
+    """Chunks chosen outside the run, delivered through `search` so the REPL, the
+    protocol and the system prompt are all unchanged and the ONLY difference from
+    the BM25 arm is which windows come back."""
+
+    def test_the_system_prompt_is_byte_identical_to_the_bm25_arm(self):
+        # The whole reason for delivering through search() rather than a new REPL
+        # name: a prompt difference would re-confound the comparison this arm exists
+        # to make clean.
+        assert _system_prompt(chunks=None) == _system_prompt(chunks=PROVIDED)
+
+    def test_the_same_windows_come_back_whatever_the_query(self):
+        _, env, _ = build(provided_chunks=PROVIDED, search_k=5)
+        first = env["search"]("ZEBRAQUUX Riverside Bignotti")
+        second = env["search"]("PLUGHWOMBAT Amity sheriff")
+        assert [(h.start, h.end) for h in first] == [(100, 300), (900, 1200), (2000, 2400)]
+        assert first == second
+
+    def test_a_query_bm25_could_not_answer_still_returns_the_set(self):
+        # BM25 returns nothing for a query of unknown terms; the fixed retriever is
+        # not consulting the index at all.
+        _, env, _ = build(provided_chunks=PROVIDED, search_k=5)
+        assert len(env["search"]("qqqqzzzz vvvvwwww")) == 3
+
+    def test_no_index_is_ever_built(self):
+        _, env, _ = build(provided_chunks=PROVIDED, search_k=5)
+        env["search"]("anything at all")
+        assert retrieval._CACHED_INDEX is None
+
+    def test_k_still_clamps_downward_only(self):
+        _, env, metrics = build(provided_chunks=PROVIDED, search_k=2)
+        assert len(env["search"]("q")) == 2  # the axis binds, not the file's length
+        assert len(env["search"]("q", k=1)) == 1
+        assert len(env["search"]("q", k=99)) == 2
+        assert metrics["search_k_clamped_calls"] == 1
+
+    def test_the_counters_mean_what_they_mean_on_the_bm25_arm(self):
+        _, env, metrics = build(provided_chunks=PROVIDED, search_k=5)
+        env["search"]("q")
+        env["search"]("q")
+        assert metrics["search_calls"] == 2
+        assert metrics["search_hits_returned"] == 6
+
+    def test_the_spans_are_recorded_for_the_gold_presence_diagnostic(self):
+        _, env, metrics = build(provided_chunks=PROVIDED, search_k=5)
+        env["search"]("q")
+        assert metrics["search_retrieved_spans"] == [(100, 300), (900, 1200), (2000, 2400)]
+
+    def test_the_arm_is_labelled_so_it_cannot_be_read_as_bm25(self):
+        _, _, metrics = build(provided_chunks=PROVIDED, search_k=5)
+        assert metrics["chunks_provided"] == 3
+        assert metrics["search_fixed"] is True
+
+    def test_a_bm25_arm_carries_neither_label(self):
+        _, _, metrics = build(search_k=5)
+        assert "chunks_provided" not in metrics
+        assert "search_fixed" not in metrics
+
+    def test_the_runaway_guard_still_applies(self):
+        _, env, _ = build(provided_chunks=PROVIDED, search_k=5, max_search_calls=2)
+        env["search"]("q")
+        env["search"]("q")
+        assert env["search"]("q") == []
+
+    def test_hits_stay_verbatim_slices_so_coverage_can_be_attributed(self):
+        _, env, _ = build(provided_chunks=PROVIDED, search_k=5)
+        for hit in env["search"]("q"):
+            assert hit.text == DOCUMENT[hit.start : hit.end]

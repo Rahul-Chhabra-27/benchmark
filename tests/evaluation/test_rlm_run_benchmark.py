@@ -249,6 +249,9 @@ def _args(**overrides) -> argparse.Namespace:
         chunks_file_sha256=None,
         ids_file=None,
         ids_sha256=None,
+        structured_map_question="task",
+        structured_map_granularity="passage",
+        structured_answer_shape="require",
     )
     base.update(overrides)
     return argparse.Namespace(**base)
@@ -597,6 +600,103 @@ class StructuredArmTest(unittest.TestCase):
         self.assertTrue(any("chunks_file_sha256" in c for c in conflicts))
 
 
+class StructuredAxesTest(unittest.TestCase):
+    """The three components of the revision-2 treatment, one knob each. Every default
+    must reproduce revision 2 exactly, or turning the flags on renames -- and orphans
+    -- every directory the revision-2 campaign wrote."""
+
+    def test_the_defaults_add_nothing_to_the_revision_two_name(self):
+        self.assertEqual(
+            build_run_dir_components(_args(mode="structured", chunks_source="bm25"), "structured", None),
+            ["loft", "nq_128k", "Qwen_Qwen3-4B-Instruct-2507", "structured", "chunks-bm255"],
+        )
+
+    def test_each_axis_gets_its_own_directory(self):
+        base = _args(mode="structured", chunks_source="bm25")
+        names = {
+            "default": build_run_dir_components(base, "structured", None)[-1],
+            "mapq": build_run_dir_components(
+                _args(mode="structured", chunks_source="bm25", structured_map_question="query"), "structured", None
+            )[-1],
+            "mapg": build_run_dir_components(
+                _args(mode="structured", chunks_source="bm25", structured_map_granularity="all"), "structured", None
+            )[-1],
+            "shape": build_run_dir_components(
+                _args(mode="structured", chunks_source="bm25", structured_answer_shape="offer"), "structured", None
+            )[-1],
+        }
+        self.assertEqual(len(set(names.values())), 4, names)
+        self.assertEqual(names["mapq"], "mapq-query")
+        self.assertEqual(names["mapg"], "mapg-all")
+        self.assertEqual(names["shape"], "shape-offer")
+
+    def test_the_axes_are_recorded_and_resume_critical(self):
+        config = build_run_config(
+            _args(mode="structured", chunks_source="bm25", structured_answer_shape="offer"),
+            "structured",
+            "loft",
+            None,
+            None,
+            None,
+        )
+        self.assertEqual(config["structured_answer_shape"], "offer")
+        self.assertEqual(config["structured_map_granularity"], "passage")
+        for key in ("structured_map_question", "structured_map_granularity", "structured_answer_shape"):
+            self.assertIn(key, RESUME_CRITICAL_KEYS)
+
+    def test_a_resume_across_two_different_shapes_conflicts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            first = build_run_config(
+                _args(mode="structured", chunks_source="bm25"), "structured", "loft", None, None, None
+            )
+            (run_dir / "config.yaml").write_text(yaml.safe_dump(first))
+            second = build_run_config(
+                _args(mode="structured", chunks_source="bm25", structured_answer_shape="offer"),
+                "structured",
+                "loft",
+                None,
+                None,
+                None,
+            )
+            conflicts = resume_conflicts(run_dir, second)
+        self.assertTrue(any("structured_answer_shape" in c for c in conflicts))
+
+    def test_an_agentic_run_records_no_axes_it_never_had(self):
+        config = build_run_config(_args(), "rlm", "loft", None, None, None)
+        self.assertNotIn("structured_answer_shape", config)
+
+
+class AgenticProvidedChunksTest(unittest.TestCase):
+    """C's chunks read by the agentic root: same loop, same prompt, different windows."""
+
+    def test_it_lands_apart_from_the_bm25_agentic_arm(self):
+        bm25 = build_run_dir_components(_args(search_k=5), "rlm", None)
+        provided = build_run_dir_components(_args(search_k=5, chunks_source="file"), "rlm", None)
+        self.assertEqual(bm25, ["loft", "nq_128k", "Qwen_Qwen3-4B-Instruct-2507", "rlm", "bm25k5"])
+        self.assertEqual(provided, [*bm25, "chunks-file5"])
+
+    def test_an_id_restricted_agentic_run_cannot_resume_the_full_one(self):
+        # --ids-file reaches nothing else in the name, and the hard-slice arms are
+        # exactly the runs that pass it.
+        full = build_run_dir_components(_args(search_k=5), "rlm", None)
+        sliced = build_run_dir_components(_args(search_k=5, ids_sha256="deadbeefcafe"), "rlm", None)
+        self.assertNotEqual(full, sliced)
+        self.assertIn("ids-deadbeef", sliced)
+
+    def test_the_chunk_source_is_recorded_for_an_agentic_run_too(self):
+        config = build_run_config(
+            _args(search_k=5, chunks_source="file", chunks_file="a.jsonl", chunks_file_sha256="aa"),
+            "rlm",
+            "loft",
+            None,
+            None,
+            None,
+        )
+        self.assertEqual(config["chunks_source"], "file")
+        self.assertEqual(config["chunks_file_sha256"], "aa")
+
+
 class StructuredCliTest(unittest.TestCase):
     def _run(self, *argv):
         """main() up to its first argparse error. Returns the message."""
@@ -610,9 +710,38 @@ class StructuredCliTest(unittest.TestCase):
             "--chunks-source", self._run("--dataset", "loft", "--data-dir", "nq_128k", "--mode", "structured")
         )
 
-    def test_a_chunk_source_outside_structured_mode_is_refused(self):
+    def test_a_chunk_source_outside_the_two_reading_modes_is_refused(self):
+        message = self._run(
+            "--dataset", "loft", "--data-dir", "nq_128k", "--mode", "vanilla", "--chunks-source", "file"
+        )
+        self.assertIn("only meaningful with --mode structured or --mode rlm", message)
+
+    def test_bm25_chunks_for_the_agentic_root_are_refused_as_a_duplicate_arm(self):
+        # It would be the --search-k arm under a second name, in a second directory.
         message = self._run("--dataset", "loft", "--data-dir", "nq_128k", "--mode", "rlm", "--chunks-source", "bm25")
-        self.assertIn("only meaningful with --mode structured", message)
+        self.assertIn("exactly the existing --search-k arm", message)
+
+    def test_provided_chunks_for_the_agentic_root_need_the_channel_they_arrive_on(self):
+        message = self._run(
+            "--dataset",
+            "loft",
+            "--data-dir",
+            "nq_128k",
+            "--mode",
+            "rlm",
+            "--chunks-source",
+            "file",
+            "--chunks-file",
+            "x.jsonl",
+        )
+        self.assertIn("--search-k", message)
+
+    def test_the_structured_axes_are_refused_outside_the_structured_pipeline(self):
+        # Ignoring one would stamp an axis into config.yaml that the run never had.
+        message = self._run(
+            "--dataset", "loft", "--data-dir", "nq_128k", "--mode", "rlm", "--structured-map-granularity", "all"
+        )
+        self.assertIn("only apply to --mode structured", message)
 
     def test_search_k_in_structured_mode_is_refused(self):
         # There is no REPL for search() to live in, and the flag would still stamp
