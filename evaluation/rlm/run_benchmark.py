@@ -189,6 +189,15 @@ def resume_conflicts(run_dir: Path, config: dict) -> list[str]:
             "search_index_revision: zero-overlap retrieval changed; use a fresh results directory "
             "instead of resuming a checkpoint from a different index revision"
         )
+    # Same shape, same reason: revision 1 read one window per map call and merely
+    # offered the answer format. A checkpoint written before either fix describes a
+    # different pipeline, and its absence of the key is exactly the case to catch.
+    if "structured_revision" in config and prior.get("structured_revision") != config["structured_revision"]:
+        conflicts.append(
+            "structured_revision: the map step now reads one CONTIGUOUS PASSAGE per call rather "
+            "than one window, and the reduce step requires the answer shape rather than offering "
+            "it; use a fresh results directory instead of resuming a revision-1 checkpoint"
+        )
     return conflicts
 
 
@@ -451,7 +460,10 @@ def write_run_artifacts(
         # cap cuts the map short, which is the difference between a thin selection
         # and a truncated run. `chunks_with_findings` near 0 is this arm's version
         # of sub_pressed_call_fraction near 0: the pipeline ran and learned nothing.
-        for key in ("chunks_provided", "map_calls", "chunks_with_findings"):
+        # map_calls is now passages, not windows: chunks_provided minus map_spans is
+        # how many adjacent windows were coalesced, which is the whole point of the
+        # clustering and invisible without both numbers.
+        for key in ("chunks_provided", "map_spans", "map_calls", "chunks_with_findings"):
             values = [(row or {}).get(key) for row in scored_frame.get("metrics", [])]
             values = [v for v in values if v is not None]
             runtime[f"average_{key}"] = float(sum(values) / len(values)) if values else 0.0
@@ -1418,6 +1430,7 @@ def build_run_config(
         "ids_sha256": getattr(args, "ids_sha256", None),
         # Only zero-overlap RLM retrieval changed; preserve other runs' configs.
         **({"search_index_revision": 2} if mode == "rlm" and args.search_k > 0 and args.search_overlap == 0 else {}),
+        **({"structured_revision": 2} if mode == "structured" else {}),
         # Which semantics produced document_coverage_fraction. Before this, spans
         # were derived AFTER the dense fold set chunk=None, so coverage was
         # structurally 0.0 on every --sub-backend http run; it is now resolved

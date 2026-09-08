@@ -11,7 +11,7 @@ stay distinguishable from one another.
 import unittest
 
 from evaluation.rlm.retrieval import Hit
-from evaluation.rlm.rlm import RLM, STRUCTURED_NOTHING
+from evaluation.rlm.rlm import RLM, STRUCTURED_NOTHING, _cluster_hits
 
 DOCUMENT = "".join(f"passage {i} says thing {i}. " for i in range(400))
 
@@ -43,7 +43,7 @@ def build(sub_replies, root_replies=("Final Answer: whale",), **kw):
 
 
 class MapTest(unittest.TestCase):
-    def test_one_sub_call_per_chunk_and_each_carries_its_own_text(self):
+    def test_one_sub_call_per_passage_and_each_carries_its_own_text(self):
         chunks = hits((0, 50), (100, 150), (200, 250))
         root, sub, rlm = build(["fact A", "fact B", "fact C"])
 
@@ -179,3 +179,81 @@ class GroundingTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ClusteringTest(unittest.TestCase):
+    """Retrieval windows overlap by 400 chars, and a document straddling a boundary
+    is deliberately selected as an adjacent PAIR. One call per window would re-read
+    the shared text and show each call half a document."""
+
+    def test_overlapping_windows_become_one_passage(self):
+        clusters = _cluster_hits(hits((0, 2000), (1600, 3600)))
+        self.assertEqual(len(clusters), 1)
+        self.assertEqual(len(clusters[0]), 2)
+
+    def test_touching_windows_become_one_passage(self):
+        self.assertEqual(len(_cluster_hits(hits((0, 2000), (2000, 4000)))), 1)
+
+    def test_a_gap_keeps_passages_apart(self):
+        self.assertEqual(len(_cluster_hits(hits((0, 2000), (2001, 4000)))), 2)
+
+    def test_clusters_come_out_in_document_order_whatever_the_rank_order(self):
+        # BM25 and the selector both return best-first, which is not document order.
+        clusters = _cluster_hits(hits((8000, 10000), (0, 2000), (4000, 6000)))
+        self.assertEqual([c[0].start for c in clusters], [0, 4000, 8000])
+
+    def test_an_adjacent_pair_costs_one_map_call_not_two(self):
+        root, sub, rlm = build(["fact"])
+        result = rlm.run_structured(DOCUMENT, "q", hits((0, 2000), (1600, 3600)))
+        self.assertEqual(sub.calls, 1)
+        self.assertEqual(result.metrics["map_calls"], 1)
+        self.assertEqual(result.metrics["map_spans"], 1)
+        # chunks_provided still counts what the selector OFFERED, so the difference
+        # between the two is how many windows were coalesced.
+        self.assertEqual(result.metrics["chunks_provided"], 2)
+
+    def test_the_merged_passage_is_sent_contiguously(self):
+        # The defect this fixes: a document split across two calls, each seeing half.
+        root, sub, rlm = build(["fact"])
+        rlm.run_structured(DOCUMENT, "q", hits((0, 2000), (1600, 3600)))
+        self.assertIn(DOCUMENT[0:3600], sub.asked[0])
+
+    def test_the_shared_overlap_is_not_repeated(self):
+        root, sub, rlm = build(["fact"])
+        rlm.run_structured(DOCUMENT, "q", hits((0, 2000), (1600, 3600)))
+        overlap = DOCUMENT[1600:2000]
+        self.assertEqual(sub.asked[0].count(overlap), 1)
+
+    def test_distant_windows_still_get_a_call_each(self):
+        root, sub, rlm = build(["fact"])
+        result = rlm.run_structured(DOCUMENT, "q", hits((0, 2000), (6000, 8000)))
+        self.assertEqual(sub.calls, 2)
+        self.assertEqual(result.metrics["map_spans"], 2)
+
+    def test_coverage_counts_a_merged_passage_once(self):
+        root, sub, rlm = build(["fact"])
+        result = rlm.run_structured(DOCUMENT, "q", hits((0, 2000), (1600, 3600)))
+        self.assertAlmostEqual(result.metrics["document_coverage_fraction"], 3600 / len(DOCUMENT))
+
+
+class AnswerShapeTest(unittest.TestCase):
+    """The agentic arms answer through FINAL(x) -- a bare value by protocol. A reduce
+    step is a chat completion, and 'be concise' is satisfied by a sentence."""
+
+    def test_the_reduce_requires_the_shape_rather_than_offering_it(self):
+        root, sub, rlm = build(["fact"])
+        rlm.run_structured(DOCUMENT, "q", hits((0, 50)), answer_format="Final Answer: ")
+        prompt = root.asked[0]
+        self.assertIn("Final Answer:", prompt)
+        self.assertIn("no sentence built around it", prompt)
+        self.assertIn("no restatement of the question", prompt)
+
+    def test_without_an_answer_format_it_still_asks_for_the_bare_answer(self):
+        root, sub, rlm = build(["fact"])
+        rlm.run_structured(DOCUMENT, "q", hits((0, 50)))
+        self.assertIn("answer itself and nothing else", root.asked[0])
+
+    def test_the_reduce_announces_document_order(self):
+        root, sub, rlm = build(["fact"])
+        rlm.run_structured(DOCUMENT, "q", hits((0, 50)))
+        self.assertIn("in document order", root.asked[0])

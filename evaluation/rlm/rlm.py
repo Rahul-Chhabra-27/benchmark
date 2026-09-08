@@ -310,8 +310,22 @@ STRUCTURED_REDUCE_SYSTEM = (
 )
 STRUCTURED_REDUCE_TEMPLATE = (
     "Question: {task}\n\n"
-    "Notes from {n_chunks} passage(s) of the document:\n{findings}\n\n"
-    "Answer the question from these notes. Be concise.{answer_format_note}"
+    "Notes from {n_chunks} passage(s) of the document, in document order:\n{findings}\n\n"
+    "Answer the question from these notes.{answer_format_note}"
+)
+# The agentic arms answer through FINAL(x), where x is a value the root computed --
+# the protocol forces a bare value. A reduce step is an ordinary chat completion,
+# and "be concise" is satisfied by a well-formed SENTENCE: measured on hotpotqa,
+# 15 of 55 replies matched the gold as a subspan while restating the question
+# around it ("Mike Leach currently coaches at Washington State"), against 2 for the
+# agentic arm. That is the whole em gap, and it is answer shape rather than
+# accuracy. So the shape is required here rather than offered, on the principle the
+# harness already applies to answer_format: an arm must not be scored on a shape it
+# was never asked for.
+STRUCTURED_ANSWER_SHAPE = (
+    "\nEnd your reply with a single final line beginning exactly `{answer_format}` and "
+    "containing the answer ITSELF -- the bare value or list, with no sentence built "
+    "around it, no restatement of the question, and no explanation after it."
 )
 
 # Sent when a model gives up without having read anything (see
@@ -470,6 +484,28 @@ def _merge_spans(spans: Sequence[tuple[int, int]]) -> list[tuple[int, int]]:
         else:
             merged.append((start, end))
     return merged
+
+
+def _cluster_hits(hits: Sequence[Hit]) -> list[list[Hit]]:
+    """Group hits into runs that touch or overlap, in document order.
+
+    Retrieval windows overlap by construction, and a document that straddles a
+    window boundary is deliberately selected as an ADJACENT PAIR. Reading those as
+    two separate passages re-reads the shared 400 characters and, worse, shows
+    each call half a document -- so the half without the fact can honestly answer
+    "nothing relevant". The agentic path never had this problem: it hands a whole
+    hit list to one llm_query, where _merge_spans coalesces them.
+
+    Returns lists rather than merged spans so each cluster can go to llm_query as
+    hits, which is what keeps the payload attributable to real document offsets.
+    """
+    clusters: list[list[Hit]] = []
+    for hit in sorted(hits, key=lambda h: (h.start, h.end)):
+        if clusters and hit.start <= max(h.end for h in clusters[-1]):
+            clusters[-1].append(hit)
+        else:
+            clusters.append([hit])
+    return clusters
 
 
 def _widen_spans(spans: Sequence[tuple[int, int]], target_chars: int, doc_len: int) -> list[tuple[int, int]]:
@@ -1345,19 +1381,25 @@ class RLM:
             return RLMResult(None, 0, False, transcript, "structured_no_chunks", metrics)
 
         map_question = STRUCTURED_MAP_QUESTION.format(task=task, nothing=STRUCTURED_NOTHING)
+        # One call per CONTIGUOUS PASSAGE, not per window: see _cluster_hits. This
+        # also puts the passages in document order, which is the order the agentic
+        # path's payload is assembled in and the order the reduce announces.
+        clusters = _cluster_hits(chunks)
+        metrics["map_spans"] = len(clusters)
         findings: list[tuple[int, str]] = []
         timed_out = False
-        for step, hit in enumerate(chunks, start=1):
+        for step, cluster in enumerate(clusters, start=1):
             if self._deadline is not None and time.monotonic() > self._deadline:
                 timed_out = True
                 break
-            answer = (llm_query(map_question, [hit]) or "").strip()
+            answer = (llm_query(map_question, cluster) or "").strip()
             metrics["map_calls"] += 1
+            span = f"[{cluster[0].start}:{max(h.end for h in cluster)}]"
             transcript.append(
                 {
                     "step": step,
-                    "reply": f"[map] chunk {step}/{len(chunks)} at [{hit.start}:{hit.end}]",
-                    "code": f"llm_query(MAP, [hits[{step - 1}]])",
+                    "reply": f"[map] passage {step}/{len(clusters)} at {span} ({len(cluster)} window(s))",
+                    "code": f"llm_query(MAP, cluster[{step - 1}])",
                     "observation": answer,
                 }
             )
@@ -1386,7 +1428,11 @@ class RLM:
             task=task,
             n_chunks=len(findings),
             findings=findings_block,
-            answer_format_note=(f"\nFormat your answer as: {answer_format}" if answer_format else ""),
+            answer_format_note=(
+                STRUCTURED_ANSWER_SHAPE.format(answer_format=answer_format.strip())
+                if answer_format
+                else "\nReply with the answer itself and nothing else."
+            ),
         )
         messages = [
             {"role": "system", "content": STRUCTURED_REDUCE_SYSTEM},
