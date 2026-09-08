@@ -107,6 +107,18 @@ them silently flatters RLM:
   diagnostic among scored examples with recorded retrieved spans. It is not a
   score ceiling: the root can read elsewhere, and a matching string does not
   establish that the retrieved text supplies sufficient evidence to answer.
+- **Provided chunks.** A `--chunks-source file` arm had its chunks chosen by an
+  external model with full document access and an unbounded budget, outside the
+  measured run. That selector's cost appears in no column, so
+  `context_tokens_held` is **not** comparable across this line: the arm is an
+  upper bound on "what if selection were solved", not a deployable method. Its
+  two fair comparators are `--chunks-source bm25` at the same `k` (same
+  pipeline, cheap selector) and the agentic arms of the same commit. The payload
+  is capped at `--chunks-k x --search-window` characters, the same budget the
+  BM25 arm spends, so the arms differ in *which* text is read and not how much --
+  without that cap the better-chosen chunk set is also the bigger one and the
+  result measures size. The selector is given the question and never the
+  answers; a chunk file built otherwise measures leakage, not retrieval.
   Two caveats travel with it. The treatment is not one variable: the primitive,
   the worked example, the locate bullet and the abstention gate all move together.
   And `document_coverage_fraction` changed meaning — spans are now resolved before
@@ -119,6 +131,36 @@ Search-enabled RLM runs with `--search-overlap 0` now record
 but the first window. These runs require a fresh results directory when an
 existing configuration lacks that revision. Default overlapping windows are
 unchanged.
+
+## The structured arm (`--mode structured`)
+
+`rlm` gives the root a REPL and lets it decide what to read and when to stop.
+`structured` reads a FIXED set of chunks with a fixed pipeline -- one
+`llm_query` per chunk, then one synthesis call -- and has no REPL at all. The
+agentic loop is removed, not assisted, so a difference between the two is
+attributable to the pipeline rather than to a luckier search.
+
+| Flag | What it does |
+|---|---|
+| `--chunks-source bm25` | the top `--chunks-k` windows, selected in-harness. The control: same chunks a `--search-k` arm gets, different pipeline. |
+| `--chunks-source file` | chunks from `--chunks-file`, chosen offline (see `chunkset.py`). Isolates selection quality, at the cost of the asymmetry above. |
+| `--ids-file` | restrict the run to named example ids, so several arms score the same rows. Applied BEFORE `--limit`, and refuses to combine with it. |
+
+Read `average_chunks_with_findings` beside the score. Near zero means every chunk
+answered "nothing relevant" and the reduce step had nothing to work with -- this
+arm's version of `sub_pressed_call_fraction` near zero, and the tell that the
+pipeline ran without measuring anything.
+
+A chunk file names the sha256 and length of the document it was built against,
+and is refused if either disagrees. Stale offsets are all still in range, so
+without that check every example reads real text from the wrong corpus and the
+arm reports a plausible score.
+
+One documented departure: when the reduce step's answer appears in none of the
+findings, it is recorded as `reduce_answer_not_quoted` rather than rejected.
+`run`'s grounding guard exists to catch a root answering from memory without
+reading; this arm shows the root nothing but text quoted out of real chunks, so
+that failure cannot arise -- and there is no loop to nudge a rejection back into.
 
 ## Runaway guards and the scratchpad
 All four are toggleable and independent; pass `0` to disable one without
