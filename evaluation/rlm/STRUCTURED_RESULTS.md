@@ -108,48 +108,114 @@ from 0 to 17 of 55. A 4B sub-model finds less in a bigger passage, and merging a
 removes the second independent attempt at the same fact. The defect the merge fixed
 was real; the cure appears to cost more than the disease on this model.
 
-Because both changes shipped together, neither can be credited or blamed alone. The
-ablation that would separate them — clustering on with the old prompt, and the new
-prompt without clustering — has not been run.
+Both changes shipped together, so neither could be credited or blamed alone. **That
+ablation has now been run** — §5 — and it reverses half of this section: clustering
+was worth `+0.036` subspan with the prompt held constant, and the whole drop came
+from the answer shape.
 
-## 5. The four runs that would settle it
+## 5. The four runs, run
 
-Reading the transcripts behind §1 showed that **B′ differs from B in three ways, not
-one**, so §1 is a bundle rather than a result about structure:
+Each removes exactly one of the differences above; the flags are documented in
+[`README.md`](README.md). Runs 1–3 are the structured arm on the full 55 rows of each
+subset, so they land against §1's unselected comparison. Run 4 is the **agentic** root
+reading C's chunks on the hard slice.
 
-- the agentic arm reads all five windows in **one** call (45 of 50 nq examples, 40 of
-  49 hotpotqa), while B′ splits the same text across calls;
-- the map prompt interpolates LOFT's `task` verbatim — *"Print out the TITLE and ID of
-  the documents you use to answer…"* — which derails a sub-model looking at one window
-  (`nq:12` answers `TITLE: Philadelphia 76ers | ID: 732` and then `NOTHING RELEVANT`);
-- the reduce step can throw a correct finding away (`nq:4`), which B structurally cannot.
+### 5.1 The revision-2 changes, separated — clustering was not the problem
 
-Two of those are defects in this implementation, not properties of a fixed pipeline.
-Each run below removes exactly one difference; the harness flags for all four are in
-[`README.md`](README.md).
+`--structured-map-granularity window` and `--structured-answer-shape offer` restore one
+revision-1 component each, so the 2×2 closes. Pooled, n=110:
 
-| run | flag | separates | comparator |
+| clustering | answer shape | run | subspan | em | abstained |
+|---|---|---|---|---|---|
+| off | offer | B′ rev1 | 0.4364 | 0.2636 | 2 |
+| off | require | **5** | 0.4000 | 0.3091 | 2 |
+| on | offer | **3** | **0.4727** | 0.1091 | 22 |
+| on | require | B′ rev2 | 0.4364 | 0.3000 | 21 |
+
+The two effects are equal and opposite, which is why rev1 and rev2 both scored 0.4364
+pooled by two different routes:
+
+- **Clustering is worth `+0.036` subspan**, at both prompt settings — paired 7–3 with
+  the prompt held at `offer`, 5–1 held at `require`. So §4's "the cure appears to cost
+  more than the disease" **is not supported**. Clustering does cost the map step its
+  yield and does create the abstentions, but those abstentions replaced *wrong answers*.
+- **Requiring the shape costs `-0.036` subspan and buys em** — `+0.19` with clustering
+  on (0.1091 → 0.3000), a smaller `+0.046` with it off. §4's reading of that trade is
+  confirmed and now quantified.
+
+Neither is significant alone at n=110, but each holds its direction in all four cells.
+
+### 5.2 The map prompt — stripping LOFT's blob makes it worse
+
+| subset | B′ rev2 | 1 bare query | abstained |
 |---|---|---|---|
-| 1 | `--structured-map-question query` | the derailed extraction from "structure" | B′ rev2 |
-| 2 | `--structured-map-granularity all` | splitting the text from the pipeline | B′ rev2 |
-| 3 | `--structured-answer-shape offer` | the two revision-2 changes | B′ rev2, B′ rev1 |
-| 4 | `--mode rlm --chunks-source file` | chunk quality from the pipeline entirely | 4c, A |
+| nq_128k | 0.5273 | **0.4364** | 17 → **0** |
+| hotpotqa_128k | 0.3455 | **0.2545** | 4 → **0** |
 
-Runs 1–3 are the structured arm on the full 55 rows of each subset, so they land
-against §1's unselected comparison. Run 4 is the **agentic** root reading C's chunks
-on the hard slice, delivered through `search()` so the system prompt stays
-byte-identical to B's.
+Paired, pooled: **10–20 (p=0.099)** — the opposite direction from the hypothesis, and
+the same direction on both subsets. The mechanism is real but backwards: the citation
+instructions were acting as a **filter**. Without them the sub-model finds something in
+almost every passage (abstentions to zero on both subsets) and the reduce step then
+answers wrongly from marginal findings. A derailed extraction was costing less than an
+undisciplined one.
 
-**Run 4's control had to be a frozen arm, not B.** A fixed chunk set returns the same
-windows for every query, and the root cannot tell — on nq it rephrased and re-searched
-**17 times per example against 1.5** for adaptive BM25, and at `--max-steps 12` the run
-ended before it read anything. So 4c is the same agentic arm over **frozen BM25 top-5**
-— the very windows B′ reads — at the same step budget. Both sides pay the trap, and
-4-vs-4c differs only in which windows were chosen, exactly as C-vs-B′ does on the
-structured pipeline. Comparing run 4 against the adaptive B would have measured the
-trap instead.
+### 5.3 One merged read — splitting was not the gap either
 
-Results: _pending_.
+| subset | B′ rev2 | 2 one map call | B agentic |
+|---|---|---|---|
+| nq_128k | 0.5273 | 0.5455 | 0.6000 |
+| hotpotqa_128k | 0.3455 | **0.4000** | 0.4000 |
+| pooled | 0.4364 | 0.4727 | 0.5000 |
+
+Reading every window in one call — exactly the payload arm B assembles — is paired
+**13–9 (p=0.52)** against B′. It closes a little over half the distance to B (0.4364 →
+0.4727 against 0.5000) and matches B outright on hotpotqa, but it is not significant:
+the single largest confound in §1 accounts for at most half the gap, and possibly none.
+
+### 5.4 C's chunks read by the agentic root — the advantage does not transfer
+
+The hard slice, n=51. `--max-search-calls 1` is the capped variant; see the trap below.
+A's row is §3's numbers pooled over the same rows; peak context was not measured on
+the slice for it, and the peaks below are the agentic arms' own.
+
+| arm | pipeline | chunks | subspan | em | peak ctx | searches/ex |
+|---|---|---|---|---|---|---|
+| C | structured | selector | **0.4706** | 0.2745 | 400 | — |
+| A | agentic | none | 0.3529 | — | — | 0 |
+| 4c | agentic | frozen BM25 | 0.2745 | 0.2353 | 1971 | 1.7 |
+| 4 | agentic | selector | 0.1569 | 0.0588 | 5166 | **21.4** |
+| 4c capped | agentic | frozen BM25 | 0.3529 | 0.2941 | 2184 | 1.0 |
+| **4 capped** | agentic | selector | **0.2353** | 0.1176 | 5284 | 1.0 |
+
+| comparison | result | p |
+|---|---|---|
+| 4 capped vs **C** — same chunks, same rows, only the pipeline differs | 4 – 16 | **0.0118** |
+| 4 capped vs 4c capped — same pipeline, only the chunks differ | 5 – 11 | 0.21 |
+| 4 capped vs A base RLM | 2 – 8 | 0.109 |
+| 4c capped vs A base RLM | 8 – 8 | 1.00 |
+
+**The selector's advantage is a property of the pipeline that reads the chunks, not of
+the chunks.** The same 51 rows and the same windows are worth 0.4706 to the fixed
+pipeline and 0.2353 to the loop. Inside the agentic arm, C's chunks beat BM25's on
+nothing at all (5–11) — where in the structured arm the same swap was 15–3, p=0.0075.
+This is the reverse of what the run was expected to show.
+
+**The trap, which is why 4c had to be frozen too.** A fixed chunk set returns the same
+windows for every query and the root cannot tell. On the uncapped arm it rephrased and
+re-searched **21.4 times per example** against the frozen-BM25 control's 1.7, burning
+peak context to ~5,200 tokens, and at `--max-steps 12` runs ended before reading at all.
+Capping searches at one recovers `+0.08` subspan (6–2 paired) and is the honest version
+of the arm; the conclusion is unchanged either way. Comparing run 4 against the
+*adaptive* `--search-k` arm would have measured the trap, which is why the control is a
+frozen BM25 arm reading the very windows B′ reads.
+
+### What this leaves
+
+§1's headline survives, and its explanation changes. Structure still buys no accuracy —
+but not because the pipeline splits the text (§5.3 removes that and gains a third of the
+gap), and not because the map prompt is derailed (§5.2 removes that and *loses* score).
+What §5.4 adds is sharper: the fixed pipeline is what makes good chunks pay, and the
+agentic loop cannot use them. §2's context result is untouched.
 
 ## Reproducing
 
