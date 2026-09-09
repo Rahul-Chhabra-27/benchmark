@@ -103,6 +103,13 @@ def collect(results: Path) -> list[dict[str, Any]]:
                 or (
                     (runtime.get("average_chunks_with_findings") or 0) < 0.05
                     and (runtime.get("gold_in_retrieved_fraction") or 0) > 0.2
+                    # ...but never on an exposure cell. gold_in_retrieved is computed
+                    # from the spans the selector OFFERED, before --structured-map-chars
+                    # cuts them, so at 400 chars the gold can be retrieved and still cut
+                    # out of what the reader saw. Finding nothing there is the point of
+                    # the axis, not a broken cell -- and those are the three most
+                    # informative points on the curve.
+                    and not map_chars
                 ),
                 "retrieval_starved": (runtime.get("gold_in_retrieved_fraction") or 0) < 0.2,
             }
