@@ -208,6 +208,35 @@ voiding the example.
 There is deliberately no hop 3. A second routing level is a documented
 non-improvement, not an untried idea.
 
+## Serving it (`serve_root.sh`)
+
+```bash
+GPU=4 evaluation/rlm/serve_root.sh          # one card, one endpoint, every lane
+```
+
+The whole structured campaign is HTTP against **one** vLLM: root calls, sub-calls and
+every lane. Measured on fox, 80 cells / 4,400 examples finished in **77 minutes with
+four lanes against a single RTX A6000** at 3.28x effective concurrency, so the card
+was never the bottleneck. More lanes are close to free; more GPUs mostly are not.
+
+Qwen3-4B bf16 is ~8 GB of weights and KV is 147,456 B/token, so eight of the widest
+cell's ~20k-token sequences add ~6 GB: **the real floor is ~14-16 GB.**
+`--gpu-memory-utilization` is what vLLM PRE-ALLOCATES, not what it needs.
+
+Two things the script refuses rather than discovers later:
+
+- **A card someone else is on.** It checks `memory.used` first and exits.
+- **A port that is already listening.** A wedged vLLM still answers `/v1/models` and
+  still accepts chat requests -- it logs "Added request" and completes none of them.
+  A campaign pointed at one looks exactly like a campaign that is running: processes
+  alive, no errors, no rows. `structured_grid.sh` asks for eight tokens before it
+  launches for the same reason.
+
+`CUDA_DEVICE_ORDER=PCI_BUS_ID` is set and is load-bearing: fox mixes RTX 6000 Ada
+(GPU 0,1) with RTX A6000 (GPU 2,3,4), CUDA orders devices FASTEST_FIRST while
+nvidia-smi orders by PCI bus, and without it the index you measured as idle is not
+necessarily the index CUDA gives you.
+
 ## The reader's ceiling (`oracle_chunks.py`)
 
 ```bash
