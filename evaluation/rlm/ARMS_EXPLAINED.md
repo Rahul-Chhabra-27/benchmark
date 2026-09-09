@@ -175,6 +175,66 @@ task needs the *whole* document.
 
 ---
 
+---
+
+# The new axes (campaign 2)
+
+Everything above ran at **one** chunk setting: 2000-character windows, 400 of
+overlap, 5 of them. Nobody ever moved it. These are the knobs that move it, and the
+two subsets that make moving it mean something.
+
+## 8. Two numbers that were one number
+
+"Chunk size" was doing two jobs at once:
+
+| | the question it answers |
+|---|---|
+| **how wide is a window** | what BM25 scores and ranks. 2000 chars ≈ 512 tokens — which is where the published chunking work lands, and where a multi-dataset sweep puts Natural Questions' own best setting. **This one is probably already right.** |
+| **how much does the reader see** | what the 4B model is actually shown per call. Nobody chose this. It came along for the ride. |
+
+The reader currently gets ~2,200 characters a call and ~11,000 an example. The
+fixed-chunk grid — a different campaign, same lab — found quality peaking around
+8,000 *tokens* of admitted context, which is roughly 32,000 characters. So the
+reader may be running at a quarter of its best size, and nobody would have noticed,
+because the only knob was the retriever's.
+
+`--structured-map-chars` is the second knob. Now they move separately.
+
+## 9. Two new subsets, and why those two
+
+| subset | what makes it hard | why it belongs |
+|---|---|---|
+| **musique** | 2–4 **hops**. The answer needs a fact you can only look up once you've read a different fact. | BM25 finds the gold about **half** the time here, against 87–95% on nq/hotpotqa. No window size fixes a missing second question. This is the only place the *wandering* model should win — and nothing has tested it. |
+| **qampari** | the answer is a **list**, scattered across many passages. | Five windows cannot hold ten answers. `k` is a hard ceiling here by arithmetic, so the k-axis should bite harder than anywhere else. |
+
+**quest was left out.** Its RLM score is 0.017 — on the floor, with nowhere to move.
+qampari's is 0.076 against a 0.364 ceiling, which is nearly three times the room.
+
+⚠️ **qampari and quest are scored on `coverage`, not `subspan_em`.** The subspan
+metric demands *every* answer in the list be matched, which pins them near zero and
+makes a real gain invisible. `coverage` is "what fraction of the list did you get".
+
+## 10. Four new arms
+
+| arm | the question | the short version of what's known |
+|---|---|---|
+| **oracle** | if retrieval were **perfect**, how much better would this get? | Hand the reader the windows that provably contain the answer. Whatever's still missing is the reader, not the search. Published numbers say don't expect much: with perfect retrieval a 7B model still got 14.6% of unknown-answer questions right, a 1.5B got 10.0%. Most of a perfect retriever is wasted on a small model. |
+| **exposure** | is a bigger window helping because it's a *better window*, or just because it's *more text*? | Same 5 windows every time; only the number of characters shown changes. If the curve flattens above ~2000, the window axis is measuring exposure and not geometry. |
+| **second hop** | can the assembly line do the thing only the wanderer can do? | One extra round of searching, using what the reader **found** the first time. Not what it *read* — expanding blindly from the raw text was tried here and made things worse. There is no third round: a deeper level is a known non-improvement. |
+| **signal vs noise** | when more chunks stop helping, which half caused it? | Every window gets tagged: does it contain the answer or not. Raising `k` adds both kinds at once, and one score cannot say which one moved. |
+
+## 11. One thing that had to be fixed first
+
+The sweep **could not have been run at all.** The window size was written into the
+results folder name only for the wandering arms — and the assembly line has no
+search to attach it to. So all twelve settings would have written to *one folder*.
+The first would run; the rest would refuse to start, on top of a checkpoint that
+disagreed with them.
+
+Not a wrong answer. No answer.
+
+---
+
 ## The one-line summary
 
 | | |
