@@ -35,13 +35,30 @@ from evaluation.results_layout import RESULTS_ROOT
 # fell through to `f1` while qampari/quest (which report `coverage`, not `f1`) had
 # no key hit at all and three numeric entries, so they failed the single-numeric
 # fallback below and were dropped from the comparison entirely.
-SCORE_KEYS = ("average", "string_match", "exact_match", "score", "accuracy", "subspan_em", "f1")
+SCORE_KEYS = ("average", "string_match", "exact_match", "score", "accuracy", "subspan_em", "coverage", "f1")
 
 # ...but "first hit in a global priority list" is a fragile way to pick a headline:
 # a scorer that reports two of these keys gets whichever happens to sit earlier,
 # silently. Where a dataset has a documented primary metric, name it here and the
 # ordering above never comes into play.
 DATASET_SCORE_KEY = {"loft": "subspan_em"}
+
+# LOFT's two multi-value subsets need a different key from the other three, so the
+# dataset alone does not settle it. `compute_multi_value_subspan_em` (benchmarks/loft/
+# calculate_metrics.py) demands EVERY gold answer be matched, which pins qampari and
+# quest near zero and makes a real improvement invisible -- qampari's own vanilla arm
+# reads 0.364 on `coverage` and is floored on `subspan_em`. `coverage` is the graded
+# metric for these two, and unlike subspan_em it was never affected by the
+# empty-prediction bug 6bedbee fixed: an empty prediction intersects nothing.
+LOFT_MULTI_VALUE_PREFIXES = ("qampari", "quest")
+LOFT_MULTI_VALUE_SCORE_KEY = "coverage"
+
+
+def loft_score_key(task: Optional[str]) -> str:
+    """LOFT's headline metric for one subset. Mirrors `is_multi_value` in its scorer."""
+    name = (task or "").split("__")[0]
+    return LOFT_MULTI_VALUE_SCORE_KEY if name.startswith(LOFT_MULTI_VALUE_PREFIXES) else "subspan_em"
+
 
 # Reported by the RLM harness about itself; never a benchmark score.
 RUNTIME_KEY = "runtime"
@@ -82,10 +99,20 @@ def _lookup(flat: dict[str, Any], key: str) -> Optional[float]:
     return float(nested[0]) if len(nested) == 1 else None
 
 
-def headline_score(metrics: dict, dataset: Optional[str] = None) -> tuple[Optional[str], Optional[float]]:
-    """Pick the comparable number out of a scorer's metrics dict."""
+def headline_score(
+    metrics: dict, dataset: Optional[str] = None, task: Optional[str] = None
+) -> tuple[Optional[str], Optional[float]]:
+    """Pick the comparable number out of a scorer's metrics dict.
+
+    `task` is optional and only consulted where the dataset's primary metric varies
+    by subset, which today means LOFT. Passing it is what keeps qampari off a metric
+    it is structurally pinned on; omitting it reproduces the previous behaviour
+    exactly.
+    """
     flat = _flatten(metrics)
     preferred = DATASET_SCORE_KEY.get(dataset or "")
+    if dataset == "loft" and task:
+        preferred = loft_score_key(task)
     if preferred is not None:
         value = _lookup(flat, preferred)
         if value is not None:
@@ -166,9 +193,15 @@ def describe_configuration(backend: str, config: dict) -> str:
     return f"{press}@cr{config.get('compression_ratio', 0.0):.2f}"
 
 
+def _task_of(config: dict) -> Optional[str]:
+    """The subset name out of a run config, as one string. `data_dir` may be a list."""
+    data_dir = config.get("data_dir")
+    return "__".join(data_dir) if isinstance(data_dir, list) else data_dir
+
+
 def build_row(run_dir: Path, config: dict, metrics: dict) -> dict[str, Any]:
     backend = config.get("backend", "kvpress")
-    metric_name, score = headline_score(metrics, config.get("dataset"))
+    metric_name, score = headline_score(metrics, config.get("dataset"), _task_of(config))
     runtime = metrics.get(RUNTIME_KEY, {}) if isinstance(metrics.get(RUNTIME_KEY), dict) else {}
 
     data_dir = config.get("data_dir")

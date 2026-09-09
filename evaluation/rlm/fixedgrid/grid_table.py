@@ -15,7 +15,7 @@ import yaml
 from evaluation.compare import headline_score
 
 
-def _score(metrics: dict[str, Any], dataset: str | None = None) -> float | None:
+def _score(metrics: dict[str, Any], dataset: str | None = None, task: str | None = None) -> float | None:
     """The run's headline number, chosen the way the rest of the repo chooses it.
 
     Delegates to compare.headline_score rather than reading `score` directly:
@@ -25,7 +25,7 @@ def _score(metrics: dict[str, Any], dataset: str | None = None) -> float | None:
     subspan_em as LOFT's primary metric, and reusing it keeps this table and
     compare.py reporting the same number for the same run.
     """
-    _, value = headline_score(metrics, dataset)
+    _, value = headline_score(metrics, dataset, task)
     return value
 
 
@@ -72,7 +72,7 @@ def collect(results: Path) -> pd.DataFrame:
                 # Loose answer-string presence diagnostic, not a score ceiling.
                 "gold_in_retrieved_fraction": runtime.get("gold_in_retrieved_fraction"),
                 "search_hits_read": runtime.get("search_hits_read"),
-                "qa_f1": _score(metrics, dataset),
+                "qa_f1": _score(metrics, dataset, subset),
                 "realized_compression_factor": runtime.get("realized_compression_factor"),
                 # The aggregate compression the cell actually delivered: total context
                 # tokens admitted over total KV retained.

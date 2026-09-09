@@ -171,6 +171,80 @@ inside a two-way ablation. The byte-exact revision-1 numbers are the revision-1 
 and `average_chunks_with_findings` then becomes "did the single call find anything"
 rather than "how many of five did".
 
+### The chunk geometry, as three separate axes
+
+`--search-window` used to set two things at once: the unit BM25 indexes, and how
+much text a map call is shown. They are different questions with different answers,
+so they are now three flags.
+
+| Flag | Default | What it controls |
+|---|---|---|
+| `--search-window` / `--search-overlap` | `2000` / `400` | the RETRIEVAL unit. 2000 chars is ~512 tokens at 20% overlap, which is where the chunking literature lands and where a multi-dataset sweep puts NQ's own optimum -- so this is the one knob that is probably already right. |
+| `--structured-map-chars` | `0` (all of it) | the READ size: characters of each passage the map call actually sees. Truncation happens on the `Hit`s, so a shortened payload still records the coverage it got rather than claiming the whole window. |
+| `--reduce-finding-chars` | `2000` | how much of each finding survives into the reduce prompt. **Raise it with the window.** Left at 2000 a 4000- or 8000-char window is truncated back here, and the top of a window sweep measures this cap instead of the window. |
+
+`win<W>o<O>` joins the run directory name whenever the geometry is non-default --
+in `--mode structured` as well as `--mode rlm`. It used to be stamped only when
+`--search-k` was set, which `--mode structured` rejects, so every cell of a window
+sweep named the same directory: the first ran and the rest aborted on a resume
+conflict. A structured run at the defaults keeps the name it already had.
+
+Both cells of a sweep are refused up front, never silently shrunk: a per-call
+payload that `--max-subcall-chars` would truncate is an argparse error, in the shape
+of the `--search-k x --search-window` guard the agentic arms already had.
+
+### A second retrieval round (`--structured-hops 2`)
+
+One follow-up round, whose query is the question plus the distinctive terms **the
+first round's map step reported**. Windows round 1 already read are excluded.
+
+The expansion source is the point. Blind pseudo-relevance feedback over retrieved
+*window text* was measured on this corpus and made recall worse everywhere (musique
+recall@5 47.5% -> 37.5%), so hop 2 has to be a decision taken after reading, which
+is what a finding is and a window is not. `hop2_chunks` records how many fresh
+windows the round added; `hop2_error` records a retriever that raised rather than
+voiding the example.
+
+There is deliberately no hop 3. A second routing level is a documented
+non-improvement, not an untried idea.
+
+## The reader's ceiling (`oracle_chunks.py`)
+
+```bash
+python -m evaluation.rlm.oracle_chunks --dataset loft --data-dir musique_128k \
+  --split test --limit 55 --window 2000 --overlap 400 --k 5 --out-dir <dir>
+```
+
+Writes a chunk file of the windows that provably carry a gold answer, greedily
+chosen to cover as many DISTINCT gold answers as possible -- which is what makes it
+an oracle on qampari and quest, where the gold is a list scattered across passages
+rather than one string. Read through `--chunks-source file`, retrieval is perfect by
+construction and whatever score is missing afterwards is the reader.
+
+Two things it always does, and both matter:
+
+- **`spans` are written.** The two hand-made chunk files carry none, so
+  `ChunkSet.hits_for`'s grid check cannot fire and window ids re-resolved on a
+  different `--search-window` would silently address unrelated text. The geometry is
+  in the filename too.
+- **A row with no gold-bearing window is labelled, not hidden.** It falls back to
+  BM25 and says so in `note`, so the analysis drops it instead of averaging a
+  non-oracle into the ceiling.
+
+## Reading a sweep back (`structured_decompose.py`)
+
+```bash
+python -m evaluation.rlm.structured_decompose --results <tree> --csv cells.csv
+```
+
+Renders score by window x k, then walks k upward and splits each step into the
+windows it added that carry a gold string and the ones that do not
+(`average_gold_windows_in_chunks` / `average_nongold_windows_in_chunks`, recorded
+beside `gold_in_retrieved`). Raising k adds signal and distractors together, so an
+undecomposed k-curve turning over cannot say which side moved. Cells with errors, or
+with `average_chunks_with_findings` near zero, are flagged as suspect and must not
+enter a table.
+
 ## Provided chunks read by the AGENTIC root
 
 `--mode rlm --search-k <k> --chunks-source file --chunks-file <…>` gives the REPL

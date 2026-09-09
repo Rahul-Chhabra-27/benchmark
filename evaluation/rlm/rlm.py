@@ -42,12 +42,13 @@ import signal
 import threading
 import time
 import traceback
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Callable, Optional, Sequence
 
 from . import retrieval
 from .client import LLMClient
-from .retrieval import Hit
+from .retrieval import Hit, tokenize
 
 ROOT_SYSTEM_PROMPT = """You are solving a task over a LONG document that does NOT fit in your context window.
 The document is stored in a Python REPL as a string variable named `context`
@@ -474,7 +475,12 @@ ALARM_REARM_FLOOR_S = 1.0
 # the relevant facts occasionally returns the whole passage; k of those would put
 # the entire payload back into the root's window, which is the one thing the RLM
 # paradigm exists to avoid.
-REDUCE_FINDING_CHARS = 2000
+#
+# A DEFAULT rather than a constant since the window geometry became an axis: at a
+# 4000- or 8000-char window the map step reads more but the reduce step would still
+# receive only 2000 chars of each finding, so the top of the window axis would
+# measure a treatment this cap had already severed. Raise it with the window.
+DEFAULT_REDUCE_FINDING_CHARS = 2000
 
 # How many characters one token is worth, for the two places that must convert
 # between the two units without a tokenizer: TokenCounter's no-tiktoken fallback
@@ -588,6 +594,59 @@ def _map_groups(hits: Sequence[Hit], granularity: str) -> list[list[Hit]]:
     if granularity == "all":
         return [ordered] if ordered else []
     raise ValueError(f"unknown map granularity {granularity!r}; choose from {list(STRUCTURED_MAP_GRANULARITIES)}")
+
+
+def _truncate_hits(hits: Sequence[Hit], max_chars: int, document: str) -> list[Hit]:
+    """The first `max_chars` characters of a cluster, still addressed by offsets.
+
+    The exposure axis asks how much of a passage the map step should SEE, which is a
+    different question from how wide the retrieval window is -- and the two are one
+    knob today. Cutting here rather than inside `llm_query` keeps `Hit.text ==
+    document[start:end]`, so a shortened payload still records the coverage it
+    actually got instead of claiming the whole window.
+
+    Spans are merged first: cluster members overlap by construction, so charging the
+    budget per-hit would spend it twice on the shared 400 characters.
+    """
+    if max_chars <= 0 or not hits:
+        return list(hits)
+    ranks = {(h.start, h.end): (h.rank, h.score) for h in hits}
+    kept: list[Hit] = []
+    spent = 0
+    for start, end in _merge_spans([(h.start, h.end) for h in hits]):
+        if spent >= max_chars:
+            break
+        stop = min(end, start + (max_chars - spent))
+        rank, score = ranks.get((start, end), (len(kept) + 1, 0.0))
+        kept.append(Hit(rank=rank, start=start, end=stop, score=score, text=document[start:stop]))
+        spent += stop - start
+    return kept
+
+
+# How many NEW terms a second hop borrows from what the first hop found. Small on
+# purpose: the round-2 query keeps the original question and adds the bridge the
+# reader surfaced, so a long tail of incidental nouns cannot outweigh the question.
+HOP_QUERY_TERMS = 12
+
+
+def _hop_query(task: str, findings: Sequence[str]) -> str:
+    """A follow-up query: the question, plus the terms the FIRST hop actually found.
+
+    Expanded from the map model's findings, never from the retrieved window text.
+    That distinction is the whole design: blind pseudo-relevance feedback over raw
+    windows was measured on this corpus and made recall WORSE everywhere (musique
+    recall@5 47.5% -> 37.5%). Hop 2 has to be a decision taken after reading, which
+    is what a finding is and what a window is not.
+
+    Terms already in the question are dropped -- they are what round 1 searched on,
+    so re-weighting them just returns round 1's windows.
+    """
+    asked = set(tokenize(task))
+    counts: Counter = Counter()
+    for text in findings:
+        counts.update(term for term in tokenize(text) if term not in asked)
+    borrowed = [term for term, _ in counts.most_common(HOP_QUERY_TERMS)]
+    return f"{task} {' '.join(borrowed)}".strip() if borrowed else task
 
 
 def _widen_spans(spans: Sequence[tuple[int, int]], target_chars: int, doc_len: int) -> list[tuple[int, int]]:
@@ -743,6 +802,9 @@ class RLM:
         structured_map_question: str = "task",
         structured_map_granularity: str = "passage",
         structured_answer_shape: str = "require",
+        structured_map_chars: int = 0,
+        reduce_finding_chars: int = DEFAULT_REDUCE_FINDING_CHARS,
+        structured_hops: int = 1,
     ):
         self.root = root_client
         self.sub = sub_client or root_client
@@ -839,6 +901,23 @@ class RLM:
         self.structured_map_question = structured_map_question
         self.structured_map_granularity = structured_map_granularity
         self.structured_answer_shape = structured_answer_shape
+        # The read side of the geometry, separated from the retrieval side. 0 = off,
+        # which is every arm run so far: the map call sees the whole passage. Above 0
+        # it sees only this many characters of it, so "how wide is a window" and "how
+        # much of one does the reader get" stop being the same number.
+        if structured_map_chars < 0:
+            raise ValueError(f"structured_map_chars must be >= 0, got {structured_map_chars}")
+        self.structured_map_chars = structured_map_chars
+        if reduce_finding_chars <= 0:
+            raise ValueError(f"reduce_finding_chars must be positive, got {reduce_finding_chars}")
+        self.reduce_finding_chars = reduce_finding_chars
+        # 1 = the shipped arm: one retrieval round, no follow-up. 2 adds a round
+        # seeded by what the first round FOUND. Capped at 2 deliberately -- see
+        # run_structured; a third level is a documented non-improvement, not an
+        # untried idea.
+        if structured_hops not in (1, 2):
+            raise ValueError(f"structured_hops must be 1 or 2, got {structured_hops}")
+        self.structured_hops = structured_hops
         self._sub_call_budget: Optional[int] = None
         self._deadline: Optional[float] = None
         self.tok = TokenCounter(token_counter)
@@ -1465,6 +1544,7 @@ class RLM:
         task: str,
         chunks: Sequence[Hit],
         answer_format: str | None = None,
+        retrieve: Callable[[str, int], Sequence[Hit]] | None = None,
     ) -> RLMResult:
         """Read a FIXED set of chunks with a fixed pipeline: map, then reduce.
 
@@ -1514,35 +1594,74 @@ class RLM:
         # accuracy with scoring.
         map_task = bare_query(task) if self.structured_map_question == "query" else task
         map_question = STRUCTURED_MAP_QUESTION.format(task=map_task, nothing=STRUCTURED_NOTHING)
-        # One call per CONTIGUOUS PASSAGE by default: see _cluster_hits and _map_groups.
-        # Every granularity puts the passages in document order, which is the order the
-        # agentic path's payload is assembled in and the order the reduce announces.
-        clusters = _map_groups(chunks, self.structured_map_granularity)
-        metrics["map_spans"] = len(clusters)
         findings: list[tuple[int, str]] = []
         timed_out = False
-        for step, cluster in enumerate(clusters, start=1):
-            if self._deadline is not None and time.monotonic() > self._deadline:
-                timed_out = True
-                break
-            answer = (llm_query(map_question, cluster) or "").strip()
-            metrics["map_calls"] += 1
-            span = f"[{cluster[0].start}:{max(h.end for h in cluster)}]"
-            transcript.append(
-                {
-                    "step": step,
-                    "reply": f"[map] passage {step}/{len(clusters)} at {span} ({len(cluster)} window(s))",
-                    "code": f"llm_query(MAP, cluster[{step - 1}])",
-                    "observation": answer,
-                }
-            )
-            # Prefix match, case-insensitive: asked for an exact sentinel a 4B model
-            # returns it with punctuation or a short apology attached often enough
-            # that equality would count those chunks as real findings and paste
-            # "NOTHING RELEVANT." into the reduce step as evidence.
-            if answer and not answer.upper().lstrip().startswith(STRUCTURED_NOTHING):
-                findings.append((step, answer))
-                metrics["chunks_with_findings"] += 1
+
+        def map_round(round_hits: Sequence[Hit], hop: int) -> bool:
+            """Read one retrieval round's windows, one call per group. True if it ran out of time.
+
+            A closure rather than a second copy of the loop, so hop 2 cannot drift
+            from hop 1: the granularity, the sentinel test, the transcript shape and
+            every counter are the same code on both rounds. A comparison between
+            `--structured-hops 1` and `2` then differs in the retrieval and nothing
+            else.
+            """
+            # One call per CONTIGUOUS PASSAGE by default: see _cluster_hits and
+            # _map_groups. Every granularity puts the passages in document order,
+            # which is the order the agentic path's payload is assembled in and the
+            # order the reduce announces.
+            clusters = _map_groups(round_hits, self.structured_map_granularity)
+            if self.structured_map_chars:
+                clusters = [_truncate_hits(c, self.structured_map_chars, context) for c in clusters]
+                clusters = [c for c in clusters if c]
+            metrics["map_spans"] = metrics.get("map_spans", 0) + len(clusters)
+            for index, cluster in enumerate(clusters, start=1):
+                if self._deadline is not None and time.monotonic() > self._deadline:
+                    return True
+                answer = (llm_query(map_question, cluster) or "").strip()
+                metrics["map_calls"] += 1
+                span = f"[{cluster[0].start}:{max(h.end for h in cluster)}]"
+                step = len(transcript) + 1
+                transcript.append(
+                    {
+                        "step": step,
+                        "reply": f"[map hop {hop}] passage {index}/{len(clusters)} at {span} "
+                        f"({len(cluster)} window(s))",
+                        "code": f"llm_query(MAP, hop{hop}.cluster[{index - 1}])",
+                        "observation": answer,
+                    }
+                )
+                # Prefix match, case-insensitive: asked for an exact sentinel a 4B
+                # model returns it with punctuation or a short apology attached often
+                # enough that equality would count those chunks as real findings and
+                # paste "NOTHING RELEVANT." into the reduce step as evidence.
+                if answer and not answer.upper().lstrip().startswith(STRUCTURED_NOTHING):
+                    findings.append((step, answer))
+                    metrics["chunks_with_findings"] += 1
+            return False
+
+        timed_out = map_round(chunks, 1)
+
+        # The second hop, and there is no third. A fixed pipeline can only follow a
+        # bridge entity it has already READ, so the round-2 query is built from the
+        # findings rather than from the windows -- see _hop_query for the measurement
+        # that forces that choice. Windows round 1 already read are excluded: sending
+        # them again would spend the budget re-reading text whose findings are
+        # already in hand.
+        if self.structured_hops >= 2 and findings and retrieve is not None and not timed_out:
+            seen = {(hit.start, hit.end) for hit in chunks}
+            wanted = len(chunks) or 1
+            try:
+                candidates = list(retrieve(_hop_query(bare_query(task), [text for _, text in findings]), wanted * 2))
+            except Exception as exc:  # pragma: no cover - a retriever fault must not void the round
+                metrics["hop2_error"] = f"{type(exc).__name__}: {exc}"
+                candidates = []
+            fresh = [hit for hit in candidates if (hit.start, hit.end) not in seen][:wanted]
+            metrics["hop2_chunks"] = len(fresh)
+            metrics["chunks_provided"] += len(fresh)
+            retrieved.extend((hit.start, hit.end) for hit in fresh)
+            if fresh:
+                timed_out = map_round(fresh, 2)
         metrics["steps"] = len(transcript)
 
         if not findings:
@@ -1556,7 +1675,7 @@ class RLM:
             metrics["abstain_reason"] = "no chunk contained relevant information"
             return RLMResult(None, len(transcript), True, transcript, "abstained", metrics)
 
-        findings_block = "\n\n".join(f"[{i}] {text[:REDUCE_FINDING_CHARS]}" for i, text in findings)
+        findings_block = "\n\n".join(f"[{i}] {text[:self.reduce_finding_chars]}" for i, text in findings)
         # `offer` is revision 1's treatment restored whole: its reduce line ("Be
         # concise.") and its note ("Format your answer as: ..."), so the answer-shape
         # change can be scored apart from the clustering change it shipped with.
