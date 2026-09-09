@@ -39,6 +39,7 @@ from .rlm import (
     STRUCTURED_MAP_QUESTIONS,
     MemoryBudget,
     Scratchpad,
+    bare_query,
     vanilla_answer,
 )
 from .sizing import (
@@ -173,6 +174,7 @@ RESUME_CRITICAL_KEYS = (
     "reduce_finding_chars",
     "structured_hops",
     "answer_list_format",
+    "chunks_query",
     # Dicts: comparing them whole covers their nested knobs too
     # (keep_recent_turns inside memory_budget, max_notes_tokens inside
     # scratchpad), which have no top-level key of their own.
@@ -635,6 +637,11 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
         # non-default rule, and deliberately. The change here is the new behaviour,
         # so it is the new behaviour that must claim a new directory; every qampari
         # and quest run already on disk keeps its name and its checkpoint.
+        # Stamped when the query is the corrected one, for the same reason `listfmt`
+        # is: the change is the new behaviour, so the new behaviour claims the new
+        # directory and the four arms already on the NAS keep their checkpoints.
+        if getattr(args, "chunks_query", "task") == "bare" and args.chunks_source == "bm25":
+            components.append("qbare")
         if answer_list_example(canonical_dataset_name(args.dataset or args.legacy_dataset), task_slug, mode):
             if getattr(args, "answer_list_format", "auto") != "off":
                 components.append("listfmt")
@@ -974,6 +981,16 @@ def main() -> None:
         "this cap rather than the window; raise it with --search-window",
     )
     ap.add_argument(
+        "--chunks-query",
+        default="task",
+        choices=["task", "bare"],
+        help="what BM25 is asked for --chunks-source bm25. `bare` strips the benchmark's "
+        "instruction wrapper down to the query inside it; `task` sends the whole thing and "
+        "is the default ONLY because it is what every structured run on disk did. On LOFT "
+        "the wrapper costs recall@2 nearly everything -- nq 0.00 against 0.95 -- so pass "
+        "`bare` for any new measurement and read a `task` run as handicapped retrieval",
+    )
+    ap.add_argument(
         "--answer-list-format",
         default="auto",
         choices=["auto", "off"],
@@ -1249,7 +1266,38 @@ def main() -> None:
         if chunk_set is not None:
             return chunk_set.hits_for(example["id"], example["context"])
         index = retrieval.get_index(example["context"], args.search_window, args.search_overlap)
-        return index.search(example["question"], args.chunks_k)
+        return index.search(chunks_query(example["question"]), args.chunks_k)
+
+    def chunks_query(question: str) -> str:
+        """What BM25 is actually asked. LOFT's `task` is not a question.
+
+        `bare_query` was written for the MAP step, where LOFT's page of citation and
+        formatting instructions derails a 4B reading one passage. The retriever was
+        handed the same wrapper and nobody applied the same reasoning -- so the query
+        BM25 scored on was dominated by "documents", "answer", "print", "title",
+        "format", "list", terms that occur in every window of the corpus.
+
+        Measured offline over 55 rows per subset, recall of the gold answer string:
+
+            task           r@2          r@5          r@10
+            nq         0.00 -> 0.95  0.65 -> 0.96  0.80 -> 0.96
+            hotpotqa   0.05 -> 0.71  0.64 -> 0.89  0.82 -> 0.91
+            musique    0.11 -> 0.38  0.29 -> 0.58  0.53 -> 0.78
+            qampari    0.00 -> 0.53* 0.53 -> 0.98  0.95 -> 1.00
+
+        At k=2 it is total: the top two windows never contained the answer on nq or
+        qampari. That is not a property of BM25 at depth 2, it is the boilerplate
+        outranking the question.
+
+        It also confounds the campaign's headline. The agentic `--search-k` arm lets
+        the MODEL write its query and gets a clean one; the structured arm did not,
+        so "structure loses to the BM25 agentic arm" was partly measuring which of
+        them was allowed to ask a sensible question.
+
+        `bare_query` is conservative -- a task with no `query:` line comes back
+        untouched -- so benchmarks whose task IS the question are unaffected.
+        """
+        return bare_query(question) if args.chunks_query == "bare" else question
 
     def retrieve_for(example: dict):
         """BM25 over this example's window grid, for `--structured-hops 2`.
@@ -1699,6 +1747,7 @@ def build_run_config(
                 "reduce_finding_chars": getattr(args, "reduce_finding_chars", DEFAULT_REDUCE_FINDING_CHARS),
                 "structured_hops": getattr(args, "structured_hops", 1),
                 "answer_list_format": getattr(args, "answer_list_format", "auto"),
+                "chunks_query": getattr(args, "chunks_query", "task"),
             }
             if mode == "structured"
             else {}

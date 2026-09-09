@@ -14,6 +14,12 @@
 #             construction, so what is missing afterwards is the reader's ceiling.
 #   hops      one follow-up round seeded by what round 1 FOUND. musique is the
 #             treatment; hotpotqa is the multi-hop control. There is no hop 3.
+#   qbare     the geometry grid again, with BM25 asked the QUESTION instead of
+#             LOFT's page of instructions. Measured offline: the wrapper costs
+#             recall@2 nearly everything (nq 0.00 -> 0.95) and recall@5 a third
+#             (0.65 -> 0.96). The first grid measures a handicapped retriever, so
+#             this is the one that answers "the upper limit"; both are kept, since
+#             the published arms all used the wrapper.
 #
 # --reduce-finding-chars tracks the window: left at 2000 a wide window is truncated
 # back at the reduce step, so the top of the sweep would measure that cap instead.
@@ -43,7 +49,8 @@ cd "$REPO" || exit 1
 export HF_HOME=${HF_HOME:-/mnt/nas/gautammahale/hf_cache} HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONPATH=.
 COMMON="--root-model $MODEL --sub-model $MODEL --base-url $BASE_URL --sub-backend http --out $RESULTS"
 
-stage=${1:?stage: geometry|exposure|oracle|hops|all}; shift
+QUERY=${QUERY:-task}   # `bare` strips LOFT's instruction wrapper before BM25 sees it
+stage=${1:?stage: geometry|exposure|oracle|hops|qbare|all}; shift
 
 preflight() {
   # GENERATE, do not just ask /v1/models. A vLLM whose engine core has wedged still
@@ -89,13 +96,14 @@ run() {  # run <label> <extra args...>
 for s in "$@"; do
   sub=${s}_128k
 
-  if [ "$stage" = geometry ] || [ "$stage" = all ]; then
+  if [ "$stage" = geometry ] || [ "$stage" = qbare ] || [ "$stage" = all ]; then
+    q=$QUERY; [ "$stage" = qbare ] && q=bare
     for w in $WINDOWS; do
       for k in $KS; do
         cap=$(cap_for "$k" "$w")
         find=$(( w > 2000 ? w : 2000 ))
-        run "geometry $sub w=$w k=$k" --data-dir "$sub" \
-            --chunks-source bm25 --chunks-k "$k" \
+        run "geometry($q) $sub w=$w k=$k" --data-dir "$sub" \
+            --chunks-source bm25 --chunks-k "$k" --chunks-query "$q" \
             --search-window "$w" --search-overlap $(( w / 5 )) \
             --reduce-finding-chars "$find" --max-subcall-chars "$cap"
       done

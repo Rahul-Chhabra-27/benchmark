@@ -256,6 +256,7 @@ def _args(**overrides) -> argparse.Namespace:
         reduce_finding_chars=2000,
         structured_hops=1,
         answer_list_format="auto",
+        chunks_query="task",
     )
     base.update(overrides)
     return argparse.Namespace(**base)

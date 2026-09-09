@@ -17,7 +17,7 @@ from evaluation.compare import headline_score, loft_score_key
 from evaluation.rlm.chunkset import ChunkSet, ChunkSetError, document_digest, window_spans
 from evaluation.rlm.oracle_chunks import gold_windows, select
 from evaluation.rlm.retrieval import Hit
-from evaluation.rlm.rlm import RLM, DEFAULT_REDUCE_FINDING_CHARS, _hop_query, _truncate_hits
+from evaluation.rlm.rlm import RLM, DEFAULT_REDUCE_FINDING_CHARS, _hop_query, _truncate_hits, bare_query
 from evaluation.rlm.run_benchmark import answer_list_example, build_run_dir_components
 
 from tests.evaluation.test_rlm_run_benchmark import _args
@@ -263,6 +263,50 @@ class AnswerListShapeTest(unittest.TestCase):
         # nq is not scored that way, so its name cannot move.
         nq = build_run_dir_components(_args(mode="structured", chunks_source="bm25"), "structured", None)
         self.assertNotIn("listfmt", nq)
+
+
+class ChunksQueryTest(unittest.TestCase):
+    """BM25 must be asked the question, not the page of instructions around it.
+
+    Measured offline over 55 rows/subset, recall of the gold answer string with the
+    full LOFT task versus the query inside it: nq r@2 0.00 -> 0.95, r@5 0.65 -> 0.96;
+    qampari r@2 0.00 -> 0.95; musique r@5 0.29 -> 0.58. At depth 2 the boilerplate
+    outranks the question completely.
+    """
+
+    LOFT_TASK = (
+        "You will be given a list of documents.\n"
+        "Print out the TITLE and ID of the documents you use to answer.\n"
+        "Then format the answers into a list.\n"
+        "query: which competition did Lloyd Harris win\n"
+    )
+
+    def test_the_wrapper_is_stripped_down_to_the_query(self):
+        self.assertEqual(bare_query(self.LOFT_TASK), "which competition did Lloyd Harris win")
+
+    def test_a_task_that_is_already_a_question_is_untouched(self):
+        # The conservative half: benchmarks whose task IS the question must not move.
+        self.assertEqual(bare_query("Who directed Rashomon?"), "Who directed Rashomon?")
+
+    def test_the_corrected_query_claims_its_own_directory(self):
+        # The default stays `task` so a no-flag run still reproduces the arms on the
+        # NAS byte for byte -- the invariant every --structured-* flag already keeps.
+        # The correction is opt-in and NAMED, which also makes it a labelled A/B
+        # rather than a silent replacement of the published numbers.
+        as_published = build_run_dir_components(_args(mode="structured", chunks_source="bm25"), "structured", None)
+        corrected = build_run_dir_components(
+            _args(mode="structured", chunks_source="bm25", chunks_query="bare"), "structured", None
+        )
+        self.assertNotIn("qbare", as_published)
+        self.assertIn("qbare", corrected)
+
+    def test_a_provided_chunk_set_is_not_stamped(self):
+        # `file` chunks are chosen offline; no BM25 query is asked at all, so the
+        # component would name a knob the run never used.
+        provided = build_run_dir_components(
+            _args(mode="structured", chunks_source="file", chunks_query="bare"), "structured", None
+        )
+        self.assertNotIn("qbare", provided)
 
 
 class MultiValueHeadlineTest(unittest.TestCase):

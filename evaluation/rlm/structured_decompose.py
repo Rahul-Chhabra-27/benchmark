@@ -89,7 +89,17 @@ def collect(results: Path) -> list[dict[str, Any]]:
                 # The structured arm's version of `sub_pressed_call_fraction` near
                 # zero: the pipeline ran and learned nothing, so the cell is not a
                 # measurement of the geometry it names.
-                "suspect": bool(runtime.get("errors")) or (runtime.get("average_chunks_with_findings") or 0) < 0.05,
+                # Errors, or the pipeline finding nothing DESPITE the gold being in
+                # front of it. Findings near zero is only a defect when retrieval
+                # worked: at k=2 on LOFT the chunks genuinely do not contain the
+                # answer (gold_in_retrieved 0.00-0.15), and an abstention there is the
+                # honest result, not a cell to throw away.
+                "suspect": bool(runtime.get("errors"))
+                or (
+                    (runtime.get("average_chunks_with_findings") or 0) < 0.05
+                    and (runtime.get("gold_in_retrieved_fraction") or 0) > 0.2
+                ),
+                "retrieval_starved": (runtime.get("gold_in_retrieved_fraction") or 0) < 0.2,
             }
         )
     return rows
@@ -99,9 +109,25 @@ def _fmt(value, spec="6.3f", blank="     -"):
     return blank if value is None else format(value, spec)
 
 
+def _sweep_rows(rows: list[dict[str, Any]], task: str) -> list[dict[str, Any]]:
+    """Just the geometry sweep: BM25 chunks, one hop, no exposure cap.
+
+    `chunks_source` is load-bearing here. The oracle arm is a `file` cell at the same
+    window and k as a BM25 cell, so keying the grid on (window, k) alone let it
+    OVERWRITE its own control -- nq's 2000/5 rendered as 0.800 (the oracle) where the
+    BM25 cell is 0.545. Every filter that selects a comparison has to name the axis
+    that distinguishes the arms, not just the axes being swept.
+    """
+    return [
+        r
+        for r in rows
+        if r["task"] == task and r["chunks_source"] == "bm25" and r["hops"] == 1 and not r["map_chars"]
+    ]
+
+
 def grid(rows: list[dict[str, Any]], task: str) -> str:
     """Score by window (rows) x k (columns), the way the fixed-chunk grid reads."""
-    cells = {(r["window"], r["k"]): r for r in rows if r["task"] == task and r["hops"] == 1 and not r["map_chars"]}
+    cells = {(r["window"], r["k"]): r for r in _sweep_rows(rows, task)}
     if not cells:
         return ""
     windows = sorted({w for w, _ in cells})
@@ -112,18 +138,25 @@ def grid(rows: list[dict[str, Any]], task: str) -> str:
         line = f"{window:>6} "
         for k in ks:
             row = cells.get((window, k))
-            line += "       -" if row is None else f"{_fmt(row['score'], '8.3f')}" + ("*" if row["suspect"] else " ")
+            if row is None:
+                line += "       -"
+                continue
+            mark = "*" if row["suspect"] else ("!" if row["retrieval_starved"] else " ")
+            line += f"{_fmt(row['score'], '8.3f')}{mark}"
         out.append(line.rstrip())
     if any(row["suspect"] for row in cells.values()):
-        out.append("  * cell is suspect: errors, or nothing was found in any chunk")
+        out.append("  * suspect: errors, or nothing found although the gold was retrieved")
+    if any(row["retrieval_starved"] for row in cells.values()):
+        out.append("  ! retrieval-starved: the gold reached under 20% of examples -- a real")
+        out.append("    result about the retriever, not about the pipeline reading it")
     return "\n".join(out)
 
 
 def decompose(rows: list[dict[str, Any]], task: str) -> str:
     """Walk k upward at each window and attribute the score change to the two counts."""
     by_window: dict[int, list[dict]] = defaultdict(list)
-    for row in rows:
-        if row["task"] == task and row["hops"] == 1 and not row["map_chars"] and row["score"] is not None:
+    for row in _sweep_rows(rows, task):
+        if row["score"] is not None:
             by_window[row["window"]].append(row)
     if not by_window:
         return ""
@@ -182,6 +215,25 @@ def main() -> None:
             print(
                 f"  {row['task']:<20}{row['map_chars']:>10}{_fmt(row['score'], '8.3f')}"
                 f"{_fmt(row['chunks_with_findings'], '11.2f')}"
+            )
+
+    oracle = [r for r in rows if r["chunks_source"] == "file"]
+    if oracle:
+        print("\noracle chunks -- retrieval perfect by construction, so what is left is the reader")
+        print("  task                 oracle    bm25 same cell    gap")
+        for row in sorted(oracle, key=lambda r: r["task"]):
+            control = next(
+                (
+                    c
+                    for c in _sweep_rows(rows, row["task"])
+                    if c["window"] == row["window"] and c["k"] == row["k"]
+                ),
+                None,
+            )
+            gap = None if control is None or control["score"] is None else row["score"] - control["score"]
+            print(
+                f"  {row['task']:<20}{_fmt(row['score'], '8.3f')}{_fmt(control and control['score'], '18.3f')}"
+                f"{_fmt(gap, '8.3f')}"
             )
 
     hopped = [r for r in rows if r["hops"] > 1]
