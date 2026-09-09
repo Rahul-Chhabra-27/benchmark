@@ -24,7 +24,7 @@ set -u
 REPO=${REPO:-/mnt/nas/gautammahale/structured_checkout}
 RESULTS=${RESULTS:-/mnt/nas/gautammahale/structured_grid}
 PY=${PY:-/mnt/nas/gautammahale/venvs/rlm/bin/python}
-BASE_URL=${BASE_URL:-http://localhost:8000/v1}
+BASE_URL=${BASE_URL:-http://localhost:8001/v1}
 MODEL=${MODEL:-Qwen/Qwen3-4B-Instruct-2507}
 LIMIT=${LIMIT:-55}
 SPLIT=${SPLIT:-test}
@@ -44,6 +44,26 @@ export HF_HOME=${HF_HOME:-/mnt/nas/gautammahale/hf_cache} HF_HUB_OFFLINE=1 TRANS
 COMMON="--root-model $MODEL --sub-model $MODEL --base-url $BASE_URL --sub-backend http --out $RESULTS"
 
 stage=${1:?stage: geometry|exposure|oracle|hops|all}; shift
+
+preflight() {
+  # GENERATE, do not just ask /v1/models. A vLLM whose engine core has wedged still
+  # answers the static routes and still accepts chat requests -- it logs "Added
+  # request" and then never finishes one. Every sub-call blocks, and a campaign
+  # started against it looks exactly like a campaign that is running: processes
+  # alive, no errors, no rows. That cost an evening once. Ninety seconds is far
+  # longer than a 4B needs for eight tokens, so a timeout here means wedged.
+  local body
+  body=$(curl -s --max-time 90 "$BASE_URL/chat/completions" -H "Content-Type: application/json" \
+    -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"reply with the word ok\"}],\"max_tokens\":8}")
+  case "$body" in
+    *'"content"'*) echo "preflight OK: $BASE_URL generated a reply" ;;
+    *) echo "PREFLIGHT FAILED: $BASE_URL did not complete a generation in 90s." >&2
+       echo "  The engine is wedged or the port is serving something else. Restart it" >&2
+       echo "  before launching -- do not run the campaign against it." >&2
+       exit 1 ;;
+  esac
+}
+preflight
 
 cap_for() {  # cap_for <k> <window> -> --max-subcall-chars for that cell
   # Clustering can merge adjacent windows into one call, so the cap has to cover a
