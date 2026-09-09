@@ -15,10 +15,12 @@ import json
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 import yaml
+
+from evaluation import compare
 
 from evaluation.benchmarks.registry import LOFT_TASKS, LONGBENCH_128K_SUBSETS, RULER_32K_TASKS, SCORER_REGISTRY
 from evaluation.benchmarks.results import score_prediction_frame
@@ -66,6 +68,25 @@ DEFAULT_CHUNKS_K = retrieval.DEFAULT_K
 # the same reason: it is the argparse default AND is compared against in
 # build_run_dir_components, and a second literal could drift from the cap the reduce
 # step actually applies.
+
+
+# The bracketed shape LOFT's multi-value scorer parses, as a worked example. Only
+# ever shown for a task that IS scored that way -- see answer_list_example.
+LOFT_LIST_ANSWER_EXAMPLE = '["first answer", "second answer", "third answer"]'
+
+
+def answer_list_example(dataset: Optional[str], task: Optional[str], mode: str) -> str:
+    """The list example this run's reduce step should show, or "" for none.
+
+    Narrow on purpose. LOFT ships one bare `Final Answer: ` prefix for every subset,
+    but only qampari and quest are scored through the list parser, and an arm that is
+    never shown the shape it is parsed with is measured as wrong when it was right --
+    3 of 3 correct answers reporting coverage 0.000, measured. Single-value subsets
+    are untouched, so every nq/hotpotqa run keeps its exact prompt and its numbers.
+    """
+    if mode != "structured" or dataset != "loft" or not task:
+        return ""
+    return LOFT_LIST_ANSWER_EXAMPLE if compare.loft_score_key(task) == "coverage" else ""
 
 
 def _subcall_chars(value: str) -> Any:
@@ -151,6 +172,7 @@ RESUME_CRITICAL_KEYS = (
     "structured_map_chars",
     "reduce_finding_chars",
     "structured_hops",
+    "answer_list_format",
     # Dicts: comparing them whole covers their nested knobs too
     # (keep_recent_turns inside memory_budget, max_notes_tokens inside
     # scratchpad), which have no top-level key of their own.
@@ -609,6 +631,13 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
             components.append(f"find{args.reduce_finding_chars}")
         if getattr(args, "structured_hops", 1) != 1:
             components.append(f"hops{args.structured_hops}")
+        # Stamped when the list shape IS shown -- the inverse of the usual
+        # non-default rule, and deliberately. The change here is the new behaviour,
+        # so it is the new behaviour that must claim a new directory; every qampari
+        # and quest run already on disk keeps its name and its checkpoint.
+        if answer_list_example(canonical_dataset_name(args.dataset or args.legacy_dataset), task_slug, mode):
+            if getattr(args, "answer_list_format", "auto") != "off":
+                components.append("listfmt")
     # The agentic arm reading a chunk set chosen outside the run. It still carries
     # `bm25k<N>` from the block above, because search() is how the chunks arrive and
     # k still bounds them; this component is what says the windows are not BM25's.
@@ -943,6 +972,15 @@ def main() -> None:
         help="characters of each map finding pasted into the reduce prompt. Left at 2000 a wide "
         "window is truncated back at the reduce step, so the top of a window sweep would measure "
         "this cap rather than the window; raise it with --search-window",
+    )
+    ap.add_argument(
+        "--answer-list-format",
+        default="auto",
+        choices=["auto", "off"],
+        help="`auto` shows the structured reduce step the BRACKETED list shape LOFT's "
+        "multi-value scorer (qampari, quest) actually parses; every other task is "
+        "untouched. `off` is the old behaviour, in which a reply naming all five gold "
+        "answers as prose extracted as one string and scored 0",
     )
     ap.add_argument(
         "--structured-hops",
@@ -1341,6 +1379,13 @@ def main() -> None:
         structured_map_chars=args.structured_map_chars,
         reduce_finding_chars=args.reduce_finding_chars,
         structured_hops=args.structured_hops,
+        structured_answer_list=(
+            ""
+            if args.answer_list_format == "off"
+            else answer_list_example(
+                canonical_dataset_name(args.dataset or args.legacy_dataset), args.data_dir, args.mode
+            )
+        ),
     )
 
     for mode in modes:
@@ -1653,6 +1698,7 @@ def build_run_config(
                 "structured_map_chars": getattr(args, "structured_map_chars", 0),
                 "reduce_finding_chars": getattr(args, "reduce_finding_chars", DEFAULT_REDUCE_FINDING_CHARS),
                 "structured_hops": getattr(args, "structured_hops", 1),
+                "answer_list_format": getattr(args, "answer_list_format", "auto"),
             }
             if mode == "structured"
             else {}

@@ -344,6 +344,22 @@ STRUCTURED_REDUCE_TEMPLATE_OFFER = (
 )
 STRUCTURED_ANSWER_SHAPE_OFFER = "\nFormat your answer as: {answer_format}"
 
+# LOFT's multi-value subsets (qampari, quest) are scored through a parser that only
+# splits a BRACKETED list. Their `answer_prefix` is the same bare "Final Answer: "
+# every other subset ships, so nothing ever told the model the shape -- and a reply
+# naming all five gold answers as prose ("Rival Schools, Gorilla Biscuits, ...")
+# extracts as ONE string, intersects no gold, and scores coverage 0.0 while the
+# harness's own loose check calls it correct. Measured on the oracle arm: 3 of 3
+# right, 0.000 reported.
+#
+# So this is the shape instruction the arm was missing, not a scoring workaround.
+# Empty by default, which reproduces every run already on disk byte for byte.
+STRUCTURED_ANSWER_LIST_NOTE = (
+    "\nThe answer is a LIST of separate items. Put it on that final line as a "
+    "bracketed, comma-separated list of quoted strings -- for example {example} -- "
+    "with no other text on the line. One item per distinct answer."
+)
+
 # The structured arm's three axes, in the shape of SEARCH_ABLATABLE above: a
 # bundled treatment gets one knob per component. Every DEFAULT reproduces revision
 # 2 byte-for-byte, so turning these on is the only way to change what the shipped
@@ -805,6 +821,7 @@ class RLM:
         structured_map_chars: int = 0,
         reduce_finding_chars: int = DEFAULT_REDUCE_FINDING_CHARS,
         structured_hops: int = 1,
+        structured_answer_list: str = "",
     ):
         self.root = root_client
         self.sub = sub_client or root_client
@@ -918,6 +935,9 @@ class RLM:
         if structured_hops not in (1, 2):
             raise ValueError(f"structured_hops must be 1 or 2, got {structured_hops}")
         self.structured_hops = structured_hops
+        # A worked example of the bracketed list a multi-value benchmark is parsed
+        # with, or "" for the single-value default. See STRUCTURED_ANSWER_LIST_NOTE.
+        self.structured_answer_list = structured_answer_list
         self._sub_call_budget: Optional[int] = None
         self._deadline: Optional[float] = None
         self.tok = TokenCounter(token_counter)
@@ -1682,15 +1702,18 @@ class RLM:
         offered = self.structured_answer_shape == "offer"
         reduce_template = STRUCTURED_REDUCE_TEMPLATE_OFFER if offered else STRUCTURED_REDUCE_TEMPLATE
         shape_note = STRUCTURED_ANSWER_SHAPE_OFFER if offered else STRUCTURED_ANSWER_SHAPE
+        answer_format_note = (
+            shape_note.format(answer_format=answer_format.strip())
+            if answer_format
+            else ("" if offered else "\nReply with the answer itself and nothing else.")
+        )
+        if self.structured_answer_list:
+            answer_format_note += STRUCTURED_ANSWER_LIST_NOTE.format(example=self.structured_answer_list)
         reduce_prompt = reduce_template.format(
             task=task,
             n_chunks=len(findings),
             findings=findings_block,
-            answer_format_note=(
-                shape_note.format(answer_format=answer_format.strip())
-                if answer_format
-                else ("" if offered else "\nReply with the answer itself and nothing else.")
-            ),
+            answer_format_note=answer_format_note,
         )
         messages = [
             {"role": "system", "content": STRUCTURED_REDUCE_SYSTEM},

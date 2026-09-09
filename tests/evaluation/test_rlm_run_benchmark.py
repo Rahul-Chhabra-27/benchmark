@@ -255,6 +255,7 @@ def _args(**overrides) -> argparse.Namespace:
         structured_map_chars=0,
         reduce_finding_chars=2000,
         structured_hops=1,
+        answer_list_format="auto",
     )
     base.update(overrides)
     return argparse.Namespace(**base)

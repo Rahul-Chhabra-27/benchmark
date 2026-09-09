@@ -18,7 +18,7 @@ from evaluation.rlm.chunkset import ChunkSet, ChunkSetError, document_digest, wi
 from evaluation.rlm.oracle_chunks import gold_windows, select
 from evaluation.rlm.retrieval import Hit
 from evaluation.rlm.rlm import RLM, DEFAULT_REDUCE_FINDING_CHARS, _hop_query, _truncate_hits
-from evaluation.rlm.run_benchmark import build_run_dir_components
+from evaluation.rlm.run_benchmark import answer_list_example, build_run_dir_components
 
 from tests.evaluation.test_rlm_run_benchmark import _args
 
@@ -214,6 +214,55 @@ class OracleChunkTest(unittest.TestCase):
         self.assertEqual(len(ChunkSet.from_file(path, chunk_chars=600, overlap=100).hits_for("x", self.DOC)), 1)
         with self.assertRaises(ChunkSetError):
             ChunkSet.from_file(path, chunk_chars=1200, overlap=200).hits_for("x", self.DOC)
+
+
+class AnswerListShapeTest(unittest.TestCase):
+    """An arm must be asked for the shape it is scored on.
+
+    LOFT ships one bare `Final Answer: ` prefix for every subset, but qampari and
+    quest are parsed by a splitter that only accepts a bracketed list. Measured on
+    the oracle arm before this existed: three replies naming every gold answer,
+    scored `coverage` 0.000.
+    """
+
+    def test_only_the_multi_value_loft_subsets_are_shown_a_list(self):
+        self.assertTrue(answer_list_example("loft", "qampari_128k", "structured"))
+        self.assertTrue(answer_list_example("loft", "quest_128k", "structured"))
+        self.assertEqual(answer_list_example("loft", "nq_128k", "structured"), "")
+        self.assertEqual(answer_list_example("loft", "hotpotqa_128k", "structured"), "")
+        self.assertEqual(answer_list_example("longbench128k", "hotpotqa", "structured"), "")
+
+    def test_the_agentic_and_vanilla_arms_are_left_alone(self):
+        # Their numbers are the reference line this campaign is read against;
+        # changing their prompt would silently move it.
+        for mode in ("rlm", "vanilla", "both"):
+            with self.subTest(mode=mode):
+                self.assertEqual(answer_list_example("loft", "qampari_128k", mode), "")
+
+    def test_the_note_reaches_the_reduce_prompt_and_only_when_asked(self):
+        root, _, rlm = build(["fact"], structured_answer_list='["a", "b"]')
+        rlm.run_structured(DOCUMENT, "which ones?", hits((0, 100)), answer_format="Final Answer: ")
+        self.assertIn("bracketed", root.asked[0])
+        self.assertIn('["a", "b"]', root.asked[0])
+
+        root, _, rlm = build(["fact"])
+        rlm.run_structured(DOCUMENT, "which ones?", hits((0, 100)), answer_format="Final Answer: ")
+        self.assertNotIn("bracketed", root.asked[0])
+
+    def test_showing_the_list_shape_claims_its_own_directory(self):
+        plain = build_run_dir_components(
+            _args(mode="structured", chunks_source="bm25", data_dir="qampari_128k", answer_list_format="off"),
+            "structured",
+            None,
+        )
+        corrected = build_run_dir_components(
+            _args(mode="structured", chunks_source="bm25", data_dir="qampari_128k"), "structured", None
+        )
+        self.assertNotIn("listfmt", plain)
+        self.assertIn("listfmt", corrected)
+        # nq is not scored that way, so its name cannot move.
+        nq = build_run_dir_components(_args(mode="structured", chunks_source="bm25"), "structured", None)
+        self.assertNotIn("listfmt", nq)
 
 
 class MultiValueHeadlineTest(unittest.TestCase):
