@@ -44,7 +44,7 @@ import time
 import traceback
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Callable, Optional, Sequence
+from typing import Callable, Mapping, Optional, Sequence
 
 from . import retrieval
 from .client import LLMClient
@@ -581,6 +581,17 @@ def _cluster_hits(hits: Sequence[Hit]) -> list[list[Hit]]:
         else:
             clusters.append([hit])
     return clusters
+
+
+def _window_of(hit: Hit, chunk_chars: int, overlap: int) -> int:
+    """Which grid window this hit is, derived exactly as the grid was built.
+
+    `window_spans` strides by `chunk_chars - overlap` from 0, so the window id is the
+    start offset divided by the stride. Recomputed rather than carried on the Hit,
+    which has no room for it and is shared with the BM25 path.
+    """
+    stride = max(chunk_chars - overlap, 1)
+    return hit.start // stride
 
 
 def _map_groups(hits: Sequence[Hit], granularity: str) -> list[list[Hit]]:
@@ -1292,6 +1303,11 @@ class RLM:
             "context": context,
             "llm_query": llm_query,
             "re": re,
+            # Not for the REPL -- the sandbox only exposes what the root is told
+            # about, and the root is never told about this. It is here so the notes
+            # path in run_structured can record what it read without reimplementing
+            # the span merge that backs document_coverage_fraction.
+            "record_coverage": record_coverage,
         }
         # Case variants bound to the same callables (see FINAL_NAMES).
         env.update({name: FINAL for name in FINAL_NAMES})
@@ -1565,6 +1581,7 @@ class RLM:
         chunks: Sequence[Hit],
         answer_format: str | None = None,
         retrieve: Callable[[str, int], Sequence[Hit]] | None = None,
+        window_notes: Mapping[int, str] | None = None,
     ) -> RLMResult:
         """Read a FIXED set of chunks with a fixed pipeline: map, then reduce.
 
@@ -1580,6 +1597,14 @@ class RLM:
         same path the search arm uses, reused rather than reimplemented, so
         coverage, truncation, caching and every sub_* counter mean the same thing
         here as they do there.
+
+        `window_notes` replaces the map step rather than assisting it. The notes were
+        written by a pass over the corpus that never saw the question (see
+        window_notes.py), so this arm reads a representation built without the query
+        and the question enters exactly once, at the reduce. The map step is SKIPPED,
+        not cached: `map_calls` is 0 because no model call is made here, and the
+        build cost lives in the notes file's header where it can be amortised over
+        the queries that share the corpus.
         """
         split_capable = hasattr(self.sub, "chat_split")
         metrics = self._base_metrics(split_capable)
@@ -1616,6 +1641,31 @@ class RLM:
         map_question = STRUCTURED_MAP_QUESTION.format(task=map_task, nothing=STRUCTURED_NOTHING)
         findings: list[tuple[int, str]] = []
         timed_out = False
+
+        if window_notes is not None:
+            # The map step is replaced by a lookup. Coverage is still recorded: the
+            # notes ARE derived from that text, so an arm reading notes for the whole
+            # grid has read the whole document in the only sense this metric tracks.
+            record_coverage = env["record_coverage"]
+            metrics["notes_read"] = 0
+            for hit in sorted(chunks, key=lambda h: (h.start, h.end)):
+                note = window_notes.get(_window_of(hit, self.search_window_chars, self.search_overlap_chars), "")
+                record_coverage(hit.start, hit.end)
+                if not note:
+                    continue
+                transcript.append(
+                    {
+                        "step": len(transcript) + 1,
+                        "reply": f"[note] window at [{hit.start}:{hit.end}]",
+                        "code": "window_notes[...]",
+                        "observation": note,
+                    }
+                )
+                findings.append((len(transcript), note))
+                metrics["notes_read"] += 1
+            metrics["chunks_with_findings"] = metrics["notes_read"]
+            metrics["map_spans"] = len(chunks)
+            metrics["steps"] = len(transcript)
 
         def map_round(round_hits: Sequence[Hit], hop: int) -> bool:
             """Read one retrieval round's windows, one call per group. True if it ran out of time.
@@ -1660,7 +1710,7 @@ class RLM:
                     metrics["chunks_with_findings"] += 1
             return False
 
-        timed_out = map_round(chunks, 1)
+        timed_out = map_round(chunks, 1) if window_notes is None else False
 
         # The second hop, and there is no third. A fixed pipeline can only follow a
         # bridge entity it has already READ, so the round-2 query is built from the

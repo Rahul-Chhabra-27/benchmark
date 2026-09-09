@@ -27,7 +27,9 @@ from evaluation.benchmarks.results import score_prediction_frame
 from evaluation.results_layout import RLM_RESULTS_DIR
 
 from . import retrieval
+from . import chunkset, window_notes
 from .chunkset import ChunkSet, ChunkSetError, file_digest
+from .retrieval import Hit
 from .client import LLMClient
 from .datasets import available_datasets, canonical_dataset_name, load_examples
 from .rlm import (
@@ -159,6 +161,14 @@ RESUME_CRITICAL_KEYS = (
     "chunks_source",
     "chunks_k",
     "chunks_file_sha256",
+    # WHICH selector wrote that file. `chunks_file_sha256` already refuses a resume
+    # across two different files, so this is belt and braces there -- it earns its
+    # place by making config.yaml self-describing, so the sweep analysis can key on
+    # the selector without reopening every chunk file to find out.
+    "chunks_tag",
+    "notes_file_sha256",
+    "notes_select",
+    "notes_k",
     "ids_sha256",
     # The three structured axes. In the slug too (only when non-default, so existing
     # directories keep their names), but listed here for the same reason `search_k`
@@ -606,6 +616,19 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
     # reachable. `mode` already reads "structured"; this says which chunks.
     if mode == "structured":
         components.append(f"chunks-{args.chunks_source}{args.chunks_k}")
+        # WHICH selector chose them. Stamped only when a tag exists, so every chunk
+        # file written before the query-agnostic selectors -- the oracle sets and the
+        # two hand-made ones -- names the directory it always named. Without this,
+        # oracle / lead / stride / random / exhaustive at the same k are all
+        # `chunks-file5` and the second arm to run dies on a resume conflict.
+        if getattr(args, "chunks_tag", None):
+            components.append(f"sel-{args.chunks_tag}")
+        # The query-free index arm. `notes-all` and `notes-bm25k<K>` are different
+        # claims -- one is query-free selection, the other is query-aware lookup over
+        # a query-agnostic index -- so they must never share a directory.
+        if getattr(args, "chunks_source", None) == "notes":
+            select = getattr(args, "notes_select", "all")
+            components.append(f"notes-{select}" if select == "all" else f"notes-bm25k{args.notes_k}")
         # The window geometry, on the same non-default rule. WITHOUT this the whole
         # geometry axis collapses: --mode structured rejects --search-k, so the
         # `mode == "rlm" and args.search_k` gate above can never fire here and every
@@ -650,6 +673,8 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
     # k still bounds them; this component is what says the windows are not BM25's.
     if mode == "rlm" and getattr(args, "chunks_source", None):
         components.append(f"chunks-{args.chunks_source}{args.chunks_k}")
+        if getattr(args, "chunks_tag", None):
+            components.append(f"sel-{args.chunks_tag}")
     # Last of all, and for EVERY mode: --ids-file picks WHICH rows run and reaches
     # nothing else in the name, so without this an id-restricted run resumes into the
     # full run's checkpoint and merges two experiments. Kept last so every structured
@@ -907,9 +932,10 @@ def main() -> None:
     ap.add_argument(
         "--chunks-source",
         default=None,
-        choices=["bm25", "file"],
+        choices=["bm25", "file", "notes"],
         help="where --mode structured gets its chunks: `bm25` selects the top --chunks-k windows "
-        "in-harness (the cheap-selector control), `file` reads them from --chunks-file, written "
+        "in-harness (the cheap-selector control), `notes` reads a query-free index built by "
+        "window_notes.py, `file` reads them from --chunks-file, written "
         "offline by a larger model. Required by --mode structured and rejected by every other mode",
     )
     ap.add_argument(
@@ -917,6 +943,35 @@ def main() -> None:
         default=None,
         help="JSONL of pre-selected chunks, one record per example id (see chunkset.py). The file's "
         "CONTENT hash is stamped into config.yaml, so editing it invalidates a resume",
+    )
+    ap.add_argument(
+        "--chunks-tag",
+        default=None,
+        help="short name for WHICH selector wrote --chunks-file, stamped into the run directory as "
+        "`sel-<tag>`. Normally left unset: the chunk file names itself in its own `selector_tag` "
+        "field and this only overrides that. Without a tag every file-sourced arm at the same k -- "
+        "oracle, lead, stride, random, exhaustive -- names the SAME directory and the second one "
+        "dies on a resume conflict",
+    )
+    ap.add_argument(
+        "--notes-file",
+        default=None,
+        help="a window_notes.py index: one note per window, written by a pass over the corpus that "
+        "never saw the question. Read with --chunks-source notes",
+    )
+    ap.add_argument(
+        "--notes-select",
+        choices=["all", "bm25"],
+        default="all",
+        help="which notes reach the reduce step. `all` is query-free end to end until the reduce; "
+        "`bm25` ranks the NOTES on the bare question, which is query-aware LOOKUP over a "
+        "query-agnostic INDEX and must be labelled as such",
+    )
+    ap.add_argument(
+        "--notes-k",
+        type=int,
+        default=DEFAULT_CHUNKS_K,
+        help="notes kept by --notes-select bm25",
     )
     ap.add_argument(
         "--chunks-k",
@@ -1174,6 +1229,14 @@ def main() -> None:
         ap.error("--chunks-source file requires --chunks-file")
     if args.chunks_source == "bm25" and args.chunks_file:
         ap.error("--chunks-file is only read by --chunks-source file; bm25 selects in-harness")
+    if args.chunks_source == "notes" and not args.notes_file:
+        ap.error("--chunks-source notes requires --notes-file")
+    if args.notes_file and args.chunks_source != "notes":
+        ap.error("--notes-file is only read by --chunks-source notes")
+    if args.chunks_source == "notes" and args.mode != "structured":
+        ap.error("--chunks-source notes replaces the structured map step; it needs --mode structured")
+    if args.chunks_tag and args.chunks_source != "file":
+        ap.error("--chunks-tag names the selector behind --chunks-file; it is only read by --chunks-source file")
     if args.ids_file and args.limit is not None:
         # --ids-file is applied BEFORE --limit, so combining them means "the first N
         # of the named rows" -- which reads like a cap but silently changes which
@@ -1254,6 +1317,80 @@ def main() -> None:
         except ChunkSetError as exc:
             ap.error(str(exc))
         args.chunks_file_sha256 = file_digest(Path(args.chunks_file))
+    args.notes_file_sha256 = file_digest(Path(args.notes_file)) if args.notes_file else None
+
+    # WHICH selector wrote the file, as a run-directory component. The file names
+    # itself; --chunks-tag only overrides that, and disagreeing with the file is an
+    # error rather than a silent rename -- naming an arm something other than what it
+    # is, is the exact failure this mechanism exists to prevent.
+    #
+    # Stamped only when a tag EXISTS, which is what keeps the invariant every other
+    # stamp here keeps: no chunk file written before the query-agnostic selectors
+    # carries `selector_tag`, so every oracle and hand-made arm already on disk names
+    # the directory it always named and its checkpoint stays reachable.
+    if chunk_set is not None:
+        try:
+            file_tag = chunk_set.tag
+        except ChunkSetError as exc:
+            ap.error(str(exc))
+        if args.chunks_tag and file_tag and args.chunks_tag != file_tag:
+            ap.error(
+                f"--chunks-tag {args.chunks_tag!r} disagrees with the chunk file's own selector_tag "
+                f"{file_tag!r}. The run directory would name the arm something other than what wrote it"
+            )
+        args.chunks_tag = args.chunks_tag or file_tag
+
+        # A map call reads one CLUSTER, and `_cluster_hits` merges windows that touch
+        # or overlap. The retrieval grid overlaps by construction, so a selection that
+        # tiles the document collapses into ONE passage spanning the whole corpus:
+        # _cap_subcall truncates it to the cap and the run reports a full sweep having
+        # read the first cap-worth of characters. The guard above cannot see this --
+        # it prices one WINDOW for every granularity but `all`.
+        if args.mode == "structured" and args.structured_map_granularity == "passage" and not auto_chunk:
+            widest = chunk_set.max_cluster_chars()
+            room = args.max_subcall_chars - args.max_subcall_chars // 4
+            if widest > room:
+                ap.error(
+                    f"this chunk set's windows merge into a single {widest}-char passage at "
+                    f"--structured-map-granularity passage, but --max-subcall-chars "
+                    f"{args.max_subcall_chars} leaves only {room} for one call. The run would read "
+                    f"the first {room} chars in ONE map call and report a sweep of "
+                    f"{chunk_set.max_windows} windows. Pass --structured-map-granularity window."
+                )
+
+        # Past --max-sub-calls, llm_query returns a NOTICE STRING instead of calling
+        # the model -- and that string does not start with the "nothing relevant"
+        # sentinel, so the findings filter counts every one of them as a finding and
+        # pastes it into the reduce prompt as evidence. A truncated sweep therefore
+        # reports MORE findings than a healthy one and passes every gate that looks
+        # for a starved cell. Refuse it instead.
+        if args.mode == "structured" and args.max_sub_calls:
+            wanted = chunk_set.max_windows
+            if wanted > args.max_sub_calls:
+                ap.error(
+                    f"this chunk set selects up to {wanted} windows per example but --max-sub-calls "
+                    f"is {args.max_sub_calls}. Calls past the budget return a notice string that the "
+                    f"findings filter counts as a FINDING, so the run would read {args.max_sub_calls} "
+                    f"windows and report {wanted} of them as read. Pass --max-sub-calls 0 to disable "
+                    f"the budget, or raise it above {wanted}."
+                )
+
+    # The notes index cannot be verified before the first example, because the check
+    # is against the DOCUMENT and the loader yields it. It is loaded on the first row
+    # and refuses there -- one example spent rather than the whole run, which is the
+    # same bargain the chunk-set load makes with the file it can read up front.
+    notes_state: dict = {"notes": None, "index": None}
+
+    def notes_for(example: dict) -> dict:
+        if notes_state["notes"] is None:
+            notes = window_notes.load_notes(
+                args.notes_file, example["context"], args.search_window, args.search_overlap
+            )
+            notes_state["notes"] = notes
+            if args.notes_select == "bm25":
+                spans = chunkset.window_spans(len(example["context"]), args.search_window, args.search_overlap)
+                notes_state["index"] = window_notes.NotesIndex(notes, spans)
+        return notes_state["notes"]
 
     def chunks_for(example: dict) -> list:
         """The chunks this example is read through: the structured arm's map step, or
@@ -1263,6 +1400,23 @@ def main() -> None:
         WHICH windows were chosen and in nothing else -- which is the whole point
         of having a cheap-selector control at all.
         """
+        if args.chunks_source == "notes":
+            document = example["context"]
+            notes = notes_for(example)
+            spans = chunkset.window_spans(len(document), args.search_window, args.search_overlap)
+            if args.notes_select == "bm25":
+                # Query-aware LOOKUP over a query-agnostic INDEX. The query is the bare
+                # question for the same reason retrieval uses it: LOFT's wrapper is a
+                # page of boilerplate present in every note.
+                chosen = sorted(notes_state["index"].search(bare_query(example["question"]), args.notes_k))
+            else:
+                chosen = sorted(notes)
+            return [
+                Hit(rank=rank, start=spans[w][0], end=spans[w][1], score=0.0,
+                    text=document[spans[w][0]:spans[w][1]])
+                for rank, w in enumerate(chosen, start=1)
+                if w < len(spans)
+            ]
         if chunk_set is not None:
             return chunk_set.hits_for(example["id"], example["context"])
         index = retrieval.get_index(example["context"], args.search_window, args.search_overlap)
@@ -1550,6 +1704,7 @@ def main() -> None:
                                 chunks_for(ex),
                                 answer_format=answer_format,
                                 retrieve=retrieve_for(ex) if args.structured_hops > 1 else None,
+                                window_notes=notes_for(ex) if args.chunks_source == "notes" else None,
                             )
                         else:
                             r = rlm.run(
@@ -1732,6 +1887,11 @@ def build_run_config(
         "chunks_k": args.chunks_k if args.chunks_source else None,
         "chunks_file": args.chunks_file,
         "chunks_file_sha256": getattr(args, "chunks_file_sha256", None),
+        "chunks_tag": getattr(args, "chunks_tag", None),
+        "notes_file": getattr(args, "notes_file", None),
+        "notes_file_sha256": getattr(args, "notes_file_sha256", None),
+        "notes_select": getattr(args, "notes_select", None) if args.chunks_source == "notes" else None,
+        "notes_k": getattr(args, "notes_k", None) if args.chunks_source == "notes" else None,
         # The three components of the revision-2 treatment, recorded whatever their
         # value: `structured_revision` names the CODE generation, and these name the
         # configuration it ran in. A run that leaves them alone is revision 2 exactly.
