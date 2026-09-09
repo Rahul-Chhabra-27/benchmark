@@ -48,6 +48,10 @@ def _cell(config: dict) -> Optional[tuple]:
         int(config.get("chunks_k") or 0),
         int(config.get("structured_map_chars") or 0),
         int(config.get("structured_hops") or 1),
+        # Load-bearing, for the same reason chunks_source is: a `bare`-query cell and
+        # a `task`-query cell sit at identical (window, k) coordinates, and a grid
+        # keyed without this would silently render one on top of the other.
+        config.get("chunks_query") or "task",
     )
 
 
@@ -57,7 +61,7 @@ def collect(results: Path) -> list[dict[str, Any]]:
         cell = _cell(config)
         if cell is None:
             continue
-        task, source, window, overlap, k, map_chars, hops = cell
+        task, source, window, overlap, k, map_chars, hops, query = cell
         runtime = metrics.get("runtime", {}) if isinstance(metrics.get("runtime"), dict) else {}
         metric_name, score = headline_score(metrics, config.get("dataset"), task)
         gold = runtime.get("average_gold_windows_in_chunks")
@@ -72,6 +76,7 @@ def collect(results: Path) -> list[dict[str, Any]]:
                 "k": k,
                 "map_chars": map_chars,
                 "hops": hops,
+                "chunks_query": query,
                 "admitted_chars": k * window if not map_chars else k * min(window, map_chars),
                 "metric": metric_name,
                 "score": score,
@@ -109,7 +114,7 @@ def _fmt(value, spec="6.3f", blank="     -"):
     return blank if value is None else format(value, spec)
 
 
-def _sweep_rows(rows: list[dict[str, Any]], task: str) -> list[dict[str, Any]]:
+def _sweep_rows(rows: list[dict[str, Any]], task: str, query: str = "task") -> list[dict[str, Any]]:
     """Just the geometry sweep: BM25 chunks, one hop, no exposure cap.
 
     `chunks_source` is load-bearing here. The oracle arm is a `file` cell at the same
@@ -121,19 +126,27 @@ def _sweep_rows(rows: list[dict[str, Any]], task: str) -> list[dict[str, Any]]:
     return [
         r
         for r in rows
-        if r["task"] == task and r["chunks_source"] == "bm25" and r["hops"] == 1 and not r["map_chars"]
+        if r["task"] == task
+        and r["chunks_source"] == "bm25"
+        and r["hops"] == 1
+        and not r["map_chars"]
+        and r["chunks_query"] == query
     ]
 
 
-def grid(rows: list[dict[str, Any]], task: str) -> str:
+def grid(rows: list[dict[str, Any]], task: str, query: str = "task") -> str:
     """Score by window (rows) x k (columns), the way the fixed-chunk grid reads."""
-    cells = {(r["window"], r["k"]): r for r in _sweep_rows(rows, task)}
+    cells = {(r["window"], r["k"]): r for r in _sweep_rows(rows, task, query)}
     if not cells:
         return ""
     windows = sorted({w for w, _ in cells})
     ks = sorted({k for _, k in cells})
     metric = next((r["metric"] for r in rows if r["task"] == task and r["metric"]), "score")
-    out = [f"\n{task} -- {metric} by window (rows) x k (cols)", "  W\\k  " + "".join(f"{k:>8}" for k in ks)]
+    asked = "the question" if query == "bare" else "the whole task string"
+    out = [
+        f"\n{task} -- {metric} by window (rows) x k (cols), BM25 asked {asked}",
+        "  W\\k  " + "".join(f"{k:>8}" for k in ks),
+    ]
     for window in windows:
         line = f"{window:>6} "
         for k in ks:
@@ -152,10 +165,10 @@ def grid(rows: list[dict[str, Any]], task: str) -> str:
     return "\n".join(out)
 
 
-def decompose(rows: list[dict[str, Any]], task: str) -> str:
+def decompose(rows: list[dict[str, Any]], task: str, query: str = "task") -> str:
     """Walk k upward at each window and attribute the score change to the two counts."""
     by_window: dict[int, list[dict]] = defaultdict(list)
-    for row in _sweep_rows(rows, task):
+    for row in _sweep_rows(rows, task, query):
         if row["score"] is not None:
             by_window[row["window"]].append(row)
     if not by_window:
@@ -204,8 +217,9 @@ def main() -> None:
         raise SystemExit(f"no --mode structured runs with a metrics.json under {args.results}")
 
     for task in sorted({r["task"] for r in rows}):
-        print(grid(rows, task))
-        print(decompose(rows, task))
+        for query in sorted({r["chunks_query"] for r in rows if r["task"] == task}):
+            print(grid(rows, task, query))
+            print(decompose(rows, task, query))
 
     exposure = [r for r in rows if r["map_chars"]]
     if exposure:
@@ -225,7 +239,7 @@ def main() -> None:
             control = next(
                 (
                     c
-                    for c in _sweep_rows(rows, row["task"])
+                    for c in _sweep_rows(rows, row["task"], "task")
                     if c["window"] == row["window"] and c["k"] == row["k"]
                 ),
                 None,
