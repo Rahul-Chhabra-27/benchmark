@@ -165,6 +165,56 @@ def _load_ruler64k(dataset_id: str, task: str) -> pd.DataFrame:
     return df
 
 
+def split_ruler_input(text: str, question_pattern, answer_pattern) -> tuple[str, str, str]:
+    """Cut one RULER prompt into (context, question, answer_prefix).
+
+    The same cut benchmarks/ruler/create_huggingface_dataset.py makes to build the
+    kvpress RULER set: the LAST match of the task's question pattern starts the
+    question (qa prompts state their instruction at the top AND the bottom), and the
+    answer pattern inside what follows starts the answer's opening words.
+    """
+    matches = list(question_pattern.finditer(text))
+    if not matches:
+        raise ValueError("RULER prompt carries no question")
+    start = matches[-1].start()
+    context, rest = text[:start], text[start:]
+    answer = answer_pattern.search(rest)
+    if answer is None:
+        raise ValueError("RULER prompt carries no answer prefix")
+    return context, rest[: answer.start()], rest[answer.start() :]
+
+
+def _load_ruler128k(dataset_id: str, task: str) -> pd.DataFrame:
+    """Load one task of RULER at 131072 Qwen3 tokens (lighteval's generation).
+
+    One split per task, and each row carries the WHOLE prompt in `input` --
+    instructions, haystack, question and the answer's opening words -- so it is cut
+    with RULER's own patterns (see split_ruler_input). `outputs` is the gold list.
+    """
+    if task not in RULER_32K_TASKS:
+        valid_tasks = ", ".join(RULER_32K_TASKS)
+        raise ValueError(f"Unknown RULER128K task {task!r}; expected one of: {valid_tasks}")
+    from evaluation.benchmarks.ruler.create_huggingface_dataset import (
+        ANSWER_PATTERNS,
+        MAX_NEW_TOKENS,
+        QUESTION_PATTERNS,
+    )
+
+    logger.info("Loading RULER128K dataset: %s (split=%s)", dataset_id, task)
+    df = load_dataset(dataset_id, split=task).to_pandas()
+    category = task.split("_")[0]
+    parts = [split_ruler_input(text, QUESTION_PATTERNS[category], ANSWER_PATTERNS[category]) for text in df["input"]]
+    df["context"] = [part[0] for part in parts]
+    df["question"] = [part[1] for part in parts]
+    df["answer_prefix"] = [part[2] for part in parts]
+    df["answer"] = df["outputs"]
+    df["task"] = task
+    df["max_new_tokens"] = MAX_NEW_TOKENS[category]
+    df["context_length"] = 131072
+    # `input` repeats the whole context; half the frame's memory for nothing.
+    return df.drop(columns=["input"])
+
+
 def load_benchmark_dataset(
     dataset_name: str,
     task: Optional[str],
@@ -191,6 +241,8 @@ def load_benchmark_dataset(
         df = _load_ruler32k(dataset_id, _require_task(dataset_name, task))
     elif dataset_name == "ruler64k":
         df = _load_ruler64k(dataset_id, _require_task(dataset_name, task))
+    elif dataset_name == "ruler128k":
+        df = _load_ruler128k(dataset_id, _require_task(dataset_name, task))
     else:
         logger.info("Loading dataset: %s (data_dir: %s)", dataset_id, task)
         df = load_dataset(dataset_id, data_dir=task, split="test").to_pandas()

@@ -33,6 +33,9 @@ DATASET_REGISTRY = {
     "loft": "f20180301/loft-rag",
     "ruler32k": "xAlg-AI/att-hub-ruler-32k",
     "ruler64k": "ollamaweights/Ruler-64k",
+    # lighteval's RULER at 131072 tokens of the Qwen3 tokenizer: one split per task,
+    # the whole prompt in `input`, cut apart by loaders._load_ruler128k.
+    "ruler128k": "lighteval/RULER-131072-Qwen-3",
     "synthetic_kv": "ollamaweights/synthetic-dataset-1208-64k",
     "synthetic_kv_32k": "ollamaweights/synthetic-dataset-1208",
 }
@@ -53,6 +56,7 @@ SCORER_REGISTRY = {
     "loft": _lazy_scorer("loft"),
     "ruler32k": _lazy_scorer("ruler32k"),
     "ruler64k": _lazy_scorer("ruler32k"),
+    "ruler128k": _lazy_scorer("ruler32k"),
     "synthetic_kv": _lazy_scorer("synthetickv64k"),
     "synthetic_kv_32k": _lazy_scorer("synthetickv32k"),
 }

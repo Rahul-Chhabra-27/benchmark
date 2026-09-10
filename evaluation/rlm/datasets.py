@@ -163,6 +163,12 @@ def load_examples(
             raise ValueError("ruler32k requires --data-dir with a RULER subset")
         if task not in RULER_32K_TASKS:
             raise ValueError(f"Unknown RULER-32K subset {task!r}; expected one of {RULER_32K_TASKS}")
+    if canonical_name == "ruler128k":
+        # The same thirteen RULER tasks, at 131072 tokens.
+        if task is None:
+            raise ValueError("ruler128k requires --data-dir with a RULER subset")
+        if task not in RULER_32K_TASKS:
+            raise ValueError(f"Unknown RULER-128K subset {task!r}; expected one of {RULER_32K_TASKS}")
     frame = load_benchmark_dataset(
         dataset_name=canonical_name,
         task=task,

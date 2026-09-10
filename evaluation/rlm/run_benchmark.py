@@ -15,7 +15,7 @@ import json
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 
 import pandas as pd
 import yaml
@@ -33,6 +33,9 @@ from .retrieval import Hit
 from .client import LLMClient
 from .datasets import available_datasets, canonical_dataset_name, load_examples
 from .rlm import (
+    CHUNK_ORDER_REVISION,
+    CHUNK_ORDERS,
+    DEFAULT_CHUNK_CALL_TOKENS,
     DEFAULT_REDUCE_FINDING_CHARS,
     RLM,
     SEARCH_ABLATABLE,
@@ -81,7 +84,7 @@ DEFAULT_CHUNKS_K = retrieval.DEFAULT_K
 LOFT_LIST_ANSWER_EXAMPLE = '["first answer", "second answer", "third answer"]'
 
 
-def answer_list_example(dataset: Optional[str], task: Optional[str], mode: str) -> str:
+def answer_list_example(dataset: Optional[str], task: Optional[str], mode: str, ordered_rlm: bool = False) -> str:
     """The list example this run's reduce step should show, or "" for none.
 
     Narrow on purpose. LOFT ships one bare `Final Answer: ` prefix for every subset,
@@ -89,8 +92,12 @@ def answer_list_example(dataset: Optional[str], task: Optional[str], mode: str) 
     never shown the shape it is parsed with is measured as wrong when it was right --
     3 of 3 correct answers reporting coverage 0.000, measured. Single-value subsets
     are untouched, so every nq/hotpotqa run keeps its exact prompt and its numbers.
+
+    The ordered-chunk agentic arms (`ordered_rlm`) are shown it too, in their FINAL
+    note: they are paired against structured arms that were. Every other agentic run
+    keeps the prompt it was scored with.
     """
-    if mode != "structured" or dataset != "loft" or not task:
+    if dataset != "loft" or not task or not (mode == "structured" or (mode == "rlm" and ordered_rlm)):
         return ""
     return LOFT_LIST_ANSWER_EXAMPLE if compare.loft_score_key(task) == "coverage" else ""
 
@@ -196,6 +203,11 @@ RESUME_CRITICAL_KEYS = (
     "structured_reader_max_tokens",
     "structured_reduce_max_tokens",
     "organization_config",
+    # The ordered-chunk agentic arms: the order, the code revision that renders it, and
+    # the per-call read budget each change what the root is shown or may send.
+    "chunk_order",
+    "chunk_order_revision",
+    "chunk_call_tokens",
     # Dicts: comparing them whole covers their nested knobs too
     # (keep_recent_turns inside memory_budget, max_notes_tokens inside
     # scratchpad), which have no top-level key of their own.
@@ -555,6 +567,8 @@ def write_run_artifacts(
             runtime[f"average_{key}"] = float(sum(values) / len(values)) if values else 0.0
         if config.get("structured_order"):
             runtime.update(ordered_runtime(scored_frame))
+    if scored and config.get("chunk_order"):
+        runtime.update(chunk_order_runtime(scored_frame))
     if config.get("sub_backend") == "kvzip":
         runtime["subcall_sizing_mode"] = config.get("subcall_sizing_mode")
         runtime["subcall_target_compression_ratio"] = config.get("target_compression_ratio")
@@ -585,18 +599,9 @@ def ordered_runtime(scored_frame: pd.DataFrame) -> dict:
         values = [v for v in values if v is not None]
         return float(sum(values) / len(values)) if values else 0.0
 
-    reader = [t for m in rows for t in m.get("reader_input_tokens", [])]
-    served = [t for m in rows for t in m.get("reader_served_prompt_tokens", [])]
     out["average_group_count"] = mean([m.get("group_count") for m in rows])
     out["average_chunks_per_group"] = mean([c for m in rows for c in m.get("group_chunk_counts", [])])
-    out["average_reader_input_tokens"] = mean(reader)
-    out["max_reader_input_tokens"] = int(max(reader)) if reader else 0
-    # Local chat-template count vs the server's own prompt_tokens, call by call.
-    out["reader_token_count_mismatches"] = int(
-        sum(1 for m in rows for a, b in zip(m.get("reader_input_tokens", []), m.get("reader_served_prompt_tokens", []))
-            if b is not None and a != b)
-    )
-    out["reader_served_counts_missing"] = int(sum(1 for t in served if t is None))
+    out.update(reader_token_runtime(rows))
     out["average_reducer_input_tokens"] = mean([m.get("reducer_input_tokens") for m in rows])
     out["max_reducer_input_tokens"] = int(max((m.get("reducer_input_tokens") or 0) for m in rows)) if rows else 0
     out["average_retained_finding_count"] = mean([m.get("retained_finding_count") for m in rows])
@@ -606,6 +611,164 @@ def ordered_runtime(scored_frame: pd.DataFrame) -> dict:
     out["organization_build_cpu_seconds"] = float(sum(v for v in builds.values() if v is not None))
     out["organization_documents"] = len(builds)
     out["average_packing_cpu_seconds"] = mean([m.get("packing_cpu_seconds") for m in rows])
+    for column in ("prompt_tokens", "completion_tokens"):
+        if column in scored_frame:
+            out[f"average_{column}"] = float(scored_frame[column].mean())
+    return out
+
+
+def reader_token_runtime(rows: list[dict]) -> dict:
+    """Reader exposure and pricing, for every arm that reads through OrderedPayload.
+
+    `reader_token_count_mismatches` compares the local chat-template count with the
+    server's own prompt_tokens, call by call: zero is the proof that a budget was
+    priced on what vLLM actually received.
+    """
+    reader = [t for m in rows for t in m.get("reader_input_tokens", [])]
+    served = [t for m in rows for t in m.get("reader_served_prompt_tokens", [])]
+    pairs = [
+        pair for m in rows for pair in zip(m.get("reader_input_tokens", []), m.get("reader_served_prompt_tokens", []))
+    ]
+    mismatches = sum(1 for local, server in pairs if server is not None and local != server)
+    return {
+        "average_reader_input_tokens": float(sum(reader) / len(reader)) if reader else 0.0,
+        "max_reader_input_tokens": int(max(reader)) if reader else 0,
+        "reader_token_count_mismatches": int(mismatches),
+        "reader_served_counts_missing": int(sum(1 for t in served if t is None)),
+    }
+
+
+def chunk_order_query(question: str, dataset: Optional[str]) -> str:
+    """What BM25 ranks the chunks against for --chunk-order bm25-query: the question alone.
+
+    LOFT wraps its query in a page of citation instructions, which `bare_query` strips
+    (the same reason `chunks_query` in main exists). RULER puts its instructions around
+    a final `Question:` line instead -- and "Answer the question based on the given
+    documents" shares "documents" with every document header in a qa haystack -- so for
+    RULER the query is the text after the last `Question:`.
+    """
+    query = bare_query(question)
+    if (dataset or "").startswith("ruler"):
+        marker = query.rfind("Question:")
+        if marker >= 0:
+            query = query[marker + len("Question:") :].strip()
+    return query
+
+
+def build_chunk_view(
+    document: str,
+    question: str,
+    order: str,
+    dataset: Optional[str],
+    organization_dir: Optional[str],
+    organizations: dict,
+) -> tuple[list[Hit], dict]:
+    """EVERY chunk of the document, in the order an ordered-chunk arm hands the root.
+
+    Both orders cut the same 2000-character, zero-overlap grid (organization.CONFIG).
+    `bm25-graph` is the question-free organization -- the structured campaign's own
+    artifact, cached by document hash in `organizations` and on disk -- and
+    `bm25-query` ranks those same chunks by BM25 against the question. So the two views
+    are permutations of one partition, and the arms differ in order and nothing else
+    they are handed.
+    """
+    started = time.process_time()
+    size, overlap = ORGANIZATION_CONFIG["chunk_chars"], ORGANIZATION_CONFIG["overlap"]
+    digest = hashlib.sha256(document.encode("utf-8")).hexdigest()
+    stats: dict = {"chunk_order": order, "document_sha256": digest}
+    if order == "bm25-graph":
+        if digest not in organizations:
+            artifact, _, cache_hit = organize(document, "bm25-graph", organization_dir)
+            organizations[digest] = (artifact, cache_hit)
+        artifact, cache_hit = organizations[digest]
+        view = ordered_hits(document, artifact)
+        stats.update(
+            organization_sha256=digest,
+            organization_cache_hit=cache_hit,
+            organization_build_cpu_seconds=artifact["build_cpu_seconds"],
+            organization_edges=len(artifact["edges"]),
+            organization_forest_edges=len(artifact["forest"]),
+        )
+    elif order == "bm25-query":
+        index = retrieval.get_index(document, size, overlap)
+        grid = [(start, min(start + size, len(document))) for start in range(0, len(document), size)]
+        if index.spans != grid:
+            raise ValueError("the BM25 index and the organization grid disagree on chunk spans")
+        query = chunk_order_query(question, dataset)
+        view = index.rank_all(query)
+        stats.update(chunk_order_query=query, chunks_scored=sum(1 for hit in view if hit.score > 0))
+    else:
+        raise ValueError(f"unknown chunk order {order!r}; choose from {list(CHUNK_ORDERS)}")
+    stats.update(
+        chunks_total=len(view),
+        chunk_view_sha256=hashlib.sha256(json.dumps([[hit.start, hit.end] for hit in view]).encode()).hexdigest(),
+        chunk_view_cpu_seconds=time.process_time() - started,
+    )
+    return view, stats
+
+
+def chunk_diagnostics(view: Sequence[Hit], ranks_read: Sequence[int], answers: list[str]) -> dict:
+    """Where the gold sat in the view, and whether the root read it. LOOSE and post hoc.
+
+    A gold answer STRING inside a chunk -- exactly as loose as gold_in_retrieved
+    (c448c97): a match does not establish the chunk carries sufficient evidence. None
+    of this is ever shown to the model.
+    """
+    gold = [hit.rank for hit in view if is_correct(hit.text, answers)]
+    read = set(ranks_read)
+    return {
+        "gold_first_position": gold[0] if gold else None,
+        "gold_chunks": len(gold),
+        "gold_in_read_chunks": bool(read & set(gold)),
+        "chunks_read": len(read),
+        "deepest_position_read": max(read) if read else 0,
+    }
+
+
+def chunk_order_runtime(scored_frame: pd.DataFrame) -> dict:
+    """Run-level aggregates for the ordered-chunk agentic arms.
+
+    What the root was offered, how much of it it read and how deep into the order it
+    went, where the gold sat (loosely), and the same reader pricing check the
+    structured ordered arms report.
+    """
+    rows = [m for m in scored_frame.get("metrics", []) if isinstance(m, dict)]
+
+    def mean(values):
+        values = [v for v in values if v is not None]
+        return float(sum(values) / len(values)) if values else 0.0
+
+    out: dict = reader_token_runtime(rows)
+    out["average_chunks_total"] = mean([m.get("chunks_total") for m in rows])
+    out["average_chunks_per_call_advertised"] = mean([m.get("chunks_per_call_advertised") for m in rows])
+    out["average_chunk_payload_calls"] = mean([m.get("chunk_payload_calls") for m in rows])
+    # The number that says whether the chunks were USED: an example that never passed
+    # one to llm_query answered from string ops or from nothing.
+    out["chunk_read_example_fraction"] = (
+        float(sum(1 for m in rows if m.get("chunk_payload_calls")) / len(rows)) if rows else 0.0
+    )
+    out["chunk_budget_refusals"] = int(sum(m.get("chunk_budget_refusals", 0) for m in rows))
+    for column in ("chunks_read", "deepest_position_read"):
+        if column in scored_frame:
+            out[f"average_{column}"] = mean(list(scored_frame[column].dropna()))
+    total = len(scored_frame)
+    if "gold_first_position" in scored_frame and total:
+        first = scored_frame["gold_first_position"].dropna()
+        out["gold_present_fraction"] = float(len(first) / total)
+        out["median_gold_first_position"] = float(first.median()) if len(first) else None
+        out["gold_in_top5_fraction"] = float((first <= 5).sum() / total)
+    if "gold_in_read_chunks" in scored_frame:
+        read = scored_frame["gold_in_read_chunks"].dropna()
+        out["gold_in_read_chunks_fraction"] = float(read.astype(bool).sum() / len(read)) if len(read) else 0.0
+    # One build per document; its cost is shared by every query on that document.
+    builds = {
+        m.get("organization_sha256"): m.get("organization_build_cpu_seconds")
+        for m in rows
+        if m.get("organization_sha256")
+    }
+    out["organization_build_cpu_seconds"] = float(sum(v for v in builds.values() if v is not None))
+    out["organization_documents"] = len(builds)
+    out["average_chunk_view_cpu_seconds"] = mean([m.get("chunk_view_cpu_seconds") for m in rows])
     for column in ("prompt_tokens", "completion_tokens"):
         if column in scored_frame:
             out[f"average_{column}"] = float(scored_frame[column].mean())
@@ -738,6 +901,15 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
         if getattr(args, "chunks_query", "task") == "bare" and args.chunks_source == "bm25":
             components.append("qbare")
         if answer_list_example(canonical_dataset_name(args.dataset or args.legacy_dataset), task_slug, mode):
+            if getattr(args, "answer_list_format", "auto") != "off":
+                components.append("listfmt")
+    # The agentic root handed EVERY chunk in a fixed order. Only when set, so every
+    # agentic directory written before it keeps its exact name.
+    if mode == "rlm" and getattr(args, "chunk_order", None):
+        components.append(f"order-{args.chunk_order}")
+        if getattr(args, "chunk_call_tokens", DEFAULT_CHUNK_CALL_TOKENS) != DEFAULT_CHUNK_CALL_TOKENS:
+            components.append(f"ctok{args.chunk_call_tokens}")
+        if answer_list_example(dataset_name, task_slug, mode, ordered_rlm=True):
             if getattr(args, "answer_list_format", "auto") != "off":
                 components.append("listfmt")
     # The agentic arm reading a chunk set chosen outside the run. It still carries
@@ -1171,6 +1343,27 @@ def main() -> None:
         help="cache + archive of organization artifacts (spans, order, graph edges, forest), keyed "
         "by document hash and configuration. Defaults to <out>/organization",
     )
+    # --- The AGENTIC root over every chunk, in a fixed order (organization.py) ---
+    # --structured-order reads every chunk through a fixed map -> reduce, so the root
+    # never chooses what to read. These hand the same chunks to the REPL loop as a
+    # `chunks` list, in an order the root is told about.
+    ap.add_argument(
+        "--chunk-order",
+        default=None,
+        choices=list(CHUNK_ORDERS),
+        help="hand the AGENTIC root every 2000-char zero-overlap chunk as a `chunks` list, in this order, "
+        "and tell it what the order is: `bm25-graph` (the question-free organization --structured-order "
+        "reads) or `bm25-query` (every chunk ranked by BM25 against the bare question). Requires --mode "
+        "rlm; there is no search() and no --chunks-source beside it",
+    )
+    ap.add_argument(
+        "--chunk-call-tokens",
+        type=int,
+        default=DEFAULT_CHUNK_CALL_TOKENS,
+        help="most tokens one llm_query over chunks may carry, counted with the served model's chat "
+        "template on the complete reader message. A longer list is refused, never truncated. The "
+        "default is one structured reader group",
+    )
     compression_target = ap.add_mutually_exclusive_group()
     compression_target.add_argument(
         "--target-compression-ratio",
@@ -1265,6 +1458,8 @@ def main() -> None:
         ap.error("--limit must be positive")
     if dataset_name == "ruler32k" and args.data_dir not in RULER_32K_TASKS:
         ap.error("--dataset ruler32k requires --data-dir with one of: " + ", ".join(RULER_32K_TASKS))
+    if dataset_name == "ruler128k" and args.data_dir not in RULER_32K_TASKS:
+        ap.error("--dataset ruler128k requires --data-dir with one of: " + ", ".join(RULER_32K_TASKS))
     # Without this, a typo'd or omitted subset surfaces as a HF 404 deep inside
     # _load_loft after the clients are already built.
     if dataset_name == "loft" and args.data_dir not in LOFT_TASKS:
@@ -1301,10 +1496,31 @@ def main() -> None:
         and args.structured_context_tokens == DEFAULT_STRUCTURED_CONTEXT_TOKENS
         and args.structured_reader_max_tokens == DEFAULT_READER_MAX_TOKENS
         and args.structured_reduce_max_tokens == DEFAULT_REDUCE_MAX_TOKENS
-        and args.organization_dir is None
+        # --chunk-order reads the same organization, so it may name the cache too.
+        and (args.organization_dir is None or args.chunk_order is not None)
     )
     if args.structured_order is None and not ordered_defaults:
         ap.error("the ordered-group flags only apply with --structured-order")
+    if args.chunk_order is None and args.chunk_call_tokens != DEFAULT_CHUNK_CALL_TOKENS:
+        ap.error("--chunk-call-tokens only applies with --chunk-order")
+    if args.chunk_order is not None:
+        # Each refusal is a way the arm would stop being "the agentic root, handed every
+        # chunk in one named order": a second locate tool, another chunk source, or a
+        # read the budget cannot price.
+        if args.mode != "rlm":
+            ap.error("--chunk-order hands the AGENTIC root its chunks; it needs --mode rlm")
+        if args.search_k:
+            ap.error("--chunk-order gives the root every chunk already ordered; it has no search() (drop --search-k)")
+        if args.chunks_source is not None:
+            ap.error("--chunk-order hands the root every chunk; it replaces --chunks-source")
+        if args.min_subcall_chars:
+            ap.error("--chunk-order reads whole chunks; --min-subcall-chars does not apply")
+        if args.sub_backend != "http":
+            ap.error("--chunk-order needs --sub-backend http (a chunk read is priced on a plain chat request)")
+        if args.chunk_call_tokens <= 0:
+            ap.error("--chunk-call-tokens must be positive")
+        if args.chunk_call_tokens + LLMClient.max_tokens > args.structured_context_tokens:
+            ap.error("--chunk-call-tokens plus the sub-call output cap exceeds --structured-context-tokens")
     if args.structured_order is not None:
         # Every refusal below is a way the arm would silently read less than the whole
         # document, or read it differently from the arm it is compared against.
@@ -1635,7 +1851,7 @@ def main() -> None:
         }
         return groups, stats
 
-    if args.structured_order and args.organization_dir is None:
+    if (args.structured_order or args.chunk_order == "bm25-graph") and args.organization_dir is None:
         args.organization_dir = str(Path(args.out) / "organization")
 
     out_dir = Path(args.out)
@@ -1723,6 +1939,9 @@ def main() -> None:
         sub.max_tokens = args.structured_reader_max_tokens
         root.max_tokens = args.structured_reduce_max_tokens
         ordered_counter = ModelTokens(args.sub_model)
+    if args.chunk_order:
+        # The agentic caps stay the base RLM's; only the chunk reads are priced exactly.
+        ordered_counter = ModelTokens(args.sub_model)
 
     budget = None
     if args.max_context_tokens is not None:
@@ -1769,9 +1988,14 @@ def main() -> None:
             ""
             if args.answer_list_format == "off"
             else answer_list_example(
-                canonical_dataset_name(args.dataset or args.legacy_dataset), args.data_dir, args.mode
+                canonical_dataset_name(args.dataset or args.legacy_dataset),
+                args.data_dir,
+                args.mode,
+                ordered_rlm=bool(args.chunk_order),
             )
         ),
+        chunk_order=args.chunk_order,
+        chunk_call_tokens=args.chunk_call_tokens,
     )
 
     for mode in modes:
@@ -1870,6 +2094,7 @@ def main() -> None:
                 # asked for a different answer SHAPE is measured as less accurate.
                 answer_format = ex.get("answer_prefix") or None
                 vstats: dict = {}
+                chunk_view = None
                 try:
                     if mode == "vanilla":
                         pred = vanilla_answer(
@@ -1898,6 +2123,17 @@ def main() -> None:
                                 retrieve=retrieve_for(ex) if args.structured_hops > 1 else None,
                                 window_notes=notes_for(ex) if args.chunks_source == "notes" else None,
                             )
+                        elif args.chunk_order:
+                            chunk_view, view_stats = build_chunk_view(
+                                ex["context"],
+                                question,
+                                args.chunk_order,
+                                dataset_name,
+                                args.organization_dir,
+                                organizations,
+                            )
+                            r = rlm.run(ex["context"], question, answer_format=answer_format, ordered_chunks=chunk_view)
+                            r.metrics.update(view_stats)
                         else:
                             r = rlm.run(
                                 ex["context"],
@@ -1966,6 +2202,11 @@ def main() -> None:
                     gold_windows = sum(1 for start, end in spans if is_correct(ex["context"][start:end], ex["answers"]))
                     record["gold_windows_in_chunks"] = gold_windows
                     record["nongold_windows_in_chunks"] = len(spans) - gold_windows
+                # Where the gold sat in the ordered view and whether the root read it --
+                # the same loose string test, applied after the example ends.
+                if chunk_view is not None and record.get("metrics"):
+                    ranks_read = record["metrics"].get("chunk_ranks_read") or []
+                    record.update(chunk_diagnostics(chunk_view, ranks_read, ex["answers"]))
                 record["correct"] = is_correct(record.get("pred"), ex["answers"])
                 record["latency_s"] = round(time.time() - t0, 2)
                 record["tokens"] = root.usage.total_tokens + sub.usage.total_tokens - tok0
@@ -2120,6 +2361,24 @@ def build_run_config(
                 "organization_dir": str(getattr(args, "organization_dir", None)),
             }
             if mode == "structured" and getattr(args, "structured_order", None)
+            else {}
+        ),
+        # The ordered-chunk agentic arms. Only present when the order is set, so every
+        # agentic config.yaml written before them is unchanged.
+        **(
+            {
+                "chunk_order": args.chunk_order,
+                "chunk_order_revision": CHUNK_ORDER_REVISION,
+                "chunk_call_tokens": getattr(args, "chunk_call_tokens", DEFAULT_CHUNK_CALL_TOKENS),
+                "chunk_order_query": "bare" if args.chunk_order == "bm25-query" else None,
+                "structured_context_tokens": getattr(
+                    args, "structured_context_tokens", DEFAULT_STRUCTURED_CONTEXT_TOKENS
+                ),
+                "organization_config": dict(ORGANIZATION_CONFIG),
+                "organization_dir": str(getattr(args, "organization_dir", None)),
+                "answer_list_format": getattr(args, "answer_list_format", "auto"),
+            }
+            if mode == "rlm" and getattr(args, "chunk_order", None)
             else {}
         ),
         "chunks_selector": chunk_selector,

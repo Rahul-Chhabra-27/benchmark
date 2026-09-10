@@ -130,10 +130,8 @@ class ChunkIndex:
             term: math.log(1 + (self.n_chunks - freq + 0.5) / (freq + 0.5)) for term, freq in document_frequency.items()
         }
 
-    def search(self, query: str, k: int = DEFAULT_K) -> list[Hit]:
-        """The k best-scoring windows for `query`, best first."""
-        if k <= 0:
-            return []
+    def _scores(self, query: str) -> dict[int, float]:
+        """BM25 score of every window sharing at least one term with `query`."""
         scores: dict[int, float] = defaultdict(float)
         for term in sorted(set(tokenize(query))):
             idf = self._idf.get(term)
@@ -144,13 +142,31 @@ class ChunkIndex:
                 length = self._lengths[index]
                 denominator = freq + self.k1 * (1 - self.b + self.b * length / (self._avg_length or 1.0))
                 scores[index] += idf * freq * (self.k1 + 1) / denominator
+        return scores
 
-        ranked = sorted(scores.items(), key=lambda pair: (-pair[1], pair[0]))[:k]
-        hits = []
-        for rank, (index, score) in enumerate(ranked, start=1):
-            start, end = self.spans[index]
-            hits.append(Hit(rank=rank, start=start, end=end, score=score, text=self.document[start:end]))
-        return hits
+    def _hit(self, rank: int, index: int, score: float) -> Hit:
+        start, end = self.spans[index]
+        return Hit(rank=rank, start=start, end=end, score=score, text=self.document[start:end])
+
+    def search(self, query: str, k: int = DEFAULT_K) -> list[Hit]:
+        """The k best-scoring windows for `query`, best first."""
+        if k <= 0:
+            return []
+        ranked = sorted(self._scores(query).items(), key=lambda pair: (-pair[1], pair[0]))[:k]
+        return [self._hit(rank, index, score) for rank, (index, score) in enumerate(ranked, start=1)]
+
+    def rank_all(self, query: str) -> list[Hit]:
+        """EVERY window, best first: a permutation of the index, never a selection.
+
+        `search` returns only windows that share a term with the query, and at most k
+        of them. An ordered view of the WHOLE document needs the rest as well, so they
+        follow the scored windows in source order with score 0.0 -- which is also what
+        tells a reader of the list where lexical relevance runs out. Ranks are 1..n.
+        """
+        scores = self._scores(query)
+        order = sorted(scores, key=lambda index: (-scores[index], index))
+        order += [index for index in range(self.n_chunks) if index not in scores]
+        return [self._hit(rank, index, scores.get(index, 0.0)) for rank, index in enumerate(order, start=1)]
 
 
 # Size-1 cache, module level so the harness and the offline recall script share it.
