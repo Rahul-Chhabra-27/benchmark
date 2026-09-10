@@ -46,12 +46,25 @@ if ss -ltn 2>/dev/null | grep -q ":$PORT "; then
   exit 1
 fi
 
+# CPU BINDING. Shared hosts run other people's CPU-heavy jobs beside ours, and a
+# server free to spread over every core competes with all of them. CPUS pins the
+# server and every process it forks (the engine core included -- affinity is
+# inherited) to a named core list, ideally physical cores local to the GPU's NUMA
+# node (`nvidia-smi topo -m`, `lscpu -e`). Unset = unbound, as before.
+CPUS=${CPUS:-}
+PIN=""
+[ -n "$CPUS" ] && PIN="taskset -c $CPUS"
+THREADS=${THREADS:-4}
+
 mkdir -p "$(dirname "$LOG")"
+# GPU may be an index or a UUID (GPU-xxxx): nvidia-smi -i and CUDA_VISIBLE_DEVICES
+# both accept either, and a UUID cannot be renumbered under you.
 tmux new-session -d -s "$SESSION" \
   "CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=$GPU HF_HOME=$HF HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
-   $VLLM serve $MODEL --served-model-name $MODEL --port $PORT \
+   OMP_NUM_THREADS=$THREADS MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false \
+   $PIN $VLLM serve $MODEL --served-model-name $MODEL --port $PORT \
    --max-model-len $MAX_LEN --gpu-memory-utilization $GPU_UTIL --enforce-eager -O0 2>&1 | tee $LOG"
-echo "serving $MODEL on GPU $GPU, port $PORT, tmux session $SESSION"
+echo "serving $MODEL on GPU $GPU, port $PORT, tmux session $SESSION${CPUS:+, cpus $CPUS}"
 echo "weights load from NFS and can take several minutes; wait for a real generation:"
 echo "  until curl -s --max-time 60 -o /dev/null -w '%{http_code}' http://localhost:$PORT/v1/chat/completions \\"
 echo "      -H 'Content-Type: application/json' \\"

@@ -39,11 +39,14 @@ from .rlm import (
     STRUCTURED_ANSWER_SHAPES,
     STRUCTURED_MAP_GRANULARITIES,
     STRUCTURED_MAP_QUESTIONS,
+    SUB_SYSTEM_PROMPT,
     MemoryBudget,
     Scratchpad,
     bare_query,
     vanilla_answer,
 )
+from .organization import CONFIG as ORGANIZATION_CONFIG
+from .organization import ORDERS, ModelTokens, ordered_hits, organize, pack
 from .sizing import (
     DEFAULT_MIN_TOKENS,
     DEFAULT_RESERVE_TOKENS,
@@ -185,6 +188,14 @@ RESUME_CRITICAL_KEYS = (
     "structured_hops",
     "answer_list_format",
     "chunks_query",
+    # The ordered whole-document arms: resuming one group budget or organization
+    # revision into another would merge two different reads into one score.
+    "structured_order",
+    "structured_group_input_tokens",
+    "structured_context_tokens",
+    "structured_reader_max_tokens",
+    "structured_reduce_max_tokens",
+    "organization_config",
     # Dicts: comparing them whole covers their nested knobs too
     # (keep_recent_turns inside memory_budget, max_notes_tokens inside
     # scratchpad), which have no top-level key of their own.
@@ -542,6 +553,8 @@ def write_run_artifacts(
             values = [(row or {}).get(key) for row in scored_frame.get("metrics", [])]
             values = [v for v in values if v is not None]
             runtime[f"average_{key}"] = float(sum(values) / len(values)) if values else 0.0
+        if config.get("structured_order"):
+            runtime.update(ordered_runtime(scored_frame))
     if config.get("sub_backend") == "kvzip":
         runtime["subcall_sizing_mode"] = config.get("subcall_sizing_mode")
         runtime["subcall_target_compression_ratio"] = config.get("target_compression_ratio")
@@ -551,6 +564,52 @@ def write_run_artifacts(
     (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n")
     (run_dir / "config.yaml").write_text(yaml.safe_dump(config, sort_keys=False))
     return metrics
+
+
+DEFAULT_GROUP_INPUT_TOKENS = 8192
+DEFAULT_STRUCTURED_CONTEXT_TOKENS = 65536
+DEFAULT_READER_MAX_TOKENS = 512
+DEFAULT_REDUCE_MAX_TOKENS = 1024
+
+
+def ordered_runtime(scored_frame: pd.DataFrame) -> dict:
+    """Run-level aggregates for the ordered whole-document arms.
+
+    Group sizes, reader and reducer exposure, and preprocessing cost -- the numbers
+    that say whether two arms with equal CAPS actually spent equal tokens.
+    """
+    rows = [m for m in scored_frame.get("metrics", []) if isinstance(m, dict)]
+    out: dict = {}
+
+    def mean(values):
+        values = [v for v in values if v is not None]
+        return float(sum(values) / len(values)) if values else 0.0
+
+    reader = [t for m in rows for t in m.get("reader_input_tokens", [])]
+    served = [t for m in rows for t in m.get("reader_served_prompt_tokens", [])]
+    out["average_group_count"] = mean([m.get("group_count") for m in rows])
+    out["average_chunks_per_group"] = mean([c for m in rows for c in m.get("group_chunk_counts", [])])
+    out["average_reader_input_tokens"] = mean(reader)
+    out["max_reader_input_tokens"] = int(max(reader)) if reader else 0
+    # Local chat-template count vs the server's own prompt_tokens, call by call.
+    out["reader_token_count_mismatches"] = int(
+        sum(1 for m in rows for a, b in zip(m.get("reader_input_tokens", []), m.get("reader_served_prompt_tokens", []))
+            if b is not None and a != b)
+    )
+    out["reader_served_counts_missing"] = int(sum(1 for t in served if t is None))
+    out["average_reducer_input_tokens"] = mean([m.get("reducer_input_tokens") for m in rows])
+    out["max_reducer_input_tokens"] = int(max((m.get("reducer_input_tokens") or 0) for m in rows)) if rows else 0
+    out["average_retained_finding_count"] = mean([m.get("retained_finding_count") for m in rows])
+    out["average_reducer_finding_chars"] = mean([m.get("reducer_finding_chars") for m in rows])
+    # One build per document; its cost is shared by every query on that document.
+    builds = {m.get("organization_sha256"): m.get("organization_build_cpu_seconds") for m in rows}
+    out["organization_build_cpu_seconds"] = float(sum(v for v in builds.values() if v is not None))
+    out["organization_documents"] = len(builds)
+    out["average_packing_cpu_seconds"] = mean([m.get("packing_cpu_seconds") for m in rows])
+    for column in ("prompt_tokens", "completion_tokens"):
+        if column in scored_frame:
+            out[f"average_{column}"] = float(scored_frame[column].mean())
+    return out
 
 
 def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Scratchpad | None) -> list[str]:
@@ -614,7 +673,20 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
     # Last of all, and only for the structured arm, so every directory written
     # before this mode existed keeps its exact name and its checkpoint stays
     # reachable. `mode` already reads "structured"; this says which chunks.
-    if mode == "structured":
+    if mode == "structured" and getattr(args, "structured_order", None):
+        # Every chunk is read, so there is no source and no k to name -- only the
+        # order and, when not the default, the group budget.
+        components.append(f"order-{args.structured_order}")
+        if args.structured_group_input_tokens != DEFAULT_GROUP_INPUT_TOKENS:
+            components.append(f"grp{args.structured_group_input_tokens}")
+        if getattr(args, "reduce_finding_chars", DEFAULT_REDUCE_FINDING_CHARS) != DEFAULT_REDUCE_FINDING_CHARS:
+            components.append(f"find{args.reduce_finding_chars}")
+        if getattr(args, "structured_map_question", "task") != "task":
+            components.append(f"mapq-{args.structured_map_question}")
+        if answer_list_example(canonical_dataset_name(args.dataset or args.legacy_dataset), task_slug, mode):
+            if getattr(args, "answer_list_format", "auto") != "off":
+                components.append("listfmt")
+    elif mode == "structured":
         components.append(f"chunks-{args.chunks_source}{args.chunks_k}")
         # WHICH selector chose them. Stamped only when a tag exists, so every chunk
         # file written before the query-agnostic selectors -- the oracle sets and the
@@ -1063,6 +1135,42 @@ def main() -> None:
         "what the FIRST round's map step found -- not from the retrieved text, which was measured "
         "on this corpus to make recall worse. There is deliberately no 3",
     )
+    # --- Ordered whole-document reading (organization.py) ---
+    # Every chunk of the document, in a question-free order, packed into reader
+    # groups under one token budget. Replaces --chunks-source: nothing is selected.
+    ap.add_argument(
+        "--structured-order",
+        default=None,
+        choices=list(ORDERS),
+        help="read EVERY 2000-char zero-overlap chunk in this question-free order, packed into "
+        "reader groups of --structured-group-input-tokens: `source` (document order, the control) "
+        "or `bm25-graph` (chunk-to-chunk BM25 graph, spanning forest, depth-first). Requires "
+        "--mode structured and --max-sub-calls 0, and replaces --chunks-source",
+    )
+    ap.add_argument(
+        "--structured-group-input-tokens",
+        type=int,
+        default=DEFAULT_GROUP_INPUT_TOKENS,
+        help="reader-group budget in model tokens, counted with the served model's chat template on "
+        "the COMPLETE reader message (instructions, question, source labels)",
+    )
+    ap.add_argument(
+        "--structured-context-tokens",
+        type=int,
+        default=DEFAULT_STRUCTURED_CONTEXT_TOKENS,
+        help="served context limit; every reader and reducer request is checked against it "
+        "(input + output cap) BEFORE it is sent",
+    )
+    ap.add_argument("--structured-reader-max-tokens", type=int, default=DEFAULT_READER_MAX_TOKENS,
+                    help="output cap per reader call under --structured-order")
+    ap.add_argument("--structured-reduce-max-tokens", type=int, default=DEFAULT_REDUCE_MAX_TOKENS,
+                    help="output cap for the reduce call under --structured-order")
+    ap.add_argument(
+        "--organization-dir",
+        default=None,
+        help="cache + archive of organization artifacts (spans, order, graph edges, forest), keyed "
+        "by document hash and configuration. Defaults to <out>/organization",
+    )
     compression_target = ap.add_mutually_exclusive_group()
     compression_target.add_argument(
         "--target-compression-ratio",
@@ -1188,7 +1296,36 @@ def main() -> None:
         )
     if args.chunks_k < 1:
         ap.error("--chunks-k must be >= 1")
-    if args.mode == "structured":
+    ordered_defaults = (
+        args.structured_group_input_tokens == DEFAULT_GROUP_INPUT_TOKENS
+        and args.structured_context_tokens == DEFAULT_STRUCTURED_CONTEXT_TOKENS
+        and args.structured_reader_max_tokens == DEFAULT_READER_MAX_TOKENS
+        and args.structured_reduce_max_tokens == DEFAULT_REDUCE_MAX_TOKENS
+        and args.organization_dir is None
+    )
+    if args.structured_order is None and not ordered_defaults:
+        ap.error("the ordered-group flags only apply with --structured-order")
+    if args.structured_order is not None:
+        # Every refusal below is a way the arm would silently read less than the whole
+        # document, or read it differently from the arm it is compared against.
+        if args.mode != "structured":
+            ap.error("--structured-order needs --mode structured")
+        if args.chunks_source is not None:
+            ap.error("--structured-order reads every chunk; it replaces --chunks-source")
+        if args.sub_backend != "http":
+            ap.error("--structured-order needs --sub-backend http (the budget is priced on a plain chat request)")
+        if args.max_sub_calls:
+            ap.error("--structured-order needs --max-sub-calls 0: a capped map would drop groups")
+        if args.structured_hops != 1 or args.structured_map_chars or args.structured_answer_shape != "require":
+            ap.error("--structured-order is one retrieval-free pass over whole chunks with the required answer shape")
+        if args.structured_map_granularity != "passage" or args.search_k:
+            ap.error("--structured-order builds its own groups; drop --structured-map-granularity / --search-k")
+        if min(args.structured_group_input_tokens, args.structured_reader_max_tokens,
+               args.structured_reduce_max_tokens) <= 0:
+            ap.error("ordered-group token budgets must be positive")
+        if args.structured_group_input_tokens + args.structured_reader_max_tokens > args.structured_context_tokens:
+            ap.error("--structured-group-input-tokens plus the reader output cap exceeds --structured-context-tokens")
+    elif args.mode == "structured":
         if args.chunks_source is None:
             ap.error("--mode structured requires --chunks-source {bm25,file}")
         if args.search_k:
@@ -1464,6 +1601,43 @@ def main() -> None:
         index = retrieval.get_index(example["context"], args.search_window, args.search_overlap)
         return lambda query, k: index.search(query, k)
 
+    organizations: dict = {}
+
+    def groups_for(document: str, task: str):
+        """Organize the document (question-free, cached), then pack it for this question.
+
+        Organization sees only the document. The QUESTION enters at packing, and only
+        as a length: the reader message carries it, so the budget must count it.
+        """
+        digest = hashlib.sha256(document.encode("utf-8")).hexdigest()
+        if digest not in organizations:
+            artifact, _, cache_hit = organize(document, args.structured_order, args.organization_dir)
+            organizations[digest] = (artifact, cache_hit)
+        artifact, cache_hit = organizations[digest]
+        started = time.process_time()
+        groups = pack(
+            document,
+            ordered_hits(document, artifact),
+            rlm.structured_question(task),
+            SUB_SYSTEM_PROMPT,
+            ordered_counter,
+            args.structured_group_input_tokens,
+        )
+        stats = {
+            "organization_sha256": digest,
+            "organization_cache_hit": cache_hit,
+            "organization_build_cpu_seconds": artifact["build_cpu_seconds"],
+            "organization_chunks": len(artifact["spans"]),
+            "organization_edges": len(artifact["edges"]),
+            "organization_forest_edges": len(artifact["forest"]),
+            "packing_cpu_seconds": time.process_time() - started,
+            "split_chunk_pieces": sum(len(g.hits) for g in groups) - len(artifact["spans"]),
+        }
+        return groups, stats
+
+    if args.structured_order and args.organization_dir is None:
+        args.organization_dir = str(Path(args.out) / "organization")
+
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     modes = ["vanilla", "rlm"] if args.mode == "both" else [args.mode]
@@ -1543,6 +1717,13 @@ def main() -> None:
                 "would be truncated away by the cap. Lower the floor or raise the budget."
             )
 
+    ordered_counter = None
+    if args.structured_order:
+        # One served model answers both roles; the caps are what differ.
+        sub.max_tokens = args.structured_reader_max_tokens
+        root.max_tokens = args.structured_reduce_max_tokens
+        ordered_counter = ModelTokens(args.sub_model)
+
     budget = None
     if args.max_context_tokens is not None:
         budget = MemoryBudget(
@@ -1581,6 +1762,9 @@ def main() -> None:
         structured_map_chars=args.structured_map_chars,
         reduce_finding_chars=args.reduce_finding_chars,
         structured_hops=args.structured_hops,
+        ordered_token_counter=ordered_counter,
+        structured_group_input_tokens=args.structured_group_input_tokens,
+        structured_context_tokens=args.structured_context_tokens,
         structured_answer_list=(
             ""
             if args.answer_list_format == "off"
@@ -1661,6 +1845,8 @@ def main() -> None:
                     continue
                 t0 = time.time()
                 tok0 = root.usage.total_tokens + sub.usage.total_tokens
+                prompt0 = root.usage.prompt_tokens + sub.usage.prompt_tokens
+                completion0 = root.usage.completion_tokens + sub.usage.completion_tokens
                 sub0 = sub.usage.calls
                 record = {
                     "id": ex["id"],
@@ -1697,7 +1883,13 @@ def main() -> None:
                         )
                         record.update(pred=pred, steps=1, finished=True, end_reason="")
                     else:
-                        if mode == "structured":
+                        if mode == "structured" and args.structured_order:
+                            groups, organization_stats = groups_for(ex["context"], question)
+                            r = rlm.run_structured(
+                                ex["context"], question, [], answer_format=answer_format, ordered_groups=groups
+                            )
+                            r.metrics.update(organization_stats)
+                        elif mode == "structured":
                             r = rlm.run_structured(
                                 ex["context"],
                                 question,
@@ -1777,6 +1969,9 @@ def main() -> None:
                 record["correct"] = is_correct(record.get("pred"), ex["answers"])
                 record["latency_s"] = round(time.time() - t0, 2)
                 record["tokens"] = root.usage.total_tokens + sub.usage.total_tokens - tok0
+                # The same server-counted usage, split into input and output.
+                record["prompt_tokens"] = root.usage.prompt_tokens + sub.usage.prompt_tokens - prompt0
+                record["completion_tokens"] = root.usage.completion_tokens + sub.usage.completion_tokens - completion0
                 record["sub_calls"] = sub.usage.calls - sub0
                 record["ctx_chars"] = len(ex["context"])
                 fout.write(json.dumps(record) + "\n")
@@ -1910,6 +2105,21 @@ def build_run_config(
                 "chunks_query": getattr(args, "chunks_query", "task"),
             }
             if mode == "structured"
+            else {}
+        ),
+        # The ordered whole-document arms. Only present when the order is set, so
+        # every config.yaml written before them is unchanged.
+        **(
+            {
+                "structured_order": args.structured_order,
+                "structured_group_input_tokens": args.structured_group_input_tokens,
+                "structured_context_tokens": args.structured_context_tokens,
+                "structured_reader_max_tokens": args.structured_reader_max_tokens,
+                "structured_reduce_max_tokens": args.structured_reduce_max_tokens,
+                "organization_config": dict(ORGANIZATION_CONFIG),
+                "organization_dir": str(getattr(args, "organization_dir", None)),
+            }
+            if mode == "structured" and getattr(args, "structured_order", None)
             else {}
         ),
         "chunks_selector": chunk_selector,

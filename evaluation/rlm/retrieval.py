@@ -135,7 +135,7 @@ class ChunkIndex:
         if k <= 0:
             return []
         scores: dict[int, float] = defaultdict(float)
-        for term in set(tokenize(query)):
+        for term in sorted(set(tokenize(query))):
             idf = self._idf.get(term)
             if idf is None:
                 continue

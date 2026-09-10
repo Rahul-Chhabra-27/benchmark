@@ -48,6 +48,7 @@ from typing import Callable, Mapping, Optional, Sequence
 
 from . import retrieval
 from .client import LLMClient
+from .organization import OrderedPayload, reader_messages
 from .retrieval import Hit, tokenize
 
 ROOT_SYSTEM_PROMPT = """You are solving a task over a LONG document that does NOT fit in your context window.
@@ -314,6 +315,15 @@ STRUCTURED_REDUCE_TEMPLATE = (
     "Notes from {n_chunks} passage(s) of the document, in document order:\n{findings}\n\n"
     "Answer the question from these notes.{answer_format_note}"
 )
+# The ordered-group arms (organization.py). Their notes arrive in the order the
+# reader groups were read, which for a graph order is NOT document order -- so the
+# header says what the order is instead of claiming one it is not. Used by BOTH
+# ordered arms, source order included, so the two differ in chunk order alone.
+STRUCTURED_REDUCE_TEMPLATE_GROUPS = (
+    "Question: {task}\n\n"
+    "Notes from {n_chunks} passage(s) of the document, in reader-group order:\n{findings}\n\n"
+    "Answer the question from these notes.{answer_format_note}"
+)
 # The agentic arms answer through FINAL(x), where x is a value the root computed --
 # the protocol forces a bare value. A reduce step is an ordinary chat completion,
 # and "be concise" is satisfied by a well-formed SENTENCE: measured on hotpotqa,
@@ -481,6 +491,9 @@ TEXT_FINAL_NONE_RE = re.compile(
 # (kvzip_backend._generate), which the root is free to ignore. Recognised here so
 # repeated failures can end the tool instead of burning the sub-call budget.
 SUB_FIT_FAILURE_PREFIX = "[SUB-MODEL ERROR]"
+# Replies that mean a reader call did not happen. On the ordered whole-document
+# path any of them is an incomplete read, never a finding.
+ORDERED_READER_FAILURES = (SUB_FIT_FAILURE_PREFIX, "[SUB-CALL LIMIT", "[TIME LIMIT")
 MAX_SUB_FIT_FAILURES = 3
 
 # Seconds the exec watchdog is always given back after a sub-call, even if its
@@ -833,7 +846,13 @@ class RLM:
         reduce_finding_chars: int = DEFAULT_REDUCE_FINDING_CHARS,
         structured_hops: int = 1,
         structured_answer_list: str = "",
+        ordered_token_counter=None,
+        structured_group_input_tokens: int = 8192,
+        structured_context_tokens: int = 65536,
     ):
+        self.ordered_token_counter = ordered_token_counter
+        self.structured_group_input_tokens = structured_group_input_tokens
+        self.structured_context_tokens = structured_context_tokens
         self.root = root_client
         self.sub = sub_client or root_client
         self.max_steps = max_steps
@@ -1117,7 +1136,22 @@ class RLM:
             # coverage and reads downstream exactly like a cell whose sub-model
             # never ran (fixedgrid/audit_cells.py treats coverage 0 as that tell).
             hit_spans: Optional[list[tuple[int, int]]] = None
-            if context is None or isinstance(context, str):
+            ordered = isinstance(context, OrderedPayload)
+            if ordered:
+                hit_spans = [(h.start, h.end) for h in context.hits]
+                chunk = context.render(document)
+                if hasattr(self.sub, "chat_split"):
+                    raise ValueError("ordered payload requires a plain chat client")
+                messages = reader_messages(SUB_SYSTEM_PROMPT, question, context, document)
+                count = self.ordered_token_counter.count_messages(messages)
+                output_cap = getattr(self.sub, "max_tokens", 0) or 0
+                if count > self.structured_group_input_tokens or count + output_cap > self.structured_context_tokens:
+                    raise ValueError(
+                        f"ordered reader exceeds token budget: {count} input + {output_cap} output against "
+                        f"{self.structured_group_input_tokens} group / {self.structured_context_tokens} context"
+                    )
+                metrics.setdefault("reader_input_tokens", []).append(count)
+            elif context is None or isinstance(context, str):
                 chunk = None if context is None else str(context)
             else:
                 items = list(context)
@@ -1204,7 +1238,10 @@ class RLM:
                 question = f"{question}\n\n{chunk}"
                 chunk = None
             question_chars = len(question)
-            question, chunk, truncated = self._cap_subcall(question, chunk)
+            if ordered:
+                truncated = False
+            else:
+                question, chunk, truncated = self._cap_subcall(question, chunk)
             if spans_sent and truncated:
                 # Keep only what survived the cap. _cap_subcall truncates from the
                 # right, so a clipped payload must stop claiming coverage for text
@@ -1254,6 +1291,11 @@ class RLM:
                     # pure-Python code watchdog and aborting a cell that never looped.
                     signal.setitimer(signal.ITIMER_REAL, max(remaining, ALARM_REARM_FLOOR_S))
             metrics["sub_calls"] += 1
+            if ordered:
+                # The server's own count, beside the local one above: equal lists are
+                # the proof that the packing budget was priced on what vLLM received.
+                served = getattr(getattr(self.sub, "usage", None), "last_prompt_tokens", None)
+                metrics.setdefault("reader_served_prompt_tokens", []).append(served)
             if expanded:
                 metrics["sub_slices_expanded"] = metrics.get("sub_slices_expanded", 0) + 1
             if unlocatable:
@@ -1535,6 +1577,16 @@ class RLM:
         return marker + text if truncated else text
 
     # ---------------- main loop ----------------
+    def structured_question(self, task: str) -> str:
+        """The question every structured map/reader call is asked.
+
+        One function for both callers, so the harness packs reader groups against
+        exactly the question `run_structured` later sends -- a budget priced on a
+        different string would not bound the real request.
+        """
+        map_task = bare_query(task) if self.structured_map_question == "query" else task
+        return STRUCTURED_MAP_QUESTION.format(task=map_task, nothing=STRUCTURED_NOTHING)
+
     def _base_metrics(self, split_capable: bool) -> dict:
         """The per-example counters every arm reports.
 
@@ -1582,6 +1634,7 @@ class RLM:
         answer_format: str | None = None,
         retrieve: Callable[[str, int], Sequence[Hit]] | None = None,
         window_notes: Mapping[int, str] | None = None,
+        ordered_groups: Sequence[OrderedPayload] | None = None,
     ) -> RLMResult:
         """Read a FIXED set of chunks with a fixed pipeline: map, then reduce.
 
@@ -1606,11 +1659,32 @@ class RLM:
         build cost lives in the notes file's header where it can be amortised over
         the queries that share the corpus.
         """
+        if ordered_groups is not None:
+            if (
+                self.ordered_token_counter is None
+                or window_notes is not None
+                or retrieve is not None
+                or self.structured_hops != 1
+            ):
+                raise ValueError("ordered groups require tokenizer and retrieval-free single pass")
+            if self.structured_map_chars or self.structured_answer_shape != "require":
+                raise ValueError("ordered groups read whole chunks under the required answer shape")
+            flattened = [h for group in ordered_groups for h in group.hits]
+            spans = sorted((h.start, h.end) for h in flattened)
+            contiguous = all(a[1] == b[0] for a, b in zip(spans, spans[1:]))
+            if not spans or spans[0][0] != 0 or spans[-1][1] != len(context) or not contiguous:
+                raise ValueError("ordered groups must cover every source character exactly once")
+            for group in ordered_groups:
+                group.render(context)
+            chunks = flattened
         split_capable = hasattr(self.sub, "chat_split")
         metrics = self._base_metrics(split_capable)
         metrics["chunks_provided"] = len(chunks)
         metrics["map_calls"] = 0
         metrics["chunks_with_findings"] = 0
+        if ordered_groups is not None:
+            metrics["group_count"] = len(ordered_groups)
+            metrics["group_chunk_counts"] = [len(group.hits) for group in ordered_groups]
         cache: dict = {}
         notes: list = []
         self._sub_call_budget = self.max_sub_calls
@@ -1637,8 +1711,7 @@ class RLM:
         # looking at a single window -- and the same string carries the output
         # contract the scorer matches on, so stripping it at the reduce would confound
         # accuracy with scoring.
-        map_task = bare_query(task) if self.structured_map_question == "query" else task
-        map_question = STRUCTURED_MAP_QUESTION.format(task=map_task, nothing=STRUCTURED_NOTHING)
+        map_question = self.structured_question(task)
         findings: list[tuple[int, str]] = []
         timed_out = False
 
@@ -1680,17 +1753,34 @@ class RLM:
             # _map_groups. Every granularity puts the passages in document order,
             # which is the order the agentic path's payload is assembled in and the
             # order the reduce announces.
-            clusters = _map_groups(round_hits, self.structured_map_granularity)
-            if self.structured_map_chars:
+            # Ordered groups arrive already packed, and are read exactly as given.
+            if ordered_groups is not None:
+                clusters = [list(g.hits) for g in ordered_groups]
+            else:
+                clusters = _map_groups(round_hits, self.structured_map_granularity)
+            if self.structured_map_chars and ordered_groups is None:
                 clusters = [_truncate_hits(c, self.structured_map_chars, context) for c in clusters]
                 clusters = [c for c in clusters if c]
             metrics["map_spans"] = metrics.get("map_spans", 0) + len(clusters)
             for index, cluster in enumerate(clusters, start=1):
                 if self._deadline is not None and time.monotonic() > self._deadline:
+                    if ordered_groups is not None:
+                        raise ValueError(
+                            f"incomplete ordered read: run timeout after {index - 1}/{len(clusters)} groups"
+                        )
                     return True
-                answer = (llm_query(map_question, cluster) or "").strip()
+                if ordered_groups is not None:
+                    # A notice string past a budget would read as a FINDING, so an
+                    # ordered read refuses to reach one rather than paste it in.
+                    if self._sub_call_budget is not None and metrics["sub_calls"] >= self._sub_call_budget:
+                        raise ValueError("incomplete ordered read: map-call limit")
+                    answer = (llm_query(map_question, OrderedPayload(tuple(cluster))) or "").strip()
+                    if not answer or answer.startswith(ORDERED_READER_FAILURES):
+                        raise ValueError(f"incomplete ordered read: reader failed on group {index}: {answer[:80]!r}")
+                else:
+                    answer = (llm_query(map_question, cluster) or "").strip()
                 metrics["map_calls"] += 1
-                span = f"[{cluster[0].start}:{max(h.end for h in cluster)}]"
+                span = ", ".join(f"[{h.start}:{h.end}]" for h in cluster)
                 step = len(transcript) + 1
                 transcript.append(
                     {
@@ -1699,6 +1789,17 @@ class RLM:
                         f"({len(cluster)} window(s))",
                         "code": f"llm_query(MAP, hop{hop}.cluster[{index - 1}])",
                         "observation": answer,
+                        # The exact reader request, so a transcript shows what was read.
+                        **(
+                            {
+                                "source_spans": [(h.start, h.end) for h in cluster],
+                                "messages": reader_messages(
+                                    SUB_SYSTEM_PROMPT, map_question, OrderedPayload(tuple(cluster)), context
+                                ),
+                            }
+                            if ordered_groups is not None
+                            else {}
+                        ),
                     }
                 )
                 # Prefix match, case-insensitive: asked for an exact sentinel a 4B
@@ -1734,6 +1835,14 @@ class RLM:
                 timed_out = map_round(fresh, 2)
         metrics["steps"] = len(transcript)
 
+        if ordered_groups is not None and (timed_out or metrics.get("document_coverage_fraction") != 1.0):
+            # Raised, not returned: run_benchmark records an exception as an ERROR,
+            # whereas an end_reason would be scored as an ordinary wrong answer.
+            raise ValueError(
+                f"incomplete ordered read: coverage {metrics.get('document_coverage_fraction')}, "
+                f"{metrics['map_calls']}/{len(ordered_groups)} groups read"
+            )
+
         if not findings:
             if timed_out:
                 return RLMResult(None, len(transcript), False, transcript, "run_timeout", metrics)
@@ -1750,7 +1859,10 @@ class RLM:
         # concise.") and its note ("Format your answer as: ..."), so the answer-shape
         # change can be scored apart from the clustering change it shipped with.
         offered = self.structured_answer_shape == "offer"
-        reduce_template = STRUCTURED_REDUCE_TEMPLATE_OFFER if offered else STRUCTURED_REDUCE_TEMPLATE
+        if ordered_groups is not None:
+            reduce_template = STRUCTURED_REDUCE_TEMPLATE_GROUPS
+        else:
+            reduce_template = STRUCTURED_REDUCE_TEMPLATE_OFFER if offered else STRUCTURED_REDUCE_TEMPLATE
         shape_note = STRUCTURED_ANSWER_SHAPE_OFFER if offered else STRUCTURED_ANSWER_SHAPE
         answer_format_note = (
             shape_note.format(answer_format=answer_format.strip())
@@ -1770,6 +1882,17 @@ class RLM:
             {"role": "user", "content": reduce_prompt},
         ]
         ctx_tokens = self.tok.count_messages(messages)
+        if ordered_groups is not None:
+            ctx_tokens = self.ordered_token_counter.count_messages(messages)
+            metrics["reducer_input_tokens"] = ctx_tokens
+            metrics["reducer_finding_chars"] = len(findings_block)
+            metrics["retained_finding_count"] = len(findings)
+            output_cap = getattr(self.root, "max_tokens", 0) or 0
+            if ctx_tokens + output_cap > self.structured_context_tokens:
+                raise ValueError(
+                    f"ordered reducer overflow: {ctx_tokens} input + {output_cap} output "
+                    f"> {self.structured_context_tokens} context"
+                )
         reply = self.root.chat(messages)
         metrics["root_prompt_tokens"] += ctx_tokens
         metrics["root_completion_tokens"] += self.tok.count(reply or "")
@@ -1782,6 +1905,7 @@ class RLM:
                 "step": len(transcript) + 1,
                 "reply": reply,
                 "code": "[reduce]",
+                **({"messages": messages} if ordered_groups is not None else {}),
                 "observation": "",
             }
         )
