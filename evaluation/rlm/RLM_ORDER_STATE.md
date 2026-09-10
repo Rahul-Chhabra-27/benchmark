@@ -3,9 +3,10 @@
 > **Read this file first.** It is updated at every milestone: code, pilot, launch, each
 > finished stage, gate and report. Where two statements disagree, the newer one wins; the
 > changelog at the bottom dates every update.
-> **Last updated: 2026-09-10 ~21:30 IST.** Revision-1 pilot lanes were stopped at
+> **Last updated: 2026-09-10 21:34 IST.** Revision-1 pilot lanes were stopped at
 > 21:23 after the audit found a zero-reader, 50-step query run. Revision 2 fixes the
-> prompt and restores the strict gate. Fresh pilot deployment is next; no full run is authorized by a pilot pass alone.
+> prompt and restores the strict gate. All ten fresh pilot lanes launched at 21:33:58
+> on code commit `cebce6c`; full launch remains pending pilot validation.
 
 ## Goal
 
@@ -70,7 +71,7 @@ prompts are rendered from `CHUNKS_HELP`, `CHUNK_ORDER_NOTES`, `SEARCH_TERMS_CHUN
 |---|---|---|---|---|---|
 | revision-2 code + tests | 553 passed, 1 skipped; black/isort/flake8/mypy checked directly | | | | |
 | revision-1 pilot | invalid: stopped | stopped | stopped | not started | not started |
-| revision-2 pilot (3 rows × 2 arms) | ready | ready | ready | ready | ready |
+| revision-2 pilot (3 rows × 2 arms) | running | running | running | running | running |
 | LOFT full (55 rows × 2 arms) | todo | todo | todo | todo | todo |
 | RULER-128k (13 tasks × 55 × 2) | not started | | | | |
 
@@ -123,11 +124,12 @@ full launch. Never accept a pass on only the subsets that happen to exist.
 - **Show loft128k numbers only** (standing user rule). Ask before showing any RULER-128k numbers.
 
 ## Next steps (ranked)
-1. Deploy revision 2 to NAS and cat, launch fresh pilot lanes, and commit the launch state.
+1. Monitor the ten revision-2 lanes (`ro2_graph_<subset>`, `ro2_query_<subset>`), launched at 21:33:58 on `cebce6c`, cores 6–15. All outputs go to local scratch, with the original structured organization cache reused.
 2. Gate all 30 pilot rows, inspect initial reader calls and list parsing, preserve the gate output and record the result. A failure blocks the full campaign; retain failed rows as evidence.
 3. Resolve allocated scratch storage, finish any report gaps, then proceed with full LOFT only when requested. RULER follows the LOFT gate, as previously planned.
 
 ## Changelog (newest first)
+- **2026-09-10 21:33:58 IST: replacement pilot launched.** Code `cebce6c` is synchronized across Mac, NAS and cat. Ten lanes, first 3 test rows for each of five LOFT subsets and two arms, local scratch `/tmp/gautammahale/rlmorder/results_pilot_r2`, group `infolab`, cores 6–15. The 243 MiB prepared 128k dataset cache was copied locally; tokenizer remains in the configured NAS HF cache. Original pilot outputs are retained separately.
 - **2026-09-10 ~21:30 IST: revision-2 prompt and gate fixes.** Stopped both revision-1 pilot process groups at 21:23, preserving their outputs and the go_root server. Removed ranked Hit-print demonstrations, made the first query move a reader call, clarified representations, and added graph retry guidance. Bumped chunk_order_revision to 2. Gate now requires every task/arm, completed valid rows with reader calls, exact positive token counts, no limit/server notices, comparator IDs/question/gold/document identity, and cached graph-order identity. Added pilot prefix matching and regression tests. Lane failures propagate and new outputs require an explicit scratch path and infolab group. Full evaluation tests: 553 passed, 1 skipped.
 - **2026-09-10 ~20:55 IST: code, tests and this file landed.**
   - Added the `--chunk-order {bm25-graph,bm25-query}` and `--chunk-call-tokens` flags, and `ChunkIndex.rank_all`.
