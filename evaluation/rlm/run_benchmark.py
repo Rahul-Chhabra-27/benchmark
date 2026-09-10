@@ -21,17 +21,17 @@ import pandas as pd
 import yaml
 
 from evaluation import compare
-
 from evaluation.benchmarks.registry import LOFT_TASKS, LONGBENCH_128K_SUBSETS, RULER_32K_TASKS, SCORER_REGISTRY
 from evaluation.benchmarks.results import score_prediction_frame
 from evaluation.results_layout import RLM_RESULTS_DIR
 
-from . import retrieval
-from . import chunkset, window_notes
+from . import chunkset, retrieval, window_notes
 from .chunkset import ChunkSet, ChunkSetError, file_digest
-from .retrieval import Hit
 from .client import LLMClient
 from .datasets import available_datasets, canonical_dataset_name, load_examples
+from .organization import CONFIG as ORGANIZATION_CONFIG
+from .organization import ORDERS, ModelTokens, ordered_hits, organize, pack
+from .retrieval import Hit
 from .rlm import (
     CHUNK_ORDER_REVISION,
     CHUNK_ORDERS,
@@ -48,8 +48,6 @@ from .rlm import (
     bare_query,
     vanilla_answer,
 )
-from .organization import CONFIG as ORGANIZATION_CONFIG
-from .organization import ORDERS, ModelTokens, ordered_hits, organize, pack
 from .sizing import (
     DEFAULT_MIN_TOKENS,
     DEFAULT_RESERVE_TOKENS,
@@ -1333,10 +1331,18 @@ def main() -> None:
         help="served context limit; every reader and reducer request is checked against it "
         "(input + output cap) BEFORE it is sent",
     )
-    ap.add_argument("--structured-reader-max-tokens", type=int, default=DEFAULT_READER_MAX_TOKENS,
-                    help="output cap per reader call under --structured-order")
-    ap.add_argument("--structured-reduce-max-tokens", type=int, default=DEFAULT_REDUCE_MAX_TOKENS,
-                    help="output cap for the reduce call under --structured-order")
+    ap.add_argument(
+        "--structured-reader-max-tokens",
+        type=int,
+        default=DEFAULT_READER_MAX_TOKENS,
+        help="output cap per reader call under --structured-order",
+    )
+    ap.add_argument(
+        "--structured-reduce-max-tokens",
+        type=int,
+        default=DEFAULT_REDUCE_MAX_TOKENS,
+        help="output cap for the reduce call under --structured-order",
+    )
     ap.add_argument(
         "--organization-dir",
         default=None,
@@ -1536,8 +1542,12 @@ def main() -> None:
             ap.error("--structured-order is one retrieval-free pass over whole chunks with the required answer shape")
         if args.structured_map_granularity != "passage" or args.search_k:
             ap.error("--structured-order builds its own groups; drop --structured-map-granularity / --search-k")
-        if min(args.structured_group_input_tokens, args.structured_reader_max_tokens,
-               args.structured_reduce_max_tokens) <= 0:
+        if (
+            min(
+                args.structured_group_input_tokens, args.structured_reader_max_tokens, args.structured_reduce_max_tokens
+            )
+            <= 0
+        ):
             ap.error("ordered-group token budgets must be positive")
         if args.structured_group_input_tokens + args.structured_reader_max_tokens > args.structured_context_tokens:
             ap.error("--structured-group-input-tokens plus the reader output cap exceeds --structured-context-tokens")
@@ -1765,8 +1775,7 @@ def main() -> None:
             else:
                 chosen = sorted(notes)
             return [
-                Hit(rank=rank, start=spans[w][0], end=spans[w][1], score=0.0,
-                    text=document[spans[w][0]:spans[w][1]])
+                Hit(rank=rank, start=spans[w][0], end=spans[w][1], score=0.0, text=document[spans[w][0] : spans[w][1]])
                 for rank, w in enumerate(chosen, start=1)
                 if w < len(spans)
             ]

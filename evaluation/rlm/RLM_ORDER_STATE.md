@@ -3,8 +3,9 @@
 > **Read this file first.** It is updated at every milestone: code, pilot, launch, each
 > finished stage, gate and report. Where two statements disagree, the newer one wins; the
 > changelog at the bottom dates every update.
-> **Last updated: 2026-09-10 ~20:55 IST.** The code and tests have landed. The pilot has
-> not been run yet.
+> **Last updated: 2026-09-10 ~21:30 IST.** Revision-1 pilot lanes were stopped at
+> 21:23 after the audit found a zero-reader, 50-step query run. Revision 2 fixes the
+> prompt and restores the strict gate. Fresh pilot deployment is next; no full run is authorized by a pilot pass alone.
 
 ## Goal
 
@@ -55,18 +56,21 @@ prompts are rendered from `CHUNKS_HELP`, `CHUNK_ORDER_NOTES`, `SEARCH_TERMS_CHUN
 | Mac checkout | `linear/benchmark`. Tests run with `.venv-mac`; black and isort are in `.venv`. |
 | compute host | **cat**, GPU 0 (RTX A6000, UUID `GPU-de398869-9f4d-2f4e-e0ab-738deda8383e`). cat has 32 cores. |
 | server | tmux `go_root`: vLLM 0.8.5 on **:8002**, `--max-model-len 65536`, util 0.5, pinned to cores 2–5, with weights on cat-local `/tmp/gautammahale/hf_cache`. It is **reused** from the graph-order campaign, so do not kill it. |
-| campaign dir | cat `/mnt/home/gautammahale/rlmorder/{checkout,results,results_pilot,organization,logs,report}` |
+| code checkout | cat `/mnt/home/gautammahale/rlmorder/checkout` (code only) |
+| revision-2 pilot scratch | cat `/tmp/gautammahale/rlmorder/{results_pilot_r2,logs,report,hf_datasets}`; primary group `infolab` |
+| old pilot evidence | `/mnt/home/gautammahale/rlmorder/results_pilot`, stopped, never resume into it |
 | LOFT organization cache | `/mnt/home/gautammahale/graphorder/organization`, the structured campaign's own cache. Every graph-arm row should report `organization_cache_hit: true`. |
 | venv on cat | `/mnt/nas/gautammahale/venvs/rlm/bin/python` |
-| HF cache | `/mnt/nas/gautammahale/hf_cache` (datasets and tokenizer). Lanes run with `HF_HUB_OFFLINE=1`. |
+| HF cache | `HF_HOME=/mnt/nas/gautammahale/hf_cache`; pilot `HF_DATASETS_CACHE=/tmp/gautammahale/rlmorder/hf_datasets` is a copy of the five 128k caches. Offline lanes. |
 | comparators | Structured arms: `/mnt/home/gautammahale/graphorder/results`, with report `graphorder/report/`. Base RLM and vanilla: `/mnt/nas/gautammahale/benchmark/evaluation/results/loft128k_guards`. |
 
 ## Status board
 
 | stage | nq | hotpotqa | musique | qampari | quest |
 |---|---|---|---|---|---|
-| code + tests | done: 532 tests pass; flake8 and mypy clean | | | | |
-| LOFT pilot (3 rows × 2 arms) | todo | todo | todo | todo | todo |
+| revision-2 code + tests | 553 passed, 1 skipped; black/isort/flake8/mypy checked directly | | | | |
+| revision-1 pilot | invalid: stopped | stopped | stopped | not started | not started |
+| revision-2 pilot (3 rows × 2 arms) | ready | ready | ready | ready | ready |
 | LOFT full (55 rows × 2 arms) | todo | todo | todo | todo | todo |
 | RULER-128k (13 tasks × 55 × 2) | not started | | | | |
 
@@ -86,31 +90,21 @@ Those runs cost about 126–128k input tokens and 35–56 s per question: every 
 ## How to resume (exact commands)
 
 ```bash
-# 0. Is the server alive? Test it by GENERATING: a wedged vLLM still answers /v1/models.
-ssh cat.cse.iitb.ac.in 'curl -s --max-time 60 localhost:8002/v1/chat/completions -H "Content-Type: application/json" \
-  -d "{\"model\":\"Qwen/Qwen3-4B-Instruct-2507\",\"messages\":[{\"role\":\"user\",\"content\":\"ok\"}],\"max_tokens\":4}"'
-# If it is dead: restart with evaluation/rlm/serve_root.sh (it resolves the GPU UUID to an index and sets UV_USE_IO_URING=0).
+# Server generation check (the existing go_root server stays running).
+ssh cat.cse.iitb.ac.in 'curl -fsS --max-time 30 localhost:8002/v1/chat/completions -H "Content-Type: application/json" -d "{\"model\":\"Qwen/Qwen3-4B-Instruct-2507\",\"messages\":[{\"role\":\"user\",\"content\":\"ok\"}],\"max_tokens\":4}"'
 
-# 1. Update the compute checkout. While lanes are running, pull ONLY doc-only commits.
-ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && git pull --ff-only'
+# Gate the complete revision-2 LOFT pilot, against the first 3 structured test rows.
+ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && PYTHONDONTWRITEBYTECODE=1 /mnt/nas/gautammahale/venvs/rlm/bin/python -m evaluation.rlm.rlm_order_gate /tmp/gautammahale/rlmorder/results_pilot_r2 --pilot --expect 3 --structured-results /mnt/home/gautammahale/graphorder/results'
 
-# 2. Pilot: 3 rows, both arms, every LOFT subset, one lane per arm.
-ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder && for a in bm25-graph:8 bm25-query:9; do arm=${a%%:*}; core=${a##*:};
-  tmux new-session -d -s "ro_pilot_$arm" "LIMIT=3 RESULTS=/mnt/home/gautammahale/rlmorder/results_pilot checkout/evaluation/rlm/rlm_order_lane.sh $arm $core > logs/pilot_$arm.log 2>&1"; done'
-
-# 3. Full LOFT run: one lane per (arm, subset), pinned to cores 6-15.
-ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder && core=6; for arm in bm25-graph bm25-query; do for s in nq hotpotqa musique qampari quest; do
-  tmux new-session -d -s "ro_${arm#bm25-}_$s" "checkout/evaluation/rlm/rlm_order_lane.sh $arm $core $s > logs/full_${arm}_$s.log 2>&1"; core=$((core+1)); done; done'
-
-# 4. Progress, gate, report. Gate before quoting ANY number.
-ssh cat.cse.iitb.ac.in 'ls /mnt/home/gautammahale/rlmorder/results/*/metrics.json | wc -l'
-ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && PYTHONPATH=. /mnt/nas/gautammahale/venvs/rlm/bin/python \
-  -m evaluation.rlm.rlm_order_gate ../results --expect 55 --structured-results /mnt/home/gautammahale/graphorder/results'
-ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && PYTHONPATH=. HF_HOME=/mnt/nas/gautammahale/hf_cache \
-  /mnt/nas/gautammahale/venvs/rlm/bin/python -m evaluation.rlm.rlm_order_report --results ../results --out ../report \
-  --structured-results /mnt/home/gautammahale/graphorder/results \
-  --guards /mnt/nas/gautammahale/benchmark/evaluation/results/loft128k_guards --repo .'
+# One lane; launch under infolab. Do not launch a duplicate active session.
+# Repeat for both orders and all five subsets on distinct cores 6-15.
+ssh cat.cse.iitb.ac.in 'sg infolab -c "LIMIT=3 HF_DATASETS_CACHE=/tmp/gautammahale/rlmorder/hf_datasets RESULTS=/tmp/gautammahale/rlmorder/results_pilot_r2 /mnt/home/gautammahale/rlmorder/checkout/evaluation/rlm/rlm_order_lane.sh bm25-query 6 nq"'
 ```
+
+The pilot uses ten short lanes (arm × subset) to validate the concurrency planned
+for full LOFT. Logs live under `/tmp/gautammahale/rlmorder/logs/pilot_r2_<arm>_<subset>.log`.
+All 30 rows, strict gate, and transcript/list-shape inspection must pass before any
+full launch. Never accept a pass on only the subsets that happen to exist.
 
 **RULER-128k:**
 1. Stage the dataset once, with network access on and outside `HF_HUB_OFFLINE`, into the NAS HF cache. Load each of the 13 splits of `lighteval/RULER-131072-Qwen-3`.
@@ -123,17 +117,18 @@ ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && PYTHONPAT
 - **One example at n=55 is 0.018.** Do not report deltas smaller than that.
 - **qampari and quest are scored on coverage, never on subspan_em.**
 - **The guards runs have 110 rows: dev rows 0–9, then test.** Our test row i is guards position i+10. The report aligns them and checks the gold answers row by row.
-- **`/mnt/nas` is 99% full.** Results go to `/mnt/home`.
+- **Do not put new raw outputs on NFS home.** Cat-local `/tmp` is temporary pilot scratch (138 GiB free at setup). `/mnt/cat/data/gautammahale` is absent and its parent is not writable; obtain the allocated path before a durable full campaign. Keep condensed evidence on NAS; use primary group `infolab`. The reused server still has its pre-existing log in graphorder home; do not mutate that live checkout.
 - **Never run `make style` on the Mac.** Its uv sync corrupts `.venv-mac`. Run `.venv/bin/python -m black/isort` directly.
 - **Only doc-only commits may be pulled into a checkout whose lanes are running.**
 - **Show loft128k numbers only** (standing user rule). Ask before showing any RULER-128k numbers.
 
 ## Next steps (ranked)
-1. Push to `nas`, clone the campaign checkout on cat, and run the LOFT pilot. Gate it, and read 2–3 transcripts per arm. Check three things: does query-aware start with `chunks[:5]`, does graph locate a chunk and then read its neighbourhood, and do the qampari lists parse. Prompts may change only before the full launch.
-2. Launch the full LOFT run, then gate, report, and update this file.
-3. RULER-128k: stage the data, pilot, full run, gate, report.
+1. Deploy revision 2 to NAS and cat, launch fresh pilot lanes, and commit the launch state.
+2. Gate all 30 pilot rows, inspect initial reader calls and list parsing, preserve the gate output and record the result. A failure blocks the full campaign; retain failed rows as evidence.
+3. Resolve allocated scratch storage, finish any report gaps, then proceed with full LOFT only when requested. RULER follows the LOFT gate, as previously planned.
 
 ## Changelog (newest first)
+- **2026-09-10 ~21:30 IST: revision-2 prompt and gate fixes.** Stopped both revision-1 pilot process groups at 21:23, preserving their outputs and the go_root server. Removed ranked Hit-print demonstrations, made the first query move a reader call, clarified representations, and added graph retry guidance. Bumped chunk_order_revision to 2. Gate now requires every task/arm, completed valid rows with reader calls, exact positive token counts, no limit/server notices, comparator IDs/question/gold/document identity, and cached graph-order identity. Added pilot prefix matching and regression tests. Lane failures propagate and new outputs require an explicit scratch path and infolab group. Full evaluation tests: 553 passed, 1 skipped.
 - **2026-09-10 ~20:55 IST: code, tests and this file landed.**
   - Added the `--chunk-order {bm25-graph,bm25-query}` and `--chunk-call-tokens` flags, and `ChunkIndex.rank_all`.
   - `run()` gained `ordered_chunks`, and priced order-preserving chunk reads via `OrderedPayload`.

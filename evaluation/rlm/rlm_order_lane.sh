@@ -14,12 +14,12 @@
 #   DATASET=loft (default): subsets nq hotpotqa musique qampari quest, run as <s>_128k on
 #     --split test.   DATASET=ruler128k: subsets are RULER task names (no split).
 #   LIMIT=3 RESULTS=$CAMPAIGN/results_pilot  for the pilot; LIMIT=55 for the campaign.
-set -u
+set -euo pipefail
 arm=${1:?arm: bm25-graph|bm25-query}; cpu=${2:?cpu core to pin to}; shift 2
 DATASET=${DATASET:-loft}
 CAMPAIGN=${CAMPAIGN:-/mnt/home/gautammahale/rlmorder}
 REPO=${REPO:-$CAMPAIGN/checkout}
-RESULTS=${RESULTS:-$CAMPAIGN/results}
+RESULTS=${RESULTS:?Set RESULTS to a scratch output directory, outside NFS home}
 PY=${PY:-/mnt/nas/gautammahale/venvs/rlm/bin/python}
 BASE_URL=${BASE_URL:-http://localhost:8002/v1}
 MODEL=${MODEL:-Qwen/Qwen3-4B-Instruct-2507}
@@ -33,9 +33,13 @@ else
   ORG=${ORG:-$CAMPAIGN/organization}
 fi
 
+if [ "$(id -gn)" != infolab ]; then
+  echo "Launch this lane with primary group infolab (sg infolab -c ...)." >&2
+  exit 1
+fi
 cd "$REPO" || exit 1
 export HF_HOME=${HF_HOME:-/mnt/nas/gautammahale/hf_cache} HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONPATH=.
-export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false PYTHONUNBUFFERED=1
 
 # GENERATE, do not just ask /v1/models: a wedged vLLM still answers the static routes.
 body=$(curl -s --max-time 90 "$BASE_URL/chat/completions" -H "Content-Type: application/json" \
@@ -54,6 +58,6 @@ for s in $SUBSETS; do
       $split --limit "$LIMIT" --mode rlm --chunk-order "$arm" --organization-dir "$ORG" \
       --max-steps "$MAX_STEPS" \
       --root-model "$MODEL" --sub-model "$MODEL" --base-url "$BASE_URL" --sub-backend http \
-      --out "$RESULTS" 2>&1 | grep -vE "^\s*$"
+      --out "$RESULTS"
 done
 echo "################ DONE $arm $DATASET $(date +%T)"

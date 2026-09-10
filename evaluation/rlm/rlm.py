@@ -211,7 +211,7 @@ Example of a correct session (4 turns):
 # told about the order and in nothing else the prompt says.
 CHUNK_ORDERS = ("bm25-graph", "bm25-query")
 # Bump for any change that can alter what an ordered-chunk root is shown or sent.
-CHUNK_ORDER_REVISION = 1
+CHUNK_ORDER_REVISION = 2
 # One structured reader group, so one agentic read is the size of one mapped group.
 DEFAULT_CHUNK_CALL_TOKENS = 8192
 # The question a chunk read is priced with when the prompt states how many chunks fit
@@ -224,6 +224,8 @@ CHUNKS_HELP = """\
       character of `context` is in exactly one chunk. Each chunk has `.rank` (its
       position in the list, counting from 1), `.start` and `.end` (character
       offsets into `context`), `.score`, and `.text` (exactly `context[.start:.end]`).
+      Printing a chunk object shows only a short prefix, NOT its full text.
+      Read chunks by passing them to `llm_query`; use `.text` for keyword filters.
     * `llm_query(question: str, chunks[i:j]) -> str`: ask a sub-LLM about some
       chunks. IMPORTANT: the sub-LLM CANNOT see `context`, `chunks` or any of your
       variables. Put the question FIRST and a LIST OF CHUNKS second --
@@ -239,11 +241,12 @@ CHUNK_ORDER_NOTES = {
   relevance to the question. `chunks[0]` is the best match and `.score` falls as
   you go down the list; a score of 0 means the chunk shares no distinctive word
   with the question at all. The answer is almost always near the TOP.
-- Strategy: read the top of the list FIRST -- one `llm_query` over `chunks[:5]`.
+- Strategy: your FIRST code block calls `llm_query` over `chunks[:5]` and prints
+  the returned answer. Do not spend a turn printing chunk objects or their ranks.
   If that answers the question, you are done: FINAL it straight away, with
   confidence; there is no need to check the rest of the document. Only if the top
-  chunks do not answer it, read further down (`chunks[5:15]`, then
-  `chunks[15:30]`). Do NOT print the whole context.""",
+  chunks do not answer it, read the next five chunks or filter `.text` for a
+  distinctive term and read those hits. Do NOT print the whole context.""",
     "bm25-graph": """\
 - HOW `chunks` IS ORDERED: it was ORGANIZED once, before your question was known,
   by a keyword-similarity graph: chunks that share distinctive words -- the same
@@ -253,8 +256,9 @@ CHUNK_ORDER_NOTES = {
 - Strategy: first FIND which chunks mention the question's distinctive terms,
   then read the best one TOGETHER WITH ITS NEIGHBOURS in one call --
   `chunks[max(0, i-2):i+6]` -- because related facts sit beside it. If that
-  answers the question, FINAL it straight away, with confidence. Do NOT print
-  the whole context.""",
+  answers the question, FINAL it straight away, with confidence. If it does not,
+  read another matching neighbourhood or try a different distinctive term before
+  abstaining. Do NOT print the whole context.""",
 }
 
 SEARCH_TERMS_CHUNKS = """\
@@ -270,15 +274,10 @@ SEARCH_TERMS_CHUNKS = """\
 WORKED_SESSION_RANKED = """\
 Example of a correct session (3 turns) for "Where was the director of the 1975 shark film born?":
   You:  ```python
-        for c in chunks[:5]:
-            print(c)
         ans = llm_query("Who directed the 1975 shark film?", chunks[:5])
         print(ans)
         ```
-  REPL: Hit(rank=1, start=812000, end=814000, score=17.40, '...Jaws (1975) was directed by Steven Spielberg...')
-        Hit(rank=2, start=56000, end=58000, score=9.12, '...shark attacks were reported off Amity that summer...')
-        ...
-        Steven Spielberg
+  REPL: Steven Spielberg
   You:  ```python
         hop2 = [c for c in chunks if "spielberg" in c.text.lower()][:8]
         ans2 = llm_query("Where was Steven Spielberg born?", hop2)

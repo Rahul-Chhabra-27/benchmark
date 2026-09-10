@@ -1,25 +1,15 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""Gate the ordered-chunk agentic runs before any number from them is reported.
+"""Validate the complete ordered-chunk campaign before launch or reporting.
 
-    python -m evaluation.rlm.rlm_order_gate <results_dir> [--expect N] [--structured-results DIR]
-
-Every check is per EXAMPLE, because a run-level average can hide one bad row: no error,
-a transcript, the whole document offered as the view, and every chunk read priced exactly
-as the server counted it and within its budget. Across arms: the same rows; the
-bm25-graph view is ONE order per LOFT corpus (the organization, not something rebuilt per
-question), while the bm25-query view changes with the question. With
---structured-results, the rows and the documents must also be the graph-order campaign's.
-
-Model BEHAVIOUR is reported, never failed: a root that never passed a chunk to llm_query,
-a [SUB-CALL LIMIT] notice, an abstention, a refused over-budget read -- those are outcomes
-of the arm, and failing the gate on them would drop exactly the rows that describe it.
-Exits non-zero on any failure.
+Use --pilot --expect 3 for the pilot; its IDs must be the first three comparator
+rows. A failed gate preserves all rows: it blocks acceptance, not analysis.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from collections import Counter
@@ -27,8 +17,12 @@ from pathlib import Path
 
 import yaml
 
+from ..benchmarks.registry import RULER_32K_TASKS
+from .rlm import CHUNK_ORDER_REVISION
+
 ARMS = ("bm25-graph", "bm25-query")
-BEHAVIOUR_NOTICES = ("[SUB-CALL LIMIT", "[TIME LIMIT")
+LOFT_SUBSETS = ("nq_128k", "hotpotqa_128k", "musique_128k", "qampari_128k", "quest_128k")
+NOTICES = ("[SUB-CALL LIMIT", "[TIME LIMIT", "[SUB-MODEL ERROR]")
 
 
 def _rows(run_dir: Path) -> dict[str, dict]:
@@ -38,19 +32,27 @@ def _rows(run_dir: Path) -> dict[str, dict]:
         return rows
     for line in path.read_text().splitlines():
         if line.strip():
-            try:
-                record = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            rows[str(record["id"])] = record  # a retry appends; the last one counts
+            record = json.loads(line)  # A partial/corrupt checkpoint cannot pass.
+            rows[str(record["id"])] = record
     return rows
 
 
+def _transcript(run_dir: Path, example_id: str) -> dict:
+    return json.loads((run_dir / "transcripts" / f"{example_id}.json").read_text())
+
+
 def check_run(run_dir: Path, config: dict, expect: int | None) -> tuple[list[str], dict]:
-    """Problems (failures) and a behaviour summary for one run directory."""
     problems: list[str] = []
     budget = config.get("chunk_call_tokens")
-    rows = _rows(run_dir)
+    if not isinstance(budget, int) or budget <= 0:
+        problems.append("missing or invalid chunk token budget")
+    if config.get("chunk_order_revision") != CHUNK_ORDER_REVISION:
+        problems.append(f"expected chunk_order_revision {CHUNK_ORDER_REVISION}")
+    try:
+        rows = _rows(run_dir)
+    except (ValueError, KeyError) as exc:
+        rows = {}
+        problems.append(f"invalid checkpoint: {exc}")
     if expect is not None and len(rows) != expect:
         problems.append(f"{len(rows)} examples, expected {expect}")
     behaviour: Counter = Counter()
@@ -60,107 +62,176 @@ def check_run(run_dir: Path, config: dict, expect: int | None) -> tuple[list[str
         tag = f"{example_id}:"
         if row.get("error"):
             problems.append(f"{tag} error {str(row['error'])[:160]}")
-            continue
+        if not row.get("finished") or row.get("end_reason") not in (
+            "final_called",
+            "abstained",
+            "final_in_prose",
+            "final_var_in_prose",
+        ):
+            problems.append(f"{tag} unfinished ending {row.get('end_reason')}")
         m = row.get("metrics") or {}
-        if not m.get("chunks_total"):
-            problems.append(f"{tag} no chunk view recorded")
+        if not m.get("chunks_total") or not m.get("chunk_view_sha256") or not m.get("document_sha256"):
+            problems.append(f"{tag} missing chunk view or document provenance")
         calls = m.get("chunk_payload_calls", 0)
+        if not calls:
+            problems.append(f"{tag} never passed a chunk to llm_query")
         local = m.get("reader_input_tokens")
         served = m.get("reader_served_prompt_tokens")
-        if local is None or served is None or len(local) != calls or len(served) != calls:
-            counts = f"{len(local or [])} local / {len(served or [])} served"
-            problems.append(f"{tag} {calls} chunk reads but {counts} token counts")
-        elif local != served:
-            problems.append(f"{tag} chunk reads priced differently from the server: local {local} vs served {served}")
-        if local and budget and max(local) > budget:
-            problems.append(f"{tag} a {max(local)}-token chunk read reached the server over the {budget} budget")
-        path = run_dir / "transcripts" / f"{example_id}.json"
-        text = path.read_text() if path.exists() else ""
-        if not text:
-            problems.append(f"{tag} no transcript")
-        for notice in BEHAVIOUR_NOTICES:
-            if notice in text:
-                behaviour[f"transcripts with {notice}"] += 1
+        if not isinstance(local, list) or not isinstance(served, list) or len(local) != calls or len(served) != calls:
+            problems.append(f"{tag} {calls} chunk reads but missing or inconsistent token counts")
+        else:
+            if any(type(t) is not int or t <= 0 for t in local + served):
+                problems.append(f"{tag} missing or invalid local/server token count")
+            if local != served:
+                problems.append(f"{tag} chunk reads priced differently from the server: {local} vs {served}")
+            if isinstance(budget, int) and any(isinstance(t, int) and t > budget for t in local + served):
+                problems.append(f"{tag} an over-budget chunk read reached the server")
+        try:
+            transcript = _transcript(run_dir, example_id)
+            if not transcript.get("transcript"):
+                raise ValueError("empty transcript")
+            if transcript.get("end_reason") != row.get("end_reason") or transcript.get("pred") != row.get("pred"):
+                raise ValueError("transcript disagrees with checkpoint")
+            text = json.dumps(transcript)
+            for notice in NOTICES:
+                if notice in text:
+                    problems.append(f"{tag} transcript contains {notice}")
+        except (OSError, ValueError) as exc:
+            problems.append(f"{tag} missing or invalid transcript: {exc}")
         behaviour[f"end_reason={row.get('end_reason')}"] += 1
-        if not calls:
-            behaviour["never passed a chunk to llm_query"] += 1
+        behaviour["abstentions"] += row.get("end_reason") == "abstained"
         behaviour["refused over-budget reads"] += m.get("chunk_budget_refusals", 0)
         behaviour["root overflow evictions"] += m.get("overflow_evictions", 0)
-        if m.get("organization_cache_hit") is False:
-            behaviour["organization built here (not a cache hit)"] += 1
         views.add(m.get("chunk_view_sha256"))
         documents.add(m.get("document_sha256"))
-    return problems, dict(behaviour=behaviour, views=views, documents=documents, ids=set(rows))
+    return problems, dict(behaviour=behaviour, views=views, documents=documents, ids=set(rows), rows=rows)
 
 
-def _structured_runs(root: Path | None) -> dict[str, dict[str, Path]]:
-    """{data_dir: {structured_order: run_dir}} for the graph-order campaign."""
-    found: dict[str, dict[str, Path]] = {}
-    if root is None:
-        return found
-    for config_path in sorted(root.glob("*/config.yaml")):
-        config = yaml.safe_load(config_path.read_text()) or {}
-        if config.get("structured_order"):
-            found.setdefault(config["data_dir"], {})[config["structured_order"]] = config_path.parent
+def _configs(root: Path, key: str) -> dict[tuple, tuple[Path, dict]]:
+    found = {}
+    for path in sorted(root.glob("*/config.yaml")):
+        config = yaml.safe_load(path.read_text()) or {}
+        if config.get(key):
+            slot = (config["dataset"], config["data_dir"], config[key])
+            if slot in found:
+                raise ValueError(f"duplicate run for {slot}")
+            found[slot] = (path.parent, config)
     return found
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("results", type=Path)
-    ap.add_argument("--expect", type=int, default=None, help="examples each run must hold")
-    ap.add_argument("--structured-results", type=Path, default=None, help="the graph-order campaign's results")
-    args = ap.parse_args()
+def check_comparator(run_dir: Path, rows: dict, comparator: Path, pilot: bool, expect: int) -> list[str]:
+    """Match exact IDs for full runs, the comparator's first N test IDs for pilots."""
+    problems = []
+    s_rows = _rows(comparator)
+    ordered_ids = sorted(s_rows, key=lambda value: int(value.rsplit(":", 1)[1]))
+    expected_ids = set(ordered_ids[:expect] if pilot else ordered_ids)
+    if len(expected_ids) != expect or set(rows) != expected_ids:
+        problems.append(f"IDs differ from {'first pilot rows of' if pilot else 'full'} structured {comparator.name}")
+    for example_id in set(rows) & expected_ids:
+        ours, theirs = rows[example_id], s_rows[example_id]
+        doc = (ours.get("metrics") or {}).get("document_sha256")
+        if not doc or doc != (theirs.get("metrics") or {}).get("organization_sha256"):
+            problems.append(f"{example_id}: document differs from structured comparator")
+        a, b = _transcript(run_dir, example_id), _transcript(comparator, example_id)
+        if a.get("question") != b.get("question") or a.get("answers") != b.get("answers"):
+            problems.append(f"{example_id}: question or answers differ from structured comparator")
+    return problems
 
-    by_subset: dict[tuple, dict[str, tuple[Path, dict]]] = {}
-    for config_path in sorted(args.results.glob("*/config.yaml")):
-        config = yaml.safe_load(config_path.read_text()) or {}
-        if config.get("chunk_order"):
-            key = (config["dataset"], config["data_dir"])
-            by_subset.setdefault(key, {})[config["chunk_order"]] = (config_path.parent, config)
-    if not by_subset:
-        sys.exit(f"no ordered-chunk runs under {args.results}")
-    structured = _structured_runs(args.structured_results)
 
-    failures = 0
-    for (dataset, subset), arms in sorted(by_subset.items()):
-        info = {}
-        for arm, (run_dir, config) in sorted(arms.items()):
-            problems, info[arm] = check_run(run_dir, config, args.expect)
-            status = "OK" if not problems else f"FAIL ({len(problems)})"
-            print(f"{dataset}/{subset:16s} {arm:11s} {status}  ({len(info[arm]['ids'])} rows)")
-            for problem in problems[:20]:
-                print(f"    {problem}")
-            for name, count in sorted(info[arm]["behaviour"].items()):
-                if count:
-                    print(f"    · {name}: {count}")
-            failures += len(problems)
-        if set(info) != set(ARMS):
-            print(f"{dataset}/{subset:16s} MISSING an arm: have {sorted(info)}")
-            failures += 1
+def check_graph_artifact(rows: dict, artifacts: list[dict]) -> list[str]:
+    problems = []
+    for example_id, row in rows.items():
+        m = row.get("metrics") or {}
+        candidates = [
+            a
+            for a in artifacts
+            if a.get("document_sha256") == m.get("document_sha256") and a.get("config", {}).get("order") == "bm25-graph"
+        ]
+        if len(candidates) != 1:
+            problems.append(f"{example_id}: expected one structured graph artifact, found {len(candidates)}")
             continue
-        graph, query = info["bm25-graph"], info["bm25-query"]
+        a = candidates[0]
+        spans, order = a["spans"], a["order"]
+        if sorted(order) != list(range(len(spans))):
+            problems.append(f"{example_id}: invalid graph artifact permutation")
+            continue
+        digest = hashlib.sha256(json.dumps([spans[i] for i in order]).encode()).hexdigest()
+        if digest != m.get("chunk_view_sha256") or len(spans) != m.get("chunks_total"):
+            problems.append(f"{example_id}: graph view differs from structured artifact order")
+        if m.get("organization_cache_hit") is not True:
+            problems.append(f"{example_id}: graph organization was not a cache hit")
+    return problems
+
+
+def check_campaign(results: Path, dataset: str, expect: int, structured: Path | None, pilot: bool) -> list[str]:
+    runs = _configs(results, "chunk_order")
+    subsets = LOFT_SUBSETS if dataset == "loft" else RULER_32K_TASKS
+    expected = {(dataset, subset, arm) for subset in subsets for arm in ARMS}
+    problems = [f"missing run: {key}" for key in sorted(expected - set(runs))]
+    problems += [f"unexpected run: {key}" for key in sorted(set(runs) - expected)]
+    comparators = _configs(structured, "structured_order") if structured else {}
+    if dataset == "loft" and structured is None:
+        problems.append("LOFT requires --structured-results for row and organization validation")
+    info = {}
+    for key, (run_dir, config) in sorted(runs.items()):
+        failures, info[key] = check_run(run_dir, config, expect)
+        if not (run_dir / "metrics.json").exists():
+            failures.append("run has no completed metrics.json")
+        if config.get("mode") != "rlm" or (dataset == "loft" and config.get("split") != "test"):
+            failures.append("expected agentic RLM and LOFT test split")
+        print(f"{key}: {len(info[key]['ids'])} rows; {dict(info[key]['behaviour'])}")
+        problems.extend(f"{key}: {p}" for p in failures)
+    for subset in subsets:
+        gkey, qkey = (dataset, subset, "bm25-graph"), (dataset, subset, "bm25-query")
+        if gkey not in info or qkey not in info:
+            continue
+        graph, query = info[gkey], info[qkey]
         if graph["ids"] != query["ids"]:
-            print(f"{dataset}/{subset:16s} the two arms ran different questions")
-            failures += 1
+            problems.append(f"{subset}: arms ran different IDs")
         if dataset == "loft" and len(graph["views"]) != 1:
-            # One corpus per LOFT subset, so one organization: several orders mean the view
-            # was rebuilt from something other than the document.
-            print(f"{dataset}/{subset:16s} bm25-graph used {len(graph['views'])} different orders on one corpus")
-            failures += 1
-        if len(query["ids"]) > 1 and len(query["views"]) < 2:
-            print(f"{dataset}/{subset:16s} WARNING: bm25-query gave every question the same order")
-        for s_arm, s_dir in sorted(structured.get(subset, {}).items()):
-            s_rows = _rows(s_dir)
-            if set(s_rows) != graph["ids"]:
-                print(f"{dataset}/{subset:16s} rows differ from structured {s_arm} ({s_dir.name})")
-                failures += 1
-            s_docs = {(r.get("metrics") or {}).get("organization_sha256") for r in s_rows.values()} - {None}
-            if s_docs and s_docs != graph["documents"] - {None}:
-                print(f"{dataset}/{subset:16s} a different document from structured {s_arm}")
-                failures += 1
-    print("GATE PASSED" if not failures else f"GATE FAILED: {failures} problem(s)")
-    sys.exit(1 if failures else 0)
+            problems.append(f"{subset}: graph used multiple orders on one document")
+        for example_id in graph["ids"] & query["ids"]:
+            gm, qm = (info[k]["rows"][example_id].get("metrics") or {} for k in (gkey, qkey))
+            if (gm.get("document_sha256"), gm.get("chunks_total")) != (
+                qm.get("document_sha256"),
+                qm.get("chunks_total"),
+            ):
+                problems.append(f"{subset}/{example_id}: arms received different documents or chunk counts")
+        if dataset != "loft" or structured is None:
+            continue
+        for s_arm in ("source", "bm25-graph"):
+            skey = (dataset, subset, s_arm)
+            if skey not in comparators:
+                problems.append(f"missing structured comparator: {skey}")
+                continue
+            s_dir, s_config = comparators[skey]
+            for key in (gkey, qkey):
+                problems.extend(check_comparator(runs[key][0], info[key]["rows"], s_dir, pilot, expect))
+            if s_arm == "bm25-graph":
+                org = s_config.get("organization_dir")
+                artifacts = [json.loads(p.read_text()) for p in Path(org).glob("*.json")] if org else []
+                problems.extend(check_graph_artifact(graph["rows"], artifacts))
+    return problems
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("results", type=Path)
+    ap.add_argument("--expect", type=int, default=55)
+    ap.add_argument("--dataset", choices=("loft", "ruler128k"), default="loft")
+    ap.add_argument("--pilot", action="store_true", help="compare to the first --expect structured rows")
+    ap.add_argument("--structured-results", type=Path)
+    args = ap.parse_args()
+    if args.expect <= 0:
+        ap.error("--expect must be positive")
+    try:
+        problems = check_campaign(args.results, args.dataset, args.expect, args.structured_results, args.pilot)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        problems = [f"invalid or incomplete artifacts: {exc}"]
+    for problem in problems:
+        print(f"FAIL: {problem}")
+    print("GATE PASSED" if not problems else f"GATE FAILED: {len(problems)} problem(s)")
+    sys.exit(bool(problems))
 
 
 if __name__ == "__main__":

@@ -389,7 +389,7 @@ class TestRunDirAndConfig:
 
     def test_config_records_the_order_its_revision_and_budget(self):
         config = rb.build_run_config(_args(**ORDERED_RLM), "rlm", "loft", None, None, None)
-        assert config["chunk_order"] == "bm25-query" and config["chunk_order_revision"] == 1
+        assert config["chunk_order"] == "bm25-query" and config["chunk_order_revision"] == rb.CHUNK_ORDER_REVISION
         assert config["chunk_call_tokens"] == 8192 and config["chunk_order_query"] == "bare"
         assert config["organization_config"]["chunk_chars"] == 2000
 
