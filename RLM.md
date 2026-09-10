@@ -1,5 +1,7 @@
 # RLM Sub-Calls over a KV Memory Budget
 
+[**RLM(new): September 5–7 LOFT-128k results**](RLM-new-README.md) — all 27 configurations, scores, and audit notes.
+
 This repository hosts two ways of surviving a context that does not fit in the model's
 window, and one experiment that combines them. **KVPress** compresses the KV cache so the
 whole document can be attended to at reduced cost. An **RLM** (Recursive Language Model)

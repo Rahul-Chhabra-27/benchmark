@@ -13,6 +13,13 @@ hosted-API path.
 — completed dataset benchmarks, memory-budget sweeps, model variants, metrics, and
 downloadable prediction files.
 
+## RLM(new) results
+
+[**LOFT-128k results after the September 5 changes**](RLM-new-README.md) —
+Qwen3-4B, 27 configurations with logical KV budgets of 2/4/8 GB and chunk factors
+of 1×/2×/4×/8×. Includes all scores and run audit notes;
+[download the complete CSV](RLM-new-loft128k.csv).
+
 ## Layout
 
 | Path | What it is |
