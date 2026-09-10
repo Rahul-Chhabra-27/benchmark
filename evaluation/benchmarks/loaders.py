@@ -7,6 +7,7 @@ The returned DataFrame is the source of truth for both KVPress and RLM.  The
 backends that do not use pandas during inference.
 """
 
+import hashlib
 import logging
 import os
 from pathlib import Path
@@ -165,6 +166,90 @@ def _load_ruler64k(dataset_id: str, task: str) -> pd.DataFrame:
     return df
 
 
+# Datasets that ship no dev/test split get one drawn here. The size follows the
+# project rule that calibration is spent data: every row used to pick a setting
+# is a row that can never appear in a reported number again, so take as few as
+# still give a usable signal (<=100, or 20% for small sets).
+CALIBRATION_SEED = "20260910"
+CALIBRATION_MAX_ROWS = 100
+CALIBRATION_FRACTION = 0.2
+
+_ID_COLUMNS = ("_id", "id", "context_id", "index")
+
+
+def _row_keys(df: pd.DataFrame) -> list[str]:
+    """A stable per-row identity, preferring a real id over row position.
+
+    Hashing an id rather than a position keeps a row's split assignment fixed
+    when the source adds, removes or reorders rows; falling back to position
+    keeps the function total for sources that ship no id at all.
+    """
+    for column in _ID_COLUMNS:
+        if column in df.columns and df[column].notna().all() and df[column].nunique() == len(df):
+            return [str(value) for value in df[column]]
+    return [str(position) for position in range(len(df))]
+
+
+def _ensure_split(df: pd.DataFrame, dataset_name: str, task: Optional[str]) -> pd.DataFrame:
+    """Give a dataset without a released split a deterministic dev/test one.
+
+    ``iter_benchmark_examples`` filters on a ``split`` column and skips the
+    filter entirely when that column is absent, so ``--split dev`` on RULER,
+    InfiniteBench or LongBench-v2 silently returns every row. A calibration
+    study there would pick a setting and report on the same rows with nothing
+    to flag it -- the same contamination that scored LOFT's 10 dev questions
+    inside its own "main" numbers, but with no split column to make it
+    detectable afterwards. Draw the line here, once, at the point both KVPress
+    and RLM load through.
+
+    Datasets that ship their own split keep it untouched: LOFT's dev set is the
+    one its authors intended, and replacing it would make these numbers
+    incomparable with every published LOFT result.
+
+    The assignment hashes a stable row key with a fixed seed rather than
+    shuffling, so it is identical across machines, processes and Python builds,
+    and is stratified by task so a multi-task frame cannot land a dev set drawn
+    from one task alone.
+    """
+    if "split" in df.columns or df.empty:
+        return df
+
+    keys = _row_keys(df)
+    if "task" in df.columns and df["task"].nunique() > 1:
+        groups = df.groupby("task", sort=True).indices.values()
+    else:
+        groups = [range(len(df))]
+
+    labels = ["test"] * len(df)
+    for positions in groups:
+        positions = list(positions)
+        n_dev = min(CALIBRATION_MAX_ROWS, int(len(positions) * CALIBRATION_FRACTION))
+        if n_dev < 1:
+            # Too few rows to spare any: leave the group entirely reportable
+            # rather than burn its only examples on calibration.
+            continue
+        salt = f"{CALIBRATION_SEED}:{dataset_name}:{task or 'default'}"
+        ranked = sorted(
+            positions,
+            key=lambda position: hashlib.blake2b(
+                f"{salt}:{keys[position]}".encode(), digest_size=16
+            ).digest(),
+        )
+        for position in ranked[:n_dev]:
+            labels[position] = "dev"
+
+    df = df.copy()
+    df["split"] = labels
+    logger.info(
+        "Assigned a deterministic calibration split to %s/%s: %d dev, %d test",
+        dataset_name,
+        task or "default",
+        labels.count("dev"),
+        labels.count("test"),
+    )
+    return df
+
+
 def load_benchmark_dataset(
     dataset_name: str,
     task: Optional[str],
@@ -195,7 +280,7 @@ def load_benchmark_dataset(
         logger.info("Loading dataset: %s (data_dir: %s)", dataset_id, task)
         df = load_dataset(dataset_id, data_dir=task, split="test").to_pandas()
 
-    return df
+    return _ensure_split(df, dataset_name, task)
 
 
 def _answers_from_row(row: Mapping[str, Any]) -> list[str]:
@@ -292,8 +377,17 @@ def iter_benchmark_examples(
                 len(df),
                 only,
             )
-    for position, (_, series) in enumerate(rows.iterrows()):
+    # Number rows by their position in the UNFILTERED frame, not by their position
+    # in this iteration. pandas keeps the original index through the split filter,
+    # --sample-fraction and .head(), so the index identifies a row no matter which
+    # subset selected it; enumerate() restarts at 0 for every subset, which made
+    # "<dataset>:<task>:0" mean the first dev row in one run and the first test row
+    # in the next. Those ids collide in the results tree and cannot be joined back
+    # to a source row. A default RangeIndex makes index == position, so runs over
+    # the whole frame keep exactly the ids they have today.
+    for _, series in rows.iterrows():
         row = series.to_dict()
+        position = series.name
         source_id = row.get("_id") or row.get("id") or row.get("context_id")
         example_id = f"{source_id}-{position}" if source_id is not None else str(position)
         answers = _answers_from_row(row)
