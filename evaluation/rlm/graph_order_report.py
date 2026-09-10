@@ -23,6 +23,7 @@ import csv
 import json
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -138,7 +139,9 @@ def main() -> None:
     args = ap.parse_args()
 
     runs = _runs(args.results)
-    arm_rows, paired_rows, provenance = [], [], {"code_revision": _git_revision(args.repo), "subsets": {}}
+    arm_rows: list[dict] = []
+    paired_rows: list[dict] = []
+    provenance: dict[str, Any] = {"code_revision": _git_revision(args.repo), "subsets": {}}
     lines = ["# BM25-graph vs source order — LOFT-128k, Qwen3-4B-Instruct-2507", ""]
     for subset in sorted(runs):
         arms = runs[subset]
