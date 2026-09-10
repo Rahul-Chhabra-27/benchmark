@@ -10,23 +10,40 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import time
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 import yaml
+
+from evaluation import compare
 
 from evaluation.benchmarks.registry import LOFT_TASKS, LONGBENCH_128K_SUBSETS, RULER_32K_TASKS, SCORER_REGISTRY
 from evaluation.benchmarks.results import score_prediction_frame
 from evaluation.results_layout import RLM_RESULTS_DIR
 
+from . import retrieval
+from .chunkset import ChunkSet, ChunkSetError, file_digest
 from .client import LLMClient
 from .datasets import available_datasets, canonical_dataset_name, load_examples
-from .rlm import RLM, MemoryBudget, Scratchpad, vanilla_answer
+from .rlm import (
+    DEFAULT_REDUCE_FINDING_CHARS,
+    RLM,
+    SEARCH_ABLATABLE,
+    STRUCTURED_ANSWER_SHAPES,
+    STRUCTURED_MAP_GRANULARITIES,
+    STRUCTURED_MAP_QUESTIONS,
+    MemoryBudget,
+    Scratchpad,
+    bare_query,
+    vanilla_answer,
+)
 from .sizing import (
+    DEFAULT_MIN_TOKENS,
     DEFAULT_RESERVE_TOKENS,
     FIXED_CHUNK_CHAR_OVERSHOOT,
     compression_ratio_from_factor,
@@ -37,6 +54,40 @@ from .sizing import (
 # build_run_dir_components as well as being the argparse default -- as two separate
 # literals, changing one would silently shift every run directory name.
 DEFAULT_MAX_SUBCALL_CHARS = 32000
+
+# Same reason as above: these are both argparse defaults and compared against in
+# build_run_dir_components, so they must be one literal each.
+DEFAULT_SEARCH_WINDOW = retrieval.DEFAULT_CHUNK_CHARS
+DEFAULT_SEARCH_OVERLAP = retrieval.DEFAULT_OVERLAP
+
+# Chunks per example for the structured arm. Matches retrieval's DEFAULT_K so a
+# `bm25` structured run and a --search-k 5 agentic run read the same windows, and
+# the only difference between them is the pipeline.
+DEFAULT_CHUNKS_K = retrieval.DEFAULT_K
+
+# DEFAULT_REDUCE_FINDING_CHARS is imported from .rlm rather than restated here for
+# the same reason: it is the argparse default AND is compared against in
+# build_run_dir_components, and a second literal could drift from the cap the reduce
+# step actually applies.
+
+
+# The bracketed shape LOFT's multi-value scorer parses, as a worked example. Only
+# ever shown for a task that IS scored that way -- see answer_list_example.
+LOFT_LIST_ANSWER_EXAMPLE = '["first answer", "second answer", "third answer"]'
+
+
+def answer_list_example(dataset: Optional[str], task: Optional[str], mode: str) -> str:
+    """The list example this run's reduce step should show, or "" for none.
+
+    Narrow on purpose. LOFT ships one bare `Final Answer: ` prefix for every subset,
+    but only qampari and quest are scored through the list parser, and an arm that is
+    never shown the shape it is parsed with is measured as wrong when it was right --
+    3 of 3 correct answers reporting coverage 0.000, measured. Single-value subsets
+    are untouched, so every nq/hotpotqa run keeps its exact prompt and its numbers.
+    """
+    if mode != "structured" or dataset != "loft" or not task:
+        return ""
+    return LOFT_LIST_ANSWER_EXAMPLE if compare.loft_score_key(task) == "coverage" else ""
 
 
 def _subcall_chars(value: str) -> Any:
@@ -61,6 +112,12 @@ def _subcall_chars(value: str) -> Any:
 RESUME_CRITICAL_KEYS = (
     "limit",
     "split",
+    # Same reason as `limit` and `split`: they pick WHICH rows are evaluated, and
+    # neither reaches the run-directory name. A `--sample-fraction 0.5` run and a
+    # full run of the same cell otherwise land in one directory, share one
+    # checkpoint.jsonl, and merge two different samples into one score.
+    "sample_fraction",
+    "sample_seed",
     "root_model",
     # Not in the slug: adding it there would rename every run directory that has
     # ever been written, orphaning their checkpoints silently. Erroring on resume
@@ -81,8 +138,43 @@ RESUME_CRITICAL_KEYS = (
     # on/off-by-value, and resuming a floor-2048 run into a floor-16384 checkpoint
     # would merge two different read regimes.
     "min_subcall_chars",
+    # In the slug too (search_k is), but listed here for the same reason
+    # min_subcall_chars is: the slug distinguishes depth, not window geometry, and
+    # resuming a 2000-char-window run into a 4000-char-window checkpoint would merge
+    # two different retrievers. --sample-fraction is the cautionary precedent: it
+    # picked which rows were evaluated, reached neither the name nor this list, and
+    # two different samples merged into one score.
+    "search_k",
+    "search_window_chars",
+    "search_overlap_chars",
+    "max_search_calls",
+    "search_ablate",
     "sub_max_tokens",
     "data_dir",
+    # The structured arm. `chunks_file_sha256` rather than the path: two runs
+    # pointed at the same filename with different contents would otherwise resume
+    # into one checkpoint and merge two different selections into one score. Same
+    # for `ids_sha256` -- an id set picks WHICH rows are evaluated, exactly the
+    # property --sample-fraction is listed above for.
+    "chunks_source",
+    "chunks_k",
+    "chunks_file_sha256",
+    "ids_sha256",
+    # The three structured axes. In the slug too (only when non-default, so existing
+    # directories keep their names), but listed here for the same reason `search_k`
+    # is: the slug says which components were withheld, and a checkpoint written
+    # before these flags existed carries no value at all for them.
+    "structured_map_question",
+    "structured_map_granularity",
+    "structured_answer_shape",
+    # The geometry axes. In the slug too (only when non-default), but listed here for
+    # the same reason search_window_chars is: resuming a 400-char-exposure run into a
+    # 4000-char one would merge two different read regimes under one score.
+    "structured_map_chars",
+    "reduce_finding_chars",
+    "structured_hops",
+    "answer_list_format",
+    "chunks_query",
     # Dicts: comparing them whole covers their nested knobs too
     # (keep_recent_turns inside memory_budget, max_notes_tokens inside
     # scratchpad), which have no top-level key of their own.
@@ -137,11 +229,28 @@ def resume_conflicts(run_dir: Path, config: dict) -> list[str]:
             f"{config_path} is corrupt ({exc}); cannot verify this run matches the "
             "checkpoint beside it. Fix or remove the run directory."
         )
-    return [
+    conflicts = [
         f"{key}: checkpoint was written with {prior.get(key)!r}, this run has {config.get(key)!r}"
         for key in RESUME_CRITICAL_KEYS
         if key in prior and prior.get(key) != config.get(key)
     ]
+    # Zero-overlap retrieval previously indexed only the first window. Missing
+    # revisions must conflict here, unlike newly added optional settings above.
+    if "search_index_revision" in config and prior.get("search_index_revision") != config["search_index_revision"]:
+        conflicts.append(
+            "search_index_revision: zero-overlap retrieval changed; use a fresh results directory "
+            "instead of resuming a checkpoint from a different index revision"
+        )
+    # Same shape, same reason: revision 1 read one window per map call and merely
+    # offered the answer format. A checkpoint written before either fix describes a
+    # different pipeline, and its absence of the key is exactly the case to catch.
+    if "structured_revision" in config and prior.get("structured_revision") != config["structured_revision"]:
+        conflicts.append(
+            "structured_revision: the map step now reads one CONTIGUOUS PASSAGE per call rather "
+            "than one window, and the reduce step requires the answer shape rather than offering "
+            "it; use a fresh results directory instead of resuming a revision-1 checkpoint"
+        )
+    return conflicts
 
 
 def _prior_resolved_chars(run_dir: Path) -> int | None:
@@ -314,6 +423,35 @@ def write_run_artifacts(
         ]
         if coverage:
             runtime["document_coverage_fraction"] = float(sum(coverage) / len(coverage))
+        # The effort thesis had no run-level aggregate at all: the grid granted 50
+        # steps and up to 64 sub-calls while the median example used 2 and 1.
+        for column in ("steps", "sub_calls"):
+            if column in scored_frame:
+                runtime[f"average_{column}"] = float(scored_frame[column].mean())
+        # Search arm only, so a non-search run's runtime block is unchanged.
+        searches = [m.get("search_calls") for m in rlm_metrics if m.get("search_calls") is not None]
+        if searches:
+            runtime["search_calls"] = int(sum(searches))
+            runtime["average_search_calls"] = float(sum(searches) / len(searches))
+            runtime["search_hits_returned"] = int(sum(m.get("search_hits_returned", 0) for m in rlm_metrics))
+            # The number that says whether the tool was actually USED, as opposed to
+            # merely offered: hits returned but never handed to llm_query.
+            runtime["search_hits_read"] = int(sum(m.get("search_hits_read", 0) for m in rlm_metrics))
+            runtime["search_k_clamped_calls"] = int(sum(m.get("search_k_clamped_calls", 0) for m in rlm_metrics))
+        if "gold_in_retrieved" in scored_frame:
+            # Loose answer-string presence diagnostic, not a score ceiling:
+            # the root can read elsewhere and a match need not supply evidence.
+            gold = scored_frame["gold_in_retrieved"].dropna()
+            if len(gold):
+                runtime["gold_in_retrieved_fraction"] = float(gold.astype(bool).sum() / len(gold))
+        # The same diagnostic split per window, so a k-sweep can say whether a cell
+        # gained score by adding SIGNAL or lost it by adding DISTRACTORS. Both rise
+        # together with k, and one number cannot separate them.
+        for column in ("gold_windows_in_chunks", "nongold_windows_in_chunks"):
+            if column in scored_frame:
+                values = scored_frame[column].dropna()
+                if len(values):
+                    runtime[f"average_{column}"] = float(values.mean())
 
     # Sub-side KV retention: the direct analogue of KVPress's
     # `average_retained_context_tokens`, but measured over llm_query sub-calls --
@@ -373,9 +511,27 @@ def write_run_artifacts(
     # failure mode of auto sizing, and invisible without both numbers side by side.
     # Outside the kvzip guard: the advertised cap governs the http arms too, and the
     # gap between it and average_sub_payload_chars is the finding, not a kvzip detail.
-    if config.get("mode") == "rlm":
+    if config.get("mode") in ("rlm", "structured"):
         runtime["subcall_chars_advertised"] = config.get("max_subcall_chars")
         runtime["subcall_chars_floor"] = config.get("min_subcall_chars") or 0
+    if scored and (config.get("mode") == "structured" or config.get("chunks_source")):
+        # `chunks_provided` is what the selector offered and `map_calls` what was
+        # actually read; they diverge when the per-example deadline or the sub-call
+        # cap cuts the map short, which is the difference between a thin selection
+        # and a truncated run. `chunks_with_findings` near 0 is this arm's version
+        # of sub_pressed_call_fraction near 0: the pipeline ran and learned nothing.
+        # map_calls is now passages, not windows: chunks_provided minus map_spans is
+        # how many adjacent windows were coalesced, which is the whole point of the
+        # clustering and invisible without both numbers.
+        # The agentic provided-chunk arm has no map step, so only the size of the
+        # set it was handed is meaningful there.
+        keys = ("chunks_provided", "map_spans", "map_calls", "chunks_with_findings")
+        if config.get("mode") != "structured":
+            keys = ("chunks_provided",)
+        for key in keys:
+            values = [(row or {}).get(key) for row in scored_frame.get("metrics", [])]
+            values = [v for v in values if v is not None]
+            runtime[f"average_{key}"] = float(sum(values) / len(values)) if values else 0.0
     if config.get("sub_backend") == "kvzip":
         runtime["subcall_sizing_mode"] = config.get("subcall_sizing_mode")
         runtime["subcall_target_compression_ratio"] = config.get("target_compression_ratio")
@@ -435,6 +591,71 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
         components.append(f"autosubx{factor:g}" if factor is not None else f"autosub{args.target_compression_ratio:g}")
     if mode == "rlm" and getattr(args, "fixed_chunk", False):
         components.append("fixed")
+    # Last, and only when retrieval is on, so every directory written before this
+    # arm existed keeps its exact name and its checkpoint stays reachable.
+    if mode == "rlm" and getattr(args, "search_k", 0):
+        components.append(f"bm25k{args.search_k}")
+        if (args.search_window, args.search_overlap) != (DEFAULT_SEARCH_WINDOW, DEFAULT_SEARCH_OVERLAP):
+            components.append(f"win{args.search_window}o{args.search_overlap}")
+        # Only when ablating, so a full-treatment run keeps the name it already has.
+        for part in ("locate", "example", "gate"):
+            if part in getattr(args, "search_ablate", ()):
+                components.append(f"no-{part}")
+    # Last of all, and only for the structured arm, so every directory written
+    # before this mode existed keeps its exact name and its checkpoint stays
+    # reachable. `mode` already reads "structured"; this says which chunks.
+    if mode == "structured":
+        components.append(f"chunks-{args.chunks_source}{args.chunks_k}")
+        # The window geometry, on the same non-default rule. WITHOUT this the whole
+        # geometry axis collapses: --mode structured rejects --search-k, so the
+        # `mode == "rlm" and args.search_k` gate above can never fire here and every
+        # window cell of a sweep would name the same directory. The first cell would
+        # run and every later one would die on resume_conflicts -- loud, but the
+        # sweep would be impossible to run at all.
+        if (args.search_window, args.search_overlap) != (DEFAULT_SEARCH_WINDOW, DEFAULT_SEARCH_OVERLAP):
+            components.append(f"win{args.search_window}o{args.search_overlap}")
+        # The revision-2 axes, stamped only when NON-default, so every directory
+        # written by the revision-2 campaign keeps its exact name and its checkpoint
+        # stays reachable -- the same rule --search-ablate follows above.
+        if getattr(args, "structured_map_question", "task") != "task":
+            components.append(f"mapq-{args.structured_map_question}")
+        if getattr(args, "structured_map_granularity", "passage") != "passage":
+            components.append(f"mapg-{args.structured_map_granularity}")
+        if getattr(args, "structured_answer_shape", "require") != "require":
+            components.append(f"shape-{args.structured_answer_shape}")
+        # How much of each passage the map step SEES, and how much of each finding
+        # survives into the reduce step. Both bound the read independently of the
+        # window width, which is the whole point of having them: a window axis that
+        # a downstream cap silently truncates measures the cap, not the window.
+        if getattr(args, "structured_map_chars", 0):
+            components.append(f"mapchars{args.structured_map_chars}")
+        if getattr(args, "reduce_finding_chars", DEFAULT_REDUCE_FINDING_CHARS) != DEFAULT_REDUCE_FINDING_CHARS:
+            components.append(f"find{args.reduce_finding_chars}")
+        if getattr(args, "structured_hops", 1) != 1:
+            components.append(f"hops{args.structured_hops}")
+        # Stamped when the list shape IS shown -- the inverse of the usual
+        # non-default rule, and deliberately. The change here is the new behaviour,
+        # so it is the new behaviour that must claim a new directory; every qampari
+        # and quest run already on disk keeps its name and its checkpoint.
+        # Stamped when the query is the corrected one, for the same reason `listfmt`
+        # is: the change is the new behaviour, so the new behaviour claims the new
+        # directory and the four arms already on the NAS keep their checkpoints.
+        if getattr(args, "chunks_query", "task") == "bare" and args.chunks_source == "bm25":
+            components.append("qbare")
+        if answer_list_example(canonical_dataset_name(args.dataset or args.legacy_dataset), task_slug, mode):
+            if getattr(args, "answer_list_format", "auto") != "off":
+                components.append("listfmt")
+    # The agentic arm reading a chunk set chosen outside the run. It still carries
+    # `bm25k<N>` from the block above, because search() is how the chunks arrive and
+    # k still bounds them; this component is what says the windows are not BM25's.
+    if mode == "rlm" and getattr(args, "chunks_source", None):
+        components.append(f"chunks-{args.chunks_source}{args.chunks_k}")
+    # Last of all, and for EVERY mode: --ids-file picks WHICH rows run and reaches
+    # nothing else in the name, so without this an id-restricted run resumes into the
+    # full run's checkpoint and merges two experiments. Kept last so every structured
+    # directory written before the agentic arm existed keeps its exact name.
+    if getattr(args, "ids_sha256", None):
+        components.append(f"ids-{args.ids_sha256[:8]}")
     return components
 
 
@@ -453,7 +674,7 @@ def main() -> None:
         default=None,
         help="shared Hugging Face config/subset, e.g. niah_single_1 for ruler32k",
     )
-    ap.add_argument("--mode", default="both", choices=["vanilla", "rlm", "both"])
+    ap.add_argument("--mode", default="both", choices=["vanilla", "rlm", "structured", "both"])
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument(
         "--split",
@@ -635,6 +856,158 @@ def main() -> None:
         "Required for the KV-compression arm to measure anything: a slice under "
         "--press-min-tokens skips the press entirely",
     )
+    # --- BM25 retrieval over the document (arm 5) ---
+    # The root's only locate primitive was `str.find`, which returns the FIRST
+    # literal occurrence. Across the 879 finished LOFT-1m transcripts 80.5% of
+    # examples never surfaced the gold answer into any REPL output at all, against
+    # 5.2% that saw it and still answered wrong -- a recall failure sitting upstream
+    # of every knob the fixed-chunk grid sweeps.
+    ap.add_argument(
+        "--search-k",
+        type=int,
+        default=0,
+        help="give the root a BM25 `search(query)` over the whole document, returning this "
+        "many ranked windows (0 = off, which is every arm run so far and leaves the REPL "
+        "namespace unchanged). This is the grid's retrieval-depth axis: the model may ask "
+        "for fewer windows but never more, so a worked example cannot override the cell",
+    )
+    ap.add_argument(
+        "--search-window",
+        type=int,
+        default=DEFAULT_SEARCH_WINDOW,
+        help="character width of each indexed window (--search-k)",
+    )
+    ap.add_argument(
+        "--search-overlap",
+        type=int,
+        default=DEFAULT_SEARCH_OVERLAP,
+        help="character overlap between adjacent indexed windows, so an answer straddling a "
+        "boundary still matches one of them (--search-k)",
+    )
+    ap.add_argument(
+        "--search-ablate",
+        default="",
+        help="comma-separated parts of the search treatment to WITHHOLD, so the bundle can be "
+        "taken apart: locate (the prose telling the root to search), example (the worked "
+        "session demonstrating it), gate (an abstention must be backed by a search). Empty = "
+        "the full treatment. Turning retrieval on changes four things at once, and a combined "
+        "result cannot say which did the work; --search-k 0 withholds the tool itself",
+    )
+    ap.add_argument(
+        "--max-search-calls",
+        type=int,
+        default=200,
+        help="runaway guard on search() calls per example, in the shape of --max-sub-calls. "
+        "Searching is pure Python over a prebuilt index, so this should never bind",
+    )
+    # --- Structured (map -> reduce) arm over PROVIDED chunks ---
+    # The search arm let the root FIND things; this hands it the chunks and takes
+    # the REPL away, so "who picked the text" and "was the loop worth it" become two
+    # axes instead of one bundled treatment.
+    ap.add_argument(
+        "--chunks-source",
+        default=None,
+        choices=["bm25", "file"],
+        help="where --mode structured gets its chunks: `bm25` selects the top --chunks-k windows "
+        "in-harness (the cheap-selector control), `file` reads them from --chunks-file, written "
+        "offline by a larger model. Required by --mode structured and rejected by every other mode",
+    )
+    ap.add_argument(
+        "--chunks-file",
+        default=None,
+        help="JSONL of pre-selected chunks, one record per example id (see chunkset.py). The file's "
+        "CONTENT hash is stamped into config.yaml, so editing it invalidates a resume",
+    )
+    ap.add_argument(
+        "--chunks-k",
+        type=int,
+        default=DEFAULT_CHUNKS_K,
+        help="chunks per example for --chunks-source bm25, and the size the `file` source is held "
+        "to: a provided chunk set may not send more than --chunks-k x --search-window characters. "
+        "Without that cap the provided-chunk arm simply reads more than the arm it is compared "
+        "against, and the result measures payload size instead of selection quality",
+    )
+    ap.add_argument(
+        "--ids-file",
+        default=None,
+        help="evaluate only the example ids in this file (one per line; blank lines and #comments "
+        "ignored), so several arms can be scored on exactly the same rows. Applied BEFORE --limit, "
+        "which it is therefore mutually exclusive with",
+    )
+    # The three components of the revision-2 structured treatment, one flag each, in
+    # the shape of --search-ablate. Every default reproduces revision 2 exactly, so a
+    # run that passes none of them is byte-identical to the arm already on the NAS.
+    ap.add_argument(
+        "--structured-map-question",
+        default="task",
+        choices=list(STRUCTURED_MAP_QUESTIONS),
+        help="what the map step asks about each passage: `task` interpolates the benchmark's "
+        "task string verbatim (LOFT's is a page of citation instructions, which derails a 4B "
+        "sub-model reading one window), `query` strips it to the query inside. The reduce step "
+        "always sees the full task -- it carries the output contract the scorer matches on",
+    )
+    ap.add_argument(
+        "--structured-map-granularity",
+        default="passage",
+        choices=list(STRUCTURED_MAP_GRANULARITIES),
+        help="how many windows go into one map call: `passage` merges touching windows into "
+        "contiguous runs, `window` reads each provided window alone, `all` reads every window "
+        "in ONE call -- which is the payload the agentic root assembles, and the difference "
+        "that separates `splitting the text` from `the pipeline`",
+    )
+    ap.add_argument(
+        "--structured-answer-shape",
+        default="require",
+        choices=list(STRUCTURED_ANSWER_SHAPES),
+        help="whether the reduce step REQUIRES the benchmark's answer shape (a bare value on a "
+        "final line) or merely OFFERS it as a format. `offer` is revision 1's wording, restored "
+        "so the shape change can be scored apart from the clustering change it shipped with",
+    )
+    ap.add_argument(
+        "--structured-map-chars",
+        type=int,
+        default=0,
+        help="characters of each passage the map step actually SEES (0 = all of it, which is "
+        "every arm run so far). --search-window sets the retrieval unit AND the read size "
+        "together; this separates them, so a window-axis result can be told apart from an "
+        "exposure effect",
+    )
+    ap.add_argument(
+        "--reduce-finding-chars",
+        type=int,
+        default=DEFAULT_REDUCE_FINDING_CHARS,
+        help="characters of each map finding pasted into the reduce prompt. Left at 2000 a wide "
+        "window is truncated back at the reduce step, so the top of a window sweep would measure "
+        "this cap rather than the window; raise it with --search-window",
+    )
+    ap.add_argument(
+        "--chunks-query",
+        default="task",
+        choices=["task", "bare"],
+        help="what BM25 is asked for --chunks-source bm25. `bare` strips the benchmark's "
+        "instruction wrapper down to the query inside it; `task` sends the whole thing and "
+        "is the default ONLY because it is what every structured run on disk did. On LOFT "
+        "the wrapper costs recall@2 nearly everything -- nq 0.00 against 0.95 -- so pass "
+        "`bare` for any new measurement and read a `task` run as handicapped retrieval",
+    )
+    ap.add_argument(
+        "--answer-list-format",
+        default="auto",
+        choices=["auto", "off"],
+        help="`auto` shows the structured reduce step the BRACKETED list shape LOFT's "
+        "multi-value scorer (qampari, quest) actually parses; every other task is "
+        "untouched. `off` is the old behaviour, in which a reply naming all five gold "
+        "answers as prose extracted as one string and scored 0",
+    )
+    ap.add_argument(
+        "--structured-hops",
+        type=int,
+        default=1,
+        choices=[1, 2],
+        help="retrieval rounds. 1 = the shipped arm. 2 adds a round whose query is built from "
+        "what the FIRST round's map step found -- not from the retrieved text, which was measured "
+        "on this corpus to make recall worse. There is deliberately no 3",
+    )
     compression_target = ap.add_mutually_exclusive_group()
     compression_target.add_argument(
         "--target-compression-ratio",
@@ -665,6 +1038,16 @@ def main() -> None:
         default=DEFAULT_RESERVE_TOKENS,
         help="tokens held back from the sub model's window when auto-sizing, to cover the "
         "question and the decoded answer (the context cap alone budgets for neither)",
+    )
+    ap.add_argument(
+        "--subcall-min-tokens",
+        type=int,
+        default=DEFAULT_MIN_TOKENS,
+        help="smallest chunk auto-sizing may resolve to before it refuses the run. The 1024 "
+        "default dates from the era of a FIXED 1024-token press floor, below which pressing "
+        "was skipped and the chunk was pointless. press_min_tokens is now derived from the "
+        "memory budget, so a sub-1024 budget presses normally and the old floor only blocks "
+        "otherwise-valid small-budget grid cells. Lower it to run them",
     )
     ap.add_argument(
         "--sub-max-tokens",
@@ -735,6 +1118,104 @@ def main() -> None:
         ap.error(str(exc))
     if args.min_subcall_chars < 0:
         ap.error("--min-subcall-chars must be >= 0 (0 disables the floor)")
+    if args.search_k < 0:
+        ap.error("--search-k must be >= 0 (0 disables retrieval)")
+    args.search_ablate = tuple(x.strip() for x in str(args.search_ablate).split(",") if x.strip())
+    unknown_ablate = set(args.search_ablate) - SEARCH_ABLATABLE
+    if unknown_ablate:
+        ap.error(f"--search-ablate: unknown {sorted(unknown_ablate)}; choose from {sorted(SEARCH_ABLATABLE)}")
+    if args.search_ablate and not args.search_k:
+        ap.error("--search-ablate needs --search-k > 0; without the tool there is nothing to ablate")
+    if args.search_k and not 0 <= args.search_overlap < args.search_window:
+        ap.error(
+            f"--search-overlap ({args.search_overlap}) must satisfy 0 <= overlap < "
+            f"--search-window ({args.search_window})"
+        )
+    if args.chunks_k < 1:
+        ap.error("--chunks-k must be >= 1")
+    if args.mode == "structured":
+        if args.chunks_source is None:
+            ap.error("--mode structured requires --chunks-source {bm25,file}")
+        if args.search_k:
+            # search() is a REPL primitive and the structured arm has no REPL, so the
+            # flag would change nothing while still stamping `bm25k5` into the run
+            # directory -- naming an agentic retrieval depth the run never had.
+            ap.error("--mode structured has no REPL for search() to live in; use --chunks-k, not --search-k")
+    elif args.mode == "rlm" and args.chunks_source is not None:
+        # A FROZEN chunk set read by the AGENTIC root: search() returns the same
+        # windows for every query, so what varies between two such runs is only which
+        # windows were chosen. `bm25` is not a duplicate of --search-k here -- an
+        # adaptive search and a frozen top-k behave very differently in a loop whose
+        # main move is to rephrase and search again (measured: 1.5 search calls per
+        # example adaptive, 17 frozen) -- and it is the only fair control for a
+        # `file` arm, because both sides then pay that cost equally. It also reads
+        # exactly the windows --mode structured --chunks-source bm25 reads, so
+        # file-vs-bm25 means the same thing on both pipelines.
+        if not args.search_k:
+            ap.error(
+                "--mode rlm --chunks-source file delivers the chunks through search(), which is "
+                "only bound with --search-k > 0. Use the same --search-k as the arm you compare against"
+            )
+    elif args.chunks_source is not None:
+        ap.error(f"--chunks-source is only meaningful with --mode structured or --mode rlm, " f"not --mode {args.mode}")
+    if args.mode != "structured" and (
+        args.structured_map_question != "task"
+        or args.structured_map_granularity != "passage"
+        or args.structured_answer_shape != "require"
+        or args.structured_map_chars
+        or args.reduce_finding_chars != DEFAULT_REDUCE_FINDING_CHARS
+        or args.structured_hops != 1
+    ):
+        # They change the map and reduce steps, which only exist in the structured
+        # pipeline. Silently ignoring one would stamp an axis into config.yaml that
+        # the run never had.
+        ap.error(f"the --structured-* axes only apply to --mode structured, not --mode {args.mode}")
+    if args.chunks_source == "file" and not args.chunks_file:
+        ap.error("--chunks-source file requires --chunks-file")
+    if args.chunks_source == "bm25" and args.chunks_file:
+        ap.error("--chunks-file is only read by --chunks-source file; bm25 selects in-harness")
+    if args.ids_file and args.limit is not None:
+        # --ids-file is applied BEFORE --limit, so combining them means "the first N
+        # of the named rows" -- which reads like a cap but silently changes which
+        # experiment ran. Make the caller pick one.
+        ap.error("--ids-file and --limit both choose which rows run; pass only one")
+
+    # A retrieval payload is k windows wide, and _cap_subcall truncates whatever
+    # exceeds --max-subcall-chars. At the 2000-char default window that caps the
+    # REAL depth near k=16, so a k=20 and a k=50 cell would both quietly read ~16
+    # windows and the top of the axis would be several cells measuring the same
+    # thing. Refuse up front, the way --fixed-chunk refuses a cell the GPU would
+    # shrink, rather than producing a plausible number for a depth never run.
+    if args.search_k and not auto_chunk:
+        needed = args.search_k * args.search_window
+        room = args.max_subcall_chars - args.max_subcall_chars // 4
+        if needed > room:
+            ap.error(
+                f"--search-k {args.search_k} x --search-window {args.search_window} = {needed} chars "
+                f"of payload, but --max-subcall-chars {args.max_subcall_chars} leaves only {room} for "
+                f"it (the question reserves a quarter). The run would silently read about "
+                f"{room // args.search_window} windows instead of {args.search_k}. Raise "
+                f"--max-subcall-chars to at least {needed * 4 // 3 + 1}."
+            )
+    # The same refusal for the structured arm, which reaches none of the above:
+    # --mode structured rejects --search-k, so args.search_k is 0 and the guard never
+    # fires there. At --structured-map-granularity all a k=10 x 8000-char cell hands
+    # _cap_subcall 80,000 characters and reads about 24,000 of them, reporting a depth
+    # it never ran. Other granularities send one cluster per call, so the binding size
+    # is one window -- but a window wider than the cap is the same silent shrink.
+    if args.mode == "structured" and not auto_chunk:
+        whole_payload = args.structured_map_granularity == "all"
+        per_call = args.chunks_k * args.search_window if whole_payload else args.search_window
+        room = args.max_subcall_chars - args.max_subcall_chars // 4
+        if per_call > room:
+            unit = "k x window" if whole_payload else "one window"
+            ap.error(
+                f"a map call would carry {per_call} chars ({unit} at --structured-map-granularity "
+                f"{args.structured_map_granularity}), but --max-subcall-chars {args.max_subcall_chars} "
+                f"leaves only {room} for it (the question reserves a quarter). The run would silently "
+                f"read about {room} chars per call. Raise --max-subcall-chars to at least "
+                f"{per_call * 4 // 3 + 1}."
+            )
     # A floor above the ceiling is silently self-cancelling: _expand_subcall widens
     # to the floor and _cap_subcall immediately truncates back to the cap, so the
     # run looks configured for big reads and produces the size it always did.
@@ -743,6 +1224,91 @@ def main() -> None:
             f"--min-subcall-chars ({args.min_subcall_chars}) exceeds --max-subcall-chars "
             f"({args.max_subcall_chars}); the floor would be truncated away by the cap"
         )
+
+    # Hash the SORTED SET, not the file: two id files listing the same rows in a
+    # different order, or with a duplicate, describe the same experiment and must
+    # resume each other.
+    example_ids = None
+    args.ids_sha256 = None
+    if args.ids_file:
+        lines = Path(args.ids_file).read_text().splitlines()
+        wanted = [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
+        if not wanted:
+            ap.error(f"--ids-file {args.ids_file} lists no ids")
+        example_ids = set(wanted)
+        args.ids_sha256 = hashlib.sha256("\n".join(sorted(example_ids)).encode("utf-8")).hexdigest()
+
+    chunk_set = None
+    args.chunks_file_sha256 = None
+    if args.chunks_source == "file":
+        # Loaded and validated before a single example runs, for the same reason
+        # the data pack is checked before the grid loads a model: a malformed chunk
+        # file discovered on example 40 has already spent the run.
+        try:
+            chunk_set = ChunkSet.from_file(
+                args.chunks_file,
+                chunk_chars=args.search_window,
+                overlap=args.search_overlap,
+                max_payload_chars=args.chunks_k * args.search_window,
+            )
+        except ChunkSetError as exc:
+            ap.error(str(exc))
+        args.chunks_file_sha256 = file_digest(Path(args.chunks_file))
+
+    def chunks_for(example: dict) -> list:
+        """The chunks this example is read through: the structured arm's map step, or
+        what `search()` returns to an agentic root handed a chunk set.
+
+        Both sources return `Hit`s on the same window grid, so the two differ in
+        WHICH windows were chosen and in nothing else -- which is the whole point
+        of having a cheap-selector control at all.
+        """
+        if chunk_set is not None:
+            return chunk_set.hits_for(example["id"], example["context"])
+        index = retrieval.get_index(example["context"], args.search_window, args.search_overlap)
+        return index.search(chunks_query(example["question"]), args.chunks_k)
+
+    def chunks_query(question: str) -> str:
+        """What BM25 is actually asked. LOFT's `task` is not a question.
+
+        `bare_query` was written for the MAP step, where LOFT's page of citation and
+        formatting instructions derails a 4B reading one passage. The retriever was
+        handed the same wrapper and nobody applied the same reasoning -- so the query
+        BM25 scored on was dominated by "documents", "answer", "print", "title",
+        "format", "list", terms that occur in every window of the corpus.
+
+        Measured offline over 55 rows per subset, recall of the gold answer string:
+
+            task           r@2          r@5          r@10
+            nq         0.00 -> 0.95  0.65 -> 0.96  0.80 -> 0.96
+            hotpotqa   0.05 -> 0.71  0.64 -> 0.89  0.82 -> 0.91
+            musique    0.11 -> 0.38  0.29 -> 0.58  0.53 -> 0.78
+            qampari    0.00 -> 0.53* 0.53 -> 0.98  0.95 -> 1.00
+
+        At k=2 it is total: the top two windows never contained the answer on nq or
+        qampari. That is not a property of BM25 at depth 2, it is the boilerplate
+        outranking the question.
+
+        It also confounds the campaign's headline. The agentic `--search-k` arm lets
+        the MODEL write its query and gets a clean one; the structured arm did not,
+        so "structure loses to the BM25 agentic arm" was partly measuring which of
+        them was allowed to ask a sensible question.
+
+        `bare_query` is conservative -- a task with no `query:` line comes back
+        untouched -- so benchmarks whose task IS the question are unaffected.
+        """
+        return bare_query(question) if args.chunks_query == "bare" else question
+
+    def retrieve_for(example: dict):
+        """BM25 over this example's window grid, for `--structured-hops 2`.
+
+        Always BM25, even under `--chunks-source file`: a chunk file names round 1
+        only, and a selector that never saw the first round's findings cannot have
+        chosen round 2. Making the follow-up the pipeline's own keeps `file` and
+        `bm25` differing in exactly the windows they start from.
+        """
+        index = retrieval.get_index(example["context"], args.search_window, args.search_overlap)
+        return lambda query, k: index.search(query, k)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -787,6 +1353,7 @@ def main() -> None:
             target_compression_ratio=args.target_compression_ratio,
             cli_max_context_tokens=args.sub_max_context_tokens,
             reserve_tokens=args.subcall_reserve_tokens,
+            min_tokens=args.subcall_min_tokens,
             char_overshoot=(FIXED_CHUNK_CHAR_OVERSHOOT if args.fixed_chunk else 1.0),
             require_budget_binding=args.fixed_chunk,
             # In fixed mode this value is the OUTPUT of planning (N), not an
@@ -858,6 +1425,24 @@ def main() -> None:
         min_sub_calls_before_abstain=args.min_sub_calls_before_abstain,
         max_unproductive_steps=args.max_unproductive_steps,
         max_error_steps=args.max_error_steps,
+        search_k=args.search_k,
+        search_window_chars=args.search_window,
+        search_overlap_chars=args.search_overlap,
+        max_search_calls=args.max_search_calls,
+        search_ablate=args.search_ablate,
+        structured_map_question=args.structured_map_question,
+        structured_map_granularity=args.structured_map_granularity,
+        structured_answer_shape=args.structured_answer_shape,
+        structured_map_chars=args.structured_map_chars,
+        reduce_finding_chars=args.reduce_finding_chars,
+        structured_hops=args.structured_hops,
+        structured_answer_list=(
+            ""
+            if args.answer_list_format == "off"
+            else answer_list_example(
+                canonical_dataset_name(args.dataset or args.legacy_dataset), args.data_dir, args.mode
+            )
+        ),
     )
 
     for mode in modes:
@@ -878,6 +1463,7 @@ def main() -> None:
             # None and kvzip_backend derives it from the memory budget, so the
             # effective value only exists on `sub`, not on `args`.
             getattr(sub, "press_min_tokens", None),
+            ",".join(chunk_set.selectors) if chunk_set is not None else None,
         )
         if done:
             # The run-dir name cannot carry every result-affecting knob, so a resume
@@ -924,6 +1510,7 @@ def main() -> None:
                 args.split,
                 sample_fraction=args.sample_fraction,
                 sample_seed=args.sample_seed,
+                ids=example_ids,
             ):
                 if ex["id"] in done:
                     continue
@@ -965,7 +1552,21 @@ def main() -> None:
                         )
                         record.update(pred=pred, steps=1, finished=True, end_reason="")
                     else:
-                        r = rlm.run(ex["context"], question, answer_format=answer_format)
+                        if mode == "structured":
+                            r = rlm.run_structured(
+                                ex["context"],
+                                question,
+                                chunks_for(ex),
+                                answer_format=answer_format,
+                                retrieve=retrieve_for(ex) if args.structured_hops > 1 else None,
+                            )
+                        else:
+                            r = rlm.run(
+                                ex["context"],
+                                question,
+                                answer_format=answer_format,
+                                chunks=chunks_for(ex) if args.chunks_source else None,
+                            )
                         if hasattr(sub, "pop_example_stats"):
                             r.metrics["sub_kv"] = sub.pop_example_stats() or None
                         record.update(
@@ -1007,6 +1608,26 @@ def main() -> None:
                 # try: vanilla_answer fills the dict before re-raising, and the
                 # errored record is exactly the one a triage pass needs it on.
                 record.update(vstats)
+                # Check for answer strings in returned windows after the example;
+                # gold answers never reach the model. This loose diagnostic does
+                # not establish whether retrieval supplied sufficient evidence.
+                spans = (
+                    (record.get("metrics") or {}).pop("search_retrieved_spans", None)
+                    if mode in ("rlm", "structured")
+                    else None
+                )
+                if spans:
+                    retrieved = "".join(ex["context"][start:end] for start, end in spans)
+                    record["gold_in_retrieved"] = is_correct(retrieved, ex["answers"])
+                    # The same loose test, applied one window at a time. Raising k adds
+                    # SIGNAL and DISTRACTORS at once, so an undecomposed k-curve cannot
+                    # say which drives its turnover; these two counts are what let the
+                    # sweep separate them afterwards. Loose in exactly the way
+                    # gold_in_retrieved is (c448c97): a matching string does not
+                    # establish the window carries sufficient evidence.
+                    gold_windows = sum(1 for start, end in spans if is_correct(ex["context"][start:end], ex["answers"]))
+                    record["gold_windows_in_chunks"] = gold_windows
+                    record["nongold_windows_in_chunks"] = len(spans) - gold_windows
                 record["correct"] = is_correct(record.get("pred"), ex["answers"])
                 record["latency_s"] = round(time.time() - t0, 2)
                 record["tokens"] = root.usage.total_tokens + sub.usage.total_tokens - tok0
@@ -1045,6 +1666,7 @@ def build_run_config(
     scratchpad: Scratchpad | None,
     subcall_sizing: Any,
     resolved_press_min_tokens: int | None = None,
+    chunk_selector: str | None = None,
 ) -> dict:
     """The run's full settings, as written to config.yaml.
 
@@ -1065,6 +1687,11 @@ def build_run_config(
         "base_url": args.base_url,
         "limit": args.limit,
         "split": args.split,
+        "sample_fraction": args.sample_fraction,
+        # Only meaningful alongside a fraction -- recorded unconditionally, two
+        # unsampled runs that merely passed different --sample-seed values would
+        # refuse to resume each other over a knob neither of them used.
+        "sample_seed": args.sample_seed if args.sample_fraction is not None else None,
         "max_steps": args.max_steps,
         "vanilla_char_limit": args.vanilla_char_limit,
         "vanilla_max_prompt_tokens": args.vanilla_max_prompt_tokens,
@@ -1102,6 +1729,49 @@ def build_run_config(
         # left at its None default, kvzip_backend derives this from the memory
         # budget, so args would serialise None while the run used a real floor.
         "press_min_tokens": resolved_press_min_tokens if args.sub_backend == "kvzip" else None,
+        "search_k": args.search_k,
+        "search_window_chars": args.search_window,
+        "search_overlap_chars": args.search_overlap,
+        "max_search_calls": args.max_search_calls,
+        "search_ablate": ",".join(args.search_ablate),
+        # The structured arm. `selector` is provenance, not a knob: it names what
+        # chose the chunks, which is the one thing about this arm that cannot be
+        # reconstructed from the flags.
+        "chunks_source": args.chunks_source,
+        "chunks_k": args.chunks_k if args.chunks_source else None,
+        "chunks_file": args.chunks_file,
+        "chunks_file_sha256": getattr(args, "chunks_file_sha256", None),
+        # The three components of the revision-2 treatment, recorded whatever their
+        # value: `structured_revision` names the CODE generation, and these name the
+        # configuration it ran in. A run that leaves them alone is revision 2 exactly.
+        **(
+            {
+                "structured_map_question": args.structured_map_question,
+                "structured_map_granularity": args.structured_map_granularity,
+                "structured_answer_shape": args.structured_answer_shape,
+                # getattr, like chunks_file_sha256 above: build_run_config is called
+                # from tests with hand-built namespaces, and a knob added later must
+                # not make an older caller raise instead of recording its default.
+                "structured_map_chars": getattr(args, "structured_map_chars", 0),
+                "reduce_finding_chars": getattr(args, "reduce_finding_chars", DEFAULT_REDUCE_FINDING_CHARS),
+                "structured_hops": getattr(args, "structured_hops", 1),
+                "answer_list_format": getattr(args, "answer_list_format", "auto"),
+                "chunks_query": getattr(args, "chunks_query", "task"),
+            }
+            if mode == "structured"
+            else {}
+        ),
+        "chunks_selector": chunk_selector,
+        "ids_file": args.ids_file,
+        "ids_sha256": getattr(args, "ids_sha256", None),
+        # Only zero-overlap RLM retrieval changed; preserve other runs' configs.
+        **({"search_index_revision": 2} if mode == "rlm" and args.search_k > 0 and args.search_overlap == 0 else {}),
+        **({"structured_revision": 2} if mode == "structured" else {}),
+        # Which semantics produced document_coverage_fraction. Before this, spans
+        # were derived AFTER the dense fold set chunk=None, so coverage was
+        # structurally 0.0 on every --sub-backend http run; it is now resolved
+        # before the fold. A coverage number must not be compared across that line.
+        "coverage_attribution": "spans_v2",
     }
 
 

@@ -1,0 +1,367 @@
+# SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""The `search` REPL primitive and the coverage attribution around it."""
+
+import pytest
+
+from evaluation.rlm import retrieval
+from evaluation.rlm.retrieval import Hit
+from evaluation.rlm.rlm import HIT_SEPARATOR, READ_STRATEGY_DEFAULT, RLM, SEARCH_TERMS_FIND, SUB_FIT_FAILURE_PREFIX
+
+DOCUMENT = (
+    ("filler text about nothing in particular " * 40)
+    + "ZEBRAQUUX the Riverside round was won by Bignotti Cotter Racing in 1983. "
+    + ("more filler text about other matters " * 40)
+    + "PLUGHWOMBAT the Amity summer attacks were reported by the county sheriff. "
+    + ("still more unrelated padding here " * 40)
+)
+
+
+class FakeClient:
+    """A plain chat backend -- no `chat_split`, like the real LLMClient."""
+
+    def __init__(self, reply="sub answer"):
+        self.reply = reply
+        self.calls = []
+
+    def chat(self, messages, **kw):
+        self.calls.append(messages)
+        return self.reply
+
+
+class FakeSplitClient(FakeClient):
+    """A split-capable backend, like KVzipSubClient."""
+
+    def __init__(self, reply="sub answer"):
+        super().__init__(reply)
+        self.split_calls = []
+
+    def chat_split(self, question, context, system=None, **kw):
+        self.split_calls.append((question, context))
+        return self.reply
+
+
+@pytest.fixture(autouse=True)
+def _clean_cache():
+    retrieval.reset_cache()
+    yield
+    retrieval.reset_cache()
+
+
+def build(sub=None, provided_chunks=None, **kw):
+    """An RLM plus the pieces _make_env needs, without running the loop."""
+    root = FakeClient()
+    rlm = RLM(root_client=root, sub_client=sub or FakeClient(), search_k=kw.pop("search_k", 3), **kw)
+    metrics = {
+        "steps": 0,
+        "sub_calls": 0,
+        "sub_call_tokens": 0,
+        "sub_cache_hits": 0,
+        "sub_fit_failures": 0,
+        "sub_slice_unlocatable_calls": 0,
+        "document_coverage_fraction": 0.0,
+        "evictions": 0,
+        "overflow_evictions": 0,
+    }
+    env = rlm._make_env(DOCUMENT, metrics, {}, [], provided_chunks=provided_chunks)
+    return rlm, env, metrics
+
+
+class TestSearchBinding:
+    def test_search_is_absent_when_retrieval_is_off(self):
+        _, env, _ = build(search_k=0)
+        assert "search" not in env
+
+    def test_search_is_bound_when_retrieval_is_on(self):
+        _, env, _ = build(search_k=3)
+        assert callable(env["search"])
+
+    def test_hits_are_verbatim_slices_of_the_document(self):
+        _, env, _ = build()
+        for hit in env["search"]("ZEBRAQUUX Riverside Bignotti"):
+            assert hit.text == DOCUMENT[hit.start : hit.end]
+
+    def test_the_model_cannot_raise_k_above_the_configured_axis(self):
+        """k is the grid's swept axis. The root copies the worked example verbatim,
+        so an example showing `k=100` must not be able to override the cell."""
+        _, env, metrics = build(search_k=2)
+        assert len(env["search"]("filler text", k=100)) == 2
+        assert metrics["search_k_clamped_calls"] == 1
+
+    def test_the_model_may_ask_for_fewer(self):
+        _, env, metrics = build(search_k=5)
+        assert len(env["search"]("filler text", k=1)) == 1
+        assert metrics.get("search_k_clamped_calls", 0) == 0
+
+    def test_search_calls_are_counted_and_capped(self):
+        _, env, metrics = build(search_k=2, max_search_calls=2)
+        env["search"]("filler")
+        env["search"]("filler")
+        assert env["search"]("filler") == []  # the guard, returning no hits
+        assert metrics["search_calls"] == 2
+
+
+class TestCoverageAttribution:
+    @pytest.mark.parametrize("client_type", [FakeClient, FakeSplitClient])
+    def test_coverage_accumulates_the_union_across_reads(self, client_type):
+        _, env, metrics = build(sub=client_type())
+        # Hit offsets avoid ambiguity from the document's repeated filler text.
+        for start, end, total in [(0, 100, 100), (50, 150, 150), (150, 200, 200), (300, 400, 300), (0, 100, 300)]:
+            hit = retrieval.Hit(rank=1, start=start, end=end, score=1.0, text=DOCUMENT[start:end])
+            env["llm_query"]("read", [hit])
+            assert metrics["document_coverage_fraction"] == pytest.approx(total / len(DOCUMENT))
+        assert metrics["sub_cache_hits"] == 1
+
+    def test_a_hit_list_payload_is_attributed_to_its_spans(self):
+        _, env, metrics = build(sub=FakeSplitClient())
+        hits = env["search"]("ZEBRAQUUX Riverside")
+        env["llm_query"]("who won?", hits)
+        expected = sum(e - s for s, e in _merged(hits)) / len(DOCUMENT)
+        assert metrics["document_coverage_fraction"] == pytest.approx(expected)
+        assert metrics["sub_slice_unlocatable_calls"] == 0
+
+    def test_the_dense_fold_path_attributes_coverage_too(self):
+        """The regression guard for the structural zero: LLMClient has no
+        chat_split, so the slice is folded into the question and `chunk` becomes
+        None. Deriving the span after that fold made document_coverage_fraction
+        0.0 on every --sub-backend http run ever recorded."""
+        _, env, metrics = build(sub=FakeClient())
+        hits = env["search"]("ZEBRAQUUX Riverside")
+        env["llm_query"]("who won?", hits)
+        assert metrics["document_coverage_fraction"] > 0
+
+    def test_a_plain_string_slice_still_attributes_on_the_fold_path(self):
+        _, env, metrics = build(sub=FakeClient())
+        env["llm_query"]("who won?", DOCUMENT[1000:3000])
+        assert metrics["document_coverage_fraction"] == pytest.approx(2000 / len(DOCUMENT))
+
+    def test_overlapping_hits_are_merged_rather_than_double_counted(self):
+        _, env, metrics = build(sub=FakeSplitClient(), search_k=5)
+        hits = env["search"]("filler text about nothing")
+        env["llm_query"]("what?", hits)
+        naive = sum(h.end - h.start for h in hits) / len(DOCUMENT)
+        assert metrics["document_coverage_fraction"] <= naive + 1e-9
+
+    def test_coverage_is_not_recorded_when_the_sub_model_refuses(self):
+        sub = FakeSplitClient(reply=f"{SUB_FIT_FAILURE_PREFIX} slice too large")
+        _, env, metrics = build(sub=sub)
+        hits = env["search"]("ZEBRAQUUX Riverside")
+        env["llm_query"]("who won?", hits)
+        assert metrics["document_coverage_fraction"] == 0.0
+        assert metrics["sub_fit_failures"] == 1
+
+    def test_truncation_clips_the_attributed_span(self):
+        _, env, metrics = build(sub=FakeSplitClient(), max_subcall_chars=900)
+        hits = env["search"]("ZEBRAQUUX Riverside")
+        env["llm_query"]("who won?", hits)
+        covered = metrics["document_coverage_fraction"] * len(DOCUMENT)
+        assert 0 < covered <= 900
+        assert metrics["sub_payload_truncated_calls"] == 1
+
+    def test_an_empty_hit_list_sends_the_question_alone(self):
+        sub = FakeSplitClient()
+        _, env, _ = build(sub=sub)
+        env["llm_query"]("who won?", [])
+        assert sub.calls and "[]" not in sub.calls[0][-1]["content"]
+
+    def test_a_hand_joined_payload_records_no_coverage(self):
+        """The residual hole, documented rather than hidden: a payload the MODEL
+        assembles cannot be located in the document."""
+        _, env, metrics = build(sub=FakeSplitClient())
+        hits = env["search"]("ZEBRAQUUX Riverside")
+        env["llm_query"]("who won?", "\n".join(h.text for h in hits))
+        assert metrics["document_coverage_fraction"] == 0.0
+
+    def test_hits_read_counts_what_was_handed_to_the_sub_model(self):
+        _, env, metrics = build(sub=FakeSplitClient(), search_k=3)
+        hits = env["search"]("filler text")
+        env["llm_query"]("what?", hits)
+        assert metrics["search_hits_read"] == len(hits)
+
+    def test_retrieved_spans_are_recorded_for_the_gold_presence_diagnostic(self):
+        _, env, metrics = build()
+        env["search"]("ZEBRAQUUX Riverside")
+        assert metrics["search_retrieved_spans"]
+        assert all(0 <= s < e <= len(DOCUMENT) for s, e in metrics["search_retrieved_spans"])
+
+
+class TestFloorInteraction:
+    def test_the_floor_widens_hit_spans_and_they_stay_verbatim(self):
+        # One hit is `search_window` wide (2000); the floor must grow it past that
+        # without saturating this deliberately small document.
+        rlm, env, metrics = build(sub=FakeSplitClient(), search_k=1, min_subcall_chars=3000, max_subcall_chars=60000)
+        hits = env["search"]("ZEBRAQUUX Riverside")
+        env["llm_query"]("who won?", hits)
+        covered = metrics["document_coverage_fraction"] * len(DOCUMENT)
+        assert 3000 <= covered < len(DOCUMENT)
+        assert metrics["sub_slice_unlocatable_calls"] == 0
+
+    def test_a_hit_payload_is_never_counted_unlocatable(self):
+        _, env, metrics = build(sub=FakeSplitClient(), search_k=1, min_subcall_chars=3000, max_subcall_chars=60000)
+        env["llm_query"]("who won?", env["search"]("ZEBRAQUUX"))
+        assert metrics["sub_slice_unlocatable_calls"] == 0
+
+
+class TestPromptWiring:
+    def test_the_search_prompt_replaces_the_find_demonstration(self):
+        rlm, _, _ = build(search_k=4)
+        slots = rlm._read_instructions(False)
+        assert "hits = search(" in slots["worked_session"]
+        assert 'context.find("invoice total")' not in slots["worked_session"]
+        assert "4 best-matching windows" in slots["search_terms"]
+
+    def test_retrieval_off_keeps_the_find_demonstration(self):
+        rlm, _, _ = build(search_k=0)
+        slots = rlm._read_instructions(False)
+        assert 'context.find("invoice total")' in slots["worked_session"]
+        assert "search(" not in slots["search_terms"]
+
+    def test_the_search_help_does_not_promise_cheap_large_slices_on_http(self):
+        """That claim is only true when the sub backend compresses its context."""
+        rlm, _, _ = build(search_k=4)
+        assert "costs barely more" not in rlm._read_instructions(False)["llm_query_help"]
+
+
+def _merged(hits):
+    spans = sorted((h.start, h.end) for h in hits)
+    out = []
+    for start, end in spans:
+        if out and start <= out[-1][1]:
+            out[-1] = (out[-1][0], max(out[-1][1], end))
+        else:
+            out.append((start, end))
+    return out
+
+
+def test_the_separator_is_what_clipping_charges_for():
+    assert HIT_SEPARATOR
+
+
+class TestAblation:
+    """--search-ablate takes the four-change bundle apart, one part at a time."""
+
+    def test_the_full_treatment_teaches_search_everywhere(self):
+        rlm, _, _ = build(search_k=5)
+        slots = rlm._read_instructions(False)
+        assert "search(" in slots["search_terms"]
+        assert "hits = search(" in slots["worked_session"]
+
+    def test_ablating_locate_reverts_the_prose_but_keeps_the_demo(self):
+        rlm, _, _ = build(search_k=5, search_ablate=("locate",))
+        slots = rlm._read_instructions(False)
+        assert slots["search_terms"] == SEARCH_TERMS_FIND
+        assert slots["read_strategy"] == READ_STRATEGY_DEFAULT
+        assert "hits = search(" in slots["worked_session"]
+
+    def test_ablating_example_reverts_the_demo_but_keeps_the_prose(self):
+        rlm, _, _ = build(search_k=5, search_ablate=("example",))
+        slots = rlm._read_instructions(False)
+        assert 'context.find("invoice total")' in slots["worked_session"]
+        assert "search(" in slots["search_terms"]
+
+    def test_the_tool_is_always_described_even_when_both_are_ablated(self):
+        """Binding a tool whose help is withheld tests nothing anyone would ship."""
+        rlm, env, _ = build(search_k=5, search_ablate=("locate", "example"))
+        assert "search" in env
+        assert "search(query: str)" in rlm._read_instructions(False)["llm_query_help"]
+
+    def test_ablating_gate_lets_an_unsearched_abstention_through(self):
+        with_gate, _, _ = build(search_k=5)
+        without, _, _ = build(search_k=5, search_ablate=("gate",))
+        assert "gate" not in with_gate.search_ablate
+        assert "gate" in without.search_ablate
+
+    def test_an_unknown_component_is_refused(self):
+        with pytest.raises(ValueError):
+            build(search_k=5, search_ablate=("typo",))
+
+    def test_ablation_is_empty_by_default(self):
+        rlm, _, _ = build(search_k=5)
+        assert rlm.search_ablate == frozenset()
+
+
+# Windows a selector chose offline, on the same grid BM25 indexes. Neither contains
+# a term any test query uses, so a BM25 arm could not return them by accident.
+PROVIDED = [
+    Hit(rank=1, start=100, end=300, score=0.0, text=DOCUMENT[100:300]),
+    Hit(rank=2, start=900, end=1200, score=0.0, text=DOCUMENT[900:1200]),
+    Hit(rank=3, start=2000, end=2400, score=0.0, text=DOCUMENT[2000:2400]),
+]
+
+
+def _system_prompt(chunks=None, **kw):
+    """The system message the root actually receives, for a one-turn run."""
+    root = FakeClient(reply="I will consider it.")  # no code block: the turn ends the run
+    rlm = RLM(root_client=root, sub_client=FakeClient(), max_steps=1, search_k=5, **kw)
+    rlm.run(DOCUMENT, "what happened at Riverside?", chunks=chunks)
+    return root.calls[0][0]["content"]
+
+
+class TestProvidedChunksReachTheAgenticRoot:
+    """Chunks chosen outside the run, delivered through `search` so the REPL, the
+    protocol and the system prompt are all unchanged and the ONLY difference from
+    the BM25 arm is which windows come back."""
+
+    def test_the_system_prompt_is_byte_identical_to_the_bm25_arm(self):
+        # The whole reason for delivering through search() rather than a new REPL
+        # name: a prompt difference would re-confound the comparison this arm exists
+        # to make clean.
+        assert _system_prompt(chunks=None) == _system_prompt(chunks=PROVIDED)
+
+    def test_the_same_windows_come_back_whatever_the_query(self):
+        _, env, _ = build(provided_chunks=PROVIDED, search_k=5)
+        first = env["search"]("ZEBRAQUUX Riverside Bignotti")
+        second = env["search"]("PLUGHWOMBAT Amity sheriff")
+        assert [(h.start, h.end) for h in first] == [(100, 300), (900, 1200), (2000, 2400)]
+        assert first == second
+
+    def test_a_query_bm25_could_not_answer_still_returns_the_set(self):
+        # BM25 returns nothing for a query of unknown terms; the fixed retriever is
+        # not consulting the index at all.
+        _, env, _ = build(provided_chunks=PROVIDED, search_k=5)
+        assert len(env["search"]("qqqqzzzz vvvvwwww")) == 3
+
+    def test_no_index_is_ever_built(self):
+        _, env, _ = build(provided_chunks=PROVIDED, search_k=5)
+        env["search"]("anything at all")
+        assert retrieval._CACHED_INDEX is None
+
+    def test_k_still_clamps_downward_only(self):
+        _, env, metrics = build(provided_chunks=PROVIDED, search_k=2)
+        assert len(env["search"]("q")) == 2  # the axis binds, not the file's length
+        assert len(env["search"]("q", k=1)) == 1
+        assert len(env["search"]("q", k=99)) == 2
+        assert metrics["search_k_clamped_calls"] == 1
+
+    def test_the_counters_mean_what_they_mean_on_the_bm25_arm(self):
+        _, env, metrics = build(provided_chunks=PROVIDED, search_k=5)
+        env["search"]("q")
+        env["search"]("q")
+        assert metrics["search_calls"] == 2
+        assert metrics["search_hits_returned"] == 6
+
+    def test_the_spans_are_recorded_for_the_gold_presence_diagnostic(self):
+        _, env, metrics = build(provided_chunks=PROVIDED, search_k=5)
+        env["search"]("q")
+        assert metrics["search_retrieved_spans"] == [(100, 300), (900, 1200), (2000, 2400)]
+
+    def test_the_arm_is_labelled_so_it_cannot_be_read_as_bm25(self):
+        _, _, metrics = build(provided_chunks=PROVIDED, search_k=5)
+        assert metrics["chunks_provided"] == 3
+        assert metrics["search_fixed"] is True
+
+    def test_a_bm25_arm_carries_neither_label(self):
+        _, _, metrics = build(search_k=5)
+        assert "chunks_provided" not in metrics
+        assert "search_fixed" not in metrics
+
+    def test_the_runaway_guard_still_applies(self):
+        _, env, _ = build(provided_chunks=PROVIDED, search_k=5, max_search_calls=2)
+        env["search"]("q")
+        env["search"]("q")
+        assert env["search"]("q") == []
+
+    def test_hits_stay_verbatim_slices_so_coverage_can_be_attributed(self):
+        _, env, _ = build(provided_chunks=PROVIDED, search_k=5)
+        for hit in env["search"]("q"):
+            assert hit.text == DOCUMENT[hit.start : hit.end]

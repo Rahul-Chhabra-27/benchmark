@@ -13,6 +13,7 @@ import os
 import random
 import string
 from pathlib import Path
+from typing import Collection
 
 from evaluation.benchmarks.loaders import iter_benchmark_examples, load_benchmark_dataset
 from evaluation.benchmarks.registry import DATASET_REGISTRY, RULER_32K_TASKS
@@ -134,12 +135,24 @@ def load_examples(
     split: str | None = None,
     sample_fraction: float | None = None,
     sample_seed: int = 42,
+    ids: Collection[str] | None = None,
 ):
-    """Yield backend-neutral examples from a synthetic or shared benchmark."""
+    """Yield backend-neutral examples from a synthetic or shared benchmark.
+
+    `ids` restricts the run to a named set of examples, which is what lets several
+    arms be scored on exactly the same rows. It is applied BEFORE `limit`: taking
+    the first N rows and then filtering would yield however many of the wanted ids
+    happened to fall inside that prefix, which is a different (and silently
+    smaller) experiment. The two are mutually exclusive at the CLI for that reason.
+    """
+    if ids is not None:
+        ids = frozenset(ids)
+        if not ids:
+            raise ValueError("ids was given but empty; nothing would be evaluated")
     if dataset_name in SYNTHETIC_TASKS:
         if split and split != "all":
             raise ValueError(f"{dataset_name} is generated, not split into dev/test; drop --split")
-        yield from SYNTHETIC_TASKS[dataset_name](limit)
+        yield from _restrict(SYNTHETIC_TASKS[dataset_name](limit if ids is None else None), ids, limit)
         return
 
     canonical_name = canonical_dataset_name(dataset_name)
@@ -155,6 +168,40 @@ def load_examples(
         task=task,
         dataset_registry=DATASET_REGISTRY,
     )
-    yield from iter_benchmark_examples(
-        frame, canonical_name, task, limit, split, sample_fraction=sample_fraction, sample_seed=sample_seed
+    yield from _restrict(
+        iter_benchmark_examples(
+            frame,
+            canonical_name,
+            task,
+            limit if ids is None else None,
+            split,
+            sample_fraction=sample_fraction,
+            sample_seed=sample_seed,
+        ),
+        ids,
+        limit,
     )
+
+
+def _restrict(examples, ids: frozenset[str] | None, limit: int | None):
+    """Keep only `ids` (if given), then apply `limit`.
+
+    Refuses an id the dataset does not have rather than quietly evaluating fewer
+    rows than asked for: an id set built from one subset's checkpoint and pointed
+    at another produces a plausible run over whatever happened to overlap.
+    """
+    if ids is None:
+        yield from examples
+        return
+    # Materialised, not streamed: the completeness check has to fire BEFORE the
+    # first example is evaluated, or a mismatched id set is reported only after a
+    # full run has already been spent on the rows that did match. Only the MATCHING
+    # rows are held, and an id set is always a small explicit slice.
+    kept = [example for example in examples if example["id"] in ids]
+    missing = ids - {example["id"] for example in kept}
+    if missing:
+        raise ValueError(
+            f"{len(missing)} of {len(ids)} requested ids are not in this dataset/split, e.g. "
+            f"{sorted(missing)[:3]}. The id set and the run do not describe the same rows"
+        )
+    yield from (kept if limit is None else kept[:limit])

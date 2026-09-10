@@ -92,7 +92,10 @@ Two properties make a KVPress row and an RLM row commensurable:
   `average_retained_context_tokens` and RLM's `average_peak_context_tokens`. Both answer
   "how much context was live at once", which is what KV memory is proportional to.
 
-Two asymmetries are recorded rather than hidden, because ignoring either flatters RLM:
+Five asymmetries are recorded rather than hidden, because ignoring any of them flatters
+RLM. The two below are the original pair; abstentions, retrieval and provided chunks were
+added later and are documented in full in [`evaluation/rlm/README.md`](evaluation/rlm/README.md)
+-- which is the authoritative list, not this one:
 
 - **Errors.** An RLM example that dies on an API error is dropped from the score and counted
   in `runtime.errors`. KVPress runs locally and cannot fail this way, so scoring an outage as

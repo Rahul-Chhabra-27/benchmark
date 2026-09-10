@@ -37,6 +37,7 @@ from typing import Any, Optional
 
 from .client import Usage
 from .sizing import (
+    DEFAULT_MIN_TOKENS,
     DEFAULT_RESERVE_TOKENS,
     SubcallSizing,
     calibrate_chars_per_token,
@@ -238,6 +239,7 @@ class KVzipSubClient:
         target_compression_ratio: float,
         cli_max_context_tokens: Optional[int] = None,
         reserve_tokens: int = DEFAULT_RESERVE_TOKENS,
+        min_tokens: int = DEFAULT_MIN_TOKENS,
         char_overshoot: float = 1.0,
         require_budget_binding: bool = False,
         apply_cli_context_cap: bool = True,
@@ -288,6 +290,7 @@ class KVzipSubClient:
             gpu_free_bytes=free_bytes,
             document_tokens=document_tokens,
             reserve_tokens=reserve_tokens,
+            min_tokens=min_tokens,
             char_overshoot=char_overshoot,
             require_budget_binding=require_budget_binding,
         )
@@ -330,9 +333,14 @@ class KVzipSubClient:
 
         Unlike a real-eviction backend, kvpress's KVzipPress never frees the
         masked-out KV -- the full context's cache is resident for the whole
-        call, not just before pruning. The 1.2x + 1 GiB headroom covers scoring
-        activations and allocator fragmentation; erring cautious here trades a
-        retry notice for an OOM that would torch-poison the loaded weights.
+        call, not just before pruning. The 2.0x + 1 GiB headroom covers KVzip's
+        reconstruction-scoring pass, whose transients run to about the size of
+        the cache again (measured 1.9x at N=108,504); erring cautious here trades
+        a retry notice for an OOM that would torch-poison the loaded weights.
+
+        Erring OPTIMISTIC is much worse than it looks: the caller turns a miss
+        into an ordinary sub-answer string, so the run completes and scores as
+        though it had a sub-model.
 
         Shares `gpu_fit_token_cap` with the chunk planner so the size we
         advertise to the root and the size we accept at call time cannot drift.

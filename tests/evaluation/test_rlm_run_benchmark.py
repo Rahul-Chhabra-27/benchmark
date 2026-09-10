@@ -7,17 +7,24 @@ Run from the repository root (the module uses absolute `evaluation.*` imports):
 """
 
 import argparse
+import contextlib
 import inspect
+import io
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import yaml
 
 from evaluation.rlm import run_benchmark as rb
+from evaluation.rlm.datasets import _restrict
 from evaluation.rlm.rlm import Scratchpad, vanilla_answer
 from evaluation.rlm.run_benchmark import (
+    RESUME_CRITICAL_KEYS,
+    build_run_config,
     build_run_dir_components,
     load_done,
     resolve_compression_target,
@@ -143,6 +150,43 @@ class ResumeGuardTest(unittest.TestCase):
         self.assertEqual(len(conflicts), 1)
         self.assertIn("compression_factor", conflicts[0])
 
+    def test_zero_overlap_retrieval_requires_the_current_index_revision(self):
+        config = rb.build_run_config(_args(search_k=3, search_overlap=0), "rlm", "loft", None, None, None)
+        self.assertEqual(config["search_index_revision"], 2)
+        old_config = {key: value for key, value in config.items() if key != "search_index_revision"}
+        for prior in (old_config, {**old_config, "search_index_revision": 1}):
+            conflicts = resume_conflicts(self._run_dir(**prior), config)
+            self.assertEqual(len(conflicts), 1)
+            self.assertIn("search_index_revision", conflicts[0])
+        self.assertEqual(resume_conflicts(self._run_dir(**config), config), [])
+
+    def test_other_runs_do_not_require_an_index_revision(self):
+        for mode, search_k, overlap in [("rlm", 3, 400), ("rlm", 0, 0), ("vanilla", 3, 0)]:
+            config = rb.build_run_config(
+                _args(search_k=search_k, search_overlap=overlap), mode, "loft", None, None, None
+            )
+            self.assertNotIn("search_index_revision", config)
+            self.assertEqual(resume_conflicts(self._run_dir(**config), config), [])
+
+    def test_the_sample_is_resume_critical(self):
+        """--sample-fraction reaches neither the run-dir name nor the slug, so the
+        config guard is the only thing standing between two different samples and
+        one shared checkpoint.jsonl."""
+        run_dir = self._run_dir(limit=20, sample_fraction=0.5, sample_seed=42)
+        self.assertEqual(resume_conflicts(run_dir, {"limit": 20, "sample_fraction": 0.5, "sample_seed": 42}), [])
+        for changed in ({"sample_fraction": 1.0}, {"sample_seed": 7}):
+            conflicts = resume_conflicts(run_dir, {"limit": 20, "sample_fraction": 0.5, "sample_seed": 42, **changed})
+            self.assertEqual(len(conflicts), 1, changed)
+            self.assertIn(next(iter(changed)), conflicts[0])
+
+    def test_runs_predating_the_sample_flags_still_resume(self):
+        """Every config.yaml already on disk lacks these keys; the guard reports
+        what the previous run actually recorded, so they must not become conflicts."""
+        run_dir = self._run_dir(limit=20, max_steps=50)
+        self.assertEqual(
+            resume_conflicts(run_dir, {"limit": 20, "max_steps": 50, "sample_fraction": None, "sample_seed": None}), []
+        )
+
     def test_a_missing_config_does_not_block_a_resume(self):
         """Checkpoints written before config.yaml was saved up front are still
         resumable -- the guard reports what it can prove, not what it assumes."""
@@ -180,6 +224,39 @@ def _args(**overrides) -> argparse.Namespace:
         compression_factor=None,
         fixed_chunk=False,
         min_subcall_chars=0,
+        sub_model="Qwen/Qwen3-4B-Instruct-2507",
+        base_url="http://localhost:8000/v1",
+        limit=10,
+        sample_fraction=None,
+        max_steps=50,
+        vanilla_char_limit=100000,
+        vanilla_max_prompt_tokens=None,
+        exec_timeout=60,
+        run_timeout=900,
+        max_sub_calls=40,
+        min_sub_calls_before_abstain=1,
+        max_unproductive_steps=5,
+        max_error_steps=3,
+        no_think=False,
+        search_k=0,
+        search_window=2000,
+        search_overlap=400,
+        max_search_calls=40,
+        search_ablate=(),
+        chunks_source=None,
+        chunks_file=None,
+        chunks_k=5,
+        chunks_file_sha256=None,
+        ids_file=None,
+        ids_sha256=None,
+        structured_map_question="task",
+        structured_map_granularity="passage",
+        structured_answer_shape="require",
+        structured_map_chars=0,
+        reduce_finding_chars=2000,
+        structured_hops=1,
+        answer_list_format="auto",
+        chunks_query="task",
     )
     base.update(overrides)
     return argparse.Namespace(**base)
@@ -449,3 +526,292 @@ class VanillaTruncationTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StructuredArmTest(unittest.TestCase):
+    """The provided-chunk arm: named apart from every other arm, and refusing the
+    flag combinations that would produce a plausible number for a run nobody made."""
+
+    def test_the_chunk_source_and_depth_are_in_the_run_directory_name(self):
+        args = _args(mode="structured", chunks_source="bm25", chunks_k=5)
+        self.assertEqual(
+            build_run_dir_components(args, "structured", None),
+            ["loft", "nq_128k", "Qwen_Qwen3-4B-Instruct-2507", "structured", "chunks-bm255"],
+        )
+
+    def test_a_file_arm_and_a_bm25_arm_of_the_same_depth_land_apart(self):
+        bm25 = build_run_dir_components(_args(mode="structured", chunks_source="bm25"), "structured", None)
+        provided = build_run_dir_components(_args(mode="structured", chunks_source="file"), "structured", None)
+        self.assertNotEqual(bm25, provided)
+
+    def test_an_id_restricted_run_cannot_share_a_directory_with_the_full_one(self):
+        full = build_run_dir_components(_args(mode="structured", chunks_source="bm25"), "structured", None)
+        sliced = build_run_dir_components(
+            _args(mode="structured", chunks_source="bm25", ids_sha256="deadbeefcafe"), "structured", None
+        )
+        self.assertNotEqual(full, sliced)
+        self.assertIn("ids-deadbeef", sliced)
+
+    def test_the_agentic_arms_keep_the_names_they_already_have(self):
+        # Every existing run directory must stay reachable: a renamed one orphans
+        # its checkpoint silently.
+        self.assertEqual(
+            build_run_dir_components(_args(), "rlm", None),
+            ["loft", "nq_128k", "Qwen_Qwen3-4B-Instruct-2507", "rlm"],
+        )
+        self.assertEqual(
+            build_run_dir_components(_args(search_k=5), "rlm", None),
+            ["loft", "nq_128k", "Qwen_Qwen3-4B-Instruct-2507", "rlm", "bm25k5"],
+        )
+
+    def test_the_chunk_file_is_identified_by_content_in_the_config(self):
+        # The path is not in RESUME_CRITICAL_KEYS; the hash is. Two runs pointed at
+        # the same filename with different contents must not resume each other.
+        args = _args(mode="structured", chunks_source="file", chunks_file="a.jsonl", chunks_file_sha256="aa")
+        config = build_run_config(args, "structured", "loft", None, None, None)
+        self.assertEqual(config["chunks_file_sha256"], "aa")
+        self.assertEqual(config["chunks_source"], "file")
+        self.assertEqual(config["chunks_k"], 5)
+        self.assertIn("chunks_file_sha256", RESUME_CRITICAL_KEYS)
+        self.assertIn("ids_sha256", RESUME_CRITICAL_KEYS)
+        self.assertIn("chunks_source", RESUME_CRITICAL_KEYS)
+
+    def test_an_agentic_run_records_no_chunk_source(self):
+        config = build_run_config(_args(), "rlm", "loft", None, None, None)
+        self.assertIsNone(config["chunks_source"])
+        self.assertIsNone(config["chunks_k"])
+
+    def test_a_resume_across_two_different_chunk_files_conflicts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            first = build_run_config(
+                _args(mode="structured", chunks_source="file", chunks_file="a.jsonl", chunks_file_sha256="aa"),
+                "structured",
+                "loft",
+                None,
+                None,
+                None,
+            )
+            (run_dir / "config.yaml").write_text(yaml.safe_dump(first))
+            second = build_run_config(
+                _args(mode="structured", chunks_source="file", chunks_file="a.jsonl", chunks_file_sha256="bb"),
+                "structured",
+                "loft",
+                None,
+                None,
+                None,
+            )
+            conflicts = resume_conflicts(run_dir, second)
+        self.assertTrue(any("chunks_file_sha256" in c for c in conflicts))
+
+
+class StructuredAxesTest(unittest.TestCase):
+    """The three components of the revision-2 treatment, one knob each. Every default
+    must reproduce revision 2 exactly, or turning the flags on renames -- and orphans
+    -- every directory the revision-2 campaign wrote."""
+
+    def test_the_defaults_add_nothing_to_the_revision_two_name(self):
+        self.assertEqual(
+            build_run_dir_components(_args(mode="structured", chunks_source="bm25"), "structured", None),
+            ["loft", "nq_128k", "Qwen_Qwen3-4B-Instruct-2507", "structured", "chunks-bm255"],
+        )
+
+    def test_each_axis_gets_its_own_directory(self):
+        base = _args(mode="structured", chunks_source="bm25")
+        names = {
+            "default": build_run_dir_components(base, "structured", None)[-1],
+            "mapq": build_run_dir_components(
+                _args(mode="structured", chunks_source="bm25", structured_map_question="query"), "structured", None
+            )[-1],
+            "mapg": build_run_dir_components(
+                _args(mode="structured", chunks_source="bm25", structured_map_granularity="all"), "structured", None
+            )[-1],
+            "shape": build_run_dir_components(
+                _args(mode="structured", chunks_source="bm25", structured_answer_shape="offer"), "structured", None
+            )[-1],
+        }
+        self.assertEqual(len(set(names.values())), 4, names)
+        self.assertEqual(names["mapq"], "mapq-query")
+        self.assertEqual(names["mapg"], "mapg-all")
+        self.assertEqual(names["shape"], "shape-offer")
+
+    def test_the_axes_are_recorded_and_resume_critical(self):
+        config = build_run_config(
+            _args(mode="structured", chunks_source="bm25", structured_answer_shape="offer"),
+            "structured",
+            "loft",
+            None,
+            None,
+            None,
+        )
+        self.assertEqual(config["structured_answer_shape"], "offer")
+        self.assertEqual(config["structured_map_granularity"], "passage")
+        for key in ("structured_map_question", "structured_map_granularity", "structured_answer_shape"):
+            self.assertIn(key, RESUME_CRITICAL_KEYS)
+
+    def test_a_resume_across_two_different_shapes_conflicts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            first = build_run_config(
+                _args(mode="structured", chunks_source="bm25"), "structured", "loft", None, None, None
+            )
+            (run_dir / "config.yaml").write_text(yaml.safe_dump(first))
+            second = build_run_config(
+                _args(mode="structured", chunks_source="bm25", structured_answer_shape="offer"),
+                "structured",
+                "loft",
+                None,
+                None,
+                None,
+            )
+            conflicts = resume_conflicts(run_dir, second)
+        self.assertTrue(any("structured_answer_shape" in c for c in conflicts))
+
+    def test_an_agentic_run_records_no_axes_it_never_had(self):
+        config = build_run_config(_args(), "rlm", "loft", None, None, None)
+        self.assertNotIn("structured_answer_shape", config)
+
+
+class AgenticProvidedChunksTest(unittest.TestCase):
+    """C's chunks read by the agentic root: same loop, same prompt, different windows."""
+
+    def test_it_lands_apart_from_the_bm25_agentic_arm(self):
+        bm25 = build_run_dir_components(_args(search_k=5), "rlm", None)
+        provided = build_run_dir_components(_args(search_k=5, chunks_source="file"), "rlm", None)
+        self.assertEqual(bm25, ["loft", "nq_128k", "Qwen_Qwen3-4B-Instruct-2507", "rlm", "bm25k5"])
+        self.assertEqual(provided, [*bm25, "chunks-file5"])
+
+    def test_an_id_restricted_agentic_run_cannot_resume_the_full_one(self):
+        # --ids-file reaches nothing else in the name, and the hard-slice arms are
+        # exactly the runs that pass it.
+        full = build_run_dir_components(_args(search_k=5), "rlm", None)
+        sliced = build_run_dir_components(_args(search_k=5, ids_sha256="deadbeefcafe"), "rlm", None)
+        self.assertNotEqual(full, sliced)
+        self.assertIn("ids-deadbeef", sliced)
+
+    def test_a_frozen_bm25_arm_is_named_apart_from_the_adaptive_search_arm(self):
+        # Not a duplicate of --search-k: an adaptive search and a frozen top-k behave
+        # very differently in a loop whose main move is to search again.
+        adaptive = build_run_dir_components(_args(search_k=5), "rlm", None)
+        frozen = build_run_dir_components(_args(search_k=5, chunks_source="bm25"), "rlm", None)
+        self.assertEqual(frozen, [*adaptive, "chunks-bm255"])
+
+    def test_the_chunk_source_is_recorded_for_an_agentic_run_too(self):
+        config = build_run_config(
+            _args(search_k=5, chunks_source="file", chunks_file="a.jsonl", chunks_file_sha256="aa"),
+            "rlm",
+            "loft",
+            None,
+            None,
+            None,
+        )
+        self.assertEqual(config["chunks_source"], "file")
+        self.assertEqual(config["chunks_file_sha256"], "aa")
+
+
+class StructuredCliTest(unittest.TestCase):
+    def _run(self, *argv):
+        """main() up to its first argparse error. Returns the message."""
+        with mock.patch.object(sys, "argv", ["run_benchmark", *argv]), self.assertRaises(SystemExit):
+            with contextlib.redirect_stderr(io.StringIO()) as err:
+                rb.main()
+        return err.getvalue()
+
+    def test_structured_without_a_chunk_source_is_refused(self):
+        self.assertIn(
+            "--chunks-source", self._run("--dataset", "loft", "--data-dir", "nq_128k", "--mode", "structured")
+        )
+
+    def test_a_chunk_source_outside_the_two_reading_modes_is_refused(self):
+        message = self._run(
+            "--dataset", "loft", "--data-dir", "nq_128k", "--mode", "vanilla", "--chunks-source", "file"
+        )
+        self.assertIn("only meaningful with --mode structured or --mode rlm", message)
+
+    def test_provided_chunks_for_the_agentic_root_need_the_channel_they_arrive_on(self):
+        message = self._run(
+            "--dataset",
+            "loft",
+            "--data-dir",
+            "nq_128k",
+            "--mode",
+            "rlm",
+            "--chunks-source",
+            "file",
+            "--chunks-file",
+            "x.jsonl",
+        )
+        self.assertIn("--search-k", message)
+
+    def test_the_structured_axes_are_refused_outside_the_structured_pipeline(self):
+        # Ignoring one would stamp an axis into config.yaml that the run never had.
+        message = self._run(
+            "--dataset", "loft", "--data-dir", "nq_128k", "--mode", "rlm", "--structured-map-granularity", "all"
+        )
+        self.assertIn("only apply to --mode structured", message)
+
+    def test_search_k_in_structured_mode_is_refused(self):
+        # There is no REPL for search() to live in, and the flag would still stamp
+        # an agentic retrieval depth into the run directory name.
+        message = self._run(
+            "--dataset",
+            "loft",
+            "--data-dir",
+            "nq_128k",
+            "--mode",
+            "structured",
+            "--chunks-source",
+            "bm25",
+            "--search-k",
+            "5",
+        )
+        self.assertIn("no REPL", message)
+
+    def test_the_file_source_needs_a_file(self):
+        message = self._run(
+            "--dataset", "loft", "--data-dir", "nq_128k", "--mode", "structured", "--chunks-source", "file"
+        )
+        self.assertIn("--chunks-file", message)
+
+    def test_ids_file_and_limit_together_are_refused(self):
+        message = self._run(
+            "--dataset",
+            "loft",
+            "--data-dir",
+            "nq_128k",
+            "--mode",
+            "structured",
+            "--chunks-source",
+            "bm25",
+            "--ids-file",
+            "x.ids",
+            "--limit",
+            "5",
+        )
+        self.assertIn("only one", message)
+
+
+class IdsFilterTest(unittest.TestCase):
+    """--ids-file must be applied BEFORE --limit, or it evaluates whichever of the
+    wanted rows happened to fall inside the first N -- a smaller, silent experiment."""
+
+    ROWS = [{"id": f"ex-{i}", "context": "c", "question": "q", "answers": ["a"]} for i in range(10)]
+
+    def test_the_named_rows_are_kept_whatever_their_position(self):
+        kept = list(_restrict(iter(self.ROWS), frozenset({"ex-7", "ex-9"}), None))
+        self.assertEqual([r["id"] for r in kept], ["ex-7", "ex-9"])
+
+    def test_an_id_the_dataset_does_not_have_is_refused(self):
+        with self.assertRaises(ValueError) as caught:
+            list(_restrict(iter(self.ROWS), frozenset({"ex-1", "nope"}), None))
+        self.assertIn("nope", str(caught.exception))
+
+    def test_the_refusal_fires_before_any_row_is_yielded(self):
+        # Otherwise a mismatched id set is reported only after a full run has been
+        # spent on the rows that did match.
+        generator = _restrict(iter(self.ROWS), frozenset({"ex-1", "nope"}), None)
+        with self.assertRaises(ValueError):
+            next(generator)
+
+    def test_no_ids_passes_everything_through_untouched(self):
+        self.assertEqual(len(list(_restrict(iter(self.ROWS), None, None))), 10)
