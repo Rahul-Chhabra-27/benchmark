@@ -795,7 +795,16 @@ def main() -> None:
             apply_cli_context_cap=not args.fixed_chunk,
         )
         if args.fixed_chunk:
-            args.min_subcall_chars = subcall_sizing.chars
+            # subcall_sizing.chars is tokens*chars_per_token*char_overshoot -- the
+            # overshoot factor (needed so estimation noise doesn't undershoot the
+            # token target) can push this past the document's own character count
+            # once tokens is already capped at document length. _expand_subcall's
+            # own min(floor, len(document)) then silently returns the chunk
+            # unwidened whenever len(chunk) happens to already reach len(document)
+            # from a different code path, but the floor itself being oversized is
+            # the more direct fix: never ask for more characters than the document
+            # actually has.
+            args.min_subcall_chars = min(subcall_sizing.chars, len(sample["context"]))
             args.max_subcall_chars = fixed_chunk_char_cap(args.min_subcall_chars)
             args.sub_max_context_tokens = subcall_sizing.tokens
             sub.max_context_tokens = subcall_sizing.tokens
