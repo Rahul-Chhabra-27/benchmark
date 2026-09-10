@@ -215,14 +215,14 @@ def _ensure_split(df: pd.DataFrame, dataset_name: str, task: Optional[str]) -> p
         return df
 
     keys = _row_keys(df)
+    groups: list[list[int]]
     if "task" in df.columns and df["task"].nunique() > 1:
-        groups = df.groupby("task", sort=True).indices.values()
+        groups = [list(positions) for positions in df.groupby("task", sort=True).indices.values()]
     else:
-        groups = [range(len(df))]
+        groups = [list(range(len(df)))]
 
-    labels = ["test"] * len(df)
+    labels: list[str] = ["test"] * len(df)
     for positions in groups:
-        positions = list(positions)
         n_dev = min(CALIBRATION_MAX_ROWS, int(len(positions) * CALIBRATION_FRACTION))
         if n_dev < 1:
             # Too few rows to spare any: leave the group entirely reportable
