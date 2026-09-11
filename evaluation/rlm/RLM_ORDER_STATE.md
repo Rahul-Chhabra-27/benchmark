@@ -276,7 +276,7 @@ The full report is `archive/rlmorder/full_report/full/report.md`.
     - The root fills RULER's answer template ("5 variables are assigned the value N, they are: …") with a count of its own ("1 variables", "2 variables").
     - No output printed that count, so revision 6 rejects the literal as designed, and the variables the root did find are lost with it.
   - **The report** is `archive/rlmorder/ruler_full_report/ruler_full/report.md`. It scores niah_multikey_3 graph as the run stands, so any number quoted from it must carry that caveat.
-- **Every REVIEW row, by cause.** `python -m evaluation.rlm.rlm_order_review <results>` labelled all 57, and I read at least one transcript per cause.
+- **Every REVIEW row, by cause.** `python -m evaluation.rlm.rlm_order_review <results>` labelled all 50, and I read at least one transcript per cause.
   - **25 refusal loops,** all niah_multikey_3 graph, as above.
   - **18 `ungrounded_final`.**
     - 15 are vt invented counts.
@@ -388,7 +388,7 @@ ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && git pull 
     - The report was written with `--tuned-rows 3`.
     - Results, report, organizations and logs are archived, with 0 checksum diffs.
   - **The server.** The script kept it up because the gate failed; I stopped it by hand at 09:26:53. GPU 0 is free.
-  - **Review.** `rlm_order_review`, new and in the repo, labelled all 57 REVIEW rows, and I read at least one transcript per cause. See **RULER-128k → The full run**.
+  - **Review.** `rlm_order_review`, new and in the repo, labelled all 50 REVIEW rows, and I read at least one transcript per cause. See **RULER-128k → The full run**.
   - **Open.** Revision 7 and a rerun are the user's call.
 - **2026-09-11 08:36–08:40 IST: the RULER r6 pilot PASSED, and the full RULER run was launched.**
   - **The r6 pilot.** 78 of 78 rows; the gate PASSED at 08:36 with 4 REVIEW rows, one per run. Archived as `archive/rlmorder/ruler_pilot_r6_*`, with 0 checksum diffs.
