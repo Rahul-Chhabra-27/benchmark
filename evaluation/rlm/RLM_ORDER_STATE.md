@@ -293,6 +293,59 @@ The full report is `archive/rlmorder/full_report/full/report.md`.
   - **The cost.** Rerunning niah_multikey_3 in both arms is 110 rows, a few minutes. Rerunning all of RULER, so that it stays on one revision, takes about 45 minutes.
   - **The alternative is worse.** Sizing the graph example to the budget would also change LOFT musique's prompt: its advertised K is 5, although no musique read was ever refused.
 
+## Audit of the results and the code (2026-09-11, after the RULER run)
+
+The user asked me to go through the results and look for bugs. Every check ran on the archived rows, and no RULER score is quoted here.
+
+**Checked and clean.**
+- **Scoring.**
+  - A `None` prediction is scored as `""`, so it counts 0 and is never dropped.
+  - Errored rows are left out as missing measurements. Both campaigns had 0.
+  - For all 36 agentic runs and all 10 structured comparators, `metrics.json` equals the mean of the per-row scores that the paired comparisons use.
+  - Every run has 55 unique rows.
+- **RULER's scorer.**
+  - It reads the right gold column on every row.
+  - No gold string sits inside any answer template, so predictions that repeat the template get no free credit.
+  - No needle prediction pads its answer with extra candidate numbers.
+- **The arms.** Their configs differ only in the order and its query. Δ is query − graph and agentic − structured, and the sign test is a two-sided exact binomial.
+- **Cost.** On all 1,980 rows, the counted input tokens cover the root's own count plus every server-reported chunk read. So "7–16k tokens per question against about 127k" compares like with like.
+- **The query arm's BM25 view.** No row has an empty query, no row's query scores zero chunks, and no benchmark instructions are left in any query.
+- **Data.**
+  - cwe's golds are its ten most frequent words: 30 occurrences each, while the next most frequent words have 14. So both arms' 0 on cwe is real.
+  - The grid diagnostic flags the same 12 niah_single_3 rows as an independent count.
+- **Fallback answers and decoding.** No fallback answer from a harness guard (31 rows) was ever credited. Decoding is greedy (temperature 0.0), so only vLLM's batching numerics vary between runs.
+
+**Findings.**
+1. **Fixed: the RULER report's noise note used LOFT's scale.**
+   - It said one example at n=55 is 0.018, but RULER's string_match runs 0–100, where one example is 1.8 points.
+   - `noise_note` now uses the metric's own scale, and the LOFT-only reference sentence appears only with `--guards`.
+   - The RULER report was regenerated with the fix; no number changed.
+2. **A harness message bug, a candidate for revision 7.**
+   - Revision 3 recognises a prose answer cell only when it starts "Final Answer:".
+   - RULER's answer lines ("Answer: The top 10 words …") still get the legacy "written on a single line" syntax message, which is wrong advice for prose. That caused cwe graph's 2 repetition breaks.
+   - The fix would change what the root is sent, so it is not applied to the finished runs.
+3. **A confusing instruction on LOFT.**
+   - LOFT's answer template is `'Final Answer: '`, so the root was told its FINAL value "must be formatted as: Final Answer:".
+   - Scoring is unaffected: no LOFT prediction carries it, and bare answers are extracted whole.
+   - It is the likely source of revision 2's "Final Answer: X" code-cell loops.
+4. **LOFT's list metric is strict, for every arm.**
+   - Coverage counts an item only on an exact normalised match, so decorated items score 0: "Red Dawn (1984)", "Ocean Forest Hotel in Myrtle Beach, South Carolina", "ID: 142 | TITLE: …". At least 13 agentic rows found gold answers that scored 0.
+   - But the structured arms decorate more. A lenient, word-bounded match lifts every arm by 0.006–0.089 and changes no ranking:
+
+| subset | arm | exact (official) | lenient |
+|---|---|---:|---:|
+| qampari | agentic graph | 0.167 | 0.188 |
+| qampari | agentic query | 0.365 | 0.405 |
+| qampari | structured graph | 0.479 | 0.568 |
+| qampari | structured source | 0.599 | 0.668 |
+| quest | agentic graph | 0.294 | 0.300 |
+| quest | agentic query | 0.212 | 0.248 |
+| quest | structured graph | 0.364 | 0.430 |
+| quest | structured source | 0.467 | 0.497 |
+
+5. **subspan_em's containment credits a few "not in the text" answers that quote the gold.** 1 agentic row (musique graph 42) and 2 structured rows: negligible, and not biased toward either kind of arm.
+6. **Minor.** `paired.noise_floor` is 1/n on the 0–1 scale. Only the standalone paired CLI prints it.
+
 ## How to resume (exact commands)
 
 ```bash
