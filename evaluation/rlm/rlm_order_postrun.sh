@@ -18,8 +18,10 @@ EXPECT=${EXPECT:-55}
 STAGE=${STAGE:-full}
 SCRATCH=${SCRATCH:-/tmp/gautammahale/rlmorder}
 if [ "$DATASET" = loft ]; then
-  # Rows 0-2 of every LOFT subset informed revisions 2-5.
+  # Rows 0-2 of every LOFT subset informed revisions 2-5, and the campaign ran revision 5:
+  # gate it at that revision, not at the checkout's.
   TUNED_ROWS=${TUNED_ROWS:-3}
+  REVISION=${REVISION:-5}
   RESULTS=${RESULTS:-$SCRATCH/results}
   REPORT=${REPORT:-$SCRATCH/report}
 else
@@ -57,8 +59,9 @@ if [ "$DATASET" = loft ]; then
 fi
 
 # 1. Gate: integrity problems fail; behaviour rows are listed under REVIEW.
+# shellcheck disable=SC2086  # the --revision pair, when set, is two words on purpose
 $PY -m evaluation.rlm.rlm_order_gate "$RESULTS" --dataset "$DATASET" --expect "$EXPECT" \
-  ${comparator[@]+"${comparator[@]}"} > "$REPORT/${STAGE}_gate.txt" 2>&1
+  ${REVISION:+--revision $REVISION} ${comparator[@]+"${comparator[@]}"} > "$REPORT/${STAGE}_gate.txt" 2>&1
 gate=$?
 echo "gate exit=$gate"
 cat "$REPORT/${STAGE}_gate.txt"

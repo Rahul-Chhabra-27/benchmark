@@ -211,7 +211,9 @@ Example of a correct session (4 turns):
 # told about the order and in nothing else the prompt says.
 CHUNK_ORDERS = ("bm25-graph", "bm25-query")
 # Bump for any change that can alter what an ordered-chunk root is shown or sent.
-CHUNK_ORDER_REVISION = 5
+# Revision 6 changes no prompt text: FINAL also accepts a literal composed from several
+# reads (composed_answer_grounded). The LOFT campaign ran revision 5.
+CHUNK_ORDER_REVISION = 6
 # One structured reader group, so one agentic read is the size of one mapped group.
 DEFAULT_CHUNK_CALL_TOKENS = 8192
 # The question a chunk read is priced with when the prompt states how many chunks fit
@@ -737,6 +739,45 @@ def _mentions(haystack: str, needle: str) -> bool:
     if not needle:
         return False
     return re.search(rf"(?<!\w){re.escape(needle)}(?!\w)", haystack) is not None
+
+
+# What a composed answer is made of (composed_answer_grounded): runs of letters and
+# digits, lower-cased, with digit-group commas dropped so "2,548" and "2548" are one word.
+_ANSWER_WORD_RE = re.compile(r"[a-z0-9]+")
+_DIGIT_GROUP_COMMA_RE = re.compile(r"(?<=\d),(?=\d{3}(?!\d))")
+# Words that carry no answer, and so never ground one.
+COMPOSED_ANSWER_FILLER = frozenset(
+    "a an and are as at be but by for from in into is it its of on or that the their there "
+    "these they this those to was were which with".split()
+)
+# A literal that adds any of these is an abstention in an answer's clothes ("are none",
+# "it is not mentioned"): it must appear word for word, or be said with FINAL_NONE.
+COMPOSED_ANSWER_NEGATIONS = frozenset(
+    "no not none nothing unknown never neither nor cannot aren couldn didn doesn don hasn "
+    "haven isn wasn weren wouldn".split()
+)
+
+
+def _answer_words(text: str) -> set[str]:
+    return set(_ANSWER_WORD_RE.findall(_DIGIT_GROUP_COMMA_RE.sub("", text.lower())))
+
+
+def composed_answer_grounded(val: str, seen_output: str, task_text: str) -> bool:
+    """Was a FINAL literal put together from what the run observed? (ordered-chunk arms)
+
+    The word-for-word test rejects an answer assembled from several reads -- four values
+    read on four calls and joined with commas, or RULER's answer template filled in with
+    the value a reader returned -- although every part of it was printed: on the RULER
+    pilot that discarded 9 of 78 answers, most of them right. So every content word the
+    literal adds to the task text (question and answer template) must have appeared in
+    REPL output. It must add at least one, and no negation. A value no read returned is
+    still a word no output contains, so a guess is still rejected.
+    """
+    added = _answer_words(val) - _answer_words(task_text)
+    if added & COMPOSED_ANSWER_NEGATIONS:
+        return False
+    content = added - COMPOSED_ANSWER_FILLER
+    return bool(content) and content <= _answer_words(seen_output)
 
 
 # --------------------------------------------------------------------------- #
@@ -2363,8 +2404,14 @@ class RLM:
             every short answer, since any question mentioning "12" licensed the
             ungrounded answer 12, and every multiple-choice task enumerates its
             labels in the prompt -- so that whole class of tasks had no guard at all.
+            The ordered-chunk arms also accept an answer composed from several reads
+            (revision 6, composed_answer_grounded); legacy runs keep the word-for-word test.
             """
-            return val in seen_output or _mentions(task, val)
+            if val in seen_output or _mentions(task, val):
+                return True
+            return self.chunk_order is not None and composed_answer_grounded(
+                val, seen_output, f"{task}\n{answer_format or ''}"
+            )
 
         def _abstention_earned() -> bool:
             """Has this run read enough of the document to claim the answer is absent?

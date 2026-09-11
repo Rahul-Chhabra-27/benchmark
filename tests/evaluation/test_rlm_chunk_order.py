@@ -34,6 +34,7 @@ from evaluation.rlm.rlm import (
     RLM,
     SUB_SYSTEM_PROMPT,
     UNGROUNDED_FINAL_CHUNKS,
+    composed_answer_grounded,
 )
 from tests.evaluation.test_rlm_run_benchmark import _args
 
@@ -380,6 +381,92 @@ class TestRun:
         legacy = RLM(root_client=FakeClient(), sub_client=FakeClient())
         obs, _ = legacy._exec("Final Answer: 2000", legacy._make_env(DOCUMENT, base_metrics(), {}, []), 4000)
         assert obs.startswith("[SYNTAX ERROR] Your code block was written on a single line")
+
+
+class Replies(FakeClient):
+    """A sub-model that answers each read with the next reply in turn."""
+
+    def __init__(self, *replies):
+        super().__init__()
+        self.replies = list(replies)
+
+    def chat(self, messages, **kw):
+        self.calls.append(messages)
+        return self.replies.pop(0)
+
+
+def run_composed(cells, replies, answer_format=None):
+    """One ordered-chunk run whose reads return `replies`; returns the result and the root."""
+    root = ScriptedRoot(cells)
+    rlm = RLM(
+        root_client=root, sub_client=Replies(*replies), chunk_order="bm25-query", ordered_token_counter=CharCounter()
+    )
+    return rlm.run(DOCUMENT, "Which cello sonatas?", answer_format=answer_format, ordered_chunks=query_view()), root
+
+
+READ_ONE = 'a = llm_query("Which cello sonata?", chunks[:2])\nprint(a)'
+
+
+class TestComposedAnswers:
+    """Revision 6: FINAL accepts a literal composed from several reads, and nothing looser."""
+
+    SEEN = "Reader: the first value is 3914404.\nReader: dusty-president -> 4968669.\nTotal: 2,548 items."
+
+    def test_values_read_on_different_calls_ground_their_combination(self):
+        assert composed_answer_grounded("3914404 and 4968669", self.SEEN, "Which values?")
+        assert not composed_answer_grounded("3914404 and 1937991", self.SEEN, "Which values?")
+
+    def test_digit_group_commas_do_not_matter(self):
+        assert composed_answer_grounded("2548", self.SEEN, "How many items?")
+        assert composed_answer_grounded("25,480", "the count was 25480", "How many?")
+
+    def test_a_uuid_cannot_be_completed_past_what_was_printed(self):
+        seen = "The uuid is c44540a1-cace-4a6"
+        assert composed_answer_grounded("c44540a1-cace-4a6", seen, "Which uuid?")
+        assert not composed_answer_grounded("c44540a1-cace-4a67-ad45-88ad7478a40e", seen, "Which uuid?")
+
+    def test_task_words_alone_and_negations_ground_nothing(self):
+        task = "What is the dusty-president value?"
+        assert not composed_answer_grounded("the dusty-president value", self.SEEN, task)
+        assert not composed_answer_grounded("3914404, the rest are none", self.SEEN + " none", "Which values?")
+
+    def test_an_answer_composed_from_several_reads_is_accepted(self):
+        cells = [
+            READ_ONE,
+            'b = llm_query("Which violin sonata?", chunks[2:4])\nprint(b)',
+            'FINAL("Op. 1111 and Op. 2222")',
+        ]
+        result, _ = run_composed(cells, ["The cello sonata is Op. 1111.", "The violin sonata is Op. 2222."])
+        assert result.end_reason == "final_called" and result.answer == "Op. 1111 and Op. 2222"
+
+    def test_the_answer_template_filled_with_a_read_value_is_accepted(self):
+        cells = [READ_ONE, 'FINAL("The sonata for cello is Op. 1111.")', "FINAL(a)"]
+        result, _ = run_composed(cells, ["It is Op. 1111."], answer_format="The sonata for cello is")
+        assert result.end_reason == "final_called" and result.answer == "The sonata for cello is Op. 1111."
+        # Without the template, its words are the root's own, and no read printed them.
+        result, _ = run_composed(cells, ["It is Op. 1111."])
+        assert result.answer == "It is Op. 1111."
+
+    def test_a_value_no_read_returned_or_an_added_negation_is_still_rejected(self):
+        for literal, reply in (
+            ("Op. 1111 and Op. 3333", "The cello sonata is Op. 1111."),
+            ("Op. 1111, others not found", "The cello sonata is Op. 1111. Others are not found."),
+        ):
+            result, root = run_composed([READ_ONE, f'FINAL("{literal}")', "FINAL(a)"], [reply])
+            rejections = [m["content"] for m in root.calls[2] if m["role"] == "user"]
+            assert UNGROUNDED_FINAL_CHUNKS.format(val=literal) in rejections
+            assert result.end_reason == "final_called" and result.answer == reply
+
+    def test_legacy_runs_keep_the_word_for_word_test(self):
+        cells = [
+            'a = llm_query("Which cello sonata? " + context[:100])\nprint(a)',
+            'b = llm_query("Which violin sonata? " + context[100:200])\nprint(b)',
+            'FINAL("Op. 1111 and Op. 2222")',
+            "FINAL(a)",
+        ]
+        replies = Replies("The cello sonata is Op. 1111.", "The violin sonata is Op. 2222.")
+        result = RLM(root_client=ScriptedRoot(cells), sub_client=replies).run(DOCUMENT, "Which cello sonatas?")
+        assert result.end_reason == "final_called" and result.answer == "The cello sonata is Op. 1111."
 
 
 class TestPrompt:

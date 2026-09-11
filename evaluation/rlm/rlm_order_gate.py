@@ -54,13 +54,15 @@ def _transcript(run_dir: Path, example_id: str) -> dict:
     return json.loads((run_dir / "transcripts" / f"{example_id}.json").read_text())
 
 
-def check_run(run_dir: Path, config: dict, expect: int | None) -> tuple[list[str], dict]:
+def check_run(
+    run_dir: Path, config: dict, expect: int | None, revision: int = CHUNK_ORDER_REVISION
+) -> tuple[list[str], dict]:
     problems: list[str] = []
     budget = config.get("chunk_call_tokens")
     if not isinstance(budget, int) or budget <= 0:
         problems.append("missing or invalid chunk token budget")
-    if config.get("chunk_order_revision") != CHUNK_ORDER_REVISION:
-        problems.append(f"expected chunk_order_revision {CHUNK_ORDER_REVISION}")
+    if config.get("chunk_order_revision") != revision:
+        problems.append(f"expected chunk_order_revision {revision}")
     try:
         rows = _rows(run_dir)
     except (ValueError, KeyError) as exc:
@@ -195,6 +197,7 @@ def check_campaign(
     structured: Path | None,
     pilot: bool,
     organization: Path | None = None,
+    revision: int = CHUNK_ORDER_REVISION,
 ) -> list[str]:
     runs = _configs(results, "chunk_order")
     subsets = LOFT_SUBSETS if dataset == "loft" else RULER_32K_TASKS
@@ -206,7 +209,7 @@ def check_campaign(
         problems.append("LOFT requires --structured-results for row and organization validation")
     info = {}
     for key, (run_dir, config) in sorted(runs.items()):
-        failures, info[key] = check_run(run_dir, config, expect)
+        failures, info[key] = check_run(run_dir, config, expect, revision)
         if not (run_dir / "metrics.json").exists():
             failures.append("run has no completed metrics.json")
         if config.get("mode") != "rlm" or (dataset == "loft" and config.get("split") != "test"):
@@ -264,12 +267,24 @@ def main() -> None:
         type=Path,
         help="the structured campaign's graph artifacts, if moved since (default: the organization_dir it recorded)",
     )
+    ap.add_argument(
+        "--revision",
+        type=int,
+        default=CHUNK_ORDER_REVISION,
+        help=f"the chunk_order_revision every run must carry (default {CHUNK_ORDER_REVISION}; LOFT ran 5)",
+    )
     args = ap.parse_args()
     if args.expect <= 0:
         ap.error("--expect must be positive")
     try:
         problems = check_campaign(
-            args.results, args.dataset, args.expect, args.structured_results, args.pilot, args.organization_dir
+            args.results,
+            args.dataset,
+            args.expect,
+            args.structured_results,
+            args.pilot,
+            args.organization_dir,
+            args.revision,
         )
     except (OSError, ValueError, KeyError, TypeError) as exc:
         problems = [f"invalid or incomplete artifacts: {exc}"]

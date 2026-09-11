@@ -105,6 +105,13 @@ def test_live_failure_modes_are_rejected(tmp_path, failure):
     assert gate.check_run(tmp_path, config, 1)[0]
 
 
+def test_an_earlier_campaign_is_gated_at_the_revision_it_ran(tmp_path):
+    write_run(tmp_path, [record()])
+    config = dict(CONFIG, chunk_order_revision=CHUNK_ORDER_REVISION - 1)
+    assert gate.check_run(tmp_path, config, 1)[0]
+    assert gate.check_run(tmp_path, config, 1, revision=CHUNK_ORDER_REVISION - 1)[0] == []
+
+
 @pytest.mark.parametrize("notice", gate.NOTICES)
 def test_limit_and_server_notices_fail(tmp_path, notice):
     row = record()
