@@ -168,6 +168,17 @@ class CompareTest(unittest.TestCase):
         self.assertEqual(result["n"], 2)
         self.assertEqual(result["only_a"], 2)
 
+    def test_a_slice_of_ids_is_paired_on_its_own(self):
+        # The rows no prompt revision was tuned on, compared by themselves.
+        rows_b = [(f"loft:nq_128k:{i}", ["whale"], "Final Answer: whale") for i in range(4)]
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            a = write_run(root, "a", self.ROWS_A)
+            b = write_run(root, "b", rows_b)
+            result = compare(a, b, resamples=50, only_ids={"loft:nq_128k:2", "loft:nq_128k:3"})
+        self.assertEqual((result["n"], result["wins"], result["only_a"]), (2, 2, 0))
+        self.assertEqual(result["delta"], 1.0)
+
     def test_subspan_em_is_never_subtracted_from_coverage(self):
         # qampari scores on coverage and nq on subspan_em; a delta across that line
         # is two different questions, not a difference.

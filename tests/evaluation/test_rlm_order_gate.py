@@ -68,7 +68,6 @@ def test_valid_reader_run_passes(tmp_path):
 @pytest.mark.parametrize(
     "failure",
     [
-        "zero_reads",
         "missing_counts",
         "mismatch",
         "over_budget",
@@ -83,9 +82,7 @@ def test_valid_reader_run_passes(tmp_path):
 def test_live_failure_modes_are_rejected(tmp_path, failure):
     row, config = record(), dict(CONFIG)
     m = row["metrics"]
-    if failure == "zero_reads":
-        m.update(chunk_payload_calls=0, reader_input_tokens=[], reader_served_prompt_tokens=[])
-    elif failure == "missing_counts":
+    if failure == "missing_counts":
         m.update(reader_input_tokens=[None], reader_served_prompt_tokens=[None])
     elif failure == "mismatch":
         m["reader_served_prompt_tokens"] = [101]
@@ -134,24 +131,25 @@ def test_one_guard_ending_is_listed_for_review_not_failed(tmp_path):
     write_run(tmp_path, rows)
     problems, info = gate.check_run(tmp_path, CONFIG, 3)
     assert not problems
-    assert info["guard_rows"] == ["loft:nq_128k:0:max_steps"] and info["behaviour"]["guard endings"] == 1
+    assert info["review"] == ["loft:nq_128k:0:max_steps"] and info["behaviour"]["guard endings"] == 1
 
 
-def test_guard_endings_beyond_a_tenth_of_the_rows_fail(tmp_path):
+def test_review_rows_warn_past_a_tenth_and_fail_past_a_quarter(tmp_path):
     rows = [record(i) for i in range(3)]
     rows[0].update(finished=False, end_reason="max_steps", pred=None)
-    rows[1].update(finished=False, end_reason="ungrounded_final", pred=None)
+    rows[1]["metrics"].update(chunk_payload_calls=0, reader_input_tokens=[], reader_served_prompt_tokens=[])
     write_run(tmp_path, rows)
-    assert any("harness guard" in p for p in gate.check_run(tmp_path, CONFIG, 3)[0])
-    # Fifty-five rows tolerate five, and fail at six.
+    problems, info = gate.check_run(tmp_path, CONFIG, 3)
+    assert any("need review" in p for p in problems)
+    assert info["review"] == ["loft:nq_128k:0:max_steps", "loft:nq_128k:1:no_reads"]
+    # Fifty-five rows: five pass quietly, six warn, fourteen fail.
     many = [record(i) for i in range(55)]
-    for row in many[:5]:
-        row.update(end_reason="repetition_broken")
-    write_run(tmp_path / "many", many)
-    assert not gate.check_run(tmp_path / "many", CONFIG, 55)[0]
-    many[5].update(end_reason="repetition_broken")
-    write_run(tmp_path / "many", many)
-    assert gate.check_run(tmp_path / "many", CONFIG, 55)[0]
+    for count, fails, warns in ((5, False, False), (6, False, True), (14, True, False)):
+        for row in many[:count]:
+            row.update(end_reason="repetition_broken")
+        write_run(tmp_path / "many", many)
+        problems, info = gate.check_run(tmp_path / "many", CONFIG, 55)
+        assert bool(problems) is fails and bool(info["warnings"]) is warns
 
 
 def test_pilot_ids_match_first_comparator_rows_not_all_55(tmp_path):

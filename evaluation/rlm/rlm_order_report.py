@@ -20,6 +20,10 @@ with other prompts. They are aligned to the same test rows by position (test row
 guards position i+10), the alignment is checked against the gold answers row by row,
 and they are rescored per row -- never paired, never subtracted.
 
+--tuned-rows N: the first N test rows of every subset informed prompt revisions, so every
+paired comparison is repeated on the remaining rows alone. The harness-interventions table
+counts what the harness refused or rejected, and the rows a harness guard ended.
+
 Also writes campaign.json: code revision, document hashes, question ids, every config.
 """
 
@@ -37,6 +41,7 @@ import yaml
 
 from ..compare import headline_score
 from .paired import compare, load_rows, per_row_scores
+from .rlm_order_gate import ANSWERED_ENDINGS
 
 ARMS = ("bm25-query", "bm25-graph")
 STRUCTURED_ARMS = ("source", "bm25-graph")
@@ -140,6 +145,9 @@ def _arm_row(dataset: str, subset: str, arm: str, run_dir: Path) -> dict:
         "median_gold_first_position": runtime.get("median_gold_first_position"),
         "gold_in_top5_fraction": runtime.get("gold_in_top5_fraction"),
         "gold_in_read_chunks_fraction": runtime.get("gold_in_read_chunks_fraction"),
+        "premature_abstentions_rejected": runtime.get("premature_abstentions_rejected"),
+        "prose_answer_cells": runtime.get("prose_answer_cells"),
+        "empty_chunk_reads": runtime.get("empty_chunk_reads"),
         "run": run_dir.name,
     }
 
@@ -152,11 +160,29 @@ def _fmt(value, digits=3):
     return str(value)
 
 
-def _pair(a: Path, b: Path, boot: int, seed: int) -> dict | None:
+def _pair(a: Path, b: Path, boot: int, seed: int, only_ids: set[str] | None = None) -> dict | None:
     try:
-        return compare(a, b, resamples=boot, seed=seed)
+        return compare(a, b, resamples=boot, seed=seed, only_ids=only_ids)
     except SystemExit as exc:  # different rows or metrics: say so, never subtract
         return {"refused": str(exc)}
+
+
+def held_out_ids(ids, tuned_rows: int) -> set[str]:
+    """The rows no revision was tuned on: every id whose trailing row number is >= tuned_rows."""
+    held = set()
+    for example_id in ids:
+        match = re.search(r"(\d+)$", str(example_id))
+        if match and int(match.group(1)) >= tuned_rows:
+            held.add(str(example_id))
+    return held
+
+
+def _pair_line(subset: str, label: str, p: dict) -> str:
+    return (
+        f"| {subset} | {label} | {p['metric']} | {p['n']} | {p['mean_b']:.3f} | {p['mean_a']:.3f} | "
+        f"{p['delta']:+.3f} | [{p['ci_lo']:+.3f}, {p['ci_hi']:+.3f}] | "
+        f"{p['wins']}/{p['losses']}/{p['ties']} | {p['sign_p']:.3g} |"
+    )
 
 
 def main() -> None:
@@ -168,6 +194,12 @@ def main() -> None:
     ap.add_argument("--repo", type=Path, default=Path("."), help="checkout the campaign ran, for the revision")
     ap.add_argument("--boot", type=int, default=10000)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument(
+        "--tuned-rows",
+        type=int,
+        default=0,
+        help="the first N test rows of each subset informed prompt revisions; also pair on the rest",
+    )
     args = ap.parse_args()
 
     runs = _configs(args.results, "chunk_order")
@@ -184,6 +216,10 @@ def main() -> None:
         "| subset | agentic | structured | agentic score | structured score | Δ | 95% CI | W/L/T | sign p |",
         "|---|---|---|---:|---:|---:|---|---|---:|",
     ]
+    held_lines = [
+        "| subset | comparison (B − A) | metric | n | B | A | Δ | 95% CI | W/L/T | sign p |",
+        "|---|---|---|---:|---:|---:|---:|---|---|---:|",
+    ]
     for (dataset, subset), arms in sorted(runs.items()):
         entry: dict = {"runs": {arm: str(path) for arm, path in arms.items()}, "configs": {}, "question_ids": {}}
         for arm in ARMS:
@@ -191,6 +227,9 @@ def main() -> None:
                 continue
             arm_rows.append(_arm_row(dataset, subset, arm, arms[arm]))
             frame, config = load_rows(arms[arm])
+            if {"end_reason", "finished"} <= set(frame.columns):
+                guarded = ~frame["finished"].astype(bool) | ~frame["end_reason"].isin(ANSWERED_ENDINGS)
+                arm_rows[-1]["guard_endings"] = int(guarded.sum())
             entry["configs"][arm] = config
             entry["question_ids"][arm] = sorted(str(i) for i in frame["id"])
             docs = {(m or {}).get("document_sha256") for m in frame.get("metrics", []) if isinstance(m, dict)}
@@ -213,6 +252,14 @@ def main() -> None:
             )
         elif pair:
             headline.append(f"| {subset} | — | — | — | — | refused: {pair['refused'][:80]} | | | | | | | |")
+        held = held_out_ids(entry["question_ids"].get(ARMS[0], []), args.tuned_rows) if args.tuned_rows else set()
+        if held and set(ARMS) <= set(arms):
+            kept = _pair(arms["bm25-graph"], arms["bm25-query"], args.boot, args.seed, only_ids=held)
+            if kept and "refused" not in kept:
+                label = f"rows >= {args.tuned_rows}"
+                kept.update(dataset=dataset, subset=subset, comparison=f"bm25-query - bm25-graph, {label}")
+                paired_rows.append(kept)
+                held_lines.append(_pair_line(subset, "bm25-query − bm25-graph", kept))
         for agentic in ARMS:
             for s_arm in STRUCTURED_ARMS:
                 if agentic not in arms or s_arm not in s_arms:
@@ -227,6 +274,13 @@ def main() -> None:
                     f"{result['delta']:+.3f} | [{result['ci_lo']:+.3f}, {result['ci_hi']:+.3f}] | "
                     f"{result['wins']}/{result['losses']}/{result['ties']} | {result['sign_p']:.3g} |"
                 )
+                if held:
+                    kept = _pair(s_arms[s_arm], arms[agentic], args.boot, args.seed, only_ids=held)
+                    if kept and "refused" not in kept:
+                        comparison = f"agentic {agentic} - structured {s_arm}, rows >= {args.tuned_rows}"
+                        kept.update(dataset=dataset, subset=subset, comparison=comparison)
+                        paired_rows.append(kept)
+                        held_lines.append(_pair_line(subset, f"{agentic} − structured {s_arm}", kept))
         provenance["subsets"][f"{dataset}/{subset}"] = entry
 
     lines = ["# Agentic RLM over ordered chunks — Qwen3-4B-Instruct-2507", ""]
@@ -239,6 +293,16 @@ def main() -> None:
     ]
     if len(versus) > 2:
         lines += ["## Agentic vs structured, same rows, same chunks and order", "", *versus, ""]
+    if len(held_lines) > 2:
+        lines += [
+            f"## Held out from tuning: rows {args.tuned_rows} and up of each subset",
+            "",
+            f"Rows 0–{args.tuned_rows - 1} of every subset informed the prompt revisions, so these pairs leave "
+            "them out. B is the first arm named, A the second.",
+            "",
+            *held_lines,
+            "",
+        ]
     lines += [
         "## Cost and behaviour, per arm",
         "",
@@ -254,6 +318,20 @@ def main() -> None:
             f"{_fmt(r['avg_chunk_reads'], 2)} | {_fmt(r['chunk_read_example_fraction'], 2)} | "
             f"{_fmt(r['avg_chunks_read'], 1)} | {_fmt(r['avg_deepest_position'], 1)} | "
             f"{_fmt(r['chunk_budget_refusals'])} | {_fmt(r['abstained'])} | {_fmt(r['errors'])} |"
+        )
+    lines += [
+        "",
+        "## Harness interventions, per arm",
+        "",
+        "| subset | arm | guard endings | abstentions rejected | prose Final Answer cells "
+        "| empty reads refused | over-budget reads refused |",
+        "|---|---|---:|---:|---:|---:|---:|",
+    ]
+    for r in arm_rows:
+        lines.append(
+            f"| {r['subset']} | {r['arm']} | {_fmt(r.get('guard_endings'))} | "
+            f"{_fmt(r['premature_abstentions_rejected'])} | {_fmt(r['prose_answer_cells'])} | "
+            f"{_fmt(r['empty_chunk_reads'])} | {_fmt(r['chunk_budget_refusals'])} |"
         )
     lines += [
         "",

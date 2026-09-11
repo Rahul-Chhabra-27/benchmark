@@ -147,7 +147,14 @@ def sign_test(wins: int, losses: int) -> float:
     return min(1.0, 2.0 * tail / (2**n))
 
 
-def compare(a_dir: Path, b_dir: Path, resamples: int = 10000, seed: int = 0, allow_subset: bool = False) -> dict:
+def compare(
+    a_dir: Path,
+    b_dir: Path,
+    resamples: int = 10000,
+    seed: int = 0,
+    allow_subset: bool = False,
+    only_ids: Optional[set[str]] = None,
+) -> dict:
     a_frame, a_config = load_rows(a_dir)
     b_frame, b_config = load_rows(b_dir)
     dataset = a_config.get("dataset")
@@ -156,6 +163,11 @@ def compare(a_dir: Path, b_dir: Path, resamples: int = 10000, seed: int = 0, all
 
     a_metric, a_scores = per_row_scores(a_frame, dataset)
     b_metric, b_scores = per_row_scores(b_frame, dataset)
+    if only_ids is not None:
+        # A deliberate slice -- e.g. the rows no prompt revision was tuned on -- taken
+        # before the same-rows check below, which still applies within it.
+        a_scores = {i: s for i, s in a_scores.items() if i in only_ids}
+        b_scores = {i: s for i, s in b_scores.items() if i in only_ids}
     if a_metric and b_metric and a_metric != b_metric:
         # subspan_em against coverage is not a difference, it is two different questions.
         raise SystemExit(f"arms report different metrics ({a_metric} vs {b_metric}); refusing to subtract them")
