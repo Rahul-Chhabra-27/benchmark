@@ -15,11 +15,21 @@ set -uo pipefail
 cd "$(dirname "$0")/../.." || exit 1
 DATASET=${DATASET:-loft}
 EXPECT=${EXPECT:-55}
-TUNED_ROWS=${TUNED_ROWS:-3}
 STAGE=${STAGE:-full}
 SCRATCH=${SCRATCH:-/tmp/gautammahale/rlmorder}
-RESULTS=${RESULTS:-$SCRATCH/results}
-REPORT=${REPORT:-$SCRATCH/report}
+if [ "$DATASET" = loft ]; then
+  # Rows 0-2 of every LOFT subset informed revisions 2-5.
+  TUNED_ROWS=${TUNED_ROWS:-3}
+  RESULTS=${RESULTS:-$SCRATCH/results}
+  REPORT=${REPORT:-$SCRATCH/report}
+else
+  # No revision was tuned on a RULER row. The graph arm's organizations are this
+  # campaign's own (rlm_order_lane.sh keeps them next to RESULTS), so they are archived too.
+  TUNED_ROWS=${TUNED_ROWS:-0}
+  RESULTS=${RESULTS:-$SCRATCH/results_$DATASET}
+  REPORT=${REPORT:-$SCRATCH/report_$DATASET}
+  ORG=${ORG:-$(dirname "$RESULTS")/organization_$DATASET}
+fi
 ARCHIVE=${ARCHIVE:-/mnt/nas/gautammahale/archive/rlmorder}
 GRAPH=${GRAPH:-/mnt/nas/gautammahale/archive/graphorder}
 GUARDS=${GUARDS:-/mnt/nas/gautammahale/benchmark/evaluation/results/loft128k_guards}
@@ -66,7 +76,9 @@ $PY -m evaluation.rlm.rlm_order_report --results "$RESULTS" --out "$REPORT/$STAG
 echo "report exit=$?"
 
 # 4. Archive to NAS and verify: an empty rsync -c -n means the copy is identical.
-for pair in "$RESULTS:${STAGE}_results" "$REPORT:${STAGE}_report"; do
+pairs=("$RESULTS:${STAGE}_results" "$REPORT:${STAGE}_report")
+if [ -n "${ORG:-}" ]; then pairs+=("$ORG:${STAGE}_organization"); fi
+for pair in "${pairs[@]}"; do
   src=${pair%%:*}
   dst=$ARCHIVE/${pair##*:}
   rsync -a "$src/" "$dst/"

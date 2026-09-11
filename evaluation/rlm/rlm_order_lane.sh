@@ -13,7 +13,8 @@
 # Usage:  rlm_order_lane.sh <bm25-graph|bm25-query> <cpu> [subset ...]
 #   DATASET=loft (default): subsets nq hotpotqa musique qampari quest, run as <s>_128k on
 #     --split test.   DATASET=ruler128k: subsets are RULER task names (no split).
-#   LIMIT=3 RESULTS=$CAMPAIGN/results_pilot  for the pilot; LIMIT=55 for the campaign.
+#   LIMIT=3 RESULTS=/tmp/gautammahale/rlmorder/results_pilot  for the pilot; LIMIT=55 for the
+#   campaign. Raw output goes to cat-local scratch and is archived to NAS after each stage.
 set -euo pipefail
 arm=${1:?arm: bm25-graph|bm25-query}; cpu=${2:?cpu core to pin to}; shift 2
 DATASET=${DATASET:-loft}
@@ -31,7 +32,9 @@ if [ "$DATASET" = loft ]; then
   ORG=${ORG:-/mnt/nas/gautammahale/archive/graphorder/organization}
 else
   SUBSETS=${*:-"niah_single_1 niah_single_2 niah_single_3 niah_multikey_1 niah_multikey_2 niah_multikey_3 niah_multivalue niah_multiquery vt cwe fwe qa_1 qa_2"}
-  ORG=${ORG:-$CAMPAIGN/organization}
+  # Every RULER row brings its own haystack, so its organizations are new raw output: they
+  # go on scratch next to RESULTS, never under $HOME (lab storage policy).
+  ORG=${ORG:-$(dirname "$RESULTS")/organization_$DATASET}
 fi
 
 if [ "$(id -gn)" != infolab ]; then
