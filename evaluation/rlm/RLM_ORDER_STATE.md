@@ -3,7 +3,7 @@
 > **Read this file first.** It is updated at every milestone: code, pilot, launch, each
 > finished stage, gate and report. Where two statements disagree, the newer one wins; the
 > changelog at the bottom dates every update.
-> **Last updated: 2026-09-11 ~08:35 IST.**
+> **Last updated: 2026-09-11 10:22 IST.**
 > - **The full RULER-128k run is COMPLETE, and its gate FAILED on 1 of 26 runs.** It ran
 >   08:39:29–09:25:13 on revision 6 (`c466401`): 1,430 of 1,430 rows, 0 errors, no limit
 >   or server notices.
@@ -15,14 +15,13 @@
 >     `archive/rlmorder/ruler_full_*`.
 >   - **Open, and the user's call:** whether to fix the refusal and rerun. See
 >     **RULER-128k → The full run**.
->   - **Ask before showing any RULER number.**
 > - **The LOFT campaign is COMPLETE, and its gate PASSED.** 550/550 rows, run 06:33–07:10
 >   on revision 5 (`2b62ef2`). There were 21 behaviour rows, and no run crossed the 10%
 >   warn line. Results, report and logs are archived on NAS; see **Results** below.
 > - **Everything is committed.** The branch is on `nas` and on `skylight`
 >   (skylight-org/intel-longcontext-pc: `feature/rlm-ordered-chunks`, and `gautam-dev`
 >   fast-forwarded).
-> - **Ask before showing any RULER number** (the standing user rule: loft128k only).
+> - **RULER-128k scores can be shown:** the user asked to see them on 2026-09-11. See **RULER-128k → Scores**.
 > - **Caveat for every LOFT number.** Rows 0–2 of each subset tuned five revisions, so
 >   the report repeats every pair on rows 3–54 (n=52). The picture does not change.
 
@@ -293,6 +292,36 @@ The full report is `archive/rlmorder/full_report/full/report.md`.
   - **The cost.** Rerunning niah_multikey_3 in both arms is 110 rows, a few minutes. Rerunning all of RULER, so that it stays on one revision, takes about 45 minutes.
   - **The alternative is worse.** Sizing the graph example to the budget would also change LOFT musique's prompt: its advertised K is 5, although no musique read was ever refused.
 
+**Scores (string_match, 0–100, n=55 per task; shown to the user on 2026-09-11 at their request).**
+
+| task | query | graph | Δ query−graph [95% CI] | W/L/T | sign p | note |
+|---|---:|---:|---|---|---:|---|
+| cwe | 0.0 | 0.0 | 0.0 | 0/0/55 | 1 | neither arm can count words from 5–6 chunks |
+| fwe | 95.2 | 92.1 | +3.0 [−0.6, +6.7] | 7/2/46 | 0.18 | |
+| niah_multikey_1 | 96.4 | 89.1 | +7.3 [0.0, +16.4] | 5/1/49 | 0.22 | |
+| niah_multikey_2 | 98.2 | 96.4 | +1.8 [0.0, +5.5] | 1/0/54 | 1 | |
+| niah_multikey_3 | 90.9 | 47.3 | +43.6 [+30.9, +56.4] | 24/0/31 | 1.2e-7 | graph gate FAIL: 25 refusal loops score 0; its other 30 rows score 86.7 |
+| niah_multiquery | 96.8 | 81.8 | +15.0 [+7.3, +23.6] | 16/3/36 | 0.004 | |
+| niah_multivalue | 95.5 | 88.6 | +6.8 [0.0, +14.1] | 9/7/39 | 0.80 | |
+| niah_single_1 | 100.0 | 100.0 | 0.0 | 0/0/55 | 1 | |
+| niah_single_2 | 100.0 | 98.2 | +1.8 [0.0, +5.5] | 1/0/54 | 1 | |
+| niah_single_3 | 78.2 | 87.3 | −9.1 [−16.4, −1.8] | 0/5/50 | 0.06 | a grid effect, see below |
+| qa_1 | 72.7 | 72.7 | 0.0 [−12.7, +12.7] | 7/7/41 | 1 | |
+| qa_2 | 56.4 | 45.5 | +10.9 [−3.6, +25.5] | 11/5/39 | 0.21 | |
+| vt | 21.1 | 22.5 | −1.5 [−8.7, +5.1] | 12/12/31 | 1 | both arms find about 1 of the 5 chained variables |
+| **mean of 13** | **77.0** | **70.9** | | | | without niah_multikey_3: 75.9 vs 72.9 |
+
+- **Rows 3–54,** which revision 6 was not tuned on, give the same picture. No difference changes sign.
+- **Every discrepancy, explained and checked on the rows:**
+  - **niah_multikey_3 graph** is the refusal loop, not the order (see **The full run**).
+  - **niah_single_3.**
+    - 12 of 55 gold UUIDs cross a chunk boundary, at three fixed depths (chunks 62/63, 192/193 and 278/279). That is why far more straddle than chance would give.
+    - The graph arm's 8-chunk neighbourhood reads took in both halves on 9 of those rows, and the reader rejoined 5. The query arm's top-5 reads took the second half on none.
+    - Those 5 rows are the whole difference (0 wins, 5 losses): an effect of the grid and the read width, not of the order. It is also why the graph arm scores above the 78.2% of rows in which a single chunk holds the gold.
+  - **vt and niah_multiquery.** Accepting the literals revision 6 rejected would lift vt to 24.0 (query) and 25.5 (graph), and niah_multiquery graph to 84.1.
+  - **Rounding.** The cost table's scores are `metrics.json`'s, rounded to 2 decimals (95.15). The headline averages the per-row scores (95.152).
+  - **Filler haystacks.** On niah_single_1 and vt, the question-free graph order puts the needle in the top 2 (median gold position 2), so the arms tie there.
+
 ## Audit of the results and the code (2026-09-11, after the RULER run)
 
 The user asked me to go through the results and look for bugs. Every check ran on the archived rows, and no RULER score is quoted here.
@@ -421,12 +450,12 @@ ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && git pull 
     - The lane script's `ORG` default and the gate and report paths now point at the archive.
 - **Never run `make style` on the Mac.** Its uv sync corrupts `.venv-mac`. Run `.venv/bin/python -m black/isort` directly.
 - **Only doc-only commits may be pulled into a checkout whose lanes are running.**
-- **Show loft128k numbers only** (standing user rule). Ask before showing any RULER-128k numbers.
+- **Show loft128k numbers, and this campaign's RULER-128k numbers** (the user OK'd RULER on 2026-09-11). Ask before showing any other dataset's numbers.
 
 ## Next steps (ranked)
 1. **The user's call: fix the refusal and rerun, or accept RULER as it stands.** See **RULER-128k → The full run**.
    - To rerun: revision 7 names a concrete slice in the over-budget refusal. Pilot it, then rerun niah_multikey_3 in both arms, or all of RULER, restarting `ro_root` with the user's OK.
-   - Either way, ask before showing any RULER number, and quote niah_multikey_3 graph only with the gate caveat.
+   - Either way, quote niah_multikey_3 graph only with the gate caveat.
 2. **Optional, and only as a new revision with its own pilot.** Never mix it into the numbers above.
    - A hint when a chunk filter matches nothing. The case trap caused most LOFT no-read rows, and 4 RULER rows.
    - Let a composed answer say what was not found ("… and no numbers for X") without losing the values it did find. Revision 6 rejects any added negation, which cost partial credit on 3 niah_multiquery rows.
@@ -434,6 +463,9 @@ ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && git pull 
 3. **The dashboard export, only if asked.** `graph_order_export_dashboard.py` is now in the repo.
 
 ## Changelog (newest first)
+- **2026-09-11 10:22 IST: the audit, and the RULER scores shown to the user.**
+  - **Audit.** The user asked for a bug hunt; see **Audit of the results and the code**. One real bug was fixed in `e9468f1`: the RULER report's noise note used LOFT's scale. The regenerated report's numbers are byte-identical.
+  - **Scores.** The user asked to see the RULER scores. They are in **RULER-128k → Scores**, with every discrepancy explained. The niah_single_3 gap was verified row by row as an effect of the grid and the read width.
 - **2026-09-11 09:25–09:40 IST: the full RULER run is COMPLETE, its gate FAILED on 1 of 26 runs, and the server is stopped.**
   - **The run.** All 1,430 rows were done by 09:25:13, with 0 errors and no limit or server notices.
   - **Post-run (R4).**
