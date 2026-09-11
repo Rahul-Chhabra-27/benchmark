@@ -24,10 +24,13 @@ from evaluation.rlm.organization import CONFIG, OrderedPayload, ordered_hits, or
 from evaluation.rlm.retrieval import Hit
 from evaluation.rlm.rlm import (
     CHUNK_ORDER_NOTES,
+    CHUNK_READS_BEFORE_ABSTAIN,
     CHUNK_WORKED_SESSIONS,
     HIT_SEPARATOR,
     PREMATURE_ABSTAIN_NUDGE,
+    PREMATURE_ABSTAIN_NUDGE_CHUNK_READS,
     PREMATURE_ABSTAIN_NUDGE_CHUNKS,
+    PROSE_ANSWER_CELL_ERROR,
     RLM,
     SUB_SYSTEM_PROMPT,
 )
@@ -318,6 +321,45 @@ class TestRun:
         _, _, root = run_once("bm25-query", query_view(), cells=cells)
         nudges = [m["content"] for m in root.calls[1] if m["role"] == "user"]
         assert PREMATURE_ABSTAIN_NUDGE_CHUNKS in nudges and PREMATURE_ABSTAIN_NUDGE not in nudges
+
+    def test_one_read_is_too_little_to_abstain_and_the_nudge_says_how_much_was_read(self):
+        cells = [
+            'a = llm_query("Which cello sonata?", chunks[:2])\nprint(a)',
+            'FINAL_NONE("absent")',
+            'b = llm_query("Which violin?", chunks[2:4])\nprint(b)',
+            'FINAL_NONE("absent")',
+            'c = llm_query("Which piano?", chunks[4:])\nprint(c)',
+            'FINAL_NONE("absent")',
+        ]
+        assert CHUNK_READS_BEFORE_ABSTAIN == 3
+        result, _, root = run_once("bm25-query", query_view(), cells=cells)
+        nudges = [m["content"] for m in root.calls[-1] if m["role"] == "user"]
+        assert PREMATURE_ABSTAIN_NUDGE_CHUNK_READS.format(read=2, total=5) in nudges
+        assert PREMATURE_ABSTAIN_NUDGE_CHUNK_READS.format(read=4, total=5) in nudges
+        assert result.end_reason == "abstained" and result.metrics["premature_abstentions"] == 2
+        assert result.metrics["chunk_payload_calls"] == 3
+
+    def test_legacy_runs_still_abstain_after_one_sub_call(self):
+        cells = ['ans = llm_query("Which cello sonata? " + context[:100])\nprint(ans)', 'FINAL_NONE("absent")']
+        result = RLM(root_client=ScriptedRoot(cells), sub_client=FakeClient()).run(DOCUMENT, "Which cello sonata?")
+        assert result.end_reason == "abstained" and "premature_abstentions" not in result.metrics
+
+    def test_a_final_answer_line_is_told_to_call_final(self):
+        cells = [READ_THEN_ANSWER[0], "Final Answer: sub answer", "FINAL(ans)"]
+        result, _, root = run_once("bm25-query", query_view(), cells=cells)
+        assert result.end_reason == "final_called" and result.answer == "sub answer"
+        assert result.metrics["prose_answer_cells"] == 1
+        assert any(PROSE_ANSWER_CELL_ERROR in m["content"] for m in root.calls[2] if m["role"] == "user")
+
+    def test_the_final_answer_diagnosis_is_for_ordered_runs_only(self):
+        rlm, env, _ = build()
+        prose = (PROSE_ANSWER_CELL_ERROR, PROSE_ANSWER_CELL_ERROR)
+        assert rlm._exec("x = 1\nFinal Answer: 2000", env, 4000) == prose
+        # `answer: x` is an annotation, valid Python: it runs as written.
+        assert "x" in rlm._exec('answer: str = "x"\nprint(answer)', env, 4000)[0]
+        legacy = RLM(root_client=FakeClient(), sub_client=FakeClient())
+        obs, _ = legacy._exec("Final Answer: 2000", legacy._make_env(DOCUMENT, base_metrics(), {}, []), 4000)
+        assert obs.startswith("[SYNTAX ERROR] Your code block was written on a single line")
 
 
 class TestPrompt:

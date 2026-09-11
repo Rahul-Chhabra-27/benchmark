@@ -211,7 +211,7 @@ Example of a correct session (4 turns):
 # told about the order and in nothing else the prompt says.
 CHUNK_ORDERS = ("bm25-graph", "bm25-query")
 # Bump for any change that can alter what an ordered-chunk root is shown or sent.
-CHUNK_ORDER_REVISION = 2
+CHUNK_ORDER_REVISION = 3
 # One structured reader group, so one agentic read is the size of one mapped group.
 DEFAULT_CHUNK_CALL_TOKENS = 8192
 # The question a chunk read is priced with when the prompt states how many chunks fit
@@ -559,6 +559,25 @@ PREMATURE_ABSTAIN_NUDGE_CHUNKS = (
     "llm_query(question, those_chunks). Only abstain once several reads have genuinely failed."
 )
 
+# How many chunk reads an ordered-chunk run makes before its FINAL_NONE is believed.
+# The legacy bar -- one sub-call -- was set for a root that located a slice before
+# reading it. Here one read of the top five chunks is 2% of a 238-chunk document, and
+# on the revision-2 pilot all three musique query-arm rows abstained after exactly that
+# one read, one of them with the gold in chunks[0]: the root had asked all three hops
+# in one question, and the reader said the text did not answer it.
+CHUNK_READS_BEFORE_ABSTAIN = 3
+
+# The rejection for an ordered-chunk run that HAS read, but too little to claim absence.
+PREMATURE_ABSTAIN_NUDGE_CHUNK_READS = (
+    "REJECTED: you have read only {read} of the {total} chunks, so you cannot yet know the "
+    "answer is absent. When a reader says the text does not answer, the question was often "
+    "too big for one read: ask for ONE fact at a time -- the first thing you need to learn "
+    "-- then look for what you learned. Read more before giving up: the next chunks of the "
+    "list, or the chunks whose `.text` mentions a distinctive term from the question, e.g. "
+    "[c for c in chunks if term.lower() in c.text.lower()]. Only abstain once several "
+    "different reads have genuinely failed."
+)
+
 FOLD_MARKER = (
     "[MEMORY NOTICE] {n} earlier turn(s) were dropped to stay within your memory "
     "budget. They are gone from your context and were NOT saved anywhere — but the "
@@ -620,6 +639,18 @@ TEXT_FINAL_VAR_RE = re.compile(rf"(?:{_FINAL_VAR_ALT})\(\s*[\"'](\w+)[\"']\s*\)"
 # FINAL_NONE may be written bare or with a reason, in code or in prose.
 TEXT_FINAL_NONE_RE = re.compile(
     rf"(?:{_FINAL_NONE_ALT})\(\s*(?:(?:\"\"\"|'''|\"|')(.*?)(?:\"\"\"|'''|\"|'))?\s*\)", re.DOTALL
+)
+# LOFT's answer line, written as a code cell. LOFT prompts close their few-shot answers
+# with "Final Answer: [...]", and on the revision-2 pilot three graph-arm rows read the
+# answer, then submitted `Final Answer: 2000` as Python. The one-line diagnosis
+# ("rewrite it multi-line") cannot be acted on for a single statement, so each row
+# resubmitted the same line until the repetition breaker replaced its answer. Only two
+# words are matched: `answer: x` alone is a valid annotation and never reaches here.
+PROSE_ANSWER_LINE_RE = re.compile(r"^\s*final\s+answer\s*:", re.IGNORECASE | re.MULTILINE)
+PROSE_ANSWER_CELL_ERROR = (
+    "[SYNTAX ERROR] `Final Answer: ...` is not Python, so nothing was recorded. Submit your "
+    "answer by calling FINAL in a code block instead: FINAL(ans) for a variable that holds "
+    "it, or FINAL(...) with the answer written out."
 )
 
 # A sub client that cannot fit a slice reports it as an ordinary return string
@@ -1713,6 +1744,10 @@ class RLM:
         try:
             compile(code, "<rlm>", "exec")
         except SyntaxError:
+            # Ordered-chunk runs only: every other agentic run keeps the diagnosis it
+            # was scored with.
+            if self.chunk_order is not None and PROSE_ANSWER_LINE_RE.search(code):
+                return PROSE_ANSWER_CELL_ERROR, PROSE_ANSWER_CELL_ERROR
             if "\n" not in code:
                 fixed = ONELINE_FIX_RE.sub("\n", code)
                 try:
@@ -2231,6 +2266,8 @@ class RLM:
                 chunks_per_call_advertised=chunk_view[2],
                 chunk_payload_calls=0,
                 chunk_budget_refusals=0,
+                premature_abstentions=0,
+                prose_answer_cells=0,
                 chunk_ranks_read=[],
                 reader_input_tokens=[],
                 reader_served_prompt_tokens=[],
@@ -2240,7 +2277,15 @@ class RLM:
         self._sub_call_budget = self.max_sub_calls
         self._deadline = time.monotonic() + self.run_timeout if self.run_timeout else None
         env = self._make_env(context, metrics, cache, notes, provided_chunks=chunks, ordered_chunks=ordered_chunks)
-        abstain_nudge = PREMATURE_ABSTAIN_NUDGE_CHUNKS if self.chunk_order is not None else PREMATURE_ABSTAIN_NUDGE
+
+        def abstain_nudge() -> str:
+            """The rejection of an unearned FINAL_NONE (see _abstention_earned)."""
+            if self.chunk_order is None:
+                return PREMATURE_ABSTAIN_NUDGE
+            if not metrics["sub_calls"]:
+                return PREMATURE_ABSTAIN_NUDGE_CHUNKS
+            read = len(set(metrics.get("chunk_ranks_read", [])))
+            return PREMATURE_ABSTAIN_NUDGE_CHUNK_READS.format(read=read, total=metrics["chunks_total"])
 
         system_msg = {
             "role": "system",
@@ -2307,6 +2352,11 @@ class RLM:
             literal string: it costs a compliant model nothing, and 77% of the 331
             LOFT-1m abstentions were reached with one sub-call or none.
             """
+            if self.chunk_order is not None:
+                # Reading, here, is passing chunks to llm_query -- and one read of the
+                # top of the list is too little to claim absence (CHUNK_READS_BEFORE_ABSTAIN).
+                needed = max(self.min_sub_calls_before_abstain, CHUNK_READS_BEFORE_ABSTAIN)
+                return metrics.get("chunk_payload_calls", 0) >= needed
             if metrics["sub_calls"] < self.min_sub_calls_before_abstain:
                 return False
             if self.search_k > 0 and "gate" not in self.search_ablate and metrics.get("search_calls", 0) < 1:
@@ -2460,7 +2510,7 @@ class RLM:
                             }
                         )
                         full_history.append({"role": "assistant", "content": reply})
-                        full_history.append({"role": "user", "content": abstain_nudge})
+                        full_history.append({"role": "user", "content": abstain_nudge()})
                         continue
                     transcript.append(
                         {
@@ -2559,6 +2609,8 @@ class RLM:
             # --- Execute ONLY the first block ---
             code = blocks[0]
             obs, obs_full = self._exec(code, env, obs_limit)
+            if obs == PROSE_ANSWER_CELL_ERROR:
+                metrics["prose_answer_cells"] = metrics.get("prose_answer_cells", 0) + 1
             if len(blocks) > 1:
                 obs += (
                     "\n[WARNING: you wrote multiple code blocks; ONLY the FIRST was "
@@ -2580,7 +2632,7 @@ class RLM:
                         env["_final_box"]["abstained"] = False
                         env["_final_box"]["reason"] = ""
                         full_history.append({"role": "assistant", "content": reply})
-                        full_history.append({"role": "user", "content": abstain_nudge})
+                        full_history.append({"role": "user", "content": abstain_nudge()})
                         continue
                     metrics["abstain_reason"] = env["_final_box"].get("reason", "")
                     return RLMResult(None, step, True, transcript, "abstained", metrics)

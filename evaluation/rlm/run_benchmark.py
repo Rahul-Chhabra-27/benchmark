@@ -35,6 +35,7 @@ from .retrieval import Hit
 from .rlm import (
     CHUNK_ORDER_REVISION,
     CHUNK_ORDERS,
+    CHUNK_READS_BEFORE_ABSTAIN,
     DEFAULT_CHUNK_CALL_TOKENS,
     DEFAULT_REDUCE_FINDING_CHARS,
     RLM,
@@ -746,6 +747,9 @@ def chunk_order_runtime(scored_frame: pd.DataFrame) -> dict:
         float(sum(1 for m in rows if m.get("chunk_payload_calls")) / len(rows)) if rows else 0.0
     )
     out["chunk_budget_refusals"] = int(sum(m.get("chunk_budget_refusals", 0) for m in rows))
+    # Harness rejections, totalled so a campaign shows how often each one fired.
+    out["premature_abstentions_rejected"] = int(sum(m.get("premature_abstentions", 0) for m in rows))
+    out["prose_answer_cells"] = int(sum(m.get("prose_answer_cells", 0) for m in rows))
     for column in ("chunks_read", "deepest_position_read"):
         if column in scored_frame:
             out[f"average_{column}"] = mean(list(scored_frame[column].dropna()))
@@ -2378,6 +2382,7 @@ def build_run_config(
             {
                 "chunk_order": args.chunk_order,
                 "chunk_order_revision": CHUNK_ORDER_REVISION,
+                "chunk_reads_before_abstain": CHUNK_READS_BEFORE_ABSTAIN,
                 "chunk_call_tokens": getattr(args, "chunk_call_tokens", DEFAULT_CHUNK_CALL_TOKENS),
                 "chunk_order_query": "bare" if args.chunk_order == "bm25-query" else None,
                 "structured_context_tokens": getattr(
