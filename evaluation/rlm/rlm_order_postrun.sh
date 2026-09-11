@@ -25,9 +25,9 @@ if [ "$DATASET" = loft ]; then
   RESULTS=${RESULTS:-$SCRATCH/results}
   REPORT=${REPORT:-$SCRATCH/report}
 else
-  # No revision was tuned on a RULER row. The graph arm's organizations are this
+  # Rows 0-2 of every RULER task informed revision 6. The graph arm's organizations are this
   # campaign's own (rlm_order_lane.sh keeps them next to RESULTS), so they are archived too.
-  TUNED_ROWS=${TUNED_ROWS:-0}
+  TUNED_ROWS=${TUNED_ROWS:-3}
   RESULTS=${RESULTS:-$SCRATCH/results_$DATASET}
   REPORT=${REPORT:-$SCRATCH/report_$DATASET}
   ORG=${ORG:-$(dirname "$RESULTS")/organization_$DATASET}
