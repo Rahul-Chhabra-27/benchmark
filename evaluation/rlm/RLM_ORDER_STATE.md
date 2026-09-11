@@ -3,17 +3,19 @@
 > **Read this file first.** It is updated at every milestone: code, pilot, launch, each
 > finished stage, gate and report. Where two statements disagree, the newer one wins; the
 > changelog at the bottom dates every update.
-> **Last updated: 2026-09-11 ~06:36 IST.**
-> - **The FULL LOFT run is RUNNING.** 55 test rows × 5 subsets × 2 arms, on revision 5
->   (`2b62ef2`). Ten lanes launched at 06:33:18, `ro_{graph,query}_<subset>` on cores 6–15.
->   Live output goes to cat-local `/tmp/gautammahale/rlmorder/results`.
-> - The revision-5 pilot passed the gate: 30/30 rows, zero guard endings.
-> - **When the run finishes:**
->   - gate it, report it and archive it (steps 4–5);
->   - **stop `ro_root`** (the user's condition for the restart);
->   - ask the user before RULER.
-> - **Caveat for every number.** Rows 0–2 of each subset were the pilot rows behind five
->   revisions. Report rows 3–54 (n=52) beside the full 55.
+> **Last updated: 2026-09-11 ~07:20 IST.**
+> - **The LOFT campaign is COMPLETE, and its gate PASSED.** 550/550 rows, run 06:33–07:10
+>   on revision 5 (`2b62ef2`). There were 21 behaviour rows, and no run crossed the 10%
+>   warn line.
+> - `ro_root` was stopped at 07:10:59. Results, report and logs are archived on NAS.
+>   See **Results** below.
+> - **Everything is committed.** The branch is on `nas` and on `skylight`
+>   (skylight-org/intel-longcontext-pc: `feature/rlm-ordered-chunks`, and `gautam-dev`
+>   fast-forwarded).
+> - **Next: RULER-128k, which needs the user's OK.** It needs the GPU again plus
+>   online dataset staging. Ask before showing any RULER number.
+> - **Caveat for every LOFT number.** Rows 0–2 of each subset tuned five revisions, so
+>   the report repeats every pair on rows 3–54 (n=52). The picture does not change.
 
 ## Goal
 
@@ -90,10 +92,11 @@ list note.
 
 | what | where |
 |---|---|
-| branch | `feature/rlm-ordered-chunks`, cut from `feature/graph-order` @ f8f7551. Pushed to **`nas`** only (fox `/mnt/nas/gautammahale/retrieval_checkout`). |
+| branch | `feature/rlm-ordered-chunks`, cut from `feature/graph-order` @ f8f7551. Pushed to **`nas`** (fox `/mnt/nas/gautammahale/retrieval_checkout`). On 2026-09-11 the user asked for it on **`skylight`** as well (`git@github.com:skylight-org/intel-longcontext-pc.git`). There it is the branch `feature/rlm-ordered-chunks`, `gautam-dev` is fast-forwarded to it, and `master` is untouched. |
+| LOFT full run | NAS `/mnt/nas/gautammahale/archive/rlmorder/`: `full_results` (590 files), `full_report` (`full/report.md`, csvs, `campaign.json`, `full_gate.txt`) and `full_logs`. A non-durable live copy is at cat `/tmp/gautammahale/rlmorder/{results,report}`. |
 | Mac checkout | `linear/benchmark`. Tests run with `.venv-mac`; black and isort are in `.venv`. |
 | compute host | **cat**, GPU 0 (RTX A6000, UUID `GPU-de398869-9f4d-2f4e-e0ab-738deda8383e`). cat has 32 cores. |
-| server | tmux **`ro_root`**, started 2026-09-11 06:04:44 with the user's OK. It replaced `go_root`, whose engine had been killed. vLLM 0.8.5 on **:8002** on GPU-de398869 (CUDA index 0): `--max-model-len 65536`, util 0.5 (24.3 GB), cores 2–5. Weights are on cat-local `/tmp/gautammahale/hf_cache`; the log is at `/tmp/gautammahale/rlmorder/logs/root.log`. **Stop it when this campaign's runs finish**; that was the user's condition for the restart. |
+| server | **STOPPED at 2026-09-11 07:10:59, after the LOFT gate passed** (the user's condition). It was tmux `ro_root`, started 06:04:44 with the user's OK to replace the killed `go_root`: vLLM 0.8.5 on :8002, GPU-de398869, 65536 ctx, util 0.5, cores 2–5, weights on cat-local `/tmp/gautammahale/hf_cache`. Restarting it (step 0) needs the user's OK. |
 | code checkout | cat `/mnt/home/gautammahale/rlmorder/checkout` (code only) |
 | pilot scratch | cat `/tmp/gautammahale/rlmorder/{results_pilot_r2,results_pilot_r3,logs,report,hf_datasets}`; primary group `infolab`. The r2 gate output is `report/pilot_r2_gate.txt`. |
 | old pilot evidence | NAS `/mnt/nas/gautammahale/archive/rlmorder/`. `results_pilot_r1` and `logs_r1`: revision 1, stopped. `results_pilot_r2`, `logs_r2` and `pilot_r2_gate.txt`: revision 2, gate failed. Never resume into them. |
@@ -112,7 +115,7 @@ list note.
 | revision-3 pilot (3 rows × 2 arms) | gate PASSED, 30/30 (06:12); archived | passed | passed | passed | passed |
 | revision-4 pilot (3 rows × 2 arms, `00b01a6`) | done 06:22; archived | done | gate FAIL: graph row 0 `ungrounded_final` | done | done |
 | revision-5 pilot (3 rows × 2 arms, `2b62ef2`) | gate PASSED, 30/30, 0 guard endings (06:32); archived | passed | passed | passed | passed |
-| LOFT full (55 rows × 2 arms, `2b62ef2`) | running (launched 06:33:18) | running | running | running | running |
+| LOFT full (55 rows × 2 arms, `2b62ef2`) | gate PASSED (07:10); archived | passed | passed | passed | passed |
 | RULER-128k (13 tasks × 55 × 2) | not started | | | | |
 
 **The comparator to beat.** These are the structured graph-order results on the same 55
@@ -127,6 +130,46 @@ test rows. That campaign's gate passed on 2026-09-10.
 | quest | coverage | 0.467 | 0.364 |
 
 Those runs cost about 126–128k input tokens and 35–56 s per question: every chunk was read.
+
+## Results: the LOFT-128k full run (gate PASSED, 2026-09-11)
+
+**What was run.** 550 rows = 55 test rows × 5 subsets × 2 arms, on revision 5 (`2b62ef2`),
+between 06:33 and 07:10 IST. The gate found no integrity problem. There were 21 behaviour
+rows (3.8%), and no run crossed the 10% warn line; the highest was musique graph, at 5 of 55.
+The full report is `archive/rlmorder/full_report/full/report.md`.
+
+| subset | metric | agentic query | agentic graph | Δ query−graph [95% CI] | structured source | structured graph | base RLM (ctx) | vanilla (ctx) |
+|---|---|---:|---:|---|---:|---:|---:|---:|
+| nq | subspan_em | 0.818 | 0.709 | +0.109 [+0.000, +0.236] | 0.709 | 0.764 | 0.545 | 0.473 |
+| hotpotqa | subspan_em | 0.709 | 0.600 | +0.109 [−0.036, +0.255] | 0.491 | 0.527 | 0.382 | 0.491 |
+| musique | subspan_em | 0.291 | 0.273 | +0.018 [−0.109, +0.145] | 0.109 | 0.255 | 0.109 | 0.236 |
+| qampari | coverage | 0.365 | 0.167 | +0.198 [+0.124, +0.276] | 0.599 | 0.479 | 0.058 | 0.396 |
+| quest | coverage | 0.212 | 0.294 | −0.082 [−0.176, +0.012] | 0.467 | 0.364 | 0.006 | 0.145 |
+
+**Query-aware order vs graph order.**
+- The query arm wins clearly on qampari (sign p = 7e-5).
+- It wins less surely on nq and hotpotqa; both CIs reach 0.
+- musique is a tie, and quest leans towards graph.
+- Rows 3–54 (n=52), which no revision was tuned on, give the same picture: qampari +0.190 [+0.113, +0.265], and quest −0.099 [−0.196, −0.006].
+
+**Agentic vs map→reduce, over the same chunks in the same order.**
+- On the single-answer subsets, the agentic query arm matches or beats map→reduce.
+  - hotpotqa: +0.218 vs source and +0.182 vs graph; both CIs are above 0.
+  - musique: +0.182 vs source.
+  - nq: +0.109 and +0.055; both CIs include 0.
+- It does this on **7–16k input tokens per question, where the structured arms spent about 127k**.
+- On the list subsets it loses clearly: qampari −0.234 and −0.115, quest −0.255 and −0.152. It reads 5–12 of about 230 chunks, and a list answer is spread across the document.
+
+**Cost and gold position.**
+- Input tokens per question: agentic query 6.9k–15.9k; agentic graph 18k–47k; structured about 127k.
+- Gold position, by loose string match: the query order puts gold in the top 5 for 62–96% of rows (median position 1–4). In the graph order the median position is 42–106.
+
+**The acceptance review sampled every REVIEW list: 8 rows, none an integrity problem.**
+- **The case trap** caused most no-read and `max_steps` rows. musique graph 18 and qampari graph 47 tested capitalised terms against `c.text.lower()` for about 50 steps; nq graph 20 tested a lower-case term against `c.text`. Revision 4's note notwithstanding.
+- **Over-narrow conjunctive filters:** hotpotqa graph 4, quest graph 21.
+- **One false rejection by the grounding guard.** musique query 45 reached "2,548" over three correct hops, typed `FINAL("2548")`, and was rejected as ungrounded.
+- **The root's own code errors:** nq query 19.
+- **An answer taken from its own printed filters, without a read:** quest query 16.
 
 ## How to resume (exact commands)
 
@@ -192,16 +235,29 @@ full launch. Never accept a pass on only the subsets that happen to exist.
 - **Show loft128k numbers only** (standing user rule). Ask before showing any RULER-128k numbers.
 
 ## Next steps (ranked)
-1. **Get the user's OK to restart the server on cat GPU 0.** Restart it with step 0 above, and check that it generates.
-2. Launch the ten revision-3 pilot lanes (step 1), then gate all 30 rows (step 2). Inspect the transcripts:
-   - no `Final Answer:` loops;
-   - every abstention comes only after at least 3 reads;
-   - the qampari and quest lists parse.
-   A failure blocks the full campaign; keep failed rows as evidence.
-3. Full LOFT: 55 rows × 5 subsets × 2 arms, with `LIMIT=55`, same lanes. Get the output location from the user first; cat-local `/tmp` is not durable. Then gate, report, and copy condensed evidence to NAS. The user's original request covers this run.
-4. RULER-128k follows the LOFT gate, as planned.
+1. **RULER-128k, which needs the user's OK first.**
+   - It needs the GPU again: `ro_root` was stopped under the user's condition.
+   - It needs a one-time online staging of `lighteval/RULER-131072-Qwen-3`.
+   - Then run a pilot, the full 13 tasks × 55 × 2, and `DATASET=ruler128k STAGE=ruler_full bash evaluation/rlm/rlm_order_postrun.sh`.
+   - Ask before showing any RULER number.
+2. **Optional, and only as a new revision with its own pilot.** Never mix it into the LOFT numbers above.
+   - A hint when a chunk filter matches nothing (the case trap).
+   - Grounding that tolerates number formats ("2548" against "2,548").
+3. **The dashboard export, only if asked.** `graph_order_export_dashboard.py` is now in the repo.
 
 ## Changelog (newest first)
+- **2026-09-11 ~07:20 IST: the LOFT full run is COMPLETE. The gate PASSED, the server is stopped, everything is archived and committed, and the branch is pushed to Skylight.**
+  - **The run.** All 550 rows were done by 07:10:02.
+  - **Post-run.** `rlm_order_postrun.sh`:
+    - gated the run: PASS, 21 behaviour rows, no WARN;
+    - stopped `ro_root` at 07:10:59;
+    - reported with `--tuned-rows 3`;
+    - archived results (590/590), report (10/10) and logs (10), with 0 checksum diffs.
+  - **Review.** Every REVIEW list was sampled; see Results.
+  - **Commits.** The user asked for everything committed and pushed to Skylight.
+    - `feature/rlm-ordered-chunks` is on `skylight`, `gautam-dev` was fast-forwarded 348b891 → the branch head, and `master` is untouched.
+    - The loose host scripts are now in the repo: the qagnostic lanes and `autoshutdown.py` under `evaluation/rlm/qagnostic/`, and the graph-order dashboard exporter as `graph_order_export_dashboard.py`.
+    - On cat, the uncommitted files in the qagnostic checkouts are identical to `feature/query-agnostic`, apart from one older `run_benchmark.py` snapshot with nothing unique in it.
 - **2026-09-11 ~06:50 IST: interim REVIEW sample from the running full run, and the post-run script.**
   - **Progress.** 357 rows had finished, and 9 of them were behaviour rows (2.5%). Only musique graph was above 10%, at 2 of its first 10 rows.
   - **Four behaviour rows were read. All four are the root's own behaviour, and none traces back to the revision-4 empty-read refusal:**
