@@ -175,7 +175,9 @@ sg infolab -c "HF_HOME=$HF_HOME PYTHONPATH=. $PY -m evaluation.rlm.rlm_order_sta
 ```
 
 It prints one line per task, and ends with `staged: lanes can run with HF_HUB_OFFLINE=1`.
-`/tmp` does not survive a reboot. If it is wiped, run the command again.
+The first run downloads everything. On cat, LOFT's five subsets alone took about 10
+minutes, printing nothing while each one downloads, so let it run. `/tmp` does not survive
+a reboot. If it is wiped, run the command again.
 
 ### 3.4 Start the server
 

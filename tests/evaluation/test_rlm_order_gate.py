@@ -253,3 +253,15 @@ def test_a_reproduction_without_the_structured_campaign_can_opt_out_of_it(tmp_pa
     results, _, _ = complete_pilot(tmp_path)
     assert any("--structured-results" in p for p in gate.check_campaign(results, "loft", 1, None, True))
     assert not gate.check_campaign(results, "loft", 1, None, True, require_comparator=False)
+
+
+def test_the_no_comparator_flag_reaches_the_campaign_check(tmp_path):
+    import sys
+    from unittest import mock
+
+    results, _, _ = complete_pilot(tmp_path)
+    base = ["rlm_order_gate", str(results), "--dataset", "loft", "--expect", "1", "--pilot"]
+    for extra, failed in (([], True), (["--no-comparator"], False)):
+        with mock.patch.object(sys, "argv", base + extra), pytest.raises(SystemExit) as exit_info:
+            gate.main()
+        assert bool(exit_info.value.code) is failed

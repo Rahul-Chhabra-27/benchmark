@@ -298,6 +298,7 @@ def main() -> None:
             args.pilot,
             args.organization_dir,
             args.revision,
+            require_comparator=not args.no_comparator,
         )
     except (OSError, ValueError, KeyError, TypeError) as exc:
         problems = [f"invalid or incomplete artifacts: {exc}"]
