@@ -3,16 +3,17 @@
 > **Read this file first.** It is updated at every milestone: code, pilot, launch, each
 > finished stage, gate and report. Where two statements disagree, the newer one wins; the
 > changelog at the bottom dates every update.
-> **Last updated: 2026-09-11 ~06:35 IST.**
-> - The server `ro_root` is up; it was restarted with the user's OK.
-> - The old raw output in `$HOME` is archived on NAS.
-> - **The revision-4 pilot failed its gate on one row.** Its fixes worked, but musique graph
->   row 0 ended `ungrounded_final`. That root held the reader's answer, then typed
->   `FINAL("Al-Aqsa Mosque, None")`, text no output contained.
-> - **Revision 5 changes three things:**
->   - FINAL is steered to the variable;
->   - the chunk arms get their own ungrounded-FINAL message, without `context.find`;
->   - the gate reviews harness-guard endings instead of failing on the first one (see Decisions).
+> **Last updated: 2026-09-11 ~06:36 IST.**
+> - **The FULL LOFT run is RUNNING.** 55 test rows × 5 subsets × 2 arms, on revision 5
+>   (`2b62ef2`). Ten lanes launched at 06:33:18, `ro_{graph,query}_<subset>` on cores 6–15.
+>   Live output goes to cat-local `/tmp/gautammahale/rlmorder/results`.
+> - The revision-5 pilot passed the gate: 30/30 rows, zero guard endings.
+> - **When the run finishes:**
+>   - gate it, report it and archive it (steps 4–5);
+>   - **stop `ro_root`** (the user's condition for the restart);
+>   - ask the user before RULER.
+> - **Caveat for every number.** Rows 0–2 of each subset were the pilot rows behind five
+>   revisions. Report rows 3–54 (n=52) beside the full 55.
 
 ## Goal
 
@@ -105,8 +106,8 @@ list note.
 | revision-2 pilot (3 rows × 2 arms) | done | gate FAIL (graph row 2) | gate FAIL (graph row 0) | gate FAIL (graph row 2) | done |
 | revision-3 pilot (3 rows × 2 arms) | gate PASSED, 30/30 (06:12); archived | passed | passed | passed | passed |
 | revision-4 pilot (3 rows × 2 arms, `00b01a6`) | done 06:22; archived | done | gate FAIL: graph row 0 `ungrounded_final` | done | done |
-| revision-5 pilot (3 rows × 2 arms) | todo | todo | todo | todo | todo |
-| LOFT full (55 rows × 2 arms) | todo | todo | todo | todo | todo |
+| revision-5 pilot (3 rows × 2 arms, `2b62ef2`) | gate PASSED, 30/30, 0 guard endings (06:32); archived | passed | passed | passed | passed |
+| LOFT full (55 rows × 2 arms, `2b62ef2`) | running (launched 06:33:18) | running | running | running | running |
 | RULER-128k (13 tasks × 55 × 2) | not started | | | | |
 
 **The comparator to beat.** These are the structured graph-order results on the same 55
@@ -193,6 +194,11 @@ full launch. Never accept a pass on only the subsets that happen to exist.
 4. RULER-128k follows the LOFT gate, as planned.
 
 ## Changelog (newest first)
+- **2026-09-11 06:33 IST: the revision-5 pilot PASSED, and the full LOFT run was launched.**
+  - **The r5 pilot** ran 06:29:42–06:32:09. The gate passed 30/30, with 0 guard endings, so it would also have passed the old strict rule.
+    - Every prose cell, empty read, over-budget read and premature abstention was recovered.
+    - The pilot is archived as `archive/rlmorder/{results_pilot_r5,logs_r5,pilot_r5_gate.txt}`.
+  - **The full run** was launched at 06:33:18 on `2b62ef2`: 10 lanes, `LIMIT=55`, `RESULTS=/tmp/gautammahale/rlmorder/results`, logs `full_<arm>_<subset>.log`. All ten passed preflight.
 - **2026-09-11 ~06:35 IST: the r4 pilot finished, its gate FAILED on 1 row, and revision 5 was prepared.**
   - **The run.** The r4 lanes ran 06:19:47–06:22:28, 30/30 rows.
   - **What worked.**
