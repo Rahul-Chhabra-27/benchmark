@@ -136,7 +136,7 @@ Style checks, the same ones the code was held to:
 # The code is the only thing that lives in $HOME.
 mkdir -p ~/rlmorder && cd ~/rlmorder
 git clone git@github.com:skylight-org/intel-longcontext-pc.git checkout   # or the lab's NAS mirror, if you can read it
-cd checkout && git checkout feature/rlm-ordered-chunks
+cd checkout && git checkout gautam-dev
 
 # Paths used in the rest of this section. Keep them in your shell.
 export REPO=$HOME/rlmorder/checkout
@@ -328,7 +328,7 @@ no structured campaign to compare LOFT against.
 apt-get update && apt-get install -y tmux git curl rsync   # most images lack tmux
 cd /workspace
 git clone https://github.com/skylight-org/intel-longcontext-pc.git benchmark   # needs access; use a token or an SSH key
-cd benchmark && git checkout feature/rlm-ordered-chunks
+cd benchmark && git checkout gautam-dev
 
 cat > /workspace/rlm_env.sh <<'EOF'
 export REPO=/workspace/benchmark
