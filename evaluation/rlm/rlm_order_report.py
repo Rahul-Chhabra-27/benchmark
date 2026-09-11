@@ -177,6 +177,20 @@ def held_out_ids(ids, tuned_rows: int) -> set[str]:
     return held
 
 
+def noise_note(n_rows: int, percent_scale: bool) -> str:
+    """How far one example moves a mean: the smallest difference a table can show.
+
+    RULER's string_match runs 0-100 and LOFT's metrics 0-1, so the same row count is a
+    step of 1.8 points on one and 0.018 on the other.
+    """
+    step = (100.0 if percent_scale else 1.0) / n_rows
+    unit = f"{step:.1f} points of a 0–100 score" if percent_scale else f"{step:.3f}"
+    return (
+        f"One example at n={n_rows} moves a mean by {unit}; "
+        "an interval narrower than that is row-sampling noise only."
+    )
+
+
 def _pair_line(subset: str, label: str, p: dict) -> str:
     return (
         f"| {subset} | {label} | {p['metric']} | {p['n']} | {p['mean_b']:.3f} | {p['mean_a']:.3f} | "
@@ -285,12 +299,14 @@ def main() -> None:
 
     lines = ["# Agentic RLM over ordered chunks — Qwen3-4B-Instruct-2507", ""]
     lines += ["## Headline, per subset (paired: bm25-query − bm25-graph)", "", *headline, ""]
-    lines += [
-        "One example at n=55 is 0.018; an interval narrower than that is row-sampling noise only. "
-        "Base RLM and vanilla are loft128k_guards rows aligned to these questions: context, not a control "
-        "(different prompts; no list-shape note on qampari/quest).",
-        "",
-    ]
+    n_rows = max((p["n"] for p in paired_rows), default=0)
+    notes = [noise_note(n_rows, any(str(d).startswith("ruler") for d, _ in runs))] if n_rows else []
+    if args.guards:
+        notes.append(
+            "Base RLM and vanilla are loft128k_guards rows aligned to these questions: context, not a control "
+            "(different prompts; no list-shape note on qampari/quest)."
+        )
+    lines += [" ".join(notes), ""]
     if len(versus) > 2:
         lines += ["## Agentic vs structured, same rows, same chunks and order", "", *versus, ""]
     if len(held_lines) > 2:
