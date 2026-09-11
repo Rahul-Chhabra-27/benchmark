@@ -39,7 +39,9 @@ SERVER=${SERVER:-ro_root}
 PY=${PY:-/mnt/nas/gautammahale/venvs/rlm/bin/python}
 export PYTHONDONTWRITEBYTECODE=1 HF_HOME=${HF_HOME:-/mnt/nas/gautammahale/hf_cache} HF_HUB_OFFLINE=1
 
-if [ "$(id -gn)" != infolab ]; then
+# Lab storage policy: on a host with an infolab group, write as infolab. A RunPod pod or
+# another cloud VM has no such group, and the check does not apply there.
+if getent group infolab >/dev/null 2>&1 && [ "$(id -gn)" != infolab ]; then
   echo "Run under primary group infolab (sg infolab -c ...)." >&2
   exit 1
 fi
@@ -54,8 +56,14 @@ echo "checkout: $(git log --oneline -1)"
 comparator=()
 reference=()
 if [ "$DATASET" = loft ]; then
-  comparator=(--structured-results "$GRAPH/results" --organization-dir "$GRAPH/organization")
-  reference=(--structured-results "$GRAPH/results" --guards "$GUARDS")
+  if [ -d "$GRAPH/results" ]; then
+    comparator=(--structured-results "$GRAPH/results" --organization-dir "$GRAPH/organization")
+    reference=(--structured-results "$GRAPH/results" --guards "$GUARDS")
+  else
+    # Off infolab the structured campaign's results are not there: gate without them, and say so.
+    echo "WARN: no structured campaign at $GRAPH/results; gating LOFT with --no-comparator" >&2
+    comparator=(--no-comparator)
+  fi
 fi
 
 # 1. Gate: integrity problems fail; behaviour rows are listed under REVIEW.

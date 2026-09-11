@@ -198,6 +198,7 @@ def check_campaign(
     pilot: bool,
     organization: Path | None = None,
     revision: int = CHUNK_ORDER_REVISION,
+    require_comparator: bool = True,
 ) -> list[str]:
     runs = _configs(results, "chunk_order")
     subsets = LOFT_SUBSETS if dataset == "loft" else RULER_32K_TASKS
@@ -206,7 +207,14 @@ def check_campaign(
     problems += [f"unexpected run: {key}" for key in sorted(set(runs) - expected)]
     comparators = _configs(structured, "structured_order") if structured else {}
     if dataset == "loft" and structured is None:
-        problems.append("LOFT requires --structured-results for row and organization validation")
+        if require_comparator:
+            problems.append("LOFT requires --structured-results for row and organization validation")
+        else:
+            # A reproduction without the structured campaign's results: say what goes unproven.
+            print(
+                "WARN: --no-comparator: rows, questions and the graph order are NOT checked against "
+                "the structured graph-order campaign"
+            )
     info = {}
     for key, (run_dir, config) in sorted(runs.items()):
         failures, info[key] = check_run(run_dir, config, expect, revision)
@@ -272,6 +280,11 @@ def main() -> None:
         type=int,
         default=CHUNK_ORDER_REVISION,
         help=f"the chunk_order_revision every run must carry (default {CHUNK_ORDER_REVISION}; LOFT ran 5)",
+    )
+    ap.add_argument(
+        "--no-comparator",
+        action="store_true",
+        help="LOFT without the structured campaign's results (e.g. off infolab): skip the checks against it",
     )
     args = ap.parse_args()
     if args.expect <= 0:

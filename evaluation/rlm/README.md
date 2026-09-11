@@ -6,6 +6,10 @@ but share the benchmark registry, Hugging Face loaders, canonical scorers, and
 the `predictions.csv` / `metrics.json` / `config.yaml` result contract. Run all
 commands below from the repository root.
 
+To run the ordered-chunk campaign (the agentic root handed every chunk in BM25 order, on
+LOFT-128k and RULER-128k) on an infolab server or on RunPod, see
+[`how_to_run.md`](../../how_to_run.md) at the repository root.
+
 ## Goal
 Quantify how Recursive Language Models (RLMs) compare against vanilla long-context
 inference on standard long-context benchmarks, with all inference served locally:

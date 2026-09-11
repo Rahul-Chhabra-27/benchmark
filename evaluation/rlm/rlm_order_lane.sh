@@ -37,7 +37,9 @@ else
   ORG=${ORG:-$(dirname "$RESULTS")/organization_$DATASET}
 fi
 
-if [ "$(id -gn)" != infolab ]; then
+# Lab storage policy: on a host with an infolab group, write as infolab. A RunPod pod or
+# another cloud VM has no such group, and the check does not apply there.
+if getent group infolab >/dev/null 2>&1 && [ "$(id -gn)" != infolab ]; then
   echo "Launch this lane with primary group infolab (sg infolab -c ...)." >&2
   exit 1
 fi

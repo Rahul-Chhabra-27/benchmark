@@ -247,3 +247,9 @@ def test_archived_graph_artifacts_are_found_through_the_override(tmp_path):
     results, structured, org = complete_pilot(tmp_path, recorded_org=str(tmp_path / "moved-away"))
     assert any("structured graph artifact" in p for p in gate.check_campaign(results, "loft", 1, structured, True))
     assert not gate.check_campaign(results, "loft", 1, structured, True, org)
+
+
+def test_a_reproduction_without_the_structured_campaign_can_opt_out_of_it(tmp_path):
+    results, _, _ = complete_pilot(tmp_path)
+    assert any("--structured-results" in p for p in gate.check_campaign(results, "loft", 1, None, True))
+    assert not gate.check_campaign(results, "loft", 1, None, True, require_comparator=False)
