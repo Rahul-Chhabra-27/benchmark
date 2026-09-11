@@ -4,13 +4,18 @@
 > finished stage, gate and report. Where two statements disagree, the newer one wins; the
 > changelog at the bottom dates every update.
 > **Last updated: 2026-09-11 ~08:35 IST.**
-> - **The full RULER-128k run is RUNNING, on revision 6. It launched at 08:39:29** (`c466401`:
->   14 lanes, 1,430 rows, logs `ruler_full_*`).
->   - The user OK'd RULER on 2026-09-11 ("yup go ahead with the ruler 128k tests as well"),
->     so `ro_root` was restarted at 08:02:30 with the LOFT settings.
->   - The revision-5 pilot failed its gate because composed answers were rejected. Revision
->     6 (`d383acc`) accepts them, and its pilot PASSED at 08:36.
->   - When every lane has printed DONE, run R4. See **RULER-128k** and **Decisions**.
+> - **The full RULER-128k run is COMPLETE, and its gate FAILED on 1 of 26 runs.** It ran
+>   08:39:29–09:25:13 on revision 6 (`c466401`): 1,430 of 1,430 rows, 0 errors, no limit
+>   or server notices.
+>   - **The failed run is niah_multikey_3 graph.** 25 of its 55 rows looped on over-budget
+>     reads and ended without reading a chunk. The graph arm's worked example reads 8
+>     chunks, and only 5 fit on all-UUID text.
+>   - vt WARNS in both arms: 8 and 7 rows invented a count in RULER's answer template.
+>   - `ro_root` was stopped at 09:26:53. Everything is archived on NAS as
+>     `archive/rlmorder/ruler_full_*`.
+>   - **Open, and the user's call:** whether to fix the refusal and rerun. See
+>     **RULER-128k → The full run**.
+>   - **Ask before showing any RULER number.**
 > - **The LOFT campaign is COMPLETE, and its gate PASSED.** 550/550 rows, run 06:33–07:10
 >   on revision 5 (`2b62ef2`). There were 21 behaviour rows, and no run crossed the 10%
 >   warn line. Results, report and logs are archived on NAS; see **Results** below.
@@ -117,10 +122,11 @@ list note.
 | what | where |
 |---|---|
 | branch | `feature/rlm-ordered-chunks`, cut from `feature/graph-order` @ f8f7551. Pushed to **`nas`** (fox `/mnt/nas/gautammahale/retrieval_checkout`). On 2026-09-11 the user asked for it on **`skylight`** as well (`git@github.com:skylight-org/intel-longcontext-pc.git`). There it is the branch `feature/rlm-ordered-chunks`, `gautam-dev` is fast-forwarded to it, and `master` is untouched. |
-| LOFT full run | NAS `/mnt/nas/gautammahale/archive/rlmorder/`: `full_results` (590 files), `full_report` (`full/report.md`, csvs, `campaign.json`, `full_gate.txt`) and `full_logs`. A non-durable live copy is at cat `/tmp/gautammahale/rlmorder/{results,report}`. |
+| LOFT full run | NAS `/mnt/nas/gautammahale/archive/rlmorder/`: `full_results` (590 files), `full_report` (`full/report.md`, csvs, `campaign.json`, `full_gate.txt`, and the revision-6 replay `loft_r6_replay.txt`) and `full_logs`. A non-durable live copy is at cat `/tmp/gautammahale/rlmorder/{results,report}`. |
+| RULER full run | NAS `/mnt/nas/gautammahale/archive/rlmorder/`: `ruler_full_results` (1,534 files), `ruler_full_report` (`ruler_full/report.md`, csvs, `campaign.json`, `ruler_full_gate.txt`, plus both pilot gates and the r6 pilot's dry-run report), `ruler_full_organization` (715 graph organizations) and `ruler_full_logs` (14). The pilots are `ruler_pilot_r5_*` and `ruler_pilot_r6_*`. A non-durable live copy is at cat `/tmp/gautammahale/rlmorder/{results_ruler128k,report_ruler128k,organization_ruler128k}`. |
 | Mac checkout | `linear/benchmark`. Tests run with `.venv-mac`; black and isort are in `.venv`. |
 | compute host | **cat**, GPU 0 (RTX A6000, UUID `GPU-de398869-9f4d-2f4e-e0ab-738deda8383e`). cat has 32 cores. |
-| server | **UP for RULER.** tmux `ro_root`, restarted 2026-09-11 08:02:30 with the user's OK; ready at 08:03:25; log `/tmp/gautammahale/rlmorder/logs/root_ruler.log`. vLLM 0.8.5 on :8002, GPU-de398869, 65536 ctx, util 0.5 (a KV cache of 104,320 tokens), cores 2–5, weights on cat-local `/tmp/gautammahale/hf_cache`. It was first stopped at 07:10:59, after the LOFT gate passed. The user's condition is to stop it when the runs finish, so the post-run script stops it once the RULER gate passes. |
+| server | **STOPPED at 2026-09-11 09:26:53, after the RULER run** (the user's condition: stop it when the runs finish). The RULER gate failed, so the post-run script kept it up; I stopped it by hand, since no rerun happens without the user's OK. GPU 0 is free, and no vLLM process is left. It was tmux `ro_root`: vLLM 0.8.5 on :8002, GPU-de398869, 65536 ctx, util 0.5 (a KV cache of 104,320 tokens), cores 2–5, weights on cat-local `/tmp/gautammahale/hf_cache`, log `/tmp/gautammahale/rlmorder/logs/root_ruler.log`. It ran 06:04–07:10 for LOFT and 08:02–09:26 for RULER, each time with the user's OK. Restarting it (step 0) needs the user's OK. |
 | code checkout | cat `/mnt/home/gautammahale/rlmorder/checkout` (code only) |
 | pilot scratch | cat `/tmp/gautammahale/rlmorder/{results_pilot_r2,results_pilot_r3,logs,report,hf_datasets}`; primary group `infolab`. The r2 gate output is `report/pilot_r2_gate.txt`. |
 | old pilot evidence | NAS `/mnt/nas/gautammahale/archive/rlmorder/`. `results_pilot_r1` and `logs_r1`: revision 1, stopped. `results_pilot_r2`, `logs_r2` and `pilot_r2_gate.txt`: revision 2, gate failed. Never resume into them. |
@@ -140,7 +146,7 @@ list note.
 | revision-4 pilot (3 rows × 2 arms, `00b01a6`) | done 06:22; archived | done | gate FAIL: graph row 0 `ungrounded_final` | done | done |
 | revision-5 pilot (3 rows × 2 arms, `2b62ef2`) | gate PASSED, 30/30, 0 guard endings (06:32); archived | passed | passed | passed | passed |
 | LOFT full (55 rows × 2 arms, `2b62ef2`) | gate PASSED (07:10); archived | passed | passed | passed | passed |
-| RULER-128k (13 tasks × 55 × 2) | r5 pilot: gate FAILED 08:14 (composed-literal rejections), archived. r6 pilot (`d383acc`): gate PASSED 08:36, archived. **Full run (`c466401`) launched 08:39:29.** See **RULER-128k** | | | | |
+| RULER-128k (13 tasks × 55 × 2) | r5 pilot: gate FAILED 08:14 (composed-literal rejections), archived. r6 pilot (`d383acc`): gate PASSED 08:36, archived. **Full run (`c466401`, 08:39–09:25): gate FAILED on niah_multikey_3 graph (refusal loop), and vt WARNS. Archived; server stopped.** See **RULER-128k → The full run** | | | | |
 
 **The comparator to beat.** These are the structured graph-order results on the same 55
 test rows. That campaign's gate passed on 2026-09-10.
@@ -258,6 +264,35 @@ The full report is `archive/rlmorder/full_report/full/report.md`.
     - vt graph row 2: `ungrounded_final`. Its literal changed the template's "5 variables" to "1 variables", a count no output printed, so r6 rejected it as designed. Accepted, it would have scored 1 of 5.
   - Archived as `archive/rlmorder/ruler_pilot_r6_{results,logs}` and `ruler_pilot_r6_gate.txt`.
 
+**The full run (gate FAILED on 1 of 26 runs).** It ran 08:39:29–09:25:13 on revision 6 (`c466401`).
+- **Integrity: clean.** 1,430 of 1,430 rows, 0 errors, no limit or server notices, and every chunk read priced exactly.
+- **Gate.** All integrity checks pass. One run FAILS on the behaviour share, and two WARN.
+  - **FAIL, niah_multikey_3 graph: 25 of 55 rows** (the line is 13).
+    - Every one hit the error-loop breaker after 3 refused over-budget reads, and never read a chunk.
+    - The graph arm's worked example reads `chunks[max(0, i-2):i+6]`, which is 8 chunks. On all-UUID text only 5 fit in 8192 tokens (`chunks_per_call_advertised` is 5).
+    - The refusal says so, but the root retries with 6–8 chunks and never with 5.
+    - The query arm, whose example reads 5 chunks, had 1 refusal in 55 rows.
+  - **WARN, vt graph (8 of 55) and vt query (7 of 55): `ungrounded_final`.**
+    - The root fills RULER's answer template ("5 variables are assigned the value N, they are: …") with a count of its own ("1 variables", "2 variables").
+    - No output printed that count, so revision 6 rejects the literal as designed, and the variables the root did find are lost with it.
+  - **The report** is `archive/rlmorder/ruler_full_report/ruler_full/report.md`. It scores niah_multikey_3 graph as the run stands, so any number quoted from it must carry that caveat.
+- **Every REVIEW row, by cause.** `python -m evaluation.rlm.rlm_order_review <results>` labelled all 57, and I read at least one transcript per cause.
+  - **25 refusal loops,** all niah_multikey_3 graph, as above.
+  - **18 `ungrounded_final`.**
+    - 15 are vt invented counts.
+    - 3 are niah_multiquery graph rows whose composed answer adds words no output printed. The one I read adds a negation: "… and no special magic numbers for smelly-galoshes and offbeat-skylight".
+    - Each rejected literal carried some right values, so the count and negation rules cost partial credit here.
+  - **4 case traps,** all qa graph (`"Duchy" in c.text.lower()` and the like).
+  - **2 repetition breaks,** cwe graph: the root repeated an answer line written as a code cell.
+  - **1 error loop in the root's own code:** niah_multikey_2 graph row 30, whose last cell was `print(hits[43])`.
+- **The server.** The post-run script kept it up, because the gate failed. I stopped it by hand at 09:26:53, since no rerun happens without the user's OK. GPU 0 is free.
+- **Archived** with 0 checksum diffs: `archive/rlmorder/ruler_full_results` (1,534 files), `ruler_full_report` (13), `ruler_full_organization` (715) and `ruler_full_logs` (14).
+- **Open, for the user to decide: fix the refusal and rerun, or accept the run as it is.**
+  - **The narrowest fix is revision 7.** The refusal would name a concrete slice to copy, built from the chunks the root passed (for example `chunks[41:46]`), instead of `chunks[a:a+5]`.
+  - **What it would change.** Nothing before a first refusal. That leaves unchanged every LOFT row except 4 quest graph rows (9 refusals in all), and every RULER run except niah_multikey_3 graph (131 refusals) and three runs with a single refusal each.
+  - **The cost.** Rerunning niah_multikey_3 in both arms is 110 rows, a few minutes. Rerunning all of RULER, so that it stays on one revision, takes about 45 minutes.
+  - **The alternative is worse.** Sizing the graph example to the budget would also change LOFT musique's prompt: its advertised K is 5, although no musique read was ever refused.
+
 ## How to resume (exact commands)
 
 ```bash
@@ -336,16 +371,25 @@ ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && git pull 
 - **Show loft128k numbers only** (standing user rule). Ask before showing any RULER-128k numbers.
 
 ## Next steps (ranked)
-1. **Finish RULER-128k.** The full run launched at 08:39:29.
-   - Once every `ruler_full_*` lane has printed DONE, run R4. It gates at revision 6, stops `ro_root` if the gate passes (the user's condition), reports with `--tuned-rows 3`, and archives everything to NAS.
-   - Sample every REVIEW list and record what it showed, as for LOFT.
-   - Ask before showing any RULER number.
+1. **The user's call: fix the refusal and rerun, or accept RULER as it stands.** See **RULER-128k → The full run**.
+   - To rerun: revision 7 names a concrete slice in the over-budget refusal. Pilot it, then rerun niah_multikey_3 in both arms, or all of RULER, restarting `ro_root` with the user's OK.
+   - Either way, ask before showing any RULER number, and quote niah_multikey_3 graph only with the gate caveat.
 2. **Optional, and only as a new revision with its own pilot.** Never mix it into the numbers above.
-   - A hint when a chunk filter matches nothing. The case trap caused most LOFT no-read rows, and one RULER pilot row.
+   - A hint when a chunk filter matches nothing. The case trap caused most LOFT no-read rows, and 4 RULER rows.
+   - Let a composed answer say what was not found ("… and no numbers for X") without losing the values it did find. Revision 6 rejects any added negation, which cost partial credit on 3 niah_multiquery rows.
    - Number formats are already tolerated: revision 6 ignores digit-group commas.
 3. **The dashboard export, only if asked.** `graph_order_export_dashboard.py` is now in the repo.
 
 ## Changelog (newest first)
+- **2026-09-11 09:25–09:40 IST: the full RULER run is COMPLETE, its gate FAILED on 1 of 26 runs, and the server is stopped.**
+  - **The run.** All 1,430 rows were done by 09:25:13, with 0 errors and no limit or server notices.
+  - **Post-run (R4).**
+    - The gate FAILS on niah_multikey_3 graph (25 of 55 rows in the refusal loop) and WARNS on vt in both arms.
+    - The report was written with `--tuned-rows 3`.
+    - Results, report, organizations and logs are archived, with 0 checksum diffs.
+  - **The server.** The script kept it up because the gate failed; I stopped it by hand at 09:26:53. GPU 0 is free.
+  - **Review.** `rlm_order_review`, new and in the repo, labelled all 57 REVIEW rows, and I read at least one transcript per cause. See **RULER-128k → The full run**.
+  - **Open.** Revision 7 and a rerun are the user's call.
 - **2026-09-11 08:36–08:40 IST: the RULER r6 pilot PASSED, and the full RULER run was launched.**
   - **The r6 pilot.** 78 of 78 rows; the gate PASSED at 08:36 with 4 REVIEW rows, one per run. Archived as `archive/rlmorder/ruler_pilot_r6_*`, with 0 checksum diffs.
   - **The report path works on RULER.** A dry run of `rlm_order_report` on the r6 pilot scored all 13 tasks on `string_match` and refused no pairing.
