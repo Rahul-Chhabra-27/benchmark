@@ -3,7 +3,7 @@
 """Report the ordered-chunk agentic campaign, one subset at a time.
 
     python -m evaluation.rlm.rlm_order_report --results <campaign>/results --out <campaign>/report \
-        [--structured-results /mnt/home/gautammahale/graphorder/results] \
+        [--structured-results /mnt/nas/gautammahale/archive/graphorder/results] \
         [--guards /mnt/nas/gautammahale/benchmark/evaluation/results/loft128k_guards]
 
 For each subset: its own metric (subspan_em; coverage for qampari and quest; string_match

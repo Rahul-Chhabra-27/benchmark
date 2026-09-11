@@ -274,6 +274,17 @@ class TestRepl:
         with pytest.raises(ValueError, match="Shorten the question"):
             env["llm_query"]("Q?", env["chunks"][0])
 
+    def test_an_empty_list_of_chunks_is_refused_and_names_the_case_trap(self):
+        sub = FakeClient()
+        _, env, metrics = build(sub=sub)
+        # The pilot's failure: a capitalised term against .lower() text matches nothing.
+        with pytest.raises(ValueError, match="EMPTY.*lower case"):
+            env["llm_query"]("Q?", [c for c in env["chunks"] if "Cello" in c.text.lower()])
+        with pytest.raises(ValueError, match="EMPTY"):
+            env["llm_query"]("Q?", (c for c in env["chunks"] if False))
+        assert sub.calls == [] and metrics["empty_chunk_reads"] == 2
+        assert metrics.get("chunk_payload_calls", 0) == 0
+
 
 class TestRun:
     def test_a_run_reports_what_was_offered_and_what_was_read(self):
@@ -398,6 +409,11 @@ class TestPrompt:
     def test_a_list_passed_to_final_parses_the_way_the_multi_value_scorer_reads_it(self):
         assert extract_prediction(str(["Rival Schools", "Quicksand"])) == ["Rival Schools", "Quicksand"]
         assert extract_prediction('["a", "b"]') == ["a", "b"]
+
+    @pytest.mark.parametrize("order", ["bm25-query", "bm25-graph"])
+    def test_both_orders_are_told_to_write_filter_terms_in_lower_case(self, order):
+        _, prompt, _ = run_once(order, query_view() if order == "bm25-query" else graph_view())
+        assert '"steven spielberg" can match it, "Steven Spielberg" never will' in " ".join(prompt.split())
 
 
 ORDERED_RLM = dict(mode="rlm", chunk_order="bm25-query", chunk_call_tokens=8192, split="test")

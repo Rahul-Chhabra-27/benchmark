@@ -3,6 +3,13 @@
 Picking up from [`HANDOFF.md`](HANDOFF.md) (the chunk-geometry campaign). Everything
 here is measured; where something is a guess it says so.
 
+> **Archived on 2026-09-11.** The lab storage policy keeps raw output out of `$HOME`. So
+> `results`, `logs`, `chunksets`, `notes`, `smoke` and `smoke_ladder` moved to
+> `/mnt/nas/gautammahale/archive/qagnostic/`; the copies were checksum-verified, then deleted
+> from `/mnt/home/gautammahale/qagnostic/`. The checkouts, scripts and `ids/` stay in `$HOME`.
+> Wherever this file names `/mnt/home/gautammahale/qagnostic/{results,logs,chunksets,notes}`,
+> read that archive path instead.
+
 **The question this campaign answers:** the chunk-geometry campaign ended with every
 number being a function of *what BM25 was asked* — nq moved 0.545 → 0.800 by stripping
 LOFT's instruction wrapper off the retrieval query. Nothing said how much of the

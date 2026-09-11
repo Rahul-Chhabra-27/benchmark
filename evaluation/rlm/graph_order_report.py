@@ -3,7 +3,7 @@
 """Report the BM25-graph vs source-order campaign, one subset at a time.
 
     python -m evaluation.rlm.graph_order_report --results <campaign>/results \
-        --out <campaign> [--historical /mnt/home/gautammahale/qagnostic/results]
+        --out <campaign> [--historical /mnt/nas/gautammahale/archive/qagnostic/results]
 
 For each subset: the subset's own metric (subspan_em, or coverage for qampari and
 quest -- never pooled), the paired difference graph - source with a bootstrap CI,

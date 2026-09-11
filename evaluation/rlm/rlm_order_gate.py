@@ -104,6 +104,7 @@ def check_run(run_dir: Path, config: dict, expect: int | None) -> tuple[list[str
         behaviour["root overflow evictions"] += m.get("overflow_evictions", 0)
         behaviour["premature abstentions rejected"] += m.get("premature_abstentions", 0)
         behaviour["prose Final Answer cells"] += m.get("prose_answer_cells", 0)
+        behaviour["empty chunk reads refused"] += m.get("empty_chunk_reads", 0)
         views.add(m.get("chunk_view_sha256"))
         documents.add(m.get("document_sha256"))
     return problems, dict(behaviour=behaviour, views=views, documents=documents, ids=set(rows), rows=rows)

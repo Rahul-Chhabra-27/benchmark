@@ -47,7 +47,8 @@ EXPOSURE_WINDOW=${EXPOSURE_WINDOW:-8000}
 CHUNKSETS=${CHUNKSETS:-/mnt/nas/gautammahale/chunksets}
 # The query-agnostic campaign: chunk sets written by query_free_chunks.py, and the
 # ids of the rows the chunk-geometry campaign never ran (test 55..99).
-QCHUNKS=${QCHUNKS:-/mnt/home/gautammahale/qagnostic/chunksets}
+# The chunk sets were archived off $HOME (lab storage policy) on 2026-09-11; the ids stayed.
+QCHUNKS=${QCHUNKS:-/mnt/nas/gautammahale/archive/qagnostic/chunksets}
 IDS=${IDS:-/mnt/home/gautammahale/qagnostic/ids}
 LADDER_KS=${LADDER_KS:-"2 5 10"}
 LADDER_SEEDS=${LADDER_SEEDS:-"0 1 2"}

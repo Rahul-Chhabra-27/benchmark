@@ -750,6 +750,7 @@ def chunk_order_runtime(scored_frame: pd.DataFrame) -> dict:
     # Harness rejections, totalled so a campaign shows how often each one fired.
     out["premature_abstentions_rejected"] = int(sum(m.get("premature_abstentions", 0) for m in rows))
     out["prose_answer_cells"] = int(sum(m.get("prose_answer_cells", 0) for m in rows))
+    out["empty_chunk_reads"] = int(sum(m.get("empty_chunk_reads", 0) for m in rows))
     for column in ("chunks_read", "deepest_position_read"):
         if column in scored_frame:
             out[f"average_{column}"] = mean(list(scored_frame[column].dropna()))

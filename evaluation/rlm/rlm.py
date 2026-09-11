@@ -211,7 +211,7 @@ Example of a correct session (4 turns):
 # told about the order and in nothing else the prompt says.
 CHUNK_ORDERS = ("bm25-graph", "bm25-query")
 # Bump for any change that can alter what an ordered-chunk root is shown or sent.
-CHUNK_ORDER_REVISION = 3
+CHUNK_ORDER_REVISION = 4
 # One structured reader group, so one agentic read is the size of one mapped group.
 DEFAULT_CHUNK_CALL_TOKENS = 8192
 # The question a chunk read is priced with when the prompt states how many chunks fit
@@ -267,6 +267,8 @@ SEARCH_TERMS_CHUNKS = """\
   proper nouns, names, titles, numbers, rare words -- and look for each one
   SEPARATELY and case-insensitively across the chunks, e.g.
   `hits = [i for i, c in enumerate(chunks) if "millionaire" in c.text.lower()]`.
+  `c.text.lower()` is all lower case, so write every term in lower case too:
+  "steven spielberg" can match it, "Steven Spielberg" never will.
   A question that needs a fact you must LEARN first (it names a film and asks
   where its director was born) takes two reads: read for the first fact, then
   look for what you just learned and read again."""
@@ -650,7 +652,16 @@ PROSE_ANSWER_LINE_RE = re.compile(r"^\s*final\s+answer\s*:", re.IGNORECASE | re.
 PROSE_ANSWER_CELL_ERROR = (
     "[SYNTAX ERROR] `Final Answer: ...` is not Python, so nothing was recorded. Submit your "
     "answer by calling FINAL in a code block instead: FINAL(ans) for a variable that holds "
-    "it, or FINAL(...) with the answer written out."
+    'it, or FINAL("...") with the answer in quotes.'
+)
+# An ordered-chunk read of NO chunks: a keyword filter that matched nothing. Sent on, the
+# reader says the text does not mention the answer -- about text it never saw -- and on
+# the revision-3 pilot the root believed it and abstained. The cause each time was a
+# capitalised term tested against `c.text.lower()`, which can never match.
+EMPTY_CHUNK_READ_ERROR = (
+    "llm_query refused: the list of chunks is EMPTY, so there is nothing to read -- your filter "
+    "matched no chunk. `c.text.lower()` is all lower case, so a term with capitals in it never "
+    "matches: write the term in lower case, or try a different distinctive term. Nothing was read."
 )
 
 # A sub client that cannot fit a slice reports it as an ordinary return string
@@ -1414,7 +1425,12 @@ class RLM:
             reader_count = 0
             if view_lookup is not None and context is not None and not isinstance(context, (str, OrderedPayload)):
                 items = [context] if isinstance(context, Hit) else list(context)
-                if items and all(isinstance(h, Hit) and view_lookup.get((h.start, h.end)) == h for h in items):
+                if not items:
+                    # A filter that matched nothing (EMPTY_CHUNK_READ_ERROR): sent on, the
+                    # reader would describe text it was never shown.
+                    metrics["empty_chunk_reads"] = metrics.get("empty_chunk_reads", 0) + 1
+                    raise ValueError(EMPTY_CHUNK_READ_ERROR)
+                if all(isinstance(h, Hit) and view_lookup.get((h.start, h.end)) == h for h in items):
                     context = OrderedPayload(tuple(items))
                     chunk_call = True
                 else:
@@ -2268,6 +2284,7 @@ class RLM:
                 chunk_budget_refusals=0,
                 premature_abstentions=0,
                 prose_answer_cells=0,
+                empty_chunk_reads=0,
                 chunk_ranks_read=[],
                 reader_input_tokens=[],
                 reader_served_prompt_tokens=[],
