@@ -3,10 +3,13 @@
 > **Read this file first.** It is updated at every milestone: code, pilot, launch, each
 > finished stage, gate and report. Where two statements disagree, the newer one wins; the
 > changelog at the bottom dates every update.
-> **Last updated: 2026-09-10 21:34 IST.** Revision-1 pilot lanes were stopped at
-> 21:23 after the audit found a zero-reader, 50-step query run. Revision 2 fixes the
-> prompt and restores the strict gate. All ten fresh pilot lanes launched at 21:33:58
-> on code commit `cebce6c`; full launch remains pending pilot validation.
+> **Last updated: 2026-09-11 ~06:00 IST.** The revision-2 pilot finished all 30 rows,
+> but its strict gate FAILED on three graph rows that ended `repetition_broken`. In
+> each, the root found its answer, then submitted LOFT's `Final Answer: X` line as a
+> code cell. Revision 3 (`4e0df25`) fixes that and raises the abstention bar. It is
+> pulled on cat. **The revision-3 pilot is BLOCKED.** The vLLM engine on cat GPU 0 was
+> stopped at 21:46:55 (`kill 15895`, run from an interactive login), and restarting it
+> needs the user's OK.
 
 ## Goal
 
@@ -49,6 +52,13 @@ prompts are rendered from `CHUNKS_HELP`, `CHUNK_ORDER_NOTES`, `SEARCH_TERMS_CHUN
 - **qampari and quest get the bracketed-list FINAL note.** The structured arms have `listfmt`; without it, correct lists score 0.000. Legacy agentic prompts are unchanged.
 - **One chunk read is at most 8192 tokens**, the same as one structured reader group. It is priced with the served model's tokenizer on the complete reader message, and the gate requires `reader_input_tokens == reader_served_prompt_tokens`.
 
+**Harness changes in revision 3, applied to ordered-chunk runs only (`4e0df25`).** Every other
+agentic configuration keeps its old behaviour. Both changes apply to both arms equally, so the
+query-vs-graph pair stays clean. Against base RLM they are two more differences, on top of the
+list note.
+- **A code cell holding `Final Answer: X` is told to call `FINAL(...)`.** Before, it got "rewrite it multi-line", which cannot be done for one statement. On the r2 pilot, 3 of 15 graph rows resubmitted that line until the repetition breaker replaced their answers. Counted per row as `prose_answer_cells`.
+- **`FINAL_NONE` needs 3 chunk reads (`CHUNK_READS_BEFORE_ABSTAIN`).** The legacy bar was one sub-call. Earlier, the root is told how many of the chunks it has read, and to ask for one fact at a time. On the r2 pilot, all 3 musique query rows abstained after a single read of `chunks[:5]`; one had the gold in `chunks[0]`, but the root had asked all three hops at once. The existing cap of 2 rejections still applies, so a root can always abstain eventually. Counted as `premature_abstentions`.
+
 ## Where everything is
 
 | what | where |
@@ -56,9 +66,9 @@ prompts are rendered from `CHUNKS_HELP`, `CHUNK_ORDER_NOTES`, `SEARCH_TERMS_CHUN
 | branch | `feature/rlm-ordered-chunks`, cut from `feature/graph-order` @ f8f7551. Pushed to **`nas`** only (fox `/mnt/nas/gautammahale/retrieval_checkout`). |
 | Mac checkout | `linear/benchmark`. Tests run with `.venv-mac`; black and isort are in `.venv`. |
 | compute host | **cat**, GPU 0 (RTX A6000, UUID `GPU-de398869-9f4d-2f4e-e0ab-738deda8383e`). cat has 32 cores. |
-| server | tmux `go_root`: vLLM 0.8.5 on **:8002**, `--max-model-len 65536`, util 0.5, pinned to cores 2–5, with weights on cat-local `/tmp/gautammahale/hf_cache`. It is **reused** from the graph-order campaign, so do not kill it. |
+| server | **DOWN (wedged) since 2026-09-10 21:46:55.** tmux `go_root` still holds the vLLM 0.8.5 API process (PID 15846) on **:8002**, and `/v1/models` still answers. But its engine (PID 15895, now `<defunct>`) was killed to free GPU 0, so every chat request hangs. The restart recipe is under "How to resume"; restarting needs the user's OK. Settings: `--max-model-len 65536`, util 0.5, cores 2–5, weights on cat-local `/tmp/gautammahale/hf_cache`. |
 | code checkout | cat `/mnt/home/gautammahale/rlmorder/checkout` (code only) |
-| revision-2 pilot scratch | cat `/tmp/gautammahale/rlmorder/{results_pilot_r2,logs,report,hf_datasets}`; primary group `infolab` |
+| pilot scratch | cat `/tmp/gautammahale/rlmorder/{results_pilot_r2,results_pilot_r3,logs,report,hf_datasets}`; primary group `infolab`. The r2 gate output is `report/pilot_r2_gate.txt`. |
 | old pilot evidence | `/mnt/home/gautammahale/rlmorder/results_pilot`, stopped, never resume into it |
 | LOFT organization cache | `/mnt/home/gautammahale/graphorder/organization`, the structured campaign's own cache. Every graph-arm row should report `organization_cache_hit: true`. |
 | venv on cat | `/mnt/nas/gautammahale/venvs/rlm/bin/python` |
@@ -69,9 +79,10 @@ prompts are rendered from `CHUNKS_HELP`, `CHUNK_ORDER_NOTES`, `SEARCH_TERMS_CHUN
 
 | stage | nq | hotpotqa | musique | qampari | quest |
 |---|---|---|---|---|---|
-| revision-2 code + tests | 553 passed, 1 skipped; black/isort/flake8/mypy checked directly | | | | |
+| revision-3 code + tests (`4e0df25`) | 558 passed; black, isort, flake8 and mypy clean | | | | |
 | revision-1 pilot | invalid: stopped | stopped | stopped | not started | not started |
-| revision-2 pilot (3 rows × 2 arms) | running | running | running | running | running |
+| revision-2 pilot (3 rows × 2 arms) | done | gate FAIL (graph row 2) | gate FAIL (graph row 0) | gate FAIL (graph row 2) | done |
+| revision-3 pilot (3 rows × 2 arms) | blocked: server | blocked | blocked | blocked | blocked |
 | LOFT full (55 rows × 2 arms) | todo | todo | todo | todo | todo |
 | RULER-128k (13 tasks × 55 × 2) | not started | | | | |
 
@@ -91,19 +102,25 @@ Those runs cost about 126–128k input tokens and 35–56 s per question: every 
 ## How to resume (exact commands)
 
 ```bash
-# Server generation check (the existing go_root server stays running).
+# 0. THE SERVER has been DOWN since 2026-09-10 21:46:55: the engine was killed and the API is wedged on :8002.
+#    Restart it ONLY with the user's OK. Stop the wedged API first, because vLLM and serve_root.sh both
+#    refuse a port that is still listening. Then start the command go_root ran, logging to local scratch.
+ssh cat.cse.iitb.ac.in 'tmux kill-session -t go_root; sleep 5; ss -ltn | grep -c ":8002 "; nvidia-smi -i 0 --query-gpu=memory.used --format=csv,noheader'
+ssh cat.cse.iitb.ac.in 'tmux new-session -d -s ro_root "CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=0 HF_HOME=/tmp/gautammahale/hf_cache HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 XDG_CACHE_HOME=/tmp/gautammahale/cache VLLM_CACHE_ROOT=/tmp/gautammahale/cache/vllm TRITON_CACHE_DIR=/tmp/gautammahale/cache/triton TORCHINDUCTOR_CACHE_DIR=/tmp/gautammahale/cache/inductor OMP_NUM_THREADS=4 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false UV_USE_IO_URING=0 taskset -c 2-5 /mnt/nas/gautammahale/benchmark/.venv/bin/vllm serve Qwen/Qwen3-4B-Instruct-2507 --served-model-name Qwen/Qwen3-4B-Instruct-2507 --port 8002 --max-model-len 65536 --gpu-memory-utilization 0.5 --enforce-eager -O0 > /tmp/gautammahale/rlmorder/logs/root.log 2>&1"'
+# Once loaded, confirm CUDA index 0 is GPU-de398869-9f4d-2f4e-e0ab-738deda8383e: nvidia-smi --query-compute-apps=gpu_uuid,pid --format=csv
+# The generation check. A wedged vLLM still answers /v1/models.
 ssh cat.cse.iitb.ac.in 'curl -fsS --max-time 30 localhost:8002/v1/chat/completions -H "Content-Type: application/json" -d "{\"model\":\"Qwen/Qwen3-4B-Instruct-2507\",\"messages\":[{\"role\":\"user\",\"content\":\"ok\"}],\"max_tokens\":4}"'
 
-# Gate the complete revision-2 LOFT pilot, against the first 3 structured test rows.
-ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && PYTHONDONTWRITEBYTECODE=1 /mnt/nas/gautammahale/venvs/rlm/bin/python -m evaluation.rlm.rlm_order_gate /tmp/gautammahale/rlmorder/results_pilot_r2 --pilot --expect 3 --structured-results /mnt/home/gautammahale/graphorder/results'
+# 1. Revision-3 pilot: ten lanes (arm × subset), the first 3 test rows, cores 6-15, under infolab.
+#    Do not launch a duplicate active session.
+ssh cat.cse.iitb.ac.in 'mkdir -p /tmp/gautammahale/rlmorder/results_pilot_r3; core=6; for arm in bm25-graph bm25-query; do for s in nq hotpotqa musique qampari quest; do tmux new-session -d -s "ro3_${arm#bm25-}_$s" "sg infolab -c \"LIMIT=3 HF_DATASETS_CACHE=/tmp/gautammahale/rlmorder/hf_datasets RESULTS=/tmp/gautammahale/rlmorder/results_pilot_r3 /mnt/home/gautammahale/rlmorder/checkout/evaluation/rlm/rlm_order_lane.sh $arm $core $s > /tmp/gautammahale/rlmorder/logs/pilot_r3_${arm}_$s.log 2>&1\""; core=$((core+1)); done; done; tmux ls'
 
-# One lane; launch under infolab. Do not launch a duplicate active session.
-# Repeat for both orders and all five subsets on distinct cores 6-15.
-ssh cat.cse.iitb.ac.in 'sg infolab -c "LIMIT=3 HF_DATASETS_CACHE=/tmp/gautammahale/rlmorder/hf_datasets RESULTS=/tmp/gautammahale/rlmorder/results_pilot_r2 /mnt/home/gautammahale/rlmorder/checkout/evaluation/rlm/rlm_order_lane.sh bm25-query 6 nq"'
+# 2. Gate the complete revision-3 LOFT pilot against the first 3 structured test rows. Save the output.
+ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && PYTHONDONTWRITEBYTECODE=1 /mnt/nas/gautammahale/venvs/rlm/bin/python -m evaluation.rlm.rlm_order_gate /tmp/gautammahale/rlmorder/results_pilot_r3 --pilot --expect 3 --structured-results /mnt/home/gautammahale/graphorder/results | tee /tmp/gautammahale/rlmorder/report/pilot_r3_gate.txt'
 ```
 
-The pilot uses ten short lanes (arm × subset) to validate the concurrency planned
-for full LOFT. Logs live under `/tmp/gautammahale/rlmorder/logs/pilot_r2_<arm>_<subset>.log`.
+The pilot runs ten short lanes (arm × subset) to test the concurrency planned for
+full LOFT. Logs live under `/tmp/gautammahale/rlmorder/logs/pilot_r3_<arm>_<subset>.log`.
 All 30 rows, strict gate, and transcript/list-shape inspection must pass before any
 full launch. Never accept a pass on only the subsets that happen to exist.
 
@@ -115,20 +132,40 @@ full launch. Never accept a pass on only the subsets that happen to exist.
 - **vLLM 0.8.5 parses `CUDA_VISIBLE_DEVICES` as an integer**, so a GPU UUID crashes startup. Resolve the UUID to an index; `serve_root.sh` does this.
 - **`taskset` does not cover libuv's io_uring polling thread.** Set `UV_USE_IO_URING=0`; `serve_root.sh` does this.
 - **A wedged vLLM still answers `/v1/models`.** Always preflight by generating; the lane script does.
+- **Killing the PID that `nvidia-smi` shows kills only vLLM's engine core.** The API process keeps listening, answers `/v1/models`, and accepts chat requests that never run (2026-09-10 21:46:55). Look for a `<defunct>` child under the API PID (`ps --ppid <pid>`). To stop a server, kill its whole tmux session.
+- **The ssh host is `cat.cse.iitb.ac.in`.** There is no `cat` alias on the Mac, and `ssh cat` stalls on DNS.
 - **One example at n=55 is 0.018.** Do not report deltas smaller than that.
 - **qampari and quest are scored on coverage, never on subspan_em.**
 - **The guards runs have 110 rows: dev rows 0–9, then test.** Our test row i is guards position i+10. The report aligns them and checks the gold answers row by row.
-- **Do not put new raw outputs on NFS home.** Cat-local `/tmp` is temporary pilot scratch (138 GiB free at setup). `/mnt/cat/data/gautammahale` is absent and its parent is not writable; obtain the allocated path before a durable full campaign. Keep condensed evidence on NAS; use primary group `infolab`. The reused server still has its pre-existing log in graphorder home; do not mutate that live checkout.
+- **Follow the lab storage policy (relayed by the user on 2026-09-11).**
+  - `$HOME` (`/mnt/home`: NFS, backed up nightly) holds code, manuscripts and condensed output ONLY. Never raw data, fine-grained run logs, reports or diagrams.
+  - Scratch belongs on `/mnt/cat/data/gautammahale`, which is NOT allocated yet; the advisor has to allocate it. Until it is, live raw output goes to cat-local `/tmp/gautammahale/rlmorder` (138 GiB free). That is not durable, so archive it after each stage.
+  - Archival goes to `/mnt/nas/gautammahale` (720 GB free; the volume is 99% full). `/mnt/infonas/data` is not mounted on cat.
+  - Write as primary group `infolab` (`sg infolab -c ...` or `exec newgrp infolab`). Keep envs and caches on local disk.
+  - **Existing violations, pending the user's OK to archive them:**
+    - `/mnt/home/gautammahale/graphorder/{results,results_pilot,logs,organization,report,pilot_report,dashboard}`, about 630 MB. `logs/` is 284 MB, and includes the vLLM request log the wedged `go_root` still owns.
+    - `rlmorder/{results_pilot,logs}`.
+    - After moving them, repoint the lane script's `ORG` default and the `--structured-results` paths.
 - **Never run `make style` on the Mac.** Its uv sync corrupts `.venv-mac`. Run `.venv/bin/python -m black/isort` directly.
 - **Only doc-only commits may be pulled into a checkout whose lanes are running.**
 - **Show loft128k numbers only** (standing user rule). Ask before showing any RULER-128k numbers.
 
 ## Next steps (ranked)
-1. Monitor the ten revision-2 lanes (`ro2_graph_<subset>`, `ro2_query_<subset>`), launched at 21:33:58 on `cebce6c`, cores 6–15. All outputs go to local scratch, with the original structured organization cache reused.
-2. Gate all 30 pilot rows, inspect initial reader calls and list parsing, preserve the gate output and record the result. A failure blocks the full campaign; retain failed rows as evidence.
-3. Resolve allocated scratch storage, finish any report gaps, then proceed with full LOFT only when requested. RULER follows the LOFT gate, as previously planned.
+1. **Get the user's OK to restart the server on cat GPU 0.** Restart it with step 0 above, and check that it generates.
+2. Launch the ten revision-3 pilot lanes (step 1), then gate all 30 rows (step 2). Inspect the transcripts:
+   - no `Final Answer:` loops;
+   - every abstention comes only after at least 3 reads;
+   - the qampari and quest lists parse.
+   A failure blocks the full campaign; keep failed rows as evidence.
+3. Full LOFT: 55 rows × 5 subsets × 2 arms, with `LIMIT=55`, same lanes. Get the output location from the user first; cat-local `/tmp` is not durable. Then gate, report, and copy condensed evidence to NAS. The user's original request covers this run.
+4. RULER-128k follows the LOFT gate, as planned.
 
 ## Changelog (newest first)
+- **2026-09-11 ~06:00 IST: the r2 pilot was gated (FAILED), revision 3 landed, and the server was found down.**
+  - **r2 pilot.** All ten lanes printed DONE by 21:46:25, 30 rows in total. The gate failed on 3 graph rows ending `repetition_broken`: hotpotqa row 2, musique row 0 and qampari row 2. Each root read the right neighbourhood, then looped on a `Final Answer: X` code cell.
+  - **What the r2 pilot shows about each arm.** The query arm now opens with `llm_query(q, chunks[:5])` and usually finishes in 2 steps, on about 2.9k root tokens. The graph arm finds its rows by keyword, then reads `chunks[i-2:i+6]`.
+  - **Revision 3 (`4e0df25`)** addresses both failure modes; see Decisions. It was pushed to `nas` and pulled on cat.
+  - **The server.** The engine was killed at 21:46:55 from an interactive login (`kill 15895`, then `kill -9 15895`), which freed GPU 0. The API on :8002 is wedged. It was not restarted, pending the user's OK.
 - **2026-09-10 21:33:58 IST: replacement pilot launched.** Code `cebce6c` is synchronized across Mac, NAS and cat. Ten lanes, first 3 test rows for each of five LOFT subsets and two arms, local scratch `/tmp/gautammahale/rlmorder/results_pilot_r2`, group `infolab`, cores 6–15. The 243 MiB prepared 128k dataset cache was copied locally; tokenizer remains in the configured NAS HF cache. Original pilot outputs are retained separately.
 - **2026-09-10 ~21:30 IST: revision-2 prompt and gate fixes.** Stopped both revision-1 pilot process groups at 21:23, preserving their outputs and the go_root server. Removed ranked Hit-print demonstrations, made the first query move a reader call, clarified representations, and added graph retry guidance. Bumped chunk_order_revision to 2. Gate now requires every task/arm, completed valid rows with reader calls, exact positive token counts, no limit/server notices, comparator IDs/question/gold/document identity, and cached graph-order identity. Added pilot prefix matching and regression tests. Lane failures propagate and new outputs require an explicit scratch path and infolab group. Full evaluation tests: 553 passed, 1 skipped.
 - **2026-09-10 ~20:55 IST: code, tests and this file landed.**
