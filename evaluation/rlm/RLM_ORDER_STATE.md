@@ -149,12 +149,15 @@ ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && PYTHONDON
 # 3. Full LOFT: ten lanes (arm × subset), all 55 test rows, cores 6-15. Live output goes to cat-local scratch.
 ssh cat.cse.iitb.ac.in 'T=/tmp/gautammahale/rlmorder; sg infolab -c "mkdir -p $T/results"; core=6; for arm in bm25-graph bm25-query; do for s in nq hotpotqa musique qampari quest; do tmux new-session -d -s "ro_${arm#bm25-}_$s" "sg infolab -c \"LIMIT=55 HF_DATASETS_CACHE=$T/hf_datasets RESULTS=$T/results /mnt/home/gautammahale/rlmorder/checkout/evaluation/rlm/rlm_order_lane.sh $arm $core $s > $T/logs/full_${arm}_$s.log 2>&1\""; core=$((core+1)); done; done; tmux ls'
 
-# 4. Gate the full run (save the output), then write the report to local scratch. Reports never go in $HOME.
-ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && PYTHONDONTWRITEBYTECODE=1 /mnt/nas/gautammahale/venvs/rlm/bin/python -m evaluation.rlm.rlm_order_gate /tmp/gautammahale/rlmorder/results --expect 55 --structured-results /mnt/nas/gautammahale/archive/graphorder/results --organization-dir /mnt/nas/gautammahale/archive/graphorder/organization | tee /tmp/gautammahale/rlmorder/report/full_gate.txt'
-ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && HF_HOME=/mnt/nas/gautammahale/hf_cache PYTHONDONTWRITEBYTECODE=1 /mnt/nas/gautammahale/venvs/rlm/bin/python -m evaluation.rlm.rlm_order_report --results /tmp/gautammahale/rlmorder/results --out /tmp/gautammahale/rlmorder/report/full --structured-results /mnt/nas/gautammahale/archive/graphorder/results --guards /mnt/nas/gautammahale/benchmark/evaluation/results/loft128k_guards --repo .'
+# 4. After the lanes finish, pull, THEN run the post-run script from the checkout. (Bash reads a script as
+#    it runs, so never pull over a running copy.) The script:
+#    - gates the run and saves the output;
+#    - stops ro_root if no row needs a rerun (the user's condition);
+#    - reports with --tuned-rows 3;
+#    - archives results, report and logs to NAS, checksum-verified.
+ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && git pull -q --ff-only && sg infolab -c "bash evaluation/rlm/rlm_order_postrun.sh"'
 
-# 5. Archive every gated stage to NAS as infolab. /tmp is not durable. An empty verify (rsync -c -n) means identical.
-ssh cat.cse.iitb.ac.in 'sg infolab -c "for d in results report logs; do rsync -a /tmp/gautammahale/rlmorder/\$d/ /mnt/nas/gautammahale/archive/rlmorder/\$d/ && rsync -a -c -n --itemize-changes /tmp/gautammahale/rlmorder/\$d/ /mnt/nas/gautammahale/archive/rlmorder/\$d/; done"'
+# 5. Inspect a sample of every row the gate lists under REVIEW, and record here what it showed.
 ```
 
 The pilot runs ten short lanes (arm × subset) to test the concurrency planned for
@@ -199,6 +202,14 @@ full launch. Never accept a pass on only the subsets that happen to exist.
 4. RULER-128k follows the LOFT gate, as planned.
 
 ## Changelog (newest first)
+- **2026-09-11 ~06:50 IST: interim REVIEW sample from the running full run, and the post-run script.**
+  - **Progress.** 357 rows had finished, and 9 of them were behaviour rows (2.5%). Only musique graph was above 10%, at 2 of its first 10 rows.
+  - **Four behaviour rows were read. All four are the root's own behaviour, and none traces back to the revision-4 empty-read refusal:**
+    - **nq query 19**, `error_loop_broken`. After step 1 the root never called `llm_query`. It printed `hits[0].text[:500]`, then hit its own `IndexError` on an empty list, then `AttributeError: 'Hit' object has no attribute 'title'`.
+    - **nq graph 20**, `repetition_broken`, no reads. It ran `"hawaii five-o" in c.text` three times: a lower-case term against original-case text, the mirror of the case trap.
+    - **hotpotqa graph 4**, no reads. Seventeen lower-case searches for "arundel" found nothing, and it abstained without a read.
+    - **quest query 16**, no reads. It answered from titles it had filtered and printed itself.
+  - **Added `rlm_order_postrun.sh`** (step 4), so the post-run procedure is a committed script and not a session file.
 - **2026-09-11 06:33 IST: the revision-5 pilot PASSED, and the full LOFT run was launched.**
   - **The r5 pilot** ran 06:29:42–06:32:09. The gate passed 30/30, with 0 guard endings, so it would also have passed the old strict rule.
     - Every prose cell, empty read, over-budget read and premature abstention was recovered.
