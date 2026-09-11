@@ -4,11 +4,13 @@
 > finished stage, gate and report. Where two statements disagree, the newer one wins; the
 > changelog at the bottom dates every update.
 > **Last updated: 2026-09-11 ~08:35 IST.**
-> - **RULER-128k is RUNNING, on revision 6.** The user OK'd RULER on 2026-09-11 ("yup go
->   ahead with the ruler 128k tests as well"), so `ro_root` was restarted at 08:02:30 with
->   the LOFT settings. The revision-5 pilot failed its gate because composed answers were
->   rejected. Revision 6 (`d383acc`) accepts them, and its pilot launched at 08:32:30. See
->   **RULER-128k** and **Decisions**.
+> - **The full RULER-128k run is RUNNING, on revision 6. It launched at 08:39:29** (`c466401`:
+>   14 lanes, 1,430 rows, logs `ruler_full_*`).
+>   - The user OK'd RULER on 2026-09-11 ("yup go ahead with the ruler 128k tests as well"),
+>     so `ro_root` was restarted at 08:02:30 with the LOFT settings.
+>   - The revision-5 pilot failed its gate because composed answers were rejected. Revision
+>     6 (`d383acc`) accepts them, and its pilot PASSED at 08:36.
+>   - When every lane has printed DONE, run R4. See **RULER-128k** and **Decisions**.
 > - **The LOFT campaign is COMPLETE, and its gate PASSED.** 550/550 rows, run 06:33–07:10
 >   on revision 5 (`2b62ef2`). There were 21 behaviour rows, and no run crossed the 10%
 >   warn line. Results, report and logs are archived on NAS; see **Results** below.
@@ -138,7 +140,7 @@ list note.
 | revision-4 pilot (3 rows × 2 arms, `00b01a6`) | done 06:22; archived | done | gate FAIL: graph row 0 `ungrounded_final` | done | done |
 | revision-5 pilot (3 rows × 2 arms, `2b62ef2`) | gate PASSED, 30/30, 0 guard endings (06:32); archived | passed | passed | passed | passed |
 | LOFT full (55 rows × 2 arms, `2b62ef2`) | gate PASSED (07:10); archived | passed | passed | passed | passed |
-| RULER-128k (13 tasks × 55 × 2) | r5 pilot: gate FAILED 08:14 (composed-literal rejections), archived; r6 pilot (`d383acc`) launched 08:32:30; see **RULER-128k** | | | | |
+| RULER-128k (13 tasks × 55 × 2) | r5 pilot: gate FAILED 08:14 (composed-literal rejections), archived. r6 pilot (`d383acc`): gate PASSED 08:36, archived. **Full run (`c466401`) launched 08:39:29.** See **RULER-128k** | | | | |
 
 **The comparator to beat.** These are the structured graph-order results on the same 55
 test rows. That campaign's gate passed on 2026-09-10.
@@ -334,17 +336,20 @@ ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && git pull 
 - **Show loft128k numbers only** (standing user rule). Ask before showing any RULER-128k numbers.
 
 ## Next steps (ranked)
-1. **RULER-128k, which needs the user's OK first.**
-   - It needs the GPU again: `ro_root` was stopped under the user's condition.
-   - It needs a one-time online staging of `lighteval/RULER-131072-Qwen-3`.
-   - Then run a pilot, the full 13 tasks × 55 × 2, and `DATASET=ruler128k STAGE=ruler_full bash evaluation/rlm/rlm_order_postrun.sh`.
+1. **Finish RULER-128k.** The full run launched at 08:39:29.
+   - Once every `ruler_full_*` lane has printed DONE, run R4. It gates at revision 6, stops `ro_root` if the gate passes (the user's condition), reports with `--tuned-rows 3`, and archives everything to NAS.
+   - Sample every REVIEW list and record what it showed, as for LOFT.
    - Ask before showing any RULER number.
-2. **Optional, and only as a new revision with its own pilot.** Never mix it into the LOFT numbers above.
-   - A hint when a chunk filter matches nothing (the case trap).
-   - Grounding that tolerates number formats ("2548" against "2,548").
+2. **Optional, and only as a new revision with its own pilot.** Never mix it into the numbers above.
+   - A hint when a chunk filter matches nothing. The case trap caused most LOFT no-read rows, and one RULER pilot row.
+   - Number formats are already tolerated: revision 6 ignores digit-group commas.
 3. **The dashboard export, only if asked.** `graph_order_export_dashboard.py` is now in the repo.
 
 ## Changelog (newest first)
+- **2026-09-11 08:36–08:40 IST: the RULER r6 pilot PASSED, and the full RULER run was launched.**
+  - **The r6 pilot.** 78 of 78 rows; the gate PASSED at 08:36 with 4 REVIEW rows, one per run. Archived as `archive/rlmorder/ruler_pilot_r6_*`, with 0 checksum diffs.
+  - **The report path works on RULER.** A dry run of `rlm_order_report` on the r6 pilot scored all 13 tasks on `string_match` and refused no pairing.
+  - **The full run** was launched at 08:39:29 on `c466401`: 14 lanes, 1,430 rows, results `results_ruler128k`, logs `ruler_full_*`. R4 comes after every lane prints DONE.
 - **2026-09-11 08:14–08:35 IST: the RULER r5 pilot FAILED its gate, revision 6 fixes composed answers, and LOFT was replayed.**
   - **The r5 pilot.** All 78 rows were done by 08:14:16. The gate failed on the behaviour share of 3 runs: 9 rows ended `ungrounded_final` on composed literals. Archived.
   - **Revision 6 (`d383acc`).** A composed FINAL literal is grounded when every content word it adds was printed. 580 tests pass. Pushed to `nas` and `skylight`, with `gautam-dev` fast-forwarded.
