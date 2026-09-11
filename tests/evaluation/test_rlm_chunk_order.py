@@ -33,6 +33,7 @@ from evaluation.rlm.rlm import (
     PROSE_ANSWER_CELL_ERROR,
     RLM,
     SUB_SYSTEM_PROMPT,
+    UNGROUNDED_FINAL_CHUNKS,
 )
 from tests.evaluation.test_rlm_run_benchmark import _args
 
@@ -361,6 +362,14 @@ class TestRun:
         assert result.end_reason == "final_called" and result.answer == "sub answer"
         assert result.metrics["prose_answer_cells"] == 1
         assert any(PROSE_ANSWER_CELL_ERROR in m["content"] for m in root.calls[2] if m["role"] == "user")
+
+    def test_an_ungrounded_literal_is_rejected_without_the_find_recipe(self):
+        cells = [READ_THEN_ANSWER[0], 'FINAL("made up answer")', "FINAL(ans)"]
+        result, _, root = run_once("bm25-query", query_view(), cells=cells)
+        rejections = [m["content"] for m in root.calls[2] if m["role"] == "user"]
+        assert UNGROUNDED_FINAL_CHUNKS.format(val="made up answer") in rejections
+        assert not any("context.find" in r for r in rejections)
+        assert result.end_reason == "final_called" and result.answer == "sub answer"
 
     def test_the_final_answer_diagnosis_is_for_ordered_runs_only(self):
         rlm, env, _ = build()

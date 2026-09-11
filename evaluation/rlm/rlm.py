@@ -211,7 +211,7 @@ Example of a correct session (4 turns):
 # told about the order and in nothing else the prompt says.
 CHUNK_ORDERS = ("bm25-graph", "bm25-query")
 # Bump for any change that can alter what an ordered-chunk root is shown or sent.
-CHUNK_ORDER_REVISION = 4
+CHUNK_ORDER_REVISION = 5
 # One structured reader group, so one agentic read is the size of one mapped group.
 DEFAULT_CHUNK_CALL_TOKENS = 8192
 # The question a chunk read is priced with when the prompt states how many chunks fit
@@ -650,9 +650,9 @@ TEXT_FINAL_NONE_RE = re.compile(
 # words are matched: `answer: x` alone is a valid annotation and never reaches here.
 PROSE_ANSWER_LINE_RE = re.compile(r"^\s*final\s+answer\s*:", re.IGNORECASE | re.MULTILINE)
 PROSE_ANSWER_CELL_ERROR = (
-    "[SYNTAX ERROR] `Final Answer: ...` is not Python, so nothing was recorded. Submit your "
-    "answer by calling FINAL in a code block instead: FINAL(ans) for a variable that holds "
-    'it, or FINAL("...") with the answer in quotes.'
+    "[SYNTAX ERROR] `Final Answer: ...` is not Python, so nothing was recorded. Submit the "
+    "answer by calling FINAL in a code block instead: FINAL(ans), with the variable that holds "
+    'it. A quoted FINAL("...") is accepted only if that exact text appeared in the REPL output.'
 )
 # An ordered-chunk read of NO chunks: a keyword filter that matched nothing. Sent on, the
 # reader says the text does not mention the answer -- about text it never saw -- and on
@@ -662,6 +662,16 @@ EMPTY_CHUNK_READ_ERROR = (
     "llm_query refused: the list of chunks is EMPTY, so there is nothing to read -- your filter "
     "matched no chunk. `c.text.lower()` is all lower case, so a term with capitals in it never "
     "matches: write the term in lower case, or try a different distinctive term. Nothing was read."
+)
+# The ungrounded-FINAL rejection for the ordered-chunk arms, without the `context.find`
+# recipe their prompt replaced. On the revision-4 pilot a root holding the reader's answer
+# in `ans` typed FINAL("Al-Aqsa Mosque, None") -- words no output contained -- and was
+# rejected into ungrounded_final; FINAL(ans) would have been accepted as it stood.
+UNGROUNDED_FINAL_CHUNKS = (
+    "REJECTED: FINAL({val!r}) is a literal that never appeared in any REPL output, so it looks "
+    "like a guess. Pass FINAL the variable that holds a reader's answer -- e.g. FINAL(ans) -- or "
+    "quote only text that appears word for word in the output above. If several different reads "
+    'have genuinely failed, say so with FINAL_NONE("reason") instead.'
 )
 
 # A sub client that cannot fit a slice reports it as an ordinary return string
@@ -2567,13 +2577,17 @@ class RLM:
                     full_history.append(
                         {
                             "role": "user",
-                            "content": f"REJECTED: your answer {val!r} never appeared in any actual REPL "
-                            "output, so it looks like a guess. Do NOT invent answers. Write a "
-                            "```python code block that finds the answer in `context` (string "
-                            "search / regex / llm_query with the snippet pasted in), look at "
-                            "the real output, and only then FINAL it. If you have genuinely "
-                            "searched and the document does not contain the answer, say so with "
-                            'FINAL_NONE("reason") instead.',
+                            "content": (
+                                UNGROUNDED_FINAL_CHUNKS.format(val=val)
+                                if self.chunk_order is not None
+                                else f"REJECTED: your answer {val!r} never appeared in any actual REPL "
+                                "output, so it looks like a guess. Do NOT invent answers. Write a "
+                                "```python code block that finds the answer in `context` (string "
+                                "search / regex / llm_query with the snippet pasted in), look at "
+                                "the real output, and only then FINAL it. If you have genuinely "
+                                "searched and the document does not contain the answer, say so with "
+                                'FINAL_NONE("reason") instead.'
+                            ),
                         }
                     )
                     continue
@@ -2663,12 +2677,16 @@ class RLM:
                     full_history.append(
                         {
                             "role": "user",
-                            "content": f"REJECTED: FINAL({val!r}) is a literal constant that never appeared "
-                            "in any REPL output — it looks like a guess. Find the real answer in "
-                            "`context` first (e.g. re.search / context.find / llm_query with the "
-                            "snippet pasted in), print it, then call FINAL on the variable "
-                            "holding it. If you have genuinely searched and the document does not "
-                            'contain the answer, say so with FINAL_NONE("reason") instead.',
+                            "content": (
+                                UNGROUNDED_FINAL_CHUNKS.format(val=val)
+                                if self.chunk_order is not None
+                                else f"REJECTED: FINAL({val!r}) is a literal constant that never appeared "
+                                "in any REPL output — it looks like a guess. Find the real answer in "
+                                "`context` first (e.g. re.search / context.find / llm_query with the "
+                                "snippet pasted in), print it, then call FINAL on the variable "
+                                "holding it. If you have genuinely searched and the document does not "
+                                'contain the answer, say so with FINAL_NONE("reason") instead.'
+                            ),
                         }
                     )
                     continue

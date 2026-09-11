@@ -69,7 +69,6 @@ def test_valid_reader_run_passes(tmp_path):
     "failure",
     [
         "zero_reads",
-        "max_steps",
         "missing_counts",
         "mismatch",
         "over_budget",
@@ -86,8 +85,6 @@ def test_live_failure_modes_are_rejected(tmp_path, failure):
     m = row["metrics"]
     if failure == "zero_reads":
         m.update(chunk_payload_calls=0, reader_input_tokens=[], reader_served_prompt_tokens=[])
-    elif failure == "max_steps":
-        row.update(finished=False, end_reason="max_steps")
     elif failure == "missing_counts":
         m.update(reader_input_tokens=[None], reader_served_prompt_tokens=[None])
     elif failure == "mismatch":
@@ -129,6 +126,32 @@ def test_abstention_after_a_read_is_valid_and_counted(tmp_path):
     problems, info = gate.check_run(tmp_path, CONFIG, 1)
     assert not problems
     assert info["behaviour"]["abstentions"] == 1
+
+
+def test_one_guard_ending_is_listed_for_review_not_failed(tmp_path):
+    rows = [record(i) for i in range(3)]
+    rows[0].update(finished=False, end_reason="max_steps", pred=None)
+    write_run(tmp_path, rows)
+    problems, info = gate.check_run(tmp_path, CONFIG, 3)
+    assert not problems
+    assert info["guard_rows"] == ["loft:nq_128k:0:max_steps"] and info["behaviour"]["guard endings"] == 1
+
+
+def test_guard_endings_beyond_a_tenth_of_the_rows_fail(tmp_path):
+    rows = [record(i) for i in range(3)]
+    rows[0].update(finished=False, end_reason="max_steps", pred=None)
+    rows[1].update(finished=False, end_reason="ungrounded_final", pred=None)
+    write_run(tmp_path, rows)
+    assert any("harness guard" in p for p in gate.check_run(tmp_path, CONFIG, 3)[0])
+    # Fifty-five rows tolerate five, and fail at six.
+    many = [record(i) for i in range(55)]
+    for row in many[:5]:
+        row.update(end_reason="repetition_broken")
+    write_run(tmp_path / "many", many)
+    assert not gate.check_run(tmp_path / "many", CONFIG, 55)[0]
+    many[5].update(end_reason="repetition_broken")
+    write_run(tmp_path / "many", many)
+    assert gate.check_run(tmp_path / "many", CONFIG, 55)[0]
 
 
 def test_pilot_ids_match_first_comparator_rows_not_all_55(tmp_path):

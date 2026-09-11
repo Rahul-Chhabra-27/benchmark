@@ -3,7 +3,9 @@
 """Validate the complete ordered-chunk campaign before launch or reporting.
 
 Use --pilot --expect 3 for the pilot; its IDs must be the first three comparator
-rows. A failed gate preserves all rows: it blocks acceptance, not analysis.
+rows. A failed gate preserves all rows: it blocks acceptance, not analysis. A row a
+harness guard ended is behaviour and is listed under REVIEW; a run fails only when such
+rows exceed GUARD_ENDING_SHARE of it.
 """
 
 from __future__ import annotations
@@ -23,6 +25,14 @@ from .rlm import CHUNK_ORDER_REVISION
 ARMS = ("bm25-graph", "bm25-query")
 LOFT_SUBSETS = ("nq_128k", "hotpotqa_128k", "musique_128k", "qampari_128k", "quest_128k")
 NOTICES = ("[SUB-CALL LIMIT", "[TIME LIMIT", "[SUB-MODEL ERROR]")
+# The endings in which the ROOT committed to an answer or an abstention.
+ANSWERED_ENDINGS = ("final_called", "abstained", "final_in_prose", "final_var_in_prose")
+# Every other ending is a harness guard: ungrounded_final, max_steps, run_timeout,
+# gave_up_no_code, and the repetition, error-loop and no-output breakers. One is
+# behaviour -- a 4B root on a hard question, under the same guards base RLM ran -- and is
+# listed for review. Many are a mechanical problem (revision 2: 3 of 15 graph rows, one
+# bug), so a run fails once they exceed this share of its rows, always tolerating one.
+GUARD_ENDING_SHARE = 0.10
 
 
 def _rows(run_dir: Path) -> dict[str, dict]:
@@ -58,17 +68,15 @@ def check_run(run_dir: Path, config: dict, expect: int | None) -> tuple[list[str
     behaviour: Counter = Counter()
     views: set = set()
     documents: set = set()
+    guard_rows: list[str] = []
     for example_id, row in rows.items():
         tag = f"{example_id}:"
         if row.get("error"):
             problems.append(f"{tag} error {str(row['error'])[:160]}")
-        if not row.get("finished") or row.get("end_reason") not in (
-            "final_called",
-            "abstained",
-            "final_in_prose",
-            "final_var_in_prose",
-        ):
-            problems.append(f"{tag} unfinished ending {row.get('end_reason')}")
+        if "finished" not in row or not row.get("end_reason"):
+            problems.append(f"{tag} missing finished flag or end_reason")
+        elif not row["finished"] or row["end_reason"] not in ANSWERED_ENDINGS:
+            guard_rows.append(f"{example_id}:{row['end_reason']}")
         m = row.get("metrics") or {}
         if not m.get("chunks_total") or not m.get("chunk_view_sha256") or not m.get("document_sha256"):
             problems.append(f"{tag} missing chunk view or document provenance")
@@ -107,7 +115,14 @@ def check_run(run_dir: Path, config: dict, expect: int | None) -> tuple[list[str
         behaviour["empty chunk reads refused"] += m.get("empty_chunk_reads", 0)
         views.add(m.get("chunk_view_sha256"))
         documents.add(m.get("document_sha256"))
-    return problems, dict(behaviour=behaviour, views=views, documents=documents, ids=set(rows), rows=rows)
+    allowed = max(1, int(GUARD_ENDING_SHARE * len(rows)))
+    if len(guard_rows) > allowed:
+        problems.append(
+            f"{len(guard_rows)} of {len(rows)} rows ended on a harness guard, over the {allowed} allowed: {guard_rows}"
+        )
+    behaviour["guard endings"] = len(guard_rows)
+    info = dict(behaviour=behaviour, views=views, documents=documents, ids=set(rows), rows=rows, guard_rows=guard_rows)
+    return problems, info
 
 
 def _configs(root: Path, key: str) -> dict[tuple, tuple[Path, dict]]:
@@ -190,6 +205,8 @@ def check_campaign(
         if config.get("mode") != "rlm" or (dataset == "loft" and config.get("split") != "test"):
             failures.append("expected agentic RLM and LOFT test split")
         print(f"{key}: {len(info[key]['ids'])} rows; {dict(info[key]['behaviour'])}")
+        if info[key]["guard_rows"]:
+            print(f"REVIEW {key}: {info[key]['guard_rows']}")
         problems.extend(f"{key}: {p}" for p in failures)
     for subset in subsets:
         gkey, qkey = (dataset, subset, "bm25-graph"), (dataset, subset, "bm25-query")
