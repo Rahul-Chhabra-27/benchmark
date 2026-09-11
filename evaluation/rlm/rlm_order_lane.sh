@@ -27,7 +27,8 @@ LIMIT=${LIMIT:-55}
 MAX_STEPS=${MAX_STEPS:-50}
 if [ "$DATASET" = loft ]; then
   SUBSETS=${*:-"nq hotpotqa musique qampari quest"}
-  ORG=${ORG:-/mnt/home/gautammahale/graphorder/organization}
+  # The structured campaign's cache, archived off $HOME under the lab storage policy.
+  ORG=${ORG:-/mnt/nas/gautammahale/archive/graphorder/organization}
 else
   SUBSETS=${*:-"niah_single_1 niah_single_2 niah_single_3 niah_multikey_1 niah_multikey_2 niah_multikey_3 niah_multivalue niah_multiquery vt cwe fwe qa_1 qa_2"}
   ORG=${ORG:-$CAMPAIGN/organization}

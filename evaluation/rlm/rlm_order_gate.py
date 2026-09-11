@@ -165,7 +165,14 @@ def check_graph_artifact(rows: dict, artifacts: list[dict]) -> list[str]:
     return problems
 
 
-def check_campaign(results: Path, dataset: str, expect: int, structured: Path | None, pilot: bool) -> list[str]:
+def check_campaign(
+    results: Path,
+    dataset: str,
+    expect: int,
+    structured: Path | None,
+    pilot: bool,
+    organization: Path | None = None,
+) -> list[str]:
     runs = _configs(results, "chunk_order")
     subsets = LOFT_SUBSETS if dataset == "loft" else RULER_32K_TASKS
     expected = {(dataset, subset, arm) for subset in subsets for arm in ARMS}
@@ -210,7 +217,9 @@ def check_campaign(results: Path, dataset: str, expect: int, structured: Path | 
             for key in (gkey, qkey):
                 problems.extend(check_comparator(runs[key][0], info[key]["rows"], s_dir, pilot, expect))
             if s_arm == "bm25-graph":
-                org = s_config.get("organization_dir")
+                # The structured campaign's own cache: where its config recorded it, unless it
+                # has since been archived elsewhere (--organization-dir).
+                org = organization or s_config.get("organization_dir")
                 artifacts = [json.loads(p.read_text()) for p in Path(org).glob("*.json")] if org else []
                 problems.extend(check_graph_artifact(graph["rows"], artifacts))
     return problems
@@ -223,11 +232,18 @@ def main() -> None:
     ap.add_argument("--dataset", choices=("loft", "ruler128k"), default="loft")
     ap.add_argument("--pilot", action="store_true", help="compare to the first --expect structured rows")
     ap.add_argument("--structured-results", type=Path)
+    ap.add_argument(
+        "--organization-dir",
+        type=Path,
+        help="the structured campaign's graph artifacts, if moved since (default: the organization_dir it recorded)",
+    )
     args = ap.parse_args()
     if args.expect <= 0:
         ap.error("--expect must be positive")
     try:
-        problems = check_campaign(args.results, args.dataset, args.expect, args.structured_results, args.pilot)
+        problems = check_campaign(
+            args.results, args.dataset, args.expect, args.structured_results, args.pilot, args.organization_dir
+        )
     except (OSError, ValueError, KeyError, TypeError) as exc:
         problems = [f"invalid or incomplete artifacts: {exc}"]
     for problem in problems:

@@ -183,7 +183,8 @@ def test_missing_comparator_is_a_failure(tmp_path):
     assert sum("missing structured comparator" in p for p in problems) == 2
 
 
-def test_complete_pilot_passes_with_both_comparators_and_cached_orders(tmp_path):
+def complete_pilot(tmp_path, recorded_org=None):
+    """A complete one-row LOFT pilot and its comparator: (results, structured, organization)."""
     results, structured, org = (tmp_path / name for name in ("results", "structured", "organization"))
     org.mkdir()
     for subset in gate.LOFT_SUBSETS:
@@ -202,6 +203,19 @@ def test_complete_pilot_passes_with_both_comparators_and_cached_orders(tmp_path)
             for i, row in enumerate(rows):
                 row["id"] = f"loft:{subset}:{i}"
                 row["metrics"]["organization_sha256"] = subset
-            config = dict(dataset="loft", data_dir=subset, structured_order=arm, organization_dir=str(org))
+            config = dict(
+                dataset="loft", data_dir=subset, structured_order=arm, organization_dir=recorded_org or str(org)
+            )
             write_run(structured / f"{subset}-{arm}", rows, config)
+    return results, structured, org
+
+
+def test_complete_pilot_passes_with_both_comparators_and_cached_orders(tmp_path):
+    results, structured, _ = complete_pilot(tmp_path)
     assert not gate.check_campaign(results, "loft", 1, structured, True)
+
+
+def test_archived_graph_artifacts_are_found_through_the_override(tmp_path):
+    results, structured, org = complete_pilot(tmp_path, recorded_org=str(tmp_path / "moved-away"))
+    assert any("structured graph artifact" in p for p in gate.check_campaign(results, "loft", 1, structured, True))
+    assert not gate.check_campaign(results, "loft", 1, structured, True, org)
