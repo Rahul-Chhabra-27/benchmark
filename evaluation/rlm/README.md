@@ -17,7 +17,8 @@ is the factor every read is pressed by (F = 1 is the uncompressed control and ta
 `--press no_press`), and a read is capped at N = B × F tokens. For Qwen3-4B, 512 MB is
 3,472 tokens, so 512 MB × 4 caps a read at 13,888 tokens, each pressed to a quarter. A cell
 the GPU or the model window cannot hold is refused before any example runs. The lane takes
-the same cell as `BUDGET_MB=512 FACTOR=4`; see section 3.7 of `how_to_run.md`.
+the same cell as `BUDGET_MB=512 FACTOR=4`. To run cells with one command, see
+[`HOW_TO_RUN_BXF.md`](../../HOW_TO_RUN_BXF.md) (`bash evaluation/rlm/run_bxf.sh`).
 
 ## Goal
 Quantify how Recursive Language Models (RLMs) compare against vanilla long-context

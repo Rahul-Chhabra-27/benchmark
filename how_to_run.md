@@ -307,6 +307,9 @@ never completes a generation.
 
 ### 3.7 A B × F cell: KV-compressed chunk reads
 
+**The simplest way is one command, `bash evaluation/rlm/run_bxf.sh`: see
+[`HOW_TO_RUN_BXF.md`](HOW_TO_RUN_BXF.md).** The rest of this section is what that script does.
+
 Set `BUDGET_MB` and `FACTOR` and a lane runs one B × F cell. The root stays on the served
 model; each chunk read goes to an in-process KVzip model on the GPU `CUDA_VISIBLE_DEVICES`
 names, capped at N = B × F tokens and pressed by exactly 1 − 1/F. `FACTOR=1` is the
