@@ -105,6 +105,48 @@ def test_live_failure_modes_are_rejected(tmp_path, failure):
     assert gate.check_run(tmp_path, config, 1)[0]
 
 
+KV_CONFIG = dict(
+    CONFIG, sub_backend="kvzip", chunk_call_tokens=13888, chunk_kv_budget_tokens=3472, compression_factor=4.0
+)
+
+
+def kv_record(**kv):
+    """A B x F row: no server count, and the press's own stats in its place."""
+    row = record()
+    stats = dict(
+        calls=1,
+        pressed_calls=1,
+        max_context_tokens=90,
+        max_retained_context_tokens=22,
+        min_compression_ratio=0.75,
+        max_compression_ratio=0.75,
+    )
+    row["metrics"].update(reader_served_prompt_tokens=[None], sub_kv={**stats, **kv})
+    return row
+
+
+def test_a_kvzip_cell_is_gated_on_its_press_not_a_server_count(tmp_path):
+    write_run(tmp_path, [kv_record()])
+    assert gate.check_run(tmp_path, KV_CONFIG, 1)[0] == []
+
+
+@pytest.mark.parametrize(
+    "kv, config, needle",
+    [
+        (dict(min_compression_ratio=0.5), {}, "1 - 1/F"),
+        (dict(pressed_calls=0), {}, "not every one"),
+        (dict(max_retained_context_tokens=4000), {}, "over B="),
+        (dict(max_context_tokens=20000), {}, "over N="),
+        (dict(calls=0), {}, "never ran"),
+        ({}, dict(compression_factor=1.0), "F=1 control"),
+    ],
+)
+def test_kvzip_cells_that_did_not_get_their_b_and_f_fail(tmp_path, kv, config, needle):
+    write_run(tmp_path, [kv_record(**kv)])
+    problems = gate.check_run(tmp_path, {**KV_CONFIG, **config}, 1)[0]
+    assert any(needle in p for p in problems), problems
+
+
 def test_an_earlier_campaign_is_gated_at_the_revision_it_ran(tmp_path):
     write_run(tmp_path, [record()])
     config = dict(CONFIG, chunk_order_revision=CHUNK_ORDER_REVISION - 1)

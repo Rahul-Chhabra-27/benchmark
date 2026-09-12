@@ -146,6 +146,7 @@ list note.
 | revision-4 pilot (3 rows × 2 arms, `00b01a6`) | done 06:22; archived | done | gate FAIL: graph row 0 `ungrounded_final` | done | done |
 | revision-5 pilot (3 rows × 2 arms, `2b62ef2`) | gate PASSED, 30/30, 0 guard endings (06:32); archived | passed | passed | passed | passed |
 | LOFT full (55 rows × 2 arms, `2b62ef2`) | gate PASSED (07:10); archived | passed | passed | passed | passed |
+| B × F reads (`feature/ordered-bxf`, 2026-09-12) | KVzip-served chunk reads, B in MB and F exact per read; code + tests only, not yet run on a GPU | | | | |
 | RULER-128k (13 tasks × 55 × 2) | r5 pilot: gate FAILED 08:14 (composed-literal rejections), archived. r6 pilot (`d383acc`): gate PASSED 08:36, archived. **Full run (`c466401`, 08:39–09:25): gate FAILED on niah_multikey_3 graph (refusal loop), and vt WARNS. Archived; server stopped.** See **RULER-128k → The full run** | | | | |
 
 **The comparator to beat.** These are the structured graph-order results on the same 55

@@ -226,6 +226,25 @@ def resolve_compression_target(args: argparse.Namespace) -> float | None:
     ratio = getattr(args, "target_compression_ratio", None)
     fixed_chunk = bool(getattr(args, "fixed_chunk", False))
 
+    if getattr(args, "chunk_order", None) and args.sub_backend == "kvzip":
+        # The B x F cell of an ordered-chunk arm: B (--memory-budget) is the KV one chunk
+        # read may keep, F the KVzip factor every read is pressed by, and N = B x F the
+        # read cap. It sizes no slice, so none of the slice-sizing flags apply.
+        if factor is None:
+            raise ValueError("--chunk-order with --sub-backend kvzip needs --compression-factor (the F of B x F)")
+        if ratio is not None or auto_chunk or fixed_chunk:
+            raise ValueError(
+                "--chunk-order B x F takes only --memory-budget and --compression-factor; drop "
+                "--target-compression-ratio, --max-subcall-chars auto and --fixed-chunk"
+            )
+        compression_ratio_from_factor(factor)  # refuses a factor below 1
+        if (factor == 1) != (args.press == "no_press"):
+            raise ValueError(
+                "--compression-factor 1 is the uncompressed control and takes --press no_press; "
+                "any other factor takes --press kvzip"
+            )
+        return None
+
     if factor is not None and ratio is not None:
         raise ValueError("--compression-factor and --target-compression-ratio are mutually exclusive")
     if factor is not None:
@@ -527,6 +546,10 @@ def write_run_artifacts(
             runtime["sub_pressed_call_fraction"] = (
                 float(sum(s.get("pressed_calls", 0) for s in sub_kv) / total_calls) if total_calls else 0.0
             )
+            # A B x F cell's B is a ceiling on every read, so report the largest, not a mean.
+            kept = [s["max_retained_context_tokens"] for s in sub_kv if "max_retained_context_tokens" in s]
+            if kept:
+                runtime["max_sub_retained_context_tokens"] = int(max(kept))
             # The cost axis compared against KVPress is peak context held at once.
             # Counting only the ROOT flatters this arm: while the root holds ~2k
             # tokens, the sub model is holding a whole slice of KV on the GPU, and
@@ -805,6 +828,9 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
         # into an old checkpoint from that backend would silently merge two
         # experiments.
         components.append(f"{args.sub_backend}-{args.press}{args.memory_budget:g}{args.memory_budget_unit}")
+        # A B x F cell of an ordered-chunk arm: F, the fixed factor every read is pressed by.
+        if getattr(args, "chunk_order", None) and getattr(args, "compression_factor", None) is not None:
+            components.append(f"cf{args.compression_factor:g}")
     # Auto-sized runs must NOT stamp the resolved char count into the name: the
     # resolution reads live GPU free memory, so a resume could resolve slightly
     # differently, land in a fresh directory, and silently start over instead of
@@ -1526,8 +1552,15 @@ def main() -> None:
             ap.error("--chunk-order hands the root every chunk; it replaces --chunks-source")
         if args.min_subcall_chars:
             ap.error("--chunk-order reads whole chunks; --min-subcall-chars does not apply")
-        if args.sub_backend != "http":
-            ap.error("--chunk-order needs --sub-backend http (a chunk read is priced on a plain chat request)")
+        if args.sub_backend == "kvzip":
+            # A B x F cell (resolve_compression_target has checked F): N = B x F replaces
+            # the hand-set read cap, and every read is pressed at one fixed ratio.
+            if args.chunk_call_tokens != DEFAULT_CHUNK_CALL_TOKENS:
+                ap.error("--chunk-order B x F derives its read cap N = B x F; drop --chunk-call-tokens")
+            if args.press_min_tokens is not None:
+                ap.error("--chunk-order B x F presses every read; drop --press-min-tokens")
+        elif args.sub_backend != "http":
+            ap.error("--chunk-order needs --sub-backend http, or kvzip for a B x F cell")
         if args.chunk_call_tokens <= 0:
             ap.error("--chunk-call-tokens must be positive")
         if args.chunk_call_tokens + LLMClient.max_tokens > args.structured_context_tokens:
@@ -1891,12 +1924,34 @@ def main() -> None:
             max_context_tokens=args.sub_max_context_tokens,
             press_min_tokens=args.press_min_tokens,
             min_free_gib=args.sub_min_free_gib,
+            # Only a B x F cell presses at one fixed ratio; every other kvzip run keeps
+            # the ratio kvpress derives per call from the memory budget.
+            compression_factor=args.compression_factor if args.chunk_order else None,
         )
     else:
         sub = LLMClient(model=args.sub_model, base_url=args.base_url)
     if args.no_think:
         eb = {"chat_template_kwargs": {"enable_thinking": False}}
         root.extra_body = sub.extra_body = eb
+
+    # A B x F cell of an ordered-chunk arm: the read cap is N = B x F, derived from the
+    # sub model's own bytes per token, so a resume always resolves the same N. Refused
+    # here, before any example runs, if the window or the GPU cannot hold a full read.
+    chunk_context_tokens = args.structured_context_tokens
+    if args.chunk_order and args.sub_backend == "kvzip":
+        try:
+            args.chunk_call_tokens = sub.plan_ordered_reads()
+        except RuntimeError as exc:
+            raise SystemExit(str(exc))
+        args.chunk_kv_budget_tokens = sub.token_budget
+        args.sub_max_context_tokens = sub.max_context_tokens = args.chunk_call_tokens
+        # The in-process reader's own limit, in place of the served window's.
+        chunk_context_tokens = args.chunk_call_tokens + sub.max_new_tokens
+        print(
+            f"[bxf] B={args.memory_budget:g}{args.memory_budget_unit} = {args.chunk_kv_budget_tokens} tokens kept, "
+            f"F={args.compression_factor:g}: every read pressed at {1 - 1 / args.compression_factor:.4f}, "
+            f"at most N={args.chunk_call_tokens} tokens"
+        )
 
     # Resolve the advertised chunk size ONCE, before the RLM is built: it is
     # rendered into the root's system prompt, so it must be identical for every
@@ -1997,7 +2052,7 @@ def main() -> None:
         structured_hops=args.structured_hops,
         ordered_token_counter=ordered_counter,
         structured_group_input_tokens=args.structured_group_input_tokens,
-        structured_context_tokens=args.structured_context_tokens,
+        structured_context_tokens=chunk_context_tokens,
         structured_answer_list=(
             ""
             if args.answer_list_format == "off"
@@ -2392,6 +2447,15 @@ def build_run_config(
                 "organization_config": dict(ORGANIZATION_CONFIG),
                 "organization_dir": str(getattr(args, "organization_dir", None)),
                 "answer_list_format": getattr(args, "answer_list_format", "auto"),
+                # A B x F cell only, so every http ordered config.yaml is unchanged.
+                **(
+                    {
+                        "chunk_read_backend": "kvzip",
+                        "chunk_kv_budget_tokens": getattr(args, "chunk_kv_budget_tokens", None),
+                    }
+                    if args.sub_backend == "kvzip"
+                    else {}
+                ),
             }
             if mode == "rlm" and getattr(args, "chunk_order", None)
             else {}

@@ -300,3 +300,40 @@ def size_subcall_chunk(
         realized_ratio_if_filled=1.0 - (min(tokens, token_budget) / tokens),
         caps=caps,
     )
+
+
+def ordered_read_tokens(
+    *,
+    token_budget: int,
+    compression_factor: float,
+    kv_bytes_per_token: int,
+    output_tokens: int,
+    sub_window_tokens: Optional[int] = None,
+    gpu_free_bytes: Optional[int] = None,
+) -> int:
+    """N = B x F: the most tokens one ordered-chunk read may carry in a B x F cell.
+
+    B (``token_budget``) is the KV one read may KEEP; every read is pressed by exactly
+    ``1 - 1/F``, so a read of n <= N tokens keeps n/F <= B. Unlike the slice planner
+    above, nothing here is clamped: a cell whose N the sub model's window or the GPU
+    cannot hold is refused outright, because a smaller N would be a different cell --
+    and a read that then fails the per-call fit check comes back as an ordinary
+    sub-answer, so the run would complete and score as though it had a sub model.
+    """
+    if token_budget < 1:
+        raise ValueError(f"token_budget must be positive, got {token_budget}")
+    compression_ratio_from_factor(compression_factor)  # refuses a factor below 1
+    tokens = int(token_budget * compression_factor)
+    if sub_window_tokens is not None and tokens + output_tokens > sub_window_tokens:
+        raise RuntimeError(
+            f"B x F asks for reads of N={tokens} tokens, and with {output_tokens} output tokens that "
+            f"exceeds the sub model's {sub_window_tokens}-token window. Lower B or F."
+        )
+    if gpu_free_bytes is not None and tokens > gpu_fit_token_cap(gpu_free_bytes, kv_bytes_per_token):
+        need_gib = (tokens * kv_bytes_per_token * KV_FIT_SAFETY_FACTOR + KV_FIT_HEADROOM_BYTES) / 1024**3
+        raise RuntimeError(
+            f"B x F asks for reads of N={tokens} tokens, whose full uncompressed KV needs ~{need_gib:.1f} GiB "
+            f"(KVzip masks, never frees), but the GPU has {gpu_free_bytes / 1024**3:.1f} GiB free. "
+            "Free the GPU (e.g. lower the root server's --gpu-memory-utilization) or lower B or F."
+        )
+    return tokens

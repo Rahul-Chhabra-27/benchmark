@@ -15,6 +15,7 @@
 #     --split test.   DATASET=ruler128k: subsets are RULER task names (no split).
 #   LIMIT=3 RESULTS=/tmp/gautammahale/rlmorder/results_pilot  for the pilot; LIMIT=55 for the
 #   campaign. Raw output goes to cat-local scratch and is archived to NAS after each stage.
+#   BUDGET_MB=512 FACTOR=4 CUDA_VISIBLE_DEVICES=0  runs the B x F cell instead (see below).
 set -euo pipefail
 arm=${1:?arm: bm25-graph|bm25-query}; cpu=${2:?cpu core to pin to}; shift 2
 DATASET=${DATASET:-loft}
@@ -35,6 +36,32 @@ else
   # Every RULER row brings its own haystack, so its organizations are new raw output: they
   # go on scratch next to RESULTS, never under $HOME (lab storage policy).
   ORG=${ORG:-$(dirname "$RESULTS")/organization_$DATASET}
+fi
+
+# A B x F cell: set BUDGET_MB (the KV one chunk read may keep, decimal MB) and FACTOR (the
+# KVzip factor every read is pressed by; 1 is the uncompressed no_press control). Reads are
+# then capped at N = B x F tokens and served by an in-process KVzip model on the GPU that
+# CUDA_VISIBLE_DEVICES names (the root stays on BASE_URL). Each cell gets its own
+# subdirectory, so rlm_order_gate.py can gate one cell at a time.
+BUDGET_MB=${BUDGET_MB:-}
+FACTOR=${FACTOR:-}
+if [ -n "$BUDGET_MB$FACTOR" ]; then
+  if [ -z "$BUDGET_MB" ] || [ -z "$FACTOR" ]; then
+    echo "Set BUDGET_MB and FACTOR together." >&2
+    exit 1
+  fi
+  PY=${KVZIP_PYTHON:-/mnt/nas/gautammahale/benchmark/.venv-kvpress/bin/python}
+  press=kvzip
+  if [ "$FACTOR" = 1 ]; then press=no_press; fi
+  # ~8 GiB of weights + 1 GiB headroom + 2.0 x N x 147,456 B: the full KV of a read, which
+  # KVzip masks but never frees (the rule kvzip_backend._fits_in_memory applies per call).
+  min_free=$(awk -v b="$BUDGET_MB" -v f="$FACTOR" \
+    'BEGIN{n=int(int(b*1e6/147456)*f); x=9+n*147456*2/2^30; m=int(x); if(x>m)m++; print m}')
+  sub_flags=(--sub-backend kvzip --press "$press" --memory-budget "$BUDGET_MB" --memory-budget-unit MB
+    --compression-factor "$FACTOR" --sub-min-free-gib "${MIN_FREE_GIB:-$min_free}")
+  RESULTS="$RESULTS/bxf_${BUDGET_MB}MB_x${FACTOR}"
+else
+  sub_flags=(--sub-backend http)
 fi
 
 # Lab storage policy: on a host with an infolab group, write as infolab. A RunPod pod or
@@ -63,7 +90,7 @@ for s in $SUBSETS; do
   taskset -c "$cpu" "$PY" -m evaluation.rlm.run_benchmark --dataset "$DATASET" --data-dir "$data_dir" \
       $split --limit "$LIMIT" --mode rlm --chunk-order "$arm" --organization-dir "$ORG" \
       --max-steps "$MAX_STEPS" \
-      --root-model "$MODEL" --sub-model "$MODEL" --base-url "$BASE_URL" --sub-backend http \
+      --root-model "$MODEL" --sub-model "$MODEL" --base-url "$BASE_URL" "${sub_flags[@]}" \
       --out "$RESULTS"
 done
 echo "################ DONE $arm $DATASET $(date +%T)"

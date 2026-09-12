@@ -54,6 +54,44 @@ def _transcript(run_dir: Path, example_id: str) -> dict:
     return json.loads((run_dir / "transcripts" / f"{example_id}.json").read_text())
 
 
+def _kv_read_problems(m: dict, calls: int, config: dict) -> list[str]:
+    """A B x F read reaches an in-process KVzip model, not a server, so there is no server
+    count to match. Check instead that the press did what the cell names: every read at
+    most N tokens, pressed by exactly 1 - 1/F, and keeping at most B."""
+    budget = config.get("chunk_call_tokens")
+    kept = config.get("chunk_kv_budget_tokens")
+    factor = config.get("compression_factor")
+    local = m.get("reader_input_tokens")
+    if not isinstance(local, list) or len(local) != calls or any(type(t) is not int or t <= 0 for t in local):
+        return [f"{calls} chunk reads but missing or invalid local token counts"]
+    problems = []
+    if isinstance(budget, int) and any(t > budget for t in local):
+        problems.append("an over-budget chunk read reached the sub model")
+    if not calls:
+        return problems
+    kv = m.get("sub_kv") or {}
+    if not kv.get("calls"):
+        return problems + ["chunk reads left no KV stats: the sub model never ran"]
+    if isinstance(budget, int) and kv.get("max_context_tokens", 0) > budget:
+        problems.append(f"a read held {kv['max_context_tokens']} context tokens, over N={budget}")
+    # One token of slack: the pipeline floors n x (1 - ratio).
+    if isinstance(kept, int) and kv.get("max_retained_context_tokens", 0) > kept + 1:
+        problems.append(f"a read kept {kv['max_retained_context_tokens']} tokens, over B={kept}")
+    if not factor:
+        problems.append("a kvzip run without a compression_factor")
+    elif factor == 1:
+        if kv.get("pressed_calls"):
+            problems.append("the F=1 control pressed a read")
+    else:
+        ratio = 1.0 - 1.0 / factor
+        if kv.get("pressed_calls") != kv["calls"]:
+            problems.append(f"{kv.get('pressed_calls')} of {kv['calls']} sub-calls pressed, not every one")
+        for key in ("min_compression_ratio", "max_compression_ratio"):
+            if abs(kv.get(key, -1.0) - ratio) > 1e-6:
+                problems.append(f"{key} {kv.get(key)} is not 1 - 1/F = {ratio:.6f}")
+    return problems
+
+
 def check_run(
     run_dir: Path, config: dict, expect: int | None, revision: int = CHUNK_ORDER_REVISION
 ) -> tuple[list[str], dict]:
@@ -90,7 +128,9 @@ def check_run(
             review[example_id] = f"{review[example_id]}+no_reads" if example_id in review else "no_reads"
         local = m.get("reader_input_tokens")
         served = m.get("reader_served_prompt_tokens")
-        if not isinstance(local, list) or not isinstance(served, list) or len(local) != calls or len(served) != calls:
+        if config.get("sub_backend") == "kvzip":
+            problems.extend(f"{tag} {p}" for p in _kv_read_problems(m, calls, config))
+        elif not isinstance(local, list) or not isinstance(served, list) or len(local) != calls or len(served) != calls:
             problems.append(f"{tag} {calls} chunk reads but missing or inconsistent token counts")
         else:
             if any(type(t) is not int or t <= 0 for t in local + served):

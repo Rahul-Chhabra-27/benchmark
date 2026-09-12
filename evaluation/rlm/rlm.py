@@ -1226,8 +1226,9 @@ class RLM:
                 raise ValueError(f"unknown chunk_order {chunk_order!r}; choose from {list(CHUNK_ORDERS)}")
             if search_k > 0:
                 raise ValueError("chunk_order hands the root every chunk in a fixed order; it has no search()")
-            if hasattr(self.sub, "chat_split"):
-                raise ValueError("chunk reads are priced on a plain chat request; use a plain chat sub client")
+            # A split-capable sub (KVzipSubClient) is a B x F cell: its chunk reads are still
+            # priced by ordered_token_counter against chunk_call_tokens (N = B x F), then sent
+            # through chat_split, whose compressed context side carries the chunks.
             if chunk_call_tokens <= 0:
                 raise ValueError(f"chunk_call_tokens must be positive, got {chunk_call_tokens}")
         self.chunk_order = chunk_order
@@ -1491,7 +1492,9 @@ class RLM:
             if ordered:
                 hit_spans = [(h.start, h.end) for h in context.hits]
                 chunk = context.render(document)
-                if hasattr(self.sub, "chat_split"):
+                if hasattr(self.sub, "chat_split") and not chunk_call:
+                    # Only an ordered-chunk read has a KV-press path (a B x F cell): its
+                    # rendered chunks ride chat_split's compressed context side below.
                     raise ValueError("ordered payload requires a plain chat client")
                 messages = reader_messages(SUB_SYSTEM_PROMPT, question, context, document)
                 count = self.ordered_token_counter.count_messages(messages)

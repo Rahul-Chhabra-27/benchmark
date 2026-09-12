@@ -317,15 +317,11 @@ class TestRun:
         with pytest.raises(ValueError, match="tokenizer"):
             rlm.run(DOCUMENT, "q", ordered_chunks=query_view())
 
-    def test_search_a_split_sub_client_and_unknown_orders_are_refused(self):
-        class Split(FakeClient):
-            def chat_split(self, question, context, system=None, **kw):
-                return ""
-
+    def test_search_and_unknown_orders_are_refused_but_a_split_sub_is_a_bxf_cell(self):
         with pytest.raises(ValueError, match="no search"):
             RLM(root_client=FakeClient(), chunk_order="bm25-query", search_k=5)
-        with pytest.raises(ValueError, match="plain chat"):
-            RLM(root_client=FakeClient(), sub_client=Split(), chunk_order="bm25-query")
+        # A split-capable sub (KVzipSubClient) is how a B x F cell reads its chunks.
+        assert RLM(root_client=FakeClient(), sub_client=SplitClient(), chunk_order="bm25-query").chunk_order
         with pytest.raises(ValueError, match="unknown chunk_order"):
             RLM(root_client=FakeClient(), chunk_order="random")
 
@@ -512,6 +508,41 @@ class TestPrompt:
         assert '"steven spielberg" can match it, "Steven Spielberg" never will' in " ".join(prompt.split())
 
 
+class SplitClient(FakeClient):
+    """A split-capable sub, like KVzipSubClient: `context` is the side the press compresses."""
+
+    def __init__(self, reply="sub answer"):
+        super().__init__(reply)
+        self.splits = []
+
+    def chat_split(self, question, context, system=None, **kw):
+        self.splits.append(dict(question=question, context=context, system=system))
+        return self.reply
+
+
+class TestKVzipReads:
+    """A B x F cell: the same ordered read, served by a KV-press sub through chat_split."""
+
+    def test_a_chunk_read_rides_the_compressed_context_side(self):
+        sub = SplitClient()
+        _, env, metrics = build(sub=sub)
+        picked = env["chunks"][:2]
+        env["llm_query"]("Which cello sonata?", picked)
+        rendered = OrderedPayload(tuple(picked)).render(DOCUMENT)
+        assert sub.splits == [dict(question="Which cello sonata?", context=rendered, system=SUB_SYSTEM_PROMPT)]
+        assert sub.calls == []
+        assert metrics["chunk_payload_calls"] == 1
+        assert metrics["reader_served_prompt_tokens"] == [None]
+        assert metrics["document_coverage_fraction"] == pytest.approx(2 * SIZE / len(DOCUMENT))
+
+    def test_a_read_over_n_is_refused_and_nothing_is_sent(self):
+        sub = SplitClient()
+        _, env, metrics = build(sub=sub, chunk_call_tokens=600)
+        with pytest.raises(ValueError, match="refused"):
+            env["llm_query"]("Q?", env["chunks"][:3])
+        assert sub.splits == [] and metrics["chunk_budget_refusals"] == 1
+
+
 ORDERED_RLM = dict(mode="rlm", chunk_order="bm25-query", chunk_call_tokens=8192, split="test")
 
 
@@ -546,6 +577,36 @@ class TestRunDirAndConfig:
         assert config["chunk_order"] == "bm25-query" and config["chunk_order_revision"] == rb.CHUNK_ORDER_REVISION
         assert config["chunk_call_tokens"] == 8192 and config["chunk_order_query"] == "bare"
         assert config["organization_config"]["chunk_chars"] == 2000
+
+    BXF = dict(
+        sub_backend="kvzip",
+        memory_budget=512.0,
+        memory_budget_unit="MB",
+        compression_factor=4.0,
+        chunk_call_tokens=13888,
+        chunk_kv_budget_tokens=3472,
+        sub_max_tokens=512,
+        sub_max_context_tokens=13888,
+    )
+
+    def test_a_bxf_cell_names_its_budget_and_factor(self):
+        components = rb.build_run_dir_components(_args(**{**ORDERED_RLM, **self.BXF}), "rlm", None)
+        assert components[components.index("rlm") + 1 :] == [
+            "split-test",
+            "kvzip-kvzip512MB",
+            "cf4",
+            "order-bm25-query",
+            "ctok13888",
+        ]
+
+    def test_a_bxf_cell_records_what_a_read_keeps(self):
+        config = rb.build_run_config(_args(**{**ORDERED_RLM, **self.BXF}), "rlm", "loft", None, None, None)
+        assert config["chunk_read_backend"] == "kvzip" and config["chunk_kv_budget_tokens"] == 3472
+        assert config["chunk_call_tokens"] == 13888 and config["compression_factor"] == 4.0
+
+    def test_an_http_ordered_config_is_unchanged(self):
+        config = rb.build_run_config(_args(**ORDERED_RLM), "rlm", "loft", None, None, None)
+        assert "chunk_read_backend" not in config and "chunk_kv_budget_tokens" not in config
 
     def test_legacy_agentic_config_has_no_chunk_keys(self):
         assert "chunk_order" not in rb.build_run_config(_args(mode="rlm"), "rlm", "loft", None, None, None)
@@ -593,8 +654,27 @@ class TestRefusals:
     def test_a_chunk_source_is_refused(self):
         assert "replaces --chunks-source" in self.refused([*self.BASE, "--chunks-source", "bm25"])
 
-    def test_a_kvzip_sub_backend_is_refused(self):
-        assert "--sub-backend http" in self.refused([*self.BASE, "--sub-backend", "kvzip"])
+    KVZIP = ["--sub-backend", "kvzip", "--memory-budget", "512", "--memory-budget-unit", "MB"]
+
+    def test_a_kvzip_cell_needs_its_factor(self):
+        assert "needs --compression-factor" in self.refused([*self.BASE, *self.KVZIP])
+
+    def test_a_kvzip_cell_derives_its_own_read_cap(self):
+        argv = [*self.BASE, *self.KVZIP, "--compression-factor", "4", "--chunk-call-tokens", "4096"]
+        assert "drop --chunk-call-tokens" in self.refused(argv)
+
+    def test_a_kvzip_cell_presses_every_read(self):
+        argv = [*self.BASE, *self.KVZIP, "--compression-factor", "4", "--press-min-tokens", "100"]
+        assert "drop --press-min-tokens" in self.refused(argv)
+
+    def test_the_press_must_match_the_factor(self):
+        assert "takes --press no_press" in self.refused([*self.BASE, *self.KVZIP, "--compression-factor", "1"])
+        argv = [*self.BASE, *self.KVZIP, "--press", "no_press", "--compression-factor", "4"]
+        assert "takes --press no_press" in self.refused(argv)
+
+    def test_slice_sizing_flags_are_refused(self):
+        argv = [*self.BASE, *self.KVZIP, "--compression-factor", "4", "--max-subcall-chars", "auto"]
+        assert "takes only --memory-budget" in self.refused(argv)
 
     def test_the_call_budget_needs_an_order(self):
         argv = [

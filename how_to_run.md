@@ -305,6 +305,32 @@ The script:
 Killing only the process `nvidia-smi` shows leaves a server that answers `/v1/models`, but
 never completes a generation.
 
+### 3.7 A B × F cell: KV-compressed chunk reads
+
+Set `BUDGET_MB` and `FACTOR` and a lane runs one B × F cell. The root stays on the served
+model; each chunk read goes to an in-process KVzip model on the GPU `CUDA_VISIBLE_DEVICES`
+names, capped at N = B × F tokens and pressed by exactly 1 − 1/F. `FACTOR=1` is the
+uncompressed control, and it, not the HTTP arm, is what a cell's F > 1 should be compared
+with: same reader, same prompt layout. Each cell writes to `$RESULTS/bxf_<B>MB_x<F>`, so gate
+one cell's directory at a time as in 3.5.
+
+```bash
+sg infolab -c "BUDGET_MB=512 FACTOR=4 CUDA_VISIBLE_DEVICES=0 DATASET=loft LIMIT=2 RESULTS=$S/results_bxf \
+  HF_HOME=$HF_HOME bash $REPO/evaluation/rlm/rlm_order_lane.sh bm25-query 6 nq"
+```
+
+A read's full uncompressed KV stays on the GPU (KVzip masks, it never frees), so a cell needs
+about 8 GiB of weights plus 2 × N × 147,456 bytes, on top of the root server:
+
+| B | F = 4: N, GPU | F = 8: N, GPU |
+|---|---|---|
+| 512 MB | 13,888, ~13 GiB | 27,776, ~17 GiB |
+| 1024 MB | 27,776, ~17 GiB | 55,552, ~25 GiB |
+| 2048 MB | 55,552, ~25 GiB | 111,104, ~40 GiB (a GPU of its own) |
+
+With the root at `--gpu-memory-utilization 0.5` on the same 48 GB card, anything over about
+20 GiB needs the root lowered or a second GPU. A cell that does not fit is refused at start-up.
+
 ---
 
 ## 4. On RunPod, or any other GPU VM
