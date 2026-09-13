@@ -44,10 +44,11 @@ import time
 import traceback
 from collections import Counter
 from dataclasses import dataclass, field
-from typing import Callable, Optional, Sequence
+from typing import Callable, Mapping, Optional, Sequence
 
 from . import retrieval
 from .client import LLMClient
+from .organization import OrderedPayload, reader_messages
 from .retrieval import Hit, tokenize
 
 ROOT_SYSTEM_PROMPT = """You are solving a task over a LONG document that does NOT fit in your context window.
@@ -191,6 +192,133 @@ Example of a correct session (4 turns):
         FINAL(ans2)
         ```"""
 
+# --------------------------------------------------------------------------- #
+# The ordered-chunk arms (--chunk-order)
+# --------------------------------------------------------------------------- #
+# The AGENTIC root handed the whole document as a list of chunks in a fixed order,
+# and told what that order is. The structured arm read every chunk through a fixed
+# map -> reduce, so the root never chose what to read; here the REPL loop chooses,
+# and the order is what makes its first read a good one.
+#
+# A variable rather than search(): a frozen set behind search() returns the same
+# windows for every query, and a1ff98f measured the root rephrasing and searching
+# eleven times against an identical result. These slots also replace the ones that
+# demonstrate `context.find` -- the root copies the demonstration (ec2c8a2), so an
+# arm whose worked session still showed .find would keep using it.
+#
+# The help and the search-terms bullet are shared by both orders; only the order
+# paragraph and the worked session differ, so the two arms differ in what they were
+# told about the order and in nothing else the prompt says.
+CHUNK_ORDERS = ("bm25-graph", "bm25-query")
+# Bump for any change that can alter what an ordered-chunk root is shown or sent.
+# Revision 6 changes no prompt text: FINAL also accepts a literal composed from several
+# reads (composed_answer_grounded). The LOFT campaign ran revision 5.
+CHUNK_ORDER_REVISION = 6
+# One structured reader group, so one agentic read is the size of one mapped group.
+DEFAULT_CHUNK_CALL_TOKENS = 8192
+# The question a chunk read is priced with when the prompt states how many chunks fit
+# in one call: longer than most questions the root writes, so the stated number holds.
+CHUNK_QUESTION_ALLOWANCE = ("Which of these passages answers the question, and what exactly do they say? " * 4).strip()
+
+CHUNKS_HELP = """\
+    * `chunks` (list): the WHOLE document cut into {n_chunks} consecutive pieces of
+      {chunk_chars} characters, then put in the order described below. Every
+      character of `context` is in exactly one chunk. Each chunk has `.rank` (its
+      position in the list, counting from 1), `.start` and `.end` (character
+      offsets into `context`), `.score`, and `.text` (exactly `context[.start:.end]`).
+      Printing a chunk object shows only a short prefix, NOT its full text.
+      Read chunks by passing them to `llm_query`; use `.text` for keyword filters.
+    * `llm_query(question: str, chunks[i:j]) -> str`: ask a sub-LLM about some
+      chunks. IMPORTANT: the sub-LLM CANNOT see `context`, `chunks` or any of your
+      variables. Put the question FIRST and a LIST OF CHUNKS second --
+      `llm_query("What is X?", chunks[:5])` -- and their text is sent for you, in
+      the order you list them. One call reads at most about {per_call} chunks
+      ({call_tokens} tokens); a longer list is refused, never cut short, so split
+      a long read into several calls. Capture the result: ans = llm_query(...)
+      then print(ans)."""
+
+CHUNK_ORDER_NOTES = {
+    "bm25-query": """\
+- HOW `chunks` IS ORDERED: it was SORTED, before you started, by BM25 keyword
+  relevance to the question. `chunks[0]` is the best match and `.score` falls as
+  you go down the list; a score of 0 means the chunk shares no distinctive word
+  with the question at all. The answer is almost always near the TOP.
+- Strategy: your FIRST code block calls `llm_query` over `chunks[:5]` and prints
+  the returned answer. Do not spend a turn printing chunk objects or their ranks.
+  If that answers the question, you are done: FINAL it straight away, with
+  confidence; there is no need to check the rest of the document. Only if the top
+  chunks do not answer it, read the next five chunks or filter `.text` for a
+  distinctive term and read those hits. Do NOT print the whole context.""",
+    "bm25-graph": """\
+- HOW `chunks` IS ORDERED: it was ORGANIZED once, before your question was known,
+  by a keyword-similarity graph: chunks that share distinctive words -- the same
+  names, titles, places -- were put NEXT TO EACH OTHER. It is NOT ranked by your
+  question (every `.score` is 0), but a chunk's neighbours in the list are usually
+  about the same people and things as the chunk itself.
+- Strategy: first FIND which chunks mention the question's distinctive terms,
+  then read the best one TOGETHER WITH ITS NEIGHBOURS in one call --
+  `chunks[max(0, i-2):i+6]` -- because related facts sit beside it. If that
+  answers the question, FINAL it straight away, with confidence. If it does not,
+  read another matching neighbourhood or try a different distinctive term before
+  abstaining. Do NOT print the whole context.""",
+}
+
+SEARCH_TERMS_CHUNKS = """\
+- SEARCH TERMS: never look for the question itself -- a whole question appears
+  nowhere in a document as a literal string. Pull out the DISTINCTIVE terms --
+  proper nouns, names, titles, numbers, rare words -- and look for each one
+  SEPARATELY and case-insensitively across the chunks, e.g.
+  `hits = [i for i, c in enumerate(chunks) if "millionaire" in c.text.lower()]`.
+  `c.text.lower()` is all lower case, so write every term in lower case too:
+  "steven spielberg" can match it, "Steven Spielberg" never will.
+  A question that needs a fact you must LEARN first (it names a film and asks
+  where its director was born) takes two reads: read for the first fact, then
+  look for what you just learned and read again."""
+
+WORKED_SESSION_RANKED = """\
+Example of a correct session (3 turns) for "Where was the director of the 1975 shark film born?":
+  You:  ```python
+        ans = llm_query("Who directed the 1975 shark film?", chunks[:5])
+        print(ans)
+        ```
+  REPL: Steven Spielberg
+  You:  ```python
+        hop2 = [c for c in chunks if "spielberg" in c.text.lower()][:8]
+        ans2 = llm_query("Where was Steven Spielberg born?", hop2)
+        print(ans2)
+        ```
+  REPL: Cincinnati, Ohio
+  You:  ```python
+        FINAL(ans2)
+        ```"""
+
+WORKED_SESSION_NEIGHBOURS = """\
+Example of a correct session (3 turns) for "Where was the director of the 1975 shark film born?":
+  You:  ```python
+        hits = [i for i, c in enumerate(chunks) if "shark" in c.text.lower() and "1975" in c.text]
+        print(hits)
+        ```
+  REPL: [41, 97]
+  You:  ```python
+        i = hits[0]
+        ans = llm_query("Who directed the 1975 shark film, and where was that director born? "
+                        "Reply with the birthplace only.", chunks[max(0, i-2):i+6])
+        print(ans)
+        ```
+  REPL: Cincinnati, Ohio
+  You:  ```python
+        FINAL(ans)
+        ```"""
+
+CHUNK_WORKED_SESSIONS = {"bm25-query": WORKED_SESSION_RANKED, "bm25-graph": WORKED_SESSION_NEIGHBOURS}
+
+# The bracketed list LOFT's multi-value scorer parses (see STRUCTURED_ANSWER_LIST_NOTE),
+# phrased for FINAL: the agentic arm answers through the value it passes there.
+RLM_ANSWER_LIST_NOTE = (
+    "The answer is a LIST of separate items: pass FINAL(...) a bracketed, comma-separated "
+    "list of quoted strings -- for example {example} -- with one item per distinct answer.\n"
+)
+
 # The llm_query help/example rendered into ROOT_SYSTEM_PROMPT depends on the sub
 # backend. The SPLIT variants teach the two-arg form used when the sub client
 # compresses the context's KV separately from the question (see kvzip_backend.py).
@@ -314,6 +442,15 @@ STRUCTURED_REDUCE_TEMPLATE = (
     "Notes from {n_chunks} passage(s) of the document, in document order:\n{findings}\n\n"
     "Answer the question from these notes.{answer_format_note}"
 )
+# The ordered-group arms (organization.py). Their notes arrive in the order the
+# reader groups were read, which for a graph order is NOT document order -- so the
+# header says what the order is instead of claiming one it is not. Used by BOTH
+# ordered arms, source order included, so the two differ in chunk order alone.
+STRUCTURED_REDUCE_TEMPLATE_GROUPS = (
+    "Question: {task}\n\n"
+    "Notes from {n_chunks} passage(s) of the document, in reader-group order:\n{findings}\n\n"
+    "Answer the question from these notes.{answer_format_note}"
+)
 # The agentic arms answer through FINAL(x), where x is a value the root computed --
 # the protocol forces a bare value. A reduce step is an ordinary chat completion,
 # and "be concise" is satisfied by a well-formed SENTENCE: measured on hotpotqa,
@@ -414,6 +551,37 @@ PREMATURE_ABSTAIN_NUDGE = (
     "different terms have genuinely failed."
 )
 
+# The same rejection for the ordered-chunk arms, without the `context.find` recipe:
+# those arms were taught to read `chunks`, and a nudge demonstrating .find would pull
+# the root back to the tactic their prompt replaced.
+PREMATURE_ABSTAIN_NUDGE_CHUNKS = (
+    "REJECTED: you called FINAL_NONE without ever calling llm_query, so you have not "
+    "actually read any of the document and cannot know the answer is absent. Read the "
+    "chunks most likely to hold the answer -- the top of `chunks` if it is sorted by "
+    "relevance, or the chunks that mention the question's distinctive terms, e.g. "
+    "[c for c in chunks if term.lower() in c.text.lower()] -- by passing them to "
+    "llm_query(question, those_chunks). Only abstain once several reads have genuinely failed."
+)
+
+# How many chunk reads an ordered-chunk run makes before its FINAL_NONE is believed.
+# The legacy bar -- one sub-call -- was set for a root that located a slice before
+# reading it. Here one read of the top five chunks is 2% of a 238-chunk document, and
+# on the revision-2 pilot all three musique query-arm rows abstained after exactly that
+# one read, one of them with the gold in chunks[0]: the root had asked all three hops
+# in one question, and the reader said the text did not answer it.
+CHUNK_READS_BEFORE_ABSTAIN = 3
+
+# The rejection for an ordered-chunk run that HAS read, but too little to claim absence.
+PREMATURE_ABSTAIN_NUDGE_CHUNK_READS = (
+    "REJECTED: you have read only {read} of the {total} chunks, so you cannot yet know the "
+    "answer is absent. When a reader says the text does not answer, the question was often "
+    "too big for one read: ask for ONE fact at a time -- the first thing you need to learn "
+    "-- then look for what you learned. Read more before giving up: the next chunks of the "
+    "list, or the chunks whose `.text` mentions a distinctive term from the question, e.g. "
+    "[c for c in chunks if term.lower() in c.text.lower()]. Only abstain once several "
+    "different reads have genuinely failed."
+)
+
 FOLD_MARKER = (
     "[MEMORY NOTICE] {n} earlier turn(s) were dropped to stay within your memory "
     "budget. They are gone from your context and were NOT saved anywhere — but the "
@@ -476,11 +644,45 @@ TEXT_FINAL_VAR_RE = re.compile(rf"(?:{_FINAL_VAR_ALT})\(\s*[\"'](\w+)[\"']\s*\)"
 TEXT_FINAL_NONE_RE = re.compile(
     rf"(?:{_FINAL_NONE_ALT})\(\s*(?:(?:\"\"\"|'''|\"|')(.*?)(?:\"\"\"|'''|\"|'))?\s*\)", re.DOTALL
 )
+# LOFT's answer line, written as a code cell. LOFT prompts close their few-shot answers
+# with "Final Answer: [...]", and on the revision-2 pilot three graph-arm rows read the
+# answer, then submitted `Final Answer: 2000` as Python. The one-line diagnosis
+# ("rewrite it multi-line") cannot be acted on for a single statement, so each row
+# resubmitted the same line until the repetition breaker replaced its answer. Only two
+# words are matched: `answer: x` alone is a valid annotation and never reaches here.
+PROSE_ANSWER_LINE_RE = re.compile(r"^\s*final\s+answer\s*:", re.IGNORECASE | re.MULTILINE)
+PROSE_ANSWER_CELL_ERROR = (
+    "[SYNTAX ERROR] `Final Answer: ...` is not Python, so nothing was recorded. Submit the "
+    "answer by calling FINAL in a code block instead: FINAL(ans), with the variable that holds "
+    'it. A quoted FINAL("...") is accepted only if that exact text appeared in the REPL output.'
+)
+# An ordered-chunk read of NO chunks: a keyword filter that matched nothing. Sent on, the
+# reader says the text does not mention the answer -- about text it never saw -- and on
+# the revision-3 pilot the root believed it and abstained. The cause each time was a
+# capitalised term tested against `c.text.lower()`, which can never match.
+EMPTY_CHUNK_READ_ERROR = (
+    "llm_query refused: the list of chunks is EMPTY, so there is nothing to read -- your filter "
+    "matched no chunk. `c.text.lower()` is all lower case, so a term with capitals in it never "
+    "matches: write the term in lower case, or try a different distinctive term. Nothing was read."
+)
+# The ungrounded-FINAL rejection for the ordered-chunk arms, without the `context.find`
+# recipe their prompt replaced. On the revision-4 pilot a root holding the reader's answer
+# in `ans` typed FINAL("Al-Aqsa Mosque, None") -- words no output contained -- and was
+# rejected into ungrounded_final; FINAL(ans) would have been accepted as it stood.
+UNGROUNDED_FINAL_CHUNKS = (
+    "REJECTED: FINAL({val!r}) is a literal that never appeared in any REPL output, so it looks "
+    "like a guess. Pass FINAL the variable that holds a reader's answer -- e.g. FINAL(ans) -- or "
+    "quote only text that appears word for word in the output above. If several different reads "
+    'have genuinely failed, say so with FINAL_NONE("reason") instead.'
+)
 
 # A sub client that cannot fit a slice reports it as an ordinary return string
 # (kvzip_backend._generate), which the root is free to ignore. Recognised here so
 # repeated failures can end the tool instead of burning the sub-call budget.
 SUB_FIT_FAILURE_PREFIX = "[SUB-MODEL ERROR]"
+# Replies that mean a reader call did not happen. On the ordered whole-document
+# path any of them is an incomplete read, never a finding.
+ORDERED_READER_FAILURES = (SUB_FIT_FAILURE_PREFIX, "[SUB-CALL LIMIT", "[TIME LIMIT")
 MAX_SUB_FIT_FAILURES = 3
 
 # Seconds the exec watchdog is always given back after a sub-call, even if its
@@ -539,6 +741,45 @@ def _mentions(haystack: str, needle: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(needle)}(?!\w)", haystack) is not None
 
 
+# What a composed answer is made of (composed_answer_grounded): runs of letters and
+# digits, lower-cased, with digit-group commas dropped so "2,548" and "2548" are one word.
+_ANSWER_WORD_RE = re.compile(r"[a-z0-9]+")
+_DIGIT_GROUP_COMMA_RE = re.compile(r"(?<=\d),(?=\d{3}(?!\d))")
+# Words that carry no answer, and so never ground one.
+COMPOSED_ANSWER_FILLER = frozenset(
+    "a an and are as at be but by for from in into is it its of on or that the their there "
+    "these they this those to was were which with".split()
+)
+# A literal that adds any of these is an abstention in an answer's clothes ("are none",
+# "it is not mentioned"): it must appear word for word, or be said with FINAL_NONE.
+COMPOSED_ANSWER_NEGATIONS = frozenset(
+    "no not none nothing unknown never neither nor cannot aren couldn didn doesn don hasn "
+    "haven isn wasn weren wouldn".split()
+)
+
+
+def _answer_words(text: str) -> set[str]:
+    return set(_ANSWER_WORD_RE.findall(_DIGIT_GROUP_COMMA_RE.sub("", text.lower())))
+
+
+def composed_answer_grounded(val: str, seen_output: str, task_text: str) -> bool:
+    """Was a FINAL literal put together from what the run observed? (ordered-chunk arms)
+
+    The word-for-word test rejects an answer assembled from several reads -- four values
+    read on four calls and joined with commas, or RULER's answer template filled in with
+    the value a reader returned -- although every part of it was printed: on the RULER
+    pilot that discarded 9 of 78 answers, most of them right. So every content word the
+    literal adds to the task text (question and answer template) must have appeared in
+    REPL output. It must add at least one, and no negation. A value no read returned is
+    still a word no output contains, so a guess is still rejected.
+    """
+    added = _answer_words(val) - _answer_words(task_text)
+    if added & COMPOSED_ANSWER_NEGATIONS:
+        return False
+    content = added - COMPOSED_ANSWER_FILLER
+    return bool(content) and content <= _answer_words(seen_output)
+
+
 # --------------------------------------------------------------------------- #
 # Retrieved-span arithmetic
 # --------------------------------------------------------------------------- #
@@ -581,6 +822,17 @@ def _cluster_hits(hits: Sequence[Hit]) -> list[list[Hit]]:
         else:
             clusters.append([hit])
     return clusters
+
+
+def _window_of(hit: Hit, chunk_chars: int, overlap: int) -> int:
+    """Which grid window this hit is, derived exactly as the grid was built.
+
+    `window_spans` strides by `chunk_chars - overlap` from 0, so the window id is the
+    start offset divided by the stride. Recomputed rather than carried on the Hit,
+    which has no room for it and is shared with the BM25 path.
+    """
+    stride = max(chunk_chars - overlap, 1)
+    return hit.start // stride
 
 
 def _map_groups(hits: Sequence[Hit], granularity: str) -> list[list[Hit]]:
@@ -716,6 +968,25 @@ def _clip_spans(spans: Sequence[tuple[int, int]], kept_chars: int, separator_len
 # --------------------------------------------------------------------------- #
 # Token accounting
 # --------------------------------------------------------------------------- #
+def _validated_view(document: str, view: Sequence[Hit]) -> tuple[Hit, ...]:
+    """An ordered-chunk view, checked before the root is shown any of it.
+
+    Every chunk must be verbatim document text, ranked 1..n in list order, and the
+    chunks together must cover every character exactly once: the view is the whole
+    document in another order, never a selection from it.
+    """
+    chunks = tuple(view)
+    if not chunks:
+        raise ValueError("an ordered-chunk view needs at least one chunk")
+    for position, hit in enumerate(chunks, start=1):
+        if not isinstance(hit, Hit) or hit.rank != position or hit.text != document[hit.start : hit.end]:
+            raise ValueError(f"ordered chunk {position} is not verbatim document text ranked by its position")
+    spans = sorted((hit.start, hit.end) for hit in chunks)
+    if spans[0][0] != 0 or spans[-1][1] != len(document) or any(a[1] != b[0] for a, b in zip(spans, spans[1:])):
+        raise ValueError("an ordered-chunk view must cover every character of the document exactly once")
+    return chunks
+
+
 class TokenCounter:
     """Token counter: uses tiktoken cl100k_base if installed, else len//4."""
 
@@ -822,7 +1093,15 @@ class RLM:
         reduce_finding_chars: int = DEFAULT_REDUCE_FINDING_CHARS,
         structured_hops: int = 1,
         structured_answer_list: str = "",
+        ordered_token_counter=None,
+        structured_group_input_tokens: int = 8192,
+        structured_context_tokens: int = 65536,
+        chunk_order: Optional[str] = None,
+        chunk_call_tokens: int = DEFAULT_CHUNK_CALL_TOKENS,
     ):
+        self.ordered_token_counter = ordered_token_counter
+        self.structured_group_input_tokens = structured_group_input_tokens
+        self.structured_context_tokens = structured_context_tokens
         self.root = root_client
         self.sub = sub_client or root_client
         self.max_steps = max_steps
@@ -938,6 +1217,25 @@ class RLM:
         # A worked example of the bracketed list a multi-value benchmark is parsed
         # with, or "" for the single-value default. See STRUCTURED_ANSWER_LIST_NOTE.
         self.structured_answer_list = structured_answer_list
+        # The ordered-chunk arms (see CHUNK_ORDERS). search() is refused beside them: the
+        # root is handed every chunk already ordered, so a second locate primitive would
+        # make the arm a different treatment -- and a query-aware one on the
+        # question-free order.
+        if chunk_order is not None:
+            if chunk_order not in CHUNK_ORDERS:
+                raise ValueError(f"unknown chunk_order {chunk_order!r}; choose from {list(CHUNK_ORDERS)}")
+            if search_k > 0:
+                raise ValueError("chunk_order hands the root every chunk in a fixed order; it has no search()")
+            # A split-capable sub (KVzipSubClient) is a B x F cell: its chunk reads are still
+            # priced by ordered_token_counter against chunk_call_tokens (N = B x F), then sent
+            # through chat_split, whose compressed context side carries the chunks.
+            if chunk_call_tokens <= 0:
+                raise ValueError(f"chunk_call_tokens must be positive, got {chunk_call_tokens}")
+        self.chunk_order = chunk_order
+        self.chunk_call_tokens = chunk_call_tokens
+        # (document identity, chunk count) -> (base, worst) token costs. Size 1, like
+        # retrieval's index cache: a LOFT subset is one document, so it hits every row.
+        self._chunk_cost_cache: dict = {}
         self._sub_call_budget: Optional[int] = None
         self._deadline: Optional[float] = None
         self.tok = TokenCounter(token_counter)
@@ -969,7 +1267,7 @@ class RLM:
             chunk, truncated = chunk[:room], True
         return question, chunk, truncated
 
-    def _read_instructions(self, split_capable: bool) -> dict:
+    def _read_instructions(self, split_capable: bool, chunk_view: Optional[tuple[int, int, int]] = None) -> dict:
         """The prompt slots that describe how to read: help, example, strategy,
         the locate bullet, and the worked session.
 
@@ -981,6 +1279,19 @@ class RLM:
         The large-read variants apply only on the split path: they promise that a big
         slice is cheap, which is only true when the sub backend compresses its context.
         """
+        if self.chunk_order is not None:
+            # (n_chunks, chunk_chars, chunks per call) of this example's view. No
+            # example_llm_query: neither chunk session is built from WORKED_SESSION_FIND,
+            # the only template that interpolates one.
+            n_chunks, chunk_chars, per_call = chunk_view or (0, 0, 0)
+            return {
+                "llm_query_help": CHUNKS_HELP.format(
+                    n_chunks=n_chunks, chunk_chars=chunk_chars, per_call=per_call, call_tokens=self.chunk_call_tokens
+                ),
+                "read_strategy": CHUNK_ORDER_NOTES[self.chunk_order],
+                "search_terms": SEARCH_TERMS_CHUNKS,
+                "worked_session": CHUNK_WORKED_SESSIONS[self.chunk_order],
+            }
         if self.search_k > 0:
             # One search block for both backends: llm_query(question, hits) behaves
             # identically either way, because the fold is invisible to the model.
@@ -1068,6 +1379,54 @@ class RLM:
         new_start = max(0, new_end - want)
         return document[new_start:new_end], True
 
+    def _chunks_per_call(self, document: str, view: Sequence[Hit]) -> int:
+        """How many chunks one llm_query carries, stated conservatively in the prompt.
+
+        Priced the way the real request is -- the same renderer and tokenizer -- on the
+        view's most expensive chunk and a long question (CHUNK_QUESTION_ALLOWANCE), so a
+        call of this many chunks with an ordinary question is not refused. Every call is
+        still checked exactly; this is only the number the root is told.
+        """
+        key = (hash(document), len(document), len(view))
+        if key not in self._chunk_cost_cache:
+            counter = self.ordered_token_counter
+
+            def cost(hits: tuple) -> int:
+                messages = reader_messages(SUB_SYSTEM_PROMPT, CHUNK_QUESTION_ALLOWANCE, OrderedPayload(hits), document)
+                return counter.count_messages(messages)
+
+            base = cost(())
+            worst = max(cost((hit,)) for hit in view) - base
+            self._chunk_cost_cache = {key: (base, worst)}
+        base, worst = self._chunk_cost_cache[key]
+        return max(1, (self.chunk_call_tokens - base) // max(worst, 1))
+
+    def _chunk_refusal(self, question: str, hits: Sequence[Hit], document: str, count: int, output_cap: int) -> str:
+        """What the root is told when a chunk read is over budget: how many WOULD fit.
+
+        Refused rather than truncated, so the root is never answered from a read it
+        believes covered chunks that were cut off -- and told the number, because a 4B
+        root told only "too long" retries with a list that is still too long.
+        """
+        fit = 0
+        for n in range(1, len(hits)):
+            messages = reader_messages(SUB_SYSTEM_PROMPT, question, OrderedPayload(tuple(hits[:n])), document)
+            size = self.ordered_token_counter.count_messages(messages)
+            if size > self.chunk_call_tokens or size + output_cap > self.structured_context_tokens:
+                break
+            fit = n
+        if not fit:
+            return (
+                f"llm_query refused: your question and the first chunk alone exceed the {self.chunk_call_tokens}-token "
+                "limit for one call. Shorten the question. Nothing was read."
+            )
+        return (
+            f"llm_query refused: those {len(hits)} chunks and your question come to {count} tokens, over the "
+            f"{self.chunk_call_tokens}-token limit for ONE call; only the first {fit} fit. Pass at most {fit} "
+            f"chunks per call -- e.g. llm_query(question, chunks[a:a+{fit}]) -- and make another call for the "
+            "rest. Nothing was read."
+        )
+
     def _make_env(
         self,
         context: str,
@@ -1075,11 +1434,15 @@ class RLM:
         cache: dict,
         notes: list,
         provided_chunks: Optional[Sequence[Hit]] = None,
+        ordered_chunks: Optional[Sequence[Hit]] = None,
     ) -> dict:
         final_box: dict = {"value": None, "done": False}
         # `llm_query`'s second parameter is also called `context` and shadows the
         # document inside it, so bind the document under a name the closure keeps.
         document = context
+        # The ordered-chunk view, addressed by span, so llm_query can tell this run's
+        # chunks from any other Hit the root might build or keep from elsewhere.
+        view_lookup = {(hit.start, hit.end): hit for hit in ordered_chunks} if ordered_chunks is not None else None
         coverage_spans: list[tuple[int, int]] = []
         # Every span search() returned, whether or not the root read it.
         # run_benchmark uses these for the answer-string presence diagnostic.
@@ -1106,7 +1469,52 @@ class RLM:
             # coverage and reads downstream exactly like a cell whose sub-model
             # never ran (fixedgrid/audit_cells.py treats coverage 0 as that tell).
             hit_spans: Optional[list[tuple[int, int]]] = None
-            if context is None or isinstance(context, str):
+            # An ordered-chunk read: a slice of `chunks`, or one chunk, is read IN THE
+            # ORDER GIVEN with each chunk labelled by its own offsets -- the structured
+            # arm's OrderedPayload, reused. Only Hits that ARE this run's chunks qualify;
+            # any other Hit list keeps the merge-into-document-order path below.
+            chunk_call = False
+            reader_count = 0
+            if view_lookup is not None and context is not None and not isinstance(context, (str, OrderedPayload)):
+                items = [context] if isinstance(context, Hit) else list(context)
+                if not items:
+                    # A filter that matched nothing (EMPTY_CHUNK_READ_ERROR): sent on, the
+                    # reader would describe text it was never shown.
+                    metrics["empty_chunk_reads"] = metrics.get("empty_chunk_reads", 0) + 1
+                    raise ValueError(EMPTY_CHUNK_READ_ERROR)
+                if all(isinstance(h, Hit) and view_lookup.get((h.start, h.end)) == h for h in items):
+                    context = OrderedPayload(tuple(items))
+                    chunk_call = True
+                else:
+                    # Materialized once, so a generator reaches the path below intact.
+                    context = items
+            ordered = isinstance(context, OrderedPayload)
+            if ordered:
+                hit_spans = [(h.start, h.end) for h in context.hits]
+                chunk = context.render(document)
+                if hasattr(self.sub, "chat_split") and not chunk_call:
+                    # Only an ordered-chunk read has a KV-press path (a B x F cell): its
+                    # rendered chunks ride chat_split's compressed context side below.
+                    raise ValueError("ordered payload requires a plain chat client")
+                messages = reader_messages(SUB_SYSTEM_PROMPT, question, context, document)
+                count = self.ordered_token_counter.count_messages(messages)
+                output_cap = getattr(self.sub, "max_tokens", 0) or 0
+                if chunk_call:
+                    if count > self.chunk_call_tokens or count + output_cap > self.structured_context_tokens:
+                        metrics["chunk_budget_refusals"] = metrics.get("chunk_budget_refusals", 0) + 1
+                        raise ValueError(self._chunk_refusal(question, context.hits, document, count, output_cap))
+                    # Recorded beside the server's count once a call is actually made: a
+                    # cache hit or a budget notice sends nothing, and would leave the two
+                    # lists different lengths.
+                    reader_count = count
+                elif count > self.structured_group_input_tokens or count + output_cap > self.structured_context_tokens:
+                    raise ValueError(
+                        f"ordered reader exceeds token budget: {count} input + {output_cap} output against "
+                        f"{self.structured_group_input_tokens} group / {self.structured_context_tokens} context"
+                    )
+                else:
+                    metrics.setdefault("reader_input_tokens", []).append(count)
+            elif context is None or isinstance(context, str):
                 chunk = None if context is None else str(context)
             else:
                 items = list(context)
@@ -1193,7 +1601,10 @@ class RLM:
                 question = f"{question}\n\n{chunk}"
                 chunk = None
             question_chars = len(question)
-            question, chunk, truncated = self._cap_subcall(question, chunk)
+            if ordered:
+                truncated = False
+            else:
+                question, chunk, truncated = self._cap_subcall(question, chunk)
             if spans_sent and truncated:
                 # Keep only what survived the cap. _cap_subcall truncates from the
                 # right, so a clipped payload must stop claiming coverage for text
@@ -1243,6 +1654,15 @@ class RLM:
                     # pure-Python code watchdog and aborting a cell that never looped.
                     signal.setitimer(signal.ITIMER_REAL, max(remaining, ALARM_REARM_FLOOR_S))
             metrics["sub_calls"] += 1
+            if ordered:
+                # The server's own count, beside the local one above: equal lists are
+                # the proof that the packing budget was priced on what vLLM received.
+                served = getattr(getattr(self.sub, "usage", None), "last_prompt_tokens", None)
+                metrics.setdefault("reader_served_prompt_tokens", []).append(served)
+                if chunk_call:
+                    metrics.setdefault("reader_input_tokens", []).append(reader_count)
+                    metrics["chunk_payload_calls"] = metrics.get("chunk_payload_calls", 0) + 1
+                    metrics.setdefault("chunk_ranks_read", []).extend(h.rank for h in context.hits)
             if expanded:
                 metrics["sub_slices_expanded"] = metrics.get("sub_slices_expanded", 0) + 1
             if unlocatable:
@@ -1292,7 +1712,16 @@ class RLM:
             "context": context,
             "llm_query": llm_query,
             "re": re,
+            # Not for the REPL -- the sandbox only exposes what the root is told
+            # about, and the root is never told about this. It is here so the notes
+            # path in run_structured can record what it read without reimplementing
+            # the span merge that backs document_coverage_fraction.
+            "record_coverage": record_coverage,
         }
+        if ordered_chunks is not None:
+            # A fresh list: the root may sort or slice it as it likes, and the view the
+            # harness checks reads against (view_lookup) is unaffected.
+            env["chunks"] = list(ordered_chunks)
         # Case variants bound to the same callables (see FINAL_NAMES).
         env.update({name: FINAL for name in FINAL_NAMES})
         env.update({name: FINAL_NONE for name in FINAL_NONE_NAMES})
@@ -1385,6 +1814,10 @@ class RLM:
         try:
             compile(code, "<rlm>", "exec")
         except SyntaxError:
+            # Ordered-chunk runs only: every other agentic run keeps the diagnosis it
+            # was scored with.
+            if self.chunk_order is not None and PROSE_ANSWER_LINE_RE.search(code):
+                return PROSE_ANSWER_CELL_ERROR, PROSE_ANSWER_CELL_ERROR
             if "\n" not in code:
                 fixed = ONELINE_FIX_RE.sub("\n", code)
                 try:
@@ -1519,6 +1952,16 @@ class RLM:
         return marker + text if truncated else text
 
     # ---------------- main loop ----------------
+    def structured_question(self, task: str) -> str:
+        """The question every structured map/reader call is asked.
+
+        One function for both callers, so the harness packs reader groups against
+        exactly the question `run_structured` later sends -- a budget priced on a
+        different string would not bound the real request.
+        """
+        map_task = bare_query(task) if self.structured_map_question == "query" else task
+        return STRUCTURED_MAP_QUESTION.format(task=map_task, nothing=STRUCTURED_NOTHING)
+
     def _base_metrics(self, split_capable: bool) -> dict:
         """The per-example counters every arm reports.
 
@@ -1565,6 +2008,8 @@ class RLM:
         chunks: Sequence[Hit],
         answer_format: str | None = None,
         retrieve: Callable[[str, int], Sequence[Hit]] | None = None,
+        window_notes: Mapping[int, str] | None = None,
+        ordered_groups: Sequence[OrderedPayload] | None = None,
     ) -> RLMResult:
         """Read a FIXED set of chunks with a fixed pipeline: map, then reduce.
 
@@ -1580,12 +2025,41 @@ class RLM:
         same path the search arm uses, reused rather than reimplemented, so
         coverage, truncation, caching and every sub_* counter mean the same thing
         here as they do there.
+
+        `window_notes` replaces the map step rather than assisting it. The notes were
+        written by a pass over the corpus that never saw the question (see
+        window_notes.py), so this arm reads a representation built without the query
+        and the question enters exactly once, at the reduce. The map step is SKIPPED,
+        not cached: `map_calls` is 0 because no model call is made here, and the
+        build cost lives in the notes file's header where it can be amortised over
+        the queries that share the corpus.
         """
+        if ordered_groups is not None:
+            if (
+                self.ordered_token_counter is None
+                or window_notes is not None
+                or retrieve is not None
+                or self.structured_hops != 1
+            ):
+                raise ValueError("ordered groups require tokenizer and retrieval-free single pass")
+            if self.structured_map_chars or self.structured_answer_shape != "require":
+                raise ValueError("ordered groups read whole chunks under the required answer shape")
+            flattened = [h for group in ordered_groups for h in group.hits]
+            spans = sorted((h.start, h.end) for h in flattened)
+            contiguous = all(a[1] == b[0] for a, b in zip(spans, spans[1:]))
+            if not spans or spans[0][0] != 0 or spans[-1][1] != len(context) or not contiguous:
+                raise ValueError("ordered groups must cover every source character exactly once")
+            for group in ordered_groups:
+                group.render(context)
+            chunks = flattened
         split_capable = hasattr(self.sub, "chat_split")
         metrics = self._base_metrics(split_capable)
         metrics["chunks_provided"] = len(chunks)
         metrics["map_calls"] = 0
         metrics["chunks_with_findings"] = 0
+        if ordered_groups is not None:
+            metrics["group_count"] = len(ordered_groups)
+            metrics["group_chunk_counts"] = [len(group.hits) for group in ordered_groups]
         cache: dict = {}
         notes: list = []
         self._sub_call_budget = self.max_sub_calls
@@ -1612,10 +2086,34 @@ class RLM:
         # looking at a single window -- and the same string carries the output
         # contract the scorer matches on, so stripping it at the reduce would confound
         # accuracy with scoring.
-        map_task = bare_query(task) if self.structured_map_question == "query" else task
-        map_question = STRUCTURED_MAP_QUESTION.format(task=map_task, nothing=STRUCTURED_NOTHING)
+        map_question = self.structured_question(task)
         findings: list[tuple[int, str]] = []
         timed_out = False
+
+        if window_notes is not None:
+            # The map step is replaced by a lookup. Coverage is still recorded: the
+            # notes ARE derived from that text, so an arm reading notes for the whole
+            # grid has read the whole document in the only sense this metric tracks.
+            record_coverage = env["record_coverage"]
+            metrics["notes_read"] = 0
+            for hit in sorted(chunks, key=lambda h: (h.start, h.end)):
+                note = window_notes.get(_window_of(hit, self.search_window_chars, self.search_overlap_chars), "")
+                record_coverage(hit.start, hit.end)
+                if not note:
+                    continue
+                transcript.append(
+                    {
+                        "step": len(transcript) + 1,
+                        "reply": f"[note] window at [{hit.start}:{hit.end}]",
+                        "code": "window_notes[...]",
+                        "observation": note,
+                    }
+                )
+                findings.append((len(transcript), note))
+                metrics["notes_read"] += 1
+            metrics["chunks_with_findings"] = metrics["notes_read"]
+            metrics["map_spans"] = len(chunks)
+            metrics["steps"] = len(transcript)
 
         def map_round(round_hits: Sequence[Hit], hop: int) -> bool:
             """Read one retrieval round's windows, one call per group. True if it ran out of time.
@@ -1630,17 +2128,34 @@ class RLM:
             # _map_groups. Every granularity puts the passages in document order,
             # which is the order the agentic path's payload is assembled in and the
             # order the reduce announces.
-            clusters = _map_groups(round_hits, self.structured_map_granularity)
-            if self.structured_map_chars:
+            # Ordered groups arrive already packed, and are read exactly as given.
+            if ordered_groups is not None:
+                clusters = [list(g.hits) for g in ordered_groups]
+            else:
+                clusters = _map_groups(round_hits, self.structured_map_granularity)
+            if self.structured_map_chars and ordered_groups is None:
                 clusters = [_truncate_hits(c, self.structured_map_chars, context) for c in clusters]
                 clusters = [c for c in clusters if c]
             metrics["map_spans"] = metrics.get("map_spans", 0) + len(clusters)
             for index, cluster in enumerate(clusters, start=1):
                 if self._deadline is not None and time.monotonic() > self._deadline:
+                    if ordered_groups is not None:
+                        raise ValueError(
+                            f"incomplete ordered read: run timeout after {index - 1}/{len(clusters)} groups"
+                        )
                     return True
-                answer = (llm_query(map_question, cluster) or "").strip()
+                if ordered_groups is not None:
+                    # A notice string past a budget would read as a FINDING, so an
+                    # ordered read refuses to reach one rather than paste it in.
+                    if self._sub_call_budget is not None and metrics["sub_calls"] >= self._sub_call_budget:
+                        raise ValueError("incomplete ordered read: map-call limit")
+                    answer = (llm_query(map_question, OrderedPayload(tuple(cluster))) or "").strip()
+                    if not answer or answer.startswith(ORDERED_READER_FAILURES):
+                        raise ValueError(f"incomplete ordered read: reader failed on group {index}: {answer[:80]!r}")
+                else:
+                    answer = (llm_query(map_question, cluster) or "").strip()
                 metrics["map_calls"] += 1
-                span = f"[{cluster[0].start}:{max(h.end for h in cluster)}]"
+                span = ", ".join(f"[{h.start}:{h.end}]" for h in cluster)
                 step = len(transcript) + 1
                 transcript.append(
                     {
@@ -1649,6 +2164,17 @@ class RLM:
                         f"({len(cluster)} window(s))",
                         "code": f"llm_query(MAP, hop{hop}.cluster[{index - 1}])",
                         "observation": answer,
+                        # The exact reader request, so a transcript shows what was read.
+                        **(
+                            {
+                                "source_spans": [(h.start, h.end) for h in cluster],
+                                "messages": reader_messages(
+                                    SUB_SYSTEM_PROMPT, map_question, OrderedPayload(tuple(cluster)), context
+                                ),
+                            }
+                            if ordered_groups is not None
+                            else {}
+                        ),
                     }
                 )
                 # Prefix match, case-insensitive: asked for an exact sentinel a 4B
@@ -1660,7 +2186,7 @@ class RLM:
                     metrics["chunks_with_findings"] += 1
             return False
 
-        timed_out = map_round(chunks, 1)
+        timed_out = map_round(chunks, 1) if window_notes is None else False
 
         # The second hop, and there is no third. A fixed pipeline can only follow a
         # bridge entity it has already READ, so the round-2 query is built from the
@@ -1684,6 +2210,14 @@ class RLM:
                 timed_out = map_round(fresh, 2)
         metrics["steps"] = len(transcript)
 
+        if ordered_groups is not None and (timed_out or metrics.get("document_coverage_fraction") != 1.0):
+            # Raised, not returned: run_benchmark records an exception as an ERROR,
+            # whereas an end_reason would be scored as an ordinary wrong answer.
+            raise ValueError(
+                f"incomplete ordered read: coverage {metrics.get('document_coverage_fraction')}, "
+                f"{metrics['map_calls']}/{len(ordered_groups)} groups read"
+            )
+
         if not findings:
             if timed_out:
                 return RLMResult(None, len(transcript), False, transcript, "run_timeout", metrics)
@@ -1700,7 +2234,10 @@ class RLM:
         # concise.") and its note ("Format your answer as: ..."), so the answer-shape
         # change can be scored apart from the clustering change it shipped with.
         offered = self.structured_answer_shape == "offer"
-        reduce_template = STRUCTURED_REDUCE_TEMPLATE_OFFER if offered else STRUCTURED_REDUCE_TEMPLATE
+        if ordered_groups is not None:
+            reduce_template = STRUCTURED_REDUCE_TEMPLATE_GROUPS
+        else:
+            reduce_template = STRUCTURED_REDUCE_TEMPLATE_OFFER if offered else STRUCTURED_REDUCE_TEMPLATE
         shape_note = STRUCTURED_ANSWER_SHAPE_OFFER if offered else STRUCTURED_ANSWER_SHAPE
         answer_format_note = (
             shape_note.format(answer_format=answer_format.strip())
@@ -1720,6 +2257,17 @@ class RLM:
             {"role": "user", "content": reduce_prompt},
         ]
         ctx_tokens = self.tok.count_messages(messages)
+        if ordered_groups is not None:
+            ctx_tokens = self.ordered_token_counter.count_messages(messages)
+            metrics["reducer_input_tokens"] = ctx_tokens
+            metrics["reducer_finding_chars"] = len(findings_block)
+            metrics["retained_finding_count"] = len(findings)
+            output_cap = getattr(self.root, "max_tokens", 0) or 0
+            if ctx_tokens + output_cap > self.structured_context_tokens:
+                raise ValueError(
+                    f"ordered reducer overflow: {ctx_tokens} input + {output_cap} output "
+                    f"> {self.structured_context_tokens} context"
+                )
         reply = self.root.chat(messages)
         metrics["root_prompt_tokens"] += ctx_tokens
         metrics["root_completion_tokens"] += self.tok.count(reply or "")
@@ -1732,6 +2280,7 @@ class RLM:
                 "step": len(transcript) + 1,
                 "reply": reply,
                 "code": "[reduce]",
+                **({"messages": messages} if ordered_groups is not None else {}),
                 "observation": "",
             }
         )
@@ -1753,20 +2302,61 @@ class RLM:
         task: str,
         answer_format: str | None = None,
         chunks: Sequence[Hit] | None = None,
+        ordered_chunks: Sequence[Hit] | None = None,
     ) -> RLMResult:
         """The agentic arm. `chunks`, when given, replaces what `search` returns with a
         set chosen outside the run -- same REPL, same system prompt, different windows.
+
+        `ordered_chunks` is the ordered-chunk arms' view: EVERY chunk of the document, in
+        the order `chunk_order` names, bound in the REPL as `chunks` and described to the
+        root (CHUNKS_HELP, CHUNK_ORDER_NOTES). It comes with `chunk_order` or not at all.
         """
+        if (ordered_chunks is None) != (self.chunk_order is None):
+            raise ValueError("ordered_chunks and chunk_order come together, or neither is given")
+        chunk_view = None
+        if ordered_chunks is not None:
+            if chunks is not None:
+                raise ValueError("an ordered-chunk run has no search() for a provided chunk set to arrive through")
+            if self.ordered_token_counter is None:
+                raise ValueError("ordered chunk reads are priced with the served model's tokenizer; none was given")
+            ordered_chunks = _validated_view(context, ordered_chunks)
+            chunk_view = (
+                len(ordered_chunks),
+                max(hit.end - hit.start for hit in ordered_chunks),
+                self._chunks_per_call(context, ordered_chunks),
+            )
         # A split-capable sub client (kvzip backend) accepts the context slice as
         # a separate argument so the press compresses it apart from the question;
         # the system prompt must teach whichever llm_query form is actually wired.
         split_capable = hasattr(self.sub, "chat_split")
         metrics = self._base_metrics(split_capable)
+        if chunk_view is not None:
+            metrics.update(
+                chunks_total=chunk_view[0],
+                chunks_per_call_advertised=chunk_view[2],
+                chunk_payload_calls=0,
+                chunk_budget_refusals=0,
+                premature_abstentions=0,
+                prose_answer_cells=0,
+                empty_chunk_reads=0,
+                chunk_ranks_read=[],
+                reader_input_tokens=[],
+                reader_served_prompt_tokens=[],
+            )
         cache: dict = {}
         notes: list = []
         self._sub_call_budget = self.max_sub_calls
         self._deadline = time.monotonic() + self.run_timeout if self.run_timeout else None
-        env = self._make_env(context, metrics, cache, notes, provided_chunks=chunks)
+        env = self._make_env(context, metrics, cache, notes, provided_chunks=chunks, ordered_chunks=ordered_chunks)
+
+        def abstain_nudge() -> str:
+            """The rejection of an unearned FINAL_NONE (see _abstention_earned)."""
+            if self.chunk_order is None:
+                return PREMATURE_ABSTAIN_NUDGE
+            if not metrics["sub_calls"]:
+                return PREMATURE_ABSTAIN_NUDGE_CHUNKS
+            read = len(set(metrics.get("chunk_ranks_read", [])))
+            return PREMATURE_ABSTAIN_NUDGE_CHUNK_READS.format(read=read, total=metrics["chunks_total"])
 
         system_msg = {
             "role": "system",
@@ -1784,10 +2374,17 @@ class RLM:
                     f"\nThe value you pass to FINAL(...) must be formatted as: {answer_format}\n"
                     if answer_format
                     else ""
+                )
+                # The multi-value list shape, on the ordered-chunk arms only: every other
+                # agentic run on disk was scored without it, so they keep their prompt.
+                + (
+                    RLM_ANSWER_LIST_NOTE.format(example=self.structured_answer_list)
+                    if self.chunk_order is not None and self.structured_answer_list
+                    else ""
                 ),
                 budget_note=self._budget_note(),
                 note_tool=(NOTE_TOOL_HELP if self.scratchpad is not None else ""),
-                **self._read_instructions(split_capable),
+                **self._read_instructions(split_capable, chunk_view),
             ),
         }
         begin_msg = {"role": "user", "content": "Begin. Write your first code block."}
@@ -1810,8 +2407,14 @@ class RLM:
             every short answer, since any question mentioning "12" licensed the
             ungrounded answer 12, and every multiple-choice task enumerates its
             labels in the prompt -- so that whole class of tasks had no guard at all.
+            The ordered-chunk arms also accept an answer composed from several reads
+            (revision 6, composed_answer_grounded); legacy runs keep the word-for-word test.
             """
-            return val in seen_output or _mentions(task, val)
+            if val in seen_output or _mentions(task, val):
+                return True
+            return self.chunk_order is not None and composed_answer_grounded(
+                val, seen_output, f"{task}\n{answer_format or ''}"
+            )
 
         def _abstention_earned() -> bool:
             """Has this run read enough of the document to claim the answer is absent?
@@ -1826,6 +2429,11 @@ class RLM:
             literal string: it costs a compliant model nothing, and 77% of the 331
             LOFT-1m abstentions were reached with one sub-call or none.
             """
+            if self.chunk_order is not None:
+                # Reading, here, is passing chunks to llm_query -- and one read of the
+                # top of the list is too little to claim absence (CHUNK_READS_BEFORE_ABSTAIN).
+                needed = max(self.min_sub_calls_before_abstain, CHUNK_READS_BEFORE_ABSTAIN)
+                return metrics.get("chunk_payload_calls", 0) >= needed
             if metrics["sub_calls"] < self.min_sub_calls_before_abstain:
                 return False
             if self.search_k > 0 and "gate" not in self.search_ablate and metrics.get("search_calls", 0) < 1:
@@ -1979,7 +2587,7 @@ class RLM:
                             }
                         )
                         full_history.append({"role": "assistant", "content": reply})
-                        full_history.append({"role": "user", "content": PREMATURE_ABSTAIN_NUDGE})
+                        full_history.append({"role": "user", "content": abstain_nudge()})
                         continue
                     transcript.append(
                         {
@@ -2019,13 +2627,17 @@ class RLM:
                     full_history.append(
                         {
                             "role": "user",
-                            "content": f"REJECTED: your answer {val!r} never appeared in any actual REPL "
-                            "output, so it looks like a guess. Do NOT invent answers. Write a "
-                            "```python code block that finds the answer in `context` (string "
-                            "search / regex / llm_query with the snippet pasted in), look at "
-                            "the real output, and only then FINAL it. If you have genuinely "
-                            "searched and the document does not contain the answer, say so with "
-                            'FINAL_NONE("reason") instead.',
+                            "content": (
+                                UNGROUNDED_FINAL_CHUNKS.format(val=val)
+                                if self.chunk_order is not None
+                                else f"REJECTED: your answer {val!r} never appeared in any actual REPL "
+                                "output, so it looks like a guess. Do NOT invent answers. Write a "
+                                "```python code block that finds the answer in `context` (string "
+                                "search / regex / llm_query with the snippet pasted in), look at "
+                                "the real output, and only then FINAL it. If you have genuinely "
+                                "searched and the document does not contain the answer, say so with "
+                                'FINAL_NONE("reason") instead.'
+                            ),
                         }
                     )
                     continue
@@ -2078,6 +2690,8 @@ class RLM:
             # --- Execute ONLY the first block ---
             code = blocks[0]
             obs, obs_full = self._exec(code, env, obs_limit)
+            if obs == PROSE_ANSWER_CELL_ERROR:
+                metrics["prose_answer_cells"] = metrics.get("prose_answer_cells", 0) + 1
             if len(blocks) > 1:
                 obs += (
                     "\n[WARNING: you wrote multiple code blocks; ONLY the FIRST was "
@@ -2099,7 +2713,7 @@ class RLM:
                         env["_final_box"]["abstained"] = False
                         env["_final_box"]["reason"] = ""
                         full_history.append({"role": "assistant", "content": reply})
-                        full_history.append({"role": "user", "content": PREMATURE_ABSTAIN_NUDGE})
+                        full_history.append({"role": "user", "content": abstain_nudge()})
                         continue
                     metrics["abstain_reason"] = env["_final_box"].get("reason", "")
                     return RLMResult(None, step, True, transcript, "abstained", metrics)
@@ -2113,12 +2727,16 @@ class RLM:
                     full_history.append(
                         {
                             "role": "user",
-                            "content": f"REJECTED: FINAL({val!r}) is a literal constant that never appeared "
-                            "in any REPL output — it looks like a guess. Find the real answer in "
-                            "`context` first (e.g. re.search / context.find / llm_query with the "
-                            "snippet pasted in), print it, then call FINAL on the variable "
-                            "holding it. If you have genuinely searched and the document does not "
-                            'contain the answer, say so with FINAL_NONE("reason") instead.',
+                            "content": (
+                                UNGROUNDED_FINAL_CHUNKS.format(val=val)
+                                if self.chunk_order is not None
+                                else f"REJECTED: FINAL({val!r}) is a literal constant that never appeared "
+                                "in any REPL output — it looks like a guess. Find the real answer in "
+                                "`context` first (e.g. re.search / context.find / llm_query with the "
+                                "snippet pasted in), print it, then call FINAL on the variable "
+                                "holding it. If you have genuinely searched and the document does not "
+                                'contain the answer, say so with FINAL_NONE("reason") instead.'
+                            ),
                         }
                     )
                     continue

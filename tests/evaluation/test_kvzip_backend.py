@@ -205,5 +205,104 @@ class TruncationAccountingTest(unittest.TestCase):
         self.assertEqual(dropped, 5)
 
 
+class _FakePress:
+    def __init__(self):
+        self.compression_ratio = 0.0
+
+    def _reset_internal_parameters(self):
+        pass
+
+
+class _FakePipeline:
+    """Records each call; reports stats the way kvpress's pipeline does for a fixed-ratio press."""
+
+    def __init__(self, model, tokenizer):
+        self.model, self.tokenizer, self.calls = model, tokenizer, []
+
+    def __call__(self, context, **kw):
+        self.calls.append(dict(context=context, **kw))
+        press = kw.get("press")
+        ratio = press.compression_ratio if press is not None else 0.0
+        n = len(context)
+        self.last_memory_budget_stats = dict(
+            context_tokens=n, retained_context_tokens=max(1, int(n * (1 - ratio))), compression_ratio=ratio
+        )
+        return {"answer": "ok"}
+
+
+def _generating_client(factor, press=True, free_bytes=40 * 1024**3):
+    """A 512 MB client that can run _generate; `factor` None keeps the budget-driven path."""
+    client = _fake_client(free_bytes=free_bytes, max_context_tokens=131072)
+    client.memory_budget, client.memory_budget_unit = 512, "MB"
+    client.pipeline = _FakePipeline(client.pipeline.model, client.pipeline.tokenizer)  # type: ignore[assignment]
+    client.press = _FakePress() if press else None
+    client.press_min_tokens = 3472
+    client.max_new_tokens = 16
+    client.usage = kvzip_backend.Usage()
+    client._example_stats = []
+    client._torch = SimpleNamespace(  # type: ignore[assignment]
+        cuda=SimpleNamespace(
+            mem_get_info=lambda: (free_bytes, free_bytes), empty_cache=lambda: None, OutOfMemoryError=MemoryError
+        )
+    )
+    if factor is not None:
+        client._fix_compression_factor(factor)
+    return client
+
+
+class FixedFactorTest(unittest.TestCase):
+    """A B x F cell presses every read at exactly 1 - 1/F, whatever its length."""
+
+    def test_every_read_is_pressed_at_exactly_one_minus_one_over_f(self):
+        client = _generating_client(4)
+        client.chat_split("q?", "x" * 100)  # far under the 3,472-token budget, and still pressed
+
+        call = client.pipeline.calls[-1]
+        self.assertIs(call["press"], client.press)
+        self.assertIsNone(call["memory_budget"])
+        self.assertEqual(client.press.compression_ratio, 0.75)
+        stats = client.pop_example_stats()
+        self.assertEqual(stats["pressed_calls"], 1)
+        self.assertEqual((stats["min_compression_ratio"], stats["max_compression_ratio"]), (0.75, 0.75))
+        self.assertEqual(stats["max_retained_context_tokens"], 25)
+
+    def test_factor_one_is_the_no_press_control(self):
+        client = _generating_client(1, press=False)
+        client.chat_split("q?", "x" * 100)
+        self.assertIsNone(client.pipeline.calls[-1]["press"])
+        self.assertEqual(client.pop_example_stats()["pressed_calls"], 0)
+
+    def test_the_press_must_agree_with_the_factor(self):
+        with self.assertRaisesRegex(ValueError, "no_press control"):
+            _generating_client(1, press=True)
+        with self.assertRaisesRegex(ValueError, "no_press control"):
+            _generating_client(4, press=False)
+
+    def test_without_a_factor_the_budget_still_sets_the_ratio(self):
+        client = _generating_client(None)
+        client.press_min_tokens = 0
+        client.chat_split("q?", "x" * 100)
+        self.assertEqual(client.pipeline.calls[-1]["memory_budget"], 512)
+
+
+class PlanOrderedReadsTest(unittest.TestCase):
+    def test_n_is_the_budget_in_tokens_times_f(self):
+        client = _generating_client(4)
+        # 512 MB / 147,456 B per token = 3,472 kept; x 4 = 13,888 per read.
+        self.assertEqual(client.token_budget, 3472)
+        self.assertEqual(client.plan_ordered_reads(), 13888)
+
+    def test_a_cell_the_gpu_cannot_hold_is_refused(self):
+        client = _generating_client(4, free_bytes=3 * 1024**3)
+        with self.assertRaisesRegex(RuntimeError, "GiB free"):
+            client.plan_ordered_reads()
+
+    def test_a_cell_past_the_model_window_is_refused(self):
+        client = _generating_client(4)
+        client.pipeline.model.config.max_position_embeddings = 8192
+        with self.assertRaisesRegex(RuntimeError, "window"):
+            client.plan_ordered_reads()
+
+
 if __name__ == "__main__":
     unittest.main()

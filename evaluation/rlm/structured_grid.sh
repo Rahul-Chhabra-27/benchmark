@@ -25,7 +25,8 @@
 # back at the reduce step, so the top of the sweep would measure that cap instead.
 #
 # Usage:  structured_grid.sh <stage> <subset> [subset ...]
-#   stage in {geometry, exposure, oracle, hops, all}
+#   stage in {geometry, exposure, oracle, hops, qbare, all,
+#             ladder, exhaustive, holdout}   -- the query-agnostic stages
 set -u
 REPO=${REPO:-/mnt/nas/gautammahale/structured_checkout}
 RESULTS=${RESULTS:-/mnt/nas/gautammahale/structured_grid}
@@ -44,13 +45,27 @@ EXPOSURES=${EXPOSURES:-"400 800 1500 2000 4000 8000"}
 # much of each passage the reader is shown -- which is the whole question.
 EXPOSURE_WINDOW=${EXPOSURE_WINDOW:-8000}
 CHUNKSETS=${CHUNKSETS:-/mnt/nas/gautammahale/chunksets}
+# The query-agnostic campaign: chunk sets written by query_free_chunks.py, and the
+# ids of the rows the chunk-geometry campaign never ran (test 55..99).
+# The chunk sets were archived off $HOME (lab storage policy) on 2026-09-11; the ids stayed.
+QCHUNKS=${QCHUNKS:-/mnt/nas/gautammahale/archive/qagnostic/chunksets}
+IDS=${IDS:-/mnt/home/gautammahale/qagnostic/ids}
+LADDER_KS=${LADDER_KS:-"2 5 10"}
+LADDER_SEEDS=${LADDER_SEEDS:-"0 1 2"}
+LADDER_WINDOW=${LADDER_WINDOW:-2000}
+# Exhaustive reads every window, so the geometry is the cost. At 2000/400 a LOFT
+# document is ~290 windows and one example is ~290 map calls; at 8000/1600 it is
+# ~72 and the reduce prompt still fits. 8000 answers the same question for a third
+# of the time, so it is the default and 2000 is opt-in.
+EXHAUSTIVE_WINDOW=${EXHAUSTIVE_WINDOW:-8000}
 
 cd "$REPO" || exit 1
 export HF_HOME=${HF_HOME:-/mnt/nas/gautammahale/hf_cache} HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONPATH=.
 COMMON="--root-model $MODEL --sub-model $MODEL --base-url $BASE_URL --sub-backend http --out $RESULTS"
+ROWSEL="--limit $LIMIT"
 
 QUERY=${QUERY:-task}   # `bare` strips LOFT's instruction wrapper before BM25 sees it
-stage=${1:?stage: geometry|exposure|oracle|hops|qbare|all}; shift
+stage=${1:?stage: geometry|exposure|oracle|hops|qbare|all|ladder|exhaustive|holdout}; shift
 
 preflight() {
   # GENERATE, do not just ask /v1/models. A vLLM whose engine core has wedged still
@@ -89,7 +104,11 @@ run() {  # run <label> <extra args...>
   # --max-subcall-chars is derived, not fixed: the harness refuses a cell whose
   # per-call payload the cap would shrink, and a 8000-char window needs more than
   # the 32000 default leaves once the question's quarter is reserved.
-  $PY -m evaluation.rlm.run_benchmark --dataset loft --split "$SPLIT" --limit "$LIMIT" \
+  # ROWSEL is `--limit N` for the development half and `--ids-file F` for the
+  # holdout. The two are mutually exclusive at the CLI on purpose: --ids-file is
+  # applied BEFORE --limit, so passing both would silently mean "the first N of the
+  # named rows" -- a different experiment that reads like a cap.
+  $PY -m evaluation.rlm.run_benchmark --dataset loft --split "$SPLIT" $ROWSEL \
       --mode structured "$@" $COMMON 2>&1 | grep -vE "^\s*$"
 }
 
@@ -129,6 +148,141 @@ for s in "$@"; do
     else
       echo "################ oracle $sub SKIPPED: $CH missing (build it with evaluation.rlm.oracle_chunks)"
     fi
+  fi
+
+  # ---------------------------------------------------------------- ladder --
+  # What the QUERY is worth, at a matched read budget. Every rung reads exactly k
+  # windows of exactly LADDER_WINDOW chars, which is why they all run at
+  # --structured-map-granularity window: `_cluster_hits` merges touching windows,
+  # so at the default `passage` granularity lead-k (adjacent windows) would become
+  # ONE call of k x window chars while stride-k stayed k calls of one window. At
+  # matched k the rungs would differ in call structure as much as in selection, and
+  # `bm25_bare - random` would be measuring both.
+  #
+  # That is also why the bm25 and oracle rungs are re-run here rather than read off
+  # the existing campaign: those cells ran at `passage` and are not controls for this.
+  if [ "$stage" = ladder ]; then
+    w=$LADDER_WINDOW
+    o=$(( w / 5 ))
+    for k in $LADDER_KS; do
+      for q in task bare; do
+        run "ladder bm25($q) $sub k=$k" --data-dir "$sub" \
+            --chunks-source bm25 --chunks-k "$k" --chunks-query "$q" \
+            --search-window "$w" --search-overlap "$o" \
+            --structured-map-granularity window --max-subcall-chars "$(cap_for "$k" "$w")"
+      done
+      for sel in lead stride; do
+        CH="$QCHUNKS/${sub}.${sel}.w${w}o${o}k${k}.jsonl"
+        [ -f "$CH" ] || { echo "################ ladder $sel $sub k=$k SKIPPED: $CH missing"; continue; }
+        run "ladder $sel $sub k=$k" --data-dir "$sub" \
+            --chunks-source file --chunks-file "$CH" --chunks-k "$k" \
+            --search-window "$w" --search-overlap "$o" \
+            --structured-map-granularity window --max-subcall-chars "$(cap_for "$k" "$w")"
+      done
+    done
+    # Three seeds, at k=5 only. One draw at n=55 carries about +/-0.05 of binomial
+    # noise -- three times the reproducibility floor -- and the headline of this
+    # whole stage is `bm25_bare - random`, so the null model needs an error bar.
+    for seed in $LADDER_SEEDS; do
+      CH="$QCHUNKS/${sub}.random-s${seed}.w${w}o${o}k5.jsonl"
+      [ -f "$CH" ] || { echo "################ ladder random-s$seed $sub SKIPPED: $CH missing"; continue; }
+      run "ladder random-s$seed $sub k=5" --data-dir "$sub" \
+          --chunks-source file --chunks-file "$CH" --chunks-k 5 \
+          --search-window "$w" --search-overlap "$o" \
+          --structured-map-granularity window --max-subcall-chars "$(cap_for 5 "$w")"
+    done
+    # The ceiling, on the same granularity as the rungs it is a ceiling for.
+    CH="$CHUNKSETS/${sub}.oracle.w2000o400k5.jsonl"
+    if [ -f "$CH" ] && [ "$w" = 2000 ]; then
+      run "ladder oracle $sub k=5" --data-dir "$sub" \
+          --chunks-source file --chunks-file "$CH" --chunks-k 5 \
+          --structured-map-granularity window
+    fi
+  fi
+
+  # ------------------------------------------------------------ exhaustive --
+  # Retrieval removed rather than replaced: every window, in document order.
+  # The k is READ OUT of the filename and never guessed -- for a `file` source
+  # --chunks-k is a payload cap of k x window and overlap is double-counted, so a
+  # single global k passes nq (298 windows at 2000/400) and fails quest (302) with
+  # a fatal ChunkSetError.
+  if [ "$stage" = exhaustive ]; then
+    w=$EXHAUSTIVE_WINDOW
+    o=$(( w / 5 ))
+    CH=$(ls "$QCHUNKS/${sub}.all.w${w}o${o}k"*.jsonl 2>/dev/null | head -1)
+    if [ -z "$CH" ]; then
+      echo "################ exhaustive $sub SKIPPED: no $QCHUNKS/${sub}.all.w${w}o${o}k*.jsonl"
+    else
+      nw=$(basename "$CH" | sed -E "s/.*k([0-9]+)\.jsonl/\1/")
+      # --reduce-finding-chars is the binding constraint here, not the window. The
+      # reduce prompt is n_findings x this, and n_findings can be every window: at
+      # the 2000 default a 75-window sweep would send ~150k chars (~37k tokens) and
+      # the server would refuse it with a 400, which the client does NOT retry.
+      find=$(( 120000 / nw ))
+      [ "$find" -gt 2000 ] && find=2000
+      # --max-sub-calls 0 is MANDATORY. Past the budget llm_query returns a notice
+      # STRING instead of calling the model, and that string does not start with the
+      # "nothing relevant" sentinel -- so the findings filter counts every one of
+      # them as a finding. A truncated sweep reports MORE findings than a healthy
+      # one and passes every gate that looks for a starved cell. run_benchmark now
+      # refuses the combination outright; this is the setting that satisfies it.
+      run "exhaustive $sub ${nw} windows w=$w find=$find" --data-dir "$sub" \
+          --chunks-source file --chunks-file "$CH" --chunks-k "$nw" \
+          --search-window "$w" --search-overlap "$o" \
+          --structured-map-granularity window --max-sub-calls 0 --run-timeout 7200 \
+          --reduce-finding-chars "$find" --max-subcall-chars "$(cap_for 1 "$w")"
+    fi
+  fi
+
+  # --------------------------------------------------------------- holdout --
+  # The rows the chunk-geometry campaign never ran: test 55..99, n=45. Every cell
+  # of that campaign was `--limit 55`, which is df.head(55), so the argmax that
+  # picked its headline cells never saw these rows. Running the promoted arms here
+  # is the only measurement in the study that is not in-sample.
+  #
+  # The ids come from the loader via query_free_chunks --ids-out, not by hand, and
+  # _restrict raises on any id the split does not have -- so a mistake is caught
+  # before an example runs rather than after a night of them.
+  if [ "$stage" = holdout ]; then
+    IDFILE="$IDS/${sub}.holdout45.ids"
+    if [ ! -f "$IDFILE" ]; then
+      echo "################ holdout $sub SKIPPED: $IDFILE missing"
+      continue
+    fi
+    ROWSEL="--ids-file $IDFILE"
+    k=${HOLDOUT_K:-5}
+    w=$LADDER_WINDOW
+    o=$(( w / 5 ))
+    for q in task bare; do
+      run "holdout bm25($q) $sub k=$k" --data-dir "$sub" \
+          --chunks-source bm25 --chunks-k "$k" --chunks-query "$q" \
+          --search-window "$w" --search-overlap "$o" \
+          --structured-map-granularity window --max-subcall-chars "$(cap_for "$k" "$w")"
+    done
+    for sel in lead stride random-s0; do
+      CH="$QCHUNKS/${sub}.${sel}.w${w}o${o}k${k}.jsonl"
+      [ -f "$CH" ] || { echo "################ holdout $sel $sub SKIPPED: $CH missing"; continue; }
+      run "holdout $sel $sub k=$k" --data-dir "$sub" \
+          --chunks-source file --chunks-file "$CH" --chunks-k "$k" \
+          --search-window "$w" --search-overlap "$o" \
+          --structured-map-granularity window --max-subcall-chars "$(cap_for "$k" "$w")"
+    done
+    CH="$CHUNKSETS/${sub}.oracle.w2000o400k5.jsonl"
+    [ -f "$CH" ] && [ "$w" = 2000 ] && run "holdout oracle $sub" --data-dir "$sub" \
+        --chunks-source file --chunks-file "$CH" --chunks-k 5 --structured-map-granularity window
+    ew=$EXHAUSTIVE_WINDOW
+    eo=$(( ew / 5 ))
+    CH=$(ls "$QCHUNKS/${sub}.all.w${ew}o${eo}k"*.jsonl 2>/dev/null | head -1)
+    if [ -n "$CH" ]; then
+      nw=$(basename "$CH" | sed -E "s/.*k([0-9]+)\.jsonl/\1/")
+      find=$(( 120000 / nw )); [ "$find" -gt 2000 ] && find=2000
+      run "holdout exhaustive $sub ${nw} windows" --data-dir "$sub" \
+          --chunks-source file --chunks-file "$CH" --chunks-k "$nw" \
+          --search-window "$ew" --search-overlap "$eo" \
+          --structured-map-granularity window --max-sub-calls 0 --run-timeout 7200 \
+          --reduce-finding-chars "$find" --max-subcall-chars "$(cap_for 1 "$ew")"
+    fi
+    ROWSEL="--limit $LIMIT"
   fi
 
   if [ "$stage" = hops ] || [ "$stage" = all ]; then

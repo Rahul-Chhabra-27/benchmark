@@ -441,6 +441,16 @@ class SubKvAggregationTest(unittest.TestCase):
         self.assertAlmostEqual(runtime["realized_compression_factor"], 2.0)
         self.assertAlmostEqual(runtime["sub_context_tokens_on_target_fraction"], 5 / 6)
 
+    def test_the_largest_kept_read_is_reported(self):
+        """A B x F cell's B is a per-read ceiling, so the run reports its maximum, not a mean."""
+        records = [
+            self._with_sub_kv("a", {"calls": 2, "max_retained_context_tokens": 3000}),
+            self._with_sub_kv("b", {"calls": 1, "max_retained_context_tokens": 3472}),
+        ]
+        path, run_dir = _checkpoint(records)
+        metrics = write_run_artifacts(path, run_dir, "synthetic_kv_32k", {"backend": "rlm"})
+        self.assertEqual(metrics["runtime"]["max_sub_retained_context_tokens"], 3472)
+
     def test_runs_without_sub_kv_report_nothing(self):
         path, run_dir = _checkpoint([_answered("a", "x", "x")])
         metrics = write_run_artifacts(path, run_dir, "synthetic_kv_32k", {"backend": "rlm"})

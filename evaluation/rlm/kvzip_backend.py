@@ -41,7 +41,9 @@ from .sizing import (
     DEFAULT_RESERVE_TOKENS,
     SubcallSizing,
     calibrate_chars_per_token,
+    compression_ratio_from_factor,
     gpu_fit_token_cap,
+    ordered_read_tokens,
     size_subcall_chunk,
 )
 
@@ -152,6 +154,10 @@ class KVzipSubClient:
     memory reflects the FULL uncompressed context, not the compressed one.
     """
 
+    # Set by _fix_compression_factor for a B x F cell; None keeps kvpress's per-call,
+    # budget-derived ratio.
+    compression_factor: Optional[float] = None
+
     def __init__(
         self,
         model: str,
@@ -163,6 +169,7 @@ class KVzipSubClient:
         max_context_tokens: int = 34000,
         press_min_tokens: Optional[int] = None,
         min_free_gib: float = 14.0,
+        compression_factor: Optional[float] = None,
     ):
         if press_name not in SUB_PRESS_CHOICES:
             raise ValueError(f"unknown press {press_name!r}; choose from {SUB_PRESS_CHOICES}")
@@ -215,6 +222,8 @@ class KVzipSubClient:
             token_budget, _, _ = compute_token_budget_from_memory(hf_model, memory_budget, memory_budget_unit)
             press_min_tokens = token_budget
         self.press_min_tokens = press_min_tokens
+        if compression_factor is not None:
+            self._fix_compression_factor(compression_factor)
         self._example_stats: list[dict] = []
         # Same helper the rest of kvpress uses to convert a GB budget into a
         # per-token byte cost -- reused here instead of re-derived, so this
@@ -227,6 +236,43 @@ class KVzipSubClient:
     def kv_bytes_per_token(self) -> int:
         """Per-token KV cost of the sub model; the scale factor for every budget."""
         return self._kv_bytes_per_token
+
+    @property
+    def token_budget(self) -> int:
+        """The memory budget in KV tokens: B of a B x F cell."""
+        from kvpress.pipeline import compute_token_budget_from_memory
+
+        return compute_token_budget_from_memory(self.pipeline.model, self.memory_budget, self.memory_budget_unit)[0]
+
+    def _fix_compression_factor(self, compression_factor: float) -> None:
+        """Press every call at exactly 1 - 1/F: one fixed ratio, not one derived per call
+        from the budget. So F is exact on every read, and a read of n <= N = B x F tokens
+        keeps n/F <= B. The press is never skipped, or F would not be what every read got.
+        """
+        ratio = compression_ratio_from_factor(compression_factor)
+        if (self.press is None) != (ratio == 0.0):
+            raise ValueError("a factor of 1 is the no_press control; any other factor needs press 'kvzip'")
+        if self.press is not None:
+            self.press.compression_ratio = ratio
+        self.press_min_tokens = 1
+        self.compression_factor = compression_factor
+
+    def plan_ordered_reads(self) -> int:
+        """N = B x F for an ordered-chunk read, refused if the window or the GPU cannot hold it."""
+        from kvpress.model_adapter import get_model_adapter
+
+        if self.compression_factor is None:
+            raise ValueError("plan_ordered_reads needs a compression factor")
+        text_config = get_model_adapter(self.pipeline.model).get_text_config(self.pipeline.model)
+        free_bytes, _ = self._torch.cuda.mem_get_info()
+        return ordered_read_tokens(
+            token_budget=self.token_budget,
+            compression_factor=self.compression_factor,
+            kv_bytes_per_token=self._kv_bytes_per_token,
+            output_tokens=self.max_new_tokens,
+            sub_window_tokens=getattr(text_config, "max_position_embeddings", None),
+            gpu_free_bytes=free_bytes,
+        )
 
     def token_len(self, text: str) -> int:
         """Public token count through the SUB tokenizer (not the root's counter)."""
@@ -390,12 +436,13 @@ class KVzipSubClient:
             max_new = int(kw.get("max_tokens") or self.max_new_tokens)
             # Same call shape as every LOFT/RULER benchmark run: memory_budget
             # is converted to a compression_ratio internally by the pipeline,
-            # scaled to THIS call's actual context length.
+            # scaled to THIS call's actual context length. A B x F cell passes no
+            # budget: its press already carries the one fixed ratio.
             result = self.pipeline(
                 context,
                 question=question,
                 press=self.press if prune else None,
-                memory_budget=self.memory_budget if prune else None,
+                memory_budget=self.memory_budget if prune and self.compression_factor is None else None,
                 memory_budget_unit=self.memory_budget_unit,
                 max_new_tokens=max_new,
                 # Enforce the cell after the pipeline adds chat-template tokens.
@@ -457,4 +504,9 @@ class KVzipSubClient:
             "max_context_tokens": max(c["context_tokens"] for c in calls),
             "average_retained_context_tokens": sum(c["retained_context_tokens"] for c in calls) / n,
             "average_compression_ratio": sum(c["compression_ratio"] for c in calls) / n,
+            # Per-call extremes, for a B x F cell's gate: B is a ceiling on every read and
+            # F the ratio of every read, so a mean could hide the one read that broke it.
+            "max_retained_context_tokens": max(c["retained_context_tokens"] for c in calls),
+            "min_compression_ratio": min(c["compression_ratio"] for c in calls),
+            "max_compression_ratio": max(c["compression_ratio"] for c in calls),
         }

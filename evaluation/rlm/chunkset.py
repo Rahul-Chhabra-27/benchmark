@@ -32,11 +32,19 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Optional
 
 from .retrieval import DEFAULT_CHUNK_CHARS, DEFAULT_OVERLAP, Hit
+
+
+# A tag becomes a COMPONENT of the run-directory name, which is "__"-joined, so it
+# must not contain a separator, a path character, or a doubled underscore that would
+# fake a component boundary. Lowercase kebab keeps it readable next to `qbare` and
+# `listfmt`, and the length cap keeps the directory name inside sane limits.
+SELECTOR_TAG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{0,23}$")
 
 
 def document_digest(document: str) -> str:
@@ -68,6 +76,18 @@ def window_spans(document_chars: int, chunk_chars: int = DEFAULT_CHUNK_CHARS, ov
     return [(start, min(start + chunk_chars, document_chars)) for start in range(0, max(document_chars, 1), stride)]
 
 
+def _valid_tag(raw, path, lineno: int) -> str:
+    """`selector_tag` if it is safe to put in a directory name, else a refusal."""
+    tag = str(raw or "")
+    if tag and not SELECTOR_TAG_PATTERN.match(tag):
+        raise ChunkSetError(
+            f"{path}:{lineno} has selector_tag {tag!r}, which is not lowercase-kebab within 24 "
+            "characters. The tag becomes a run-directory component, so a separator or a path "
+            "character in it would fake a component boundary"
+        )
+    return tag
+
+
 @dataclass(frozen=True)
 class ChunkRecord:
     """One example's selection, as written by the selector."""
@@ -77,6 +97,7 @@ class ChunkRecord:
     document_sha256: str
     document_chars: int
     selector: str = ""
+    selector_tag: str = ""
     note: str = ""
     spans: tuple[tuple[int, int], ...] = field(default=())
 
@@ -115,6 +136,66 @@ class ChunkSet:
     def selectors(self) -> list[str]:
         return sorted({r.selector for r in self._by_id.values() if r.selector})
 
+    @property
+    def tag(self) -> str:
+        """The one selector tag this file describes, or "" if it names none.
+
+        Absent from every chunk file written before the query-agnostic selectors
+        existed, which is exactly what lets the run-directory stamp be conditional
+        on it: an untagged file names the directory it always named, so the oracle
+        and hand-made chunk sets on disk keep their checkpoints. A file carrying two
+        tags is not one arm and is refused rather than silently named after whichever
+        record was read last.
+        """
+        tags = {r.selector_tag for r in self._by_id.values() if r.selector_tag}
+        if len(tags) > 1:
+            raise ChunkSetError(
+                f"chunk file mixes selector tags {sorted(tags)}; one file is one arm. "
+                "Split it, or the run directory would name only one of them"
+            )
+        return tags.pop() if tags else ""
+
+    @property
+    def max_windows(self) -> int:
+        """The most windows any one example selects.
+
+        What a per-example call budget has to clear: the structured map step makes
+        one `llm_query` per group, and a budget below this silently turns the tail
+        of the sweep into notice strings that the findings filter counts as findings.
+        """
+        return max((len(r.windows) for r in self._by_id.values()), default=0)
+
+    def max_cluster_chars(self) -> int:
+        """The widest CONTIGUOUS run of selected text, in characters.
+
+        `rlm._cluster_hits` merges windows that touch or overlap into ONE map call, and
+        the retrieval grid overlaps by construction -- so a selection that tiles the
+        document collapses into a single passage spanning the whole corpus, which
+        `_cap_subcall` then truncates to the subcall cap. The run reports a full sweep
+        and reads the first cap-worth of characters. This is what lets that be refused
+        before the run starts rather than discovered in the numbers afterwards.
+
+        The merge rule is duplicated rather than imported: `rlm` carries the heavy
+        imports this module's docstring promises to stay free of. It is six lines, and
+        a test pins the two against each other.
+        """
+        widest = 0
+        for record in self._by_id.values():
+            grid = window_spans(record.document_chars, self.chunk_chars, self.overlap)
+            spans = sorted(grid[w] for w in record.windows if 0 <= w < len(grid))
+            start = end = None
+            for span_start, span_end in spans:
+                if start is None:
+                    start, end = span_start, span_end
+                elif span_start <= end:  # touching or overlapping -- same map call
+                    end = max(end, span_end)
+                else:
+                    widest = max(widest, end - start)
+                    start, end = span_start, span_end
+            if start is not None:
+                widest = max(widest, end - start)
+        return widest
+
     @classmethod
     def from_file(
         cls,
@@ -144,6 +225,7 @@ class ChunkSet:
                     document_sha256=str(raw["document_sha256"]),
                     document_chars=int(raw["document_chars"]),
                     selector=str(raw.get("selector", "")),
+                    selector_tag=_valid_tag(raw.get("selector_tag", ""), path, lineno),
                     note=str(raw.get("note", "")),
                     spans=tuple((int(a), int(b)) for a, b in raw.get("spans", ())),
                 )
