@@ -5,7 +5,10 @@ GPU, and the vanilla and RLM arms run against it. No SLURM, no launcher script â
 step is a command you can read and rerun. The worked example is LOFT-128k (`nq`,
 `hotpotqa`) on `Qwen/Qwen3.5-4B`; section 8 covers other models and datasets.
 
-Tested end to end on elk, 2026-09-14, from a clean `/tmp/$USER/rlm` with `master` at `c92f4e2`.
+Sections 1â€“5 tested verbatim on elk, 2026-09-14, from a clean `/tmp/$USER/rlm` with `master`
+at `c92f4e2` (setup ~4 min, server ready ~5 min, smoke: both arms 0 errors). Section 6 is the
+same command at `--split test --limit 55`. The reference scores in section 7 came from a
+55-row run with these flags.
 
 ## 0. Before you start
 
@@ -48,7 +51,7 @@ source /tmp/$USER/rlm/env
 Every command below assumes `$S` is set. A command that fails with a path like
 `/venv-vllm/bin/...` means you skipped this.
 
-## 2. One-time setup per host (~15 min)
+## 2. One-time setup per host (~5 min on elk; almost all of it downloads)
 
 ```bash
 source /tmp/$USER/rlm/env
