@@ -15,7 +15,7 @@ section 7 came from a 55-row run on `master` `c92f4e2` with these flags.
 - **Host.** Any infolab GPU host whose driver reports **CUDA 12.8 or newer**
   (`nvidia-smi`, top right). bee and elk qualify. fox reports 12.5, so the vLLM build
   used here will not load there.
-- **GitHub access** to `skylight-org/intel-longcontext-pc` over SSH from that host
+- **GitHub access** to `skylight-org/agentic-longcontext` (formerly `intel-longcontext-pc`) over SSH from that host
   (`ssh -T git@github.com` should greet you).
 - **Where things go.** Everything below lives in `/tmp/$USER/rlm` (`$S`), the host's local disk:
   venvs (~12 GB), weights (~9 GB), caches, results. **Not `$HOME`**: it is a small,
@@ -57,7 +57,7 @@ Every command below assumes `$S` is set. A command that fails with a path like
 source /tmp/$USER/rlm/env
 
 # code
-git clone -b gautam-dev git@github.com:skylight-org/intel-longcontext-pc.git $S/skylight   # this guide lives on gautam-dev
+git clone -b gautam-dev git@github.com:skylight-org/agentic-longcontext.git $S/skylight   # this guide lives on gautam-dev
 cd $S/skylight            # all later commands run from here
 
 # venv 1: the model server (vLLM 0.19, CUDA 12.8 build)
