@@ -6,9 +6,9 @@ step is a command you can read and rerun. The worked example is LOFT-128k (`nq`,
 `hotpotqa`) on `Qwen/Qwen3.5-4B`; section 8 covers other models and datasets.
 
 Sections 1–5 tested verbatim on elk, 2026-09-14, from a clean `/tmp/$USER/rlm` with `master`
-at `c92f4e2` (setup ~4 min, server ready ~5 min, smoke: both arms 0 errors). Section 6 is the
-same command at `--split test --limit 55`. The reference scores in section 7 came from a
-55-row run with these flags.
+at `c92f4e2` and again on `gautam-dev` at `eba22c9` (setup ~4 min, server ready ~5 min, smoke: both
+arms 0 errors). Section 6 is the same command at `--split test --limit 55`. The reference scores in
+section 7 came from a 55-row run on `master` `c92f4e2` with these flags.
 
 ## 0. Before you start
 
@@ -57,7 +57,7 @@ Every command below assumes `$S` is set. A command that fails with a path like
 source /tmp/$USER/rlm/env
 
 # code
-git clone git@github.com:skylight-org/intel-longcontext-pc.git $S/skylight
+git clone -b gautam-dev git@github.com:skylight-org/intel-longcontext-pc.git $S/skylight   # this guide lives on gautam-dev
 cd $S/skylight            # all later commands run from here
 
 # venv 1: the model server (vLLM 0.19, CUDA 12.8 build)
