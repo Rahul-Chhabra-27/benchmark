@@ -6,9 +6,11 @@ but share the benchmark registry, Hugging Face loaders, canonical scorers, and
 the `predictions.csv` / `metrics.json` / `config.yaml` result contract. Run all
 commands below from the repository root.
 
-To run the ordered-chunk campaign (the agentic root handed every chunk in BM25 order, on
-LOFT-128k and RULER-128k) on an infolab server or on RunPod, see
-[`how_to_run.md`](../../how_to_run.md) at the repository root.
+**To run anything, follow [`RUNNING.md`](../../RUNNING.md) at the repository root.** It
+covers the base vanilla/RLM run, the ordered-chunk arms (the agentic root handed every
+chunk in BM25 order, on LOFT-128k and RULER-128k), B × F cells and the KVzip arms, on an
+infolab server or on RunPod. What each finished campaign found is in
+[`CAMPAIGNS.md`](../../CAMPAIGNS.md).
 
 Either ordered arm can also run as a **B × F cell**, reading through an in-process KVzip
 model instead of the served one: `--sub-backend kvzip --memory-budget <B>
@@ -18,7 +20,7 @@ is the factor every read is pressed by (F = 1 is the uncompressed control and ta
 3,472 tokens, so 512 MB × 4 caps a read at 13,888 tokens, each pressed to a quarter. A cell
 the GPU or the model window cannot hold is refused before any example runs. The lane takes
 the same cell as `BUDGET_MB=512 FACTOR=4`. To run cells with one command, see
-[`HOW_TO_RUN_BXF.md`](../../HOW_TO_RUN_BXF.md) (`bash evaluation/rlm/run_bxf.sh`).
+[`RUNNING.md` §7](../../RUNNING.md#7-b--f-cells) (`bash evaluation/rlm/run_bxf.sh`).
 
 ## Goal
 Quantify how Recursive Language Models (RLMs) compare against vanilla long-context
@@ -50,9 +52,9 @@ download datasets (HF) ──> $HF_HOME ──> vllm serve <model> --port 8000
 ```
 
 ## Steps
-**On an infolab host, follow [`INFOLAB.md`](INFOLAB.md) instead**: one GPU, two venvs,
-plain commands, from a fresh account to a scored LOFT run. The steps below are the
-generic outline.
+**On an infolab host, follow [`RUNNING.md` §5](../../RUNNING.md#5-base-run-vanilla-and-rlm)
+instead**: one GPU, two venvs, plain commands, from a fresh account to a scored LOFT run.
+The steps below are the generic outline.
 
 1. **Environment**: `uv sync --extra eval`, then `source .venv/bin/activate`.
 2. **Data prep** (login node if compute nodes lack internet):

@@ -1,7 +1,7 @@
 # The benchmark-driver venv: what `python -m evaluation.rlm.run_benchmark` and
 # `python -m evaluation.compare` import for the vanilla and rlm arms (HTTP sub-calls).
 # No torch, no vLLM -- the driver only talks to the server over HTTP.
-# See evaluation/rlm/INFOLAB.md.
+# See RUNNING.md §2 at the repository root.
 #
 #   uv pip install -p $S/venv-drv -r evaluation/rlm/requirements-driver.txt
 #

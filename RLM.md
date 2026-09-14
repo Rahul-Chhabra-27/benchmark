@@ -297,7 +297,7 @@ calls and measured nothing. `average_sub_compression_ratio` well below
 ## 7. Known issues
 
 Recorded so they are not rediscovered as bugs. The list was longer; see
-[`fix_rlm.md`](fix_rlm.md) for what was fixed and why.
+[`CAMPAIGNS.md` §2](CAMPAIGNS.md#2-the-rlm-audit-generation-2-fixes) for what was fixed and why.
 
 1. **`KVzipPress` masks rather than frees.** A bigger chunk costs full GPU memory. Sizing
    from the budget buys comparability, not headroom. This is why the reported cost axis is
@@ -325,8 +325,8 @@ Recorded so they are not rediscovered as bugs. The list was longer; see
 
 - [`evaluation/rlm/README.md`](evaluation/rlm/README.md) — the RLM harness itself: guards,
   scratchpad, benchmarks, metrics.
-- [`evaluation/rlm/loft128k/README.md`](evaluation/rlm/loft128k/README.md) — the LOFT-128k
-  arm-by-arm runbook.
-- [`fix_rlm.md`](fix_rlm.md) — the audit that produced the generation-2 changes: what was
-  broken, what was fixed, and what is deliberately left alone.
+- [`RUNNING.md`](RUNNING.md) — how to run every arm, including the KVzip sub-call arms
+  (§8).
+- [`CAMPAIGNS.md`](CAMPAIGNS.md) — the finished campaigns, including the LOFT-128k
+  arm-by-arm campaign (§1) and the audit that produced the generation-2 changes (§2).
 - [`evaluation/README.md`](evaluation/README.md) — the KVPress evaluation matrix.
