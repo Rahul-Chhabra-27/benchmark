@@ -1,0 +1,8 @@
+# The model-server venv: vLLM only. See evaluation/rlm/INFOLAB.md.
+#
+#   uv pip install -p $S/venv-vllm -r evaluation/rlm/requirements-server.txt --torch-backend=cu128
+#
+# 0.19.0 is the newest vLLM whose torch (2.10) still ships a CUDA 12.8 build, which is
+# what the infolab drivers (570) accept; >=0.20 moves to torch 2.11+ and CUDA 13.
+# It is also the oldest vLLM that serves Qwen3.5 (arch qwen3_5); 0.8.5 cannot.
+vllm==0.19.0

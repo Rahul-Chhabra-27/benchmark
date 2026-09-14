@@ -1,0 +1,16 @@
+# The benchmark-driver venv: what `python -m evaluation.rlm.run_benchmark` and
+# `python -m evaluation.compare` import for the vanilla and rlm arms (HTTP sub-calls).
+# No torch, no vLLM -- the driver only talks to the server over HTTP.
+# See evaluation/rlm/INFOLAB.md.
+#
+#   uv pip install -p $S/venv-drv -r evaluation/rlm/requirements-driver.txt
+#
+# Not enough for --sub-backend kvzip (that loads a model in-process; use `uv sync --extra eval`).
+datasets==5.0.1
+numpy==2.2.6
+openai==3.1.0
+pandas==2.3.3
+PyYAML==6.0.3
+rich==15.0.0
+scipy==1.17.1  # imported lazily by the scorer, so an import check alone will not catch it missing
+tiktoken==0.13.0

@@ -50,6 +50,10 @@ download datasets (HF) ──> $HF_HOME ──> vllm serve <model> --port 8000
 ```
 
 ## Steps
+**On an infolab host, follow [`INFOLAB.md`](INFOLAB.md) instead**: one GPU, two venvs,
+plain commands, from a fresh account to a scored LOFT run. The steps below are the
+generic outline.
+
 1. **Environment**: `uv sync --extra eval`, then `source .venv/bin/activate`.
 2. **Data prep** (login node if compute nodes lack internet):
    `bash evaluation/rlm/slurm/download_data.sh` — caches the shared datasets
