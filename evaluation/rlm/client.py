@@ -8,10 +8,12 @@ so no API key is involved.
 """
 from __future__ import annotations
 
+import asyncio
 import time
 from dataclasses import dataclass, field
+from typing import Sequence
 
-from openai import APIError, APITimeoutError, OpenAI, RateLimitError
+from openai import APIError, APITimeoutError, AsyncOpenAI, OpenAI, RateLimitError
 
 
 @dataclass
@@ -52,21 +54,30 @@ class LLMClient:
 
     def __post_init__(self) -> None:
         # Local OpenAI-compatible servers ignore the key but the SDK requires one.
-        self._client = OpenAI(base_url=self.base_url, api_key=self.api_key or "EMPTY", timeout=self.timeout)
+        key = self.api_key or "EMPTY"
+        self._client = OpenAI(base_url=self.base_url, api_key=key, timeout=self.timeout)
+        self._async_client = AsyncOpenAI(base_url=self.base_url, api_key=key, timeout=self.timeout)
 
-    def chat(self, messages: list[dict], **kw) -> str:
-        """One chat completion with backoff. Returns assistant text."""
+    def _chat_params(self, messages: list[dict], **kw) -> dict:
         params = dict(
             model=self.model,
             messages=messages,
             temperature=kw.get("temperature", self.temperature),
             max_tokens=kw.get("max_tokens", self.max_tokens),
         )
-        # Per-call extra_body wins; otherwise use the client default (e.g. disable thinking):
         eb = kw.get("extra_body") or self.extra_body
         if eb:
             params["extra_body"] = eb
+        return params
 
+    @staticmethod
+    def _retryable_api_error(exc: APIError) -> bool:
+        status = getattr(exc, "status_code", None)
+        return status is None or status >= 500
+
+    def chat(self, messages: list[dict], **kw) -> str:
+        """One chat completion with backoff. Returns assistant text."""
+        params = self._chat_params(messages, **kw)
         delay = 2.0
         for attempt in range(self.max_retries):
             try:
@@ -82,11 +93,44 @@ class LLMClient:
                 # 5xx are retryable; 4xx (bad request, context too long) are not.
                 # Connection errors (e.g. APIConnectionError) have no status_code
                 # at all -- treat those as retryable too.
-                status = getattr(e, "status_code", None)
-                if status is not None and status < 500:
-                    raise
-                if attempt == self.max_retries - 1:
+                if not self._retryable_api_error(e) or attempt == self.max_retries - 1:
                     raise
                 time.sleep(delay)
                 delay = min(delay * 2, 120)
         raise RuntimeError("unreachable")
+
+    def chat_batch(self, jobs: Sequence[Sequence[dict]], **kw) -> list[str]:
+        """Concurrent chat completions so vLLM can engine-batch a SCAN.
+
+        The OpenAI chat endpoint takes one conversation per HTTP request.
+        Firing them together is how a served vLLM instance actually batches.
+        """
+        message_lists = [list(m) for m in jobs]
+        if not message_lists:
+            return []
+        if len(message_lists) == 1:
+            return [self.chat(message_lists[0], **kw)]
+        return asyncio.run(self._chat_batch_async(message_lists, **kw))
+
+    async def _chat_batch_async(self, message_lists: list[list[dict]], **kw) -> list[str]:
+        async def one(messages: list[dict]) -> str:
+            params = self._chat_params(messages, **kw)
+            delay = 2.0
+            for attempt in range(self.max_retries):
+                try:
+                    resp = await self._async_client.chat.completions.create(**params)
+                    self.usage.add(resp)
+                    return resp.choices[0].message.content or ""
+                except (RateLimitError, APITimeoutError):
+                    if attempt == self.max_retries - 1:
+                        raise
+                    await asyncio.sleep(delay)
+                    delay = min(delay * 2, 120)
+                except APIError as e:
+                    if not self._retryable_api_error(e) or attempt == self.max_retries - 1:
+                        raise
+                    await asyncio.sleep(delay)
+                    delay = min(delay * 2, 120)
+            raise RuntimeError("unreachable")
+
+        return list(await asyncio.gather(*[one(m) for m in message_lists]))

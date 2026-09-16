@@ -4,6 +4,7 @@
 
 Usage:
   python -m evaluation.rlm.run_benchmark --dataset niah --mode rlm --limit 1 --debug
+  python -m evaluation.rlm.run_benchmark --dataset loft --data-dir nq_128k --mode original --limit 1
   python -m evaluation.rlm.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5
 """
 
@@ -27,10 +28,13 @@ from evaluation.results_layout import RLM_RESULTS_DIR
 
 from . import chunkset, retrieval, window_notes
 from .chunkset import ChunkSet, ChunkSetError, file_digest
+from .clean_rlm import RLM as CleanRLM
+from .clean_rlm import VLLMClient as CleanVLLMClient
 from .client import LLMClient
 from .datasets import available_datasets, canonical_dataset_name, load_examples
 from .organization import CONFIG as ORGANIZATION_CONFIG
 from .organization import ORDERS, ModelTokens, ordered_hits, organize, pack
+from .original_rlm import OriginalRLM
 from .retrieval import Hit
 from .rlm import (
     CHUNK_ORDER_REVISION,
@@ -56,6 +60,7 @@ from .sizing import (
     compression_ratio_from_factor,
     fixed_chunk_char_cap,
 )
+from .skylight_rlm import SkylightRLM
 
 # The historical hand-picked chunk size. Named because it is compared against in
 # build_run_dir_components as well as being the argparse default -- as two separate
@@ -96,7 +101,7 @@ def answer_list_example(dataset: Optional[str], task: Optional[str], mode: str, 
     note: they are paired against structured arms that were. Every other agentic run
     keeps the prompt it was scored with.
     """
-    if dataset != "loft" or not task or not (mode == "structured" or (mode == "rlm" and ordered_rlm)):
+    if dataset != "loft" or not task or not (mode == "structured" or (mode in ("rlm", "clean-rlm") and ordered_rlm)):
         return ""
     return LOFT_LIST_ANSWER_EXAMPLE if compare.loft_score_key(task) == "coverage" else ""
 
@@ -566,7 +571,7 @@ def write_run_artifacts(
     # failure mode of auto sizing, and invisible without both numbers side by side.
     # Outside the kvzip guard: the advertised cap governs the http arms too, and the
     # gap between it and average_sub_payload_chars is the finding, not a kvzip detail.
-    if config.get("mode") in ("rlm", "structured"):
+    if config.get("mode") in ("rlm", "clean-rlm", "structured"):
         runtime["subcall_chars_advertised"] = config.get("max_subcall_chars")
         runtime["subcall_chars_floor"] = config.get("min_subcall_chars") or 0
     if scored and (config.get("mode") == "structured" or config.get("chunks_source")):
@@ -817,11 +822,11 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
     # so naming it would rename every existing directory for no new information.
     if getattr(args, "split", "all") != "all":
         components.append(f"split-{args.split}")
-    if mode == "rlm" and args.max_context_tokens is not None:
+    if mode in ("rlm", "clean-rlm", "skylight") and args.max_context_tokens is not None:
         components.append(f"ctx{args.max_context_tokens}")
-    if mode == "rlm" and scratchpad is not None:
+    if mode in ("rlm", "clean-rlm") and scratchpad is not None:
         components.append("scratchpad")
-    if mode == "rlm" and args.sub_backend == "kvzip":
+    if mode in ("rlm", "clean-rlm") and args.sub_backend == "kvzip":
         # Backend-prefixed ("kvzip-kvzip1GB", not a bare "kvzip1GB"): kvpress's
         # own KVzipPress (masking, not real eviction) produces different
         # results than the standalone-KVzip backend it replaced, so resuming
@@ -836,25 +841,29 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
     # differently, land in a fresh directory, and silently start over instead of
     # hitting the _prior_resolved_chars guard. Only hand-picked sizes are named.
     sizing_mode = getattr(args, "subcall_sizing_mode", "fixed")
-    if mode == "rlm" and sizing_mode == "fixed" and args.max_subcall_chars != DEFAULT_MAX_SUBCALL_CHARS:
+    if mode in ("rlm", "clean-rlm") and sizing_mode == "fixed" and args.max_subcall_chars != DEFAULT_MAX_SUBCALL_CHARS:
         components.append(f"sub{args.max_subcall_chars}")
     # A floor changes both the prompt and the slices, so a floored run must never
     # share a checkpoint with the unfloored run of the same subset. Only stamped
     # when non-zero, so every existing run directory keeps its name.
-    if mode == "rlm" and getattr(args, "min_subcall_chars", 0) and not getattr(args, "fixed_chunk", False):
+    if (
+        mode in ("rlm", "clean-rlm")
+        and getattr(args, "min_subcall_chars", 0)
+        and not getattr(args, "fixed_chunk", False)
+    ):
         components.append(f"min{args.min_subcall_chars}")
     # After the `sub` component, so every hand-sized slug stays byte-identical to
     # what it was before auto-sizing existed. This marker is the ONLY thing
     # separating an auto run that happens to resolve to exactly the default size
     # from the hand-sized default -- neither carries a `sub<N>` component.
-    if mode == "rlm" and sizing_mode == "auto":
+    if mode in ("rlm", "clean-rlm") and sizing_mode == "auto":
         factor = getattr(args, "compression_factor", None)
         components.append(f"autosubx{factor:g}" if factor is not None else f"autosub{args.target_compression_ratio:g}")
-    if mode == "rlm" and getattr(args, "fixed_chunk", False):
+    if mode in ("rlm", "clean-rlm") and getattr(args, "fixed_chunk", False):
         components.append("fixed")
     # Last, and only when retrieval is on, so every directory written before this
     # arm existed keeps its exact name and its checkpoint stays reachable.
-    if mode == "rlm" and getattr(args, "search_k", 0):
+    if mode in ("rlm", "clean-rlm") and getattr(args, "search_k", 0):
         components.append(f"bm25k{args.search_k}")
         if (args.search_window, args.search_overlap) != (DEFAULT_SEARCH_WINDOW, DEFAULT_SEARCH_OVERLAP):
             components.append(f"win{args.search_window}o{args.search_overlap}")
@@ -934,7 +943,7 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
                 components.append("listfmt")
     # The agentic root handed EVERY chunk in a fixed order. Only when set, so every
     # agentic directory written before it keeps its exact name.
-    if mode == "rlm" and getattr(args, "chunk_order", None):
+    if mode in ("rlm", "clean-rlm") and getattr(args, "chunk_order", None):
         components.append(f"order-{args.chunk_order}")
         if getattr(args, "chunk_call_tokens", DEFAULT_CHUNK_CALL_TOKENS) != DEFAULT_CHUNK_CALL_TOKENS:
             components.append(f"ctok{args.chunk_call_tokens}")
@@ -944,7 +953,7 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
     # The agentic arm reading a chunk set chosen outside the run. It still carries
     # `bm25k<N>` from the block above, because search() is how the chunks arrive and
     # k still bounds them; this component is what says the windows are not BM25's.
-    if mode == "rlm" and getattr(args, "chunks_source", None):
+    if mode in ("rlm", "clean-rlm") and getattr(args, "chunks_source", None):
         components.append(f"chunks-{args.chunks_source}{args.chunks_k}")
         if getattr(args, "chunks_tag", None):
             components.append(f"sel-{args.chunks_tag}")
@@ -972,7 +981,11 @@ def main() -> None:
         default=None,
         help="shared Hugging Face config/subset, e.g. niah_single_1 for ruler32k",
     )
-    ap.add_argument("--mode", default="both", choices=["vanilla", "rlm", "structured", "both"])
+    ap.add_argument(
+        "--mode",
+        default="both",
+        choices=["vanilla", "rlm", "clean-rlm", "structured", "skylight", "original", "both"],
+    )
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument(
         "--split",
@@ -1486,6 +1499,8 @@ def main() -> None:
         help="disable Qwen3 thinking mode (chat_template_kwargs.enable_thinking=False)",
     )
     args = ap.parse_args()
+    if args.mode == "clean-rlm" and args.sub_backend != "http":
+        ap.error("--mode clean-rlm needs explicit --sub-backend http")
     if args.sub_backend == "nim":  # deprecated alias; the slug never carried it
         args.sub_backend = "http"
 
@@ -1534,7 +1549,7 @@ def main() -> None:
         and args.structured_reader_max_tokens == DEFAULT_READER_MAX_TOKENS
         and args.structured_reduce_max_tokens == DEFAULT_REDUCE_MAX_TOKENS
         # --chunk-order reads the same organization, so it may name the cache too.
-        and (args.organization_dir is None or args.chunk_order is not None)
+        and (args.organization_dir is None or args.chunk_order is not None or args.mode == "skylight")
     )
     if args.structured_order is None and not ordered_defaults:
         ap.error("the ordered-group flags only apply with --structured-order")
@@ -1544,8 +1559,8 @@ def main() -> None:
         # Each refusal is a way the arm would stop being "the agentic root, handed every
         # chunk in one named order": a second locate tool, another chunk source, or a
         # read the budget cannot price.
-        if args.mode != "rlm":
-            ap.error("--chunk-order hands the AGENTIC root its chunks; it needs --mode rlm")
+        if args.mode not in ("rlm", "clean-rlm"):
+            ap.error("--chunk-order hands the AGENTIC root its chunks; it needs --mode rlm or clean-rlm")
         if args.search_k:
             ap.error("--chunk-order gives the root every chunk already ordered; it has no search() (drop --search-k)")
         if args.chunks_source is not None:
@@ -1597,7 +1612,7 @@ def main() -> None:
             # flag would change nothing while still stamping `bm25k5` into the run
             # directory -- naming an agentic retrieval depth the run never had.
             ap.error("--mode structured has no REPL for search() to live in; use --chunks-k, not --search-k")
-    elif args.mode == "rlm" and args.chunks_source is not None:
+    elif args.mode in ("rlm", "clean-rlm") and args.chunks_source is not None:
         # A FROZEN chunk set read by the AGENTIC root: search() returns the same
         # windows for every query, so what varies between two such runs is only which
         # windows were chosen. `bm25` is not a duplicate of --search-k here -- an
@@ -1609,11 +1624,14 @@ def main() -> None:
         # file-vs-bm25 means the same thing on both pipelines.
         if not args.search_k:
             ap.error(
-                "--mode rlm --chunks-source file delivers the chunks through search(), which is "
+                f"--mode {args.mode} --chunks-source file delivers the chunks through search(), which is "
                 "only bound with --search-k > 0. Use the same --search-k as the arm you compare against"
             )
     elif args.chunks_source is not None:
-        ap.error(f"--chunks-source is only meaningful with --mode structured or --mode rlm, " f"not --mode {args.mode}")
+        ap.error(
+            "--chunks-source is only meaningful with --mode structured or --mode rlm "
+            f"(including clean-rlm), not --mode {args.mode}"
+        )
     if args.mode != "structured" and (
         args.structured_map_question != "task"
         or args.structured_map_granularity != "passage"
@@ -1898,15 +1916,20 @@ def main() -> None:
         }
         return groups, stats
 
-    if (args.structured_order or args.chunk_order == "bm25-graph") and args.organization_dir is None:
+    if (
+        args.structured_order or args.chunk_order == "bm25-graph" or args.mode == "skylight"
+    ) and args.organization_dir is None:
         args.organization_dir = str(Path(args.out) / "organization")
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     modes = ["vanilla", "rlm"] if args.mode == "both" else [args.mode]
 
-    root = LLMClient(model=args.root_model, base_url=args.base_url)
+    client_type = CleanVLLMClient if args.mode == "clean-rlm" else LLMClient
+    root = client_type(model=args.root_model, base_url=args.base_url)
     sub: Any
+    if args.mode in ("skylight", "original") and args.sub_backend != "http":
+        ap.error(f"--mode {args.mode} needs --sub-backend http")
     if args.sub_backend == "kvzip":
         if modes == ["vanilla"]:
             ap.error("--sub-backend kvzip only affects RLM sub-calls; use --mode rlm (or both)")
@@ -1929,7 +1952,7 @@ def main() -> None:
             compression_factor=args.compression_factor if args.chunk_order else None,
         )
     else:
-        sub = LLMClient(model=args.sub_model, base_url=args.base_url)
+        sub = client_type(model=args.sub_model, base_url=args.base_url)
     if args.no_think:
         eb = {"chat_template_kwargs": {"enable_thinking": False}}
         root.extra_body = sub.extra_body = eb
@@ -2066,6 +2089,66 @@ def main() -> None:
         chunk_order=args.chunk_order,
         chunk_call_tokens=args.chunk_call_tokens,
     )
+    clean_rlm = (
+        CleanRLM(
+            root_client=root,
+            sub_client=sub,
+            max_steps=args.max_steps,
+            budget=budget,
+            scratchpad=scratchpad,
+            exec_timeout=args.exec_timeout or None,
+            run_timeout=args.run_timeout or None,
+            max_sub_calls=args.max_sub_calls or None,
+            max_subcall_chars=args.max_subcall_chars,
+            min_subcall_chars=args.min_subcall_chars,
+            min_sub_calls_before_abstain=args.min_sub_calls_before_abstain,
+            max_unproductive_steps=args.max_unproductive_steps,
+            max_error_steps=args.max_error_steps,
+            search_k=args.search_k,
+            search_window_chars=args.search_window,
+            search_overlap_chars=args.search_overlap,
+            max_search_calls=args.max_search_calls,
+            search_ablate=args.search_ablate,
+            structured_answer_list=(
+                ""
+                if args.answer_list_format == "off"
+                else answer_list_example(
+                    canonical_dataset_name(args.dataset or args.legacy_dataset),
+                    args.data_dir,
+                    args.mode,
+                    ordered_rlm=bool(args.chunk_order),
+                )
+            ),
+            ordered_token_counter=ordered_counter,
+            structured_context_tokens=chunk_context_tokens,
+            chunk_order=args.chunk_order,
+            chunk_call_tokens=args.chunk_call_tokens,
+        )
+        if args.mode == "clean-rlm"
+        else None
+    )
+    skylight = SkylightRLM(
+        root_client=root,
+        sub_client=sub,
+        max_steps=args.max_steps,
+        chunk_chars=ORGANIZATION_CONFIG["chunk_chars"],
+        chunk_overlap=ORGANIZATION_CONFIG["overlap"],
+        budget=budget,
+        run_timeout=args.run_timeout or None,
+        max_sub_calls=args.max_sub_calls or None,
+        debug=args.debug,
+        organization_dir=args.organization_dir,
+        vanilla_max_prompt_tokens=args.vanilla_max_prompt_tokens,
+        enable_thinking=not args.no_think,
+    )
+    original = OriginalRLM(
+        root_client=root,
+        sub_client=sub,
+        max_steps=args.max_steps,
+        repl_timeout=args.exec_timeout or None,
+        run_timeout=args.run_timeout or None,
+        debug=args.debug,
+    )
 
     for mode in modes:
         run_dir = out_dir / "__".join(build_run_dir_components(args, mode, scratchpad))
@@ -2192,6 +2275,10 @@ def main() -> None:
                                 retrieve=retrieve_for(ex) if args.structured_hops > 1 else None,
                                 window_notes=notes_for(ex) if args.chunks_source == "notes" else None,
                             )
+                        elif mode == "skylight":
+                            r = skylight.run(ex["context"], question, answer_format=answer_format)
+                        elif mode == "original":
+                            r = original.run(ex["context"], question)
                         elif args.chunk_order:
                             chunk_view, view_stats = build_chunk_view(
                                 ex["context"],
@@ -2201,10 +2288,14 @@ def main() -> None:
                                 args.organization_dir,
                                 organizations,
                             )
-                            r = rlm.run(ex["context"], question, answer_format=answer_format, ordered_chunks=chunk_view)
+                            runner = clean_rlm if mode == "clean-rlm" else rlm
+                            r = runner.run(
+                                ex["context"], question, answer_format=answer_format, ordered_chunks=chunk_view
+                            )
                             r.metrics.update(view_stats)
                         else:
-                            r = rlm.run(
+                            runner = clean_rlm if mode == "clean-rlm" else rlm
+                            r = runner.run(
                                 ex["context"],
                                 question,
                                 answer_format=answer_format,
@@ -2233,12 +2324,15 @@ def main() -> None:
                                 tf,
                                 indent=2,
                             )
-                        if args.debug:
+                        if args.debug and mode != "skylight":
                             for t in r.transcript:
                                 print(f"\n--- step {t['step']} ---")
-                                print("MODEL REPLY:\n" + (t.get("reply") or "")[:2000])
-                                print("EXECUTED CODE:\n" + (t.get("code") or "<none>"))
-                                print("REPL OUTPUT:\n" + t["observation"][:2000])
+                                if "content" in t:
+                                    print(f"{t.get('role', 'turn')}:\n" + (t.get("content") or "")[:2000])
+                                else:
+                                    print("MODEL REPLY:\n" + (t.get("reply") or "")[:2000])
+                                    print("EXECUTED CODE:\n" + (t.get("code") or "<none>"))
+                                    print("REPL OUTPUT:\n" + t["observation"][:2000])
                             print(f"\nEND: reason={r.end_reason} pred={r.answer!r}\n")
                 except Exception as e:
                     record.update(
@@ -2256,7 +2350,7 @@ def main() -> None:
                 # not establish whether retrieval supplied sufficient evidence.
                 spans = (
                     (record.get("metrics") or {}).pop("search_retrieved_spans", None)
-                    if mode in ("rlm", "structured")
+                    if mode in ("rlm", "clean-rlm", "structured")
                     else None
                 )
                 if spans:
@@ -2457,14 +2551,18 @@ def build_run_config(
                     else {}
                 ),
             }
-            if mode == "rlm" and getattr(args, "chunk_order", None)
+            if mode in ("rlm", "clean-rlm") and getattr(args, "chunk_order", None)
             else {}
         ),
         "chunks_selector": chunk_selector,
         "ids_file": args.ids_file,
         "ids_sha256": getattr(args, "ids_sha256", None),
         # Only zero-overlap RLM retrieval changed; preserve other runs' configs.
-        **({"search_index_revision": 2} if mode == "rlm" and args.search_k > 0 and args.search_overlap == 0 else {}),
+        **(
+            {"search_index_revision": 2}
+            if mode in ("rlm", "clean-rlm") and args.search_k > 0 and args.search_overlap == 0
+            else {}
+        ),
         **({"structured_revision": 2} if mode == "structured" else {}),
         # Which semantics produced document_coverage_fraction. Before this, spans
         # were derived AFTER the dense fold set chunk=None, so coverage was
