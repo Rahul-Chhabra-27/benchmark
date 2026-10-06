@@ -6,8 +6,8 @@ The long document never enters the root model's context. The root sees only
 the system prompt, the task, and the action / observation history.
 
 Each root turn must end with a stop form:
-  1. SUB_CALL — INDEX is one sub-read; SCAN/FULLSCAN is one batched vLLM
-     request over the selected chunks (control returns when the batch
+  1. SUB_CALL — read chunk(s) through a sub-model (SCAN feeds one chunk at a
+     time so the sub-call stays small; control returns only when the scan
      finishes; each chunk reply is appended to history).
   2. final_answer={...} — history already has enough evidence; that string is
      the answer used for evaluation.
@@ -32,74 +32,120 @@ from .rlm import MemoryBudget, RLMResult, TokenCounter, _is_context_overflow
 # --------------------------------------------------------------------------- #
 
 ROOT_SYSTEM_PROMPT = """\
-CHUNKS: there are {n_chunks} chunks (valid indices: 0..{last_idx}).
-You control retrieval over this document.
-The answer exists in the document. You see only retrieval summaries.
+You are solving a task over a LONG document that does NOT fit in your context.
 
-OUTPUT ONLY ONE OF THESE FORMS. DO NOT WRITE ANALYSIS OR A PREAMBLE.
+CHUNKS: there are {n_chunks} chunks in the document (valid indices: 0..{last_idx}).
+Each chunk is about {chunk_chars} characters. You never see the raw document —
+only your action history and the observations returned for those actions.
 
-QUERY: {retrieval_query}
-SUB_CALL(STATE=BM25, LOOK=SCAN(4))
+There IS always a solution in the document. Do not give up and do not invent
+facts. Escalate through the tactics below until history actually contains the
+answer, then stop with final_answer={{...}}.
 
-or:
+WHAT TO TRY (in this order):
+  1. FIND a chunk, then read it. Use RFIND on a distinctive string (a name,
+     title, number, rare word — never the whole question). INDEX(0) reads the
+     best hit. Multi-hop questions need several finds: read one fact, RFIND
+     what you just learned, read again, until every piece is in history.
+  2. SCAN a prefix. Two useful orders:
+       STATE=BM25  — query BM25: chunk 0 is the best match to QUERY; SCAN(i)
+                     reads the top i+1 chunks one-by-one (e.g. SCAN(4)).
+       STATE=ORDERED — BM25-graph: related chunks sit next to each other;
+                     INDEX a hit then SCAN(i,j) its neighbours.
+     Use this when you are not sure which exact string to RFIND.
+  3. If that is not enough, FULLSCAN the chosen order. Each chunk is still
+     read one-by-one; every reply is written into history. Use this to locate
+     the relevant passage and keep its extract in history.
+  4. Last resort: LOOK=VANILLA. That sends the ENTIRE document plus QUERY to
+     the sub-model in one call — the same as answering in vanilla mode. Use
+     this only after 1–3 have failed.
 
-final_answer={{<answer in the required format>}}
+MEMORY: older history may be dropped to stay within a memory budget. Re-read
+anything you still need. Do not invent chunk contents.
 
-For every retrieval, copy the QUERY line shown above exactly. Never output
-placeholder text or angle brackets.
+Each turn, emit EXACTLY ONE stop form, then STOP. Write nothing after it. The two 
+stop forms are either 1) Ask for more information or 2) Finish with final answer.
 
-States:
-- STATE=RFIND("text"): chunks containing this exact text first. Use a
-  distinctive phrase copied from the task or a previous summary. Its complete
-  call is: SUB_CALL(STATE=RFIND("exact phrase"), LOOK=INDEX(0))
-- STATE=BM25: chunks ranked for QUERY. This is the best general search.
-- STATE=ORDERED: related chunks adjacent in BM25-graph order.
-- STATE=UNORDERED: original document order.
+────────────────────────────────────────
+1) Ask for more information
+────────────────────────────────────────
+Parameters:
+  st    = ORDERED | UNORDERED | BM25 | RFIND(text)
+  i     = integer (0-based index in the chosen STATE order)
+  span  = INDEX(i) | SCAN(i) | FULLSCAN | VANILLA | SCAN(i,j)
 
-Looks. Every call needs BOTH a STATE and a LOOK:
-- LOOK=INDEX(i): read one chunk.
-- LOOK=SCAN(i): read chunks 0 through i in one batched sub-call.
-- LOOK=SCAN(i,j): read chunks i through j in one batched sub-call.
-- LOOK=FULLSCAN: read every chunk in one batched sub-call,
-  as SUB_CALL(STATE=ORDERED, LOOK=FULLSCAN)
-- LOOK=VANILLA: whole document in one call, as
-  SUB_CALL(STATE=ORDERED, LOOK=VANILLA)
+Then stop with:
+  QUERY: <question for the sub-model>
+  SUB_CALL(STATE=st, LOOK=span)
 
-Search policy:
-1. Start with RFIND on a phrase from the task, or BM25 with SCAN(4).
-2. If ANY observation contains "SUMMARY: FOUND", the search succeeded. Ignore
-   NOT_FOUND observations from other chunks and output final_answer immediately,
-   copying the answer= text from that FOUND observation verbatim.
-3. Only when every observation says NOT_FOUND, try BM25 SCAN(4), then BM25
-   SCAN(10). Do not search invented answer candidates or repeat a search.
-4. Use FULLSCAN or VANILLA only as a last resort.
+STATE:
+  UNORDERED — chunks in document (source) order.
+  ORDERED   — BM25-graph order (default). Built once BEFORE your question:
+              each chunk is scored as a BM25 query against the others, then
+              a similarity graph is walked so related chunks sit NEXT TO
+              EACH OTHER. This is NOT ranked by your QUERY.
+  BM25      — query BM25: every chunk ranked against this QUERY (best first).
+              SCAN(i) then reads the i+1 most relevant chunks.
+  RFIND(text) — substring search (case-insensitive). Matching chunks move to
+              the FRONT in ORDERED relative order; the rest follow, still in
+              ORDERED. Example: SUB_CALL(STATE=RFIND("spielberg"), LOOK=INDEX(0))
 
-Only the text inside final_answer={{...}} is graded, so it must contain the
-answer itself and nothing else. {answer_format_note}
-If the task also asks you to print document titles or IDs, that part is not
-graded: leave titles and IDs out of the braces entirely.
+LOOK:
+  INDEX(i)  — ask QUERY about chunk i only. Reply comes back immediately.
+  SCAN(i)   — linear scan of chunks 0..i inclusive, one chunk at a time.
+              Control returns only after the whole prefix scan finishes.
+  SCAN(i,j) — linear scan of chunks i..j inclusive (a neighbourhood around a
+              hit). Example: after INDEX finds chunk 7, SCAN(5,10) reads its
+              neighbours. Bounds are clamped; if j<i they are swapped.
+  FULLSCAN  — same one-by-one scan over every chunk. Control returns only
+              when the entire scan finishes. Each reply is stored in history.
+  VANILLA   — one sub-call over the FULL document + QUERY (vanilla mode).
+              STATE is ignored. Last resort.
 
-Example. Given the observation
-  SUMMARY: FOUND | answer=Melvil Dewey | evidence=Dewey invented the system |
-  documents=Dewey Decimal Classification (199)
-the correct reply is exactly:
-  final_answer={{Melvil Dewey}}
+Child replies are stored in your history as ANSWER + SUMMARY. Read those
+summaries before you SUB_CALL again — do not re-FIND or re-SCAN a chunk
+whose summary you already have.
 
-TASK:
-{task}"""
+────────────────────────────────────────
+2) Finish when history is enough
+────────────────────────────────────────
+Stop with:
+  final_answer={{<your answer>}}
+
+Use this only after observations support the answer. The text inside the
+braces is the answer used for evaluation.
+
+────────────────────────────────────────
+Worked example (shape only)
+────────────────────────────────────────
+  You:  QUERY: Who directed the 1975 shark film?
+        SUB_CALL(STATE=RFIND("shark"), LOOK=INDEX(0))
+  Obs:  [INDEX 0 | RFIND(shark)]
+        ANSWER: Steven Spielberg
+        SUMMARY: This passage names Spielberg as director of the 1975 shark film.
+  You:  QUERY: Where was that director born?
+        SUB_CALL(STATE=ORDERED, LOOK=SCAN(0,3))
+  Obs:  [SCAN 0 (0..3) | ORDERED]
+        ANSWER: Cincinnati, Ohio
+        SUMMARY: Neighbour chunks give Spielberg's birthplace as Cincinnati, Ohio.
+  You:  final_answer={{Cincinnati, Ohio}}
+
+The user's task is:
+{task}
+{answer_format_note}"""
 
 SUB_SYSTEM_PROMPT = """\
-Answer the question using only the passage. Output exactly one line.
+You are a reading assistant for a root model that cannot see the document.
+Use ONLY the provided text.
 
-If the passage answers the question:
-SUMMARY: FOUND | answer=<direct answer> | evidence=<short supporting fact> | documents=<TITLE (ID)>
+Reply with EXACTLY this shape (two labels, nothing else):
+ANSWER: <direct answer to the question, or NOTHING RELEVANT>
+SUMMARY: <2-4 sentences the root should remember: names, numbers, relations,
+where a next fact might live. If the question is unanswered, still note any
+distinctive terms or structure in this text so the root does not re-read it
+blindly.>
 
-Otherwise:
-SUMMARY: NOT_FOUND | documents=<titles and IDs examined>
-
-The answer= value must copy the fullest exact answer span from the passage.
-Do not shorten a person's full name to the document title or a common name.
-Copy titles and IDs exactly. No analysis, preamble, markdown, or extra lines."""
+Do not discuss how you were invoked."""
 
 FOLD_MARKER = (
     "[MEMORY NOTICE] {n} earlier message(s) were dropped to stay within your "
@@ -107,57 +153,20 @@ FOLD_MARKER = (
     "you need anything from those turns. Continue from the recent history below."
 )
 
-BUDGET_SPENT_MSG = (
-    "[BUDGET SPENT] All {spent} retrieval calls for this task are used up. No "
-    "further SUB_CALL will return anything. Answer now with final_answer={{...}} "
-    "using the best candidate in your history, even if you are not certain."
-)
-
-ROOT_SAMPLING = {
-    "repetition_penalty": 1.05,
-    "frequency_penalty": 0.4,
-    "presence_penalty": 0.2,
-}
-
 BEGIN_MSG = (
-    "There are {n_chunks} chunks (indices 0..{last_idx}). Begin retrieval. "
-    "Output only QUERY + SUB_CALL, or final_answer={{...}}."
+    "The document is split into {n_chunks} chunks (indices 0..{last_idx}). "
+    "You do not see those chunks — only later observations. "
+    "Begin. End your first turn with QUERY + SUB_CALL, or final_answer={{...}}."
 )
 
 _STATE_ATOM = r"ORDERED|UNORDERED|BM25|st|" r"RFIND\s*\(\s*(?:\"[^\"]*\"|'[^']*'|[^,)]+?)\s*\)"
-# Matched anywhere, not just at end of reply: a root that second-guesses itself
-# after writing the stop form still committed to an answer.
-_FINAL_RE = re.compile(r"final_answer\s*=\s*\{(?P<body>[^{}]*(?:\{[^{}]*\}[^{}]*)*)\}", re.IGNORECASE | re.DOTALL)
-# Thinking dumps often include template finals; never treat these as a stop.
-_PLACEHOLDER_FINAL_RE = re.compile(
-    r"(?is)^\s*(?:"
-    r"\.\.\.|…|"
-    r"value|answer|result|output|text|query|"
-    r"your\s+answer|<value>|<answer>|"
-    r"\{+\s*(?:\.\.\.|…|value|answer)\s*\}+"
-    r")\s*$"
-)
-
-
-def _is_placeholder_final(body: str) -> bool:
-    """True for CoT/template shells like ``{value}`` / ``{...}``, not real answers."""
-    text = (body or "").strip()
-    if not text:
-        return True
-    return bool(_PLACEHOLDER_FINAL_RE.match(text))
+_FINAL_RE = re.compile(r"final_answer\s*=\s*\{(?P<body>.*)\}\s*$", re.IGNORECASE | re.DOTALL)
 _SUBCALL_RE = re.compile(
     r"SUB_CALL\s*\(\s*STATE\s*=\s*(?P<state>" + _STATE_ATOM + r")\s*,\s*"
     r"LOOK\s*=\s*(?P<look>INDEX\s*\(\s*(?P<index>i|\d+)\s*\)|"
     r"SCAN\s*\(\s*(?P<scan>i|\d+)\s*(?:,\s*(?P<scan_end>j|\d+)\s*)?\)|"
     r"FULLSCAN|VANILLA|span)\s*"
     r"(?:,\s*QUERY\s*=\s*(?P<qstr>\"[^\"]*\"|'[^']*'))?\s*\)",
-    re.IGNORECASE,
-)
-# FULLSCAN and VANILLA need no index, so the root often drops LOOK= and writes
-# them as the STATE. The intent is unambiguous, and rejecting it just burns a
-# step on a mistake the root tends to repeat.
-_WHOLE_DOC_LOOK_RE = re.compile(
-    r"SUB_CALL\s*\(\s*(?:STATE|LOOK)\s*=\s*(?P<look>FULLSCAN|VANILLA)\s*\)",
     re.IGNORECASE,
 )
 _QUERY_LINE_RE = re.compile(r"(?im)^\s*QUERY\s*:\s*(?P<query>.+?)\s*$")
@@ -259,19 +268,14 @@ def _resolve_look(
     return "SCAN", start, int(b)
 
 
-def parse_root_action(text: str, default_query: str = "") -> tuple[str, object]:
-    """Return ('final', answer_str) or ('subcall', SubCall) or ('invalid', reason).
-
-    ``default_query`` fills a missing QUERY line. Placeholder finals such as
-    ``final_answer={...}`` / ``{value}`` that thinking dumps into the CoT are ignored.
-    """
-    stripped = _strip_thinking(text or "")
+def parse_root_action(text: str) -> tuple[str, object]:
+    """Return ('final', answer_str) or ('subcall', SubCall) or ('invalid', reason)."""
+    stripped = (text or "").strip()
     if not stripped:
         return "invalid", "empty reply"
 
-    finals = [m for m in _FINAL_RE.finditer(stripped) if not _is_placeholder_final(m.group("body"))]
-    final = finals[-1] if finals else None
-    sub = _SUBCALL_RE.search(stripped) or _WHOLE_DOC_LOOK_RE.search(stripped)
+    final = _FINAL_RE.search(stripped)
+    sub = _SUBCALL_RE.search(stripped)
     final_at = final.end() if final else -1
     sub_at = sub.end() if sub else -1
 
@@ -282,16 +286,6 @@ def parse_root_action(text: str, default_query: str = "") -> tuple[str, object]:
         return "final", final.group("body").strip()
 
     assert sub is not None
-    if sub.re is _WHOLE_DOC_LOOK_RE:
-        qline = _QUERY_LINE_RE.search(stripped)
-        query = qline.group("query").strip() if qline else ""
-        if not query:
-            query = (default_query or "").strip()
-        if not query:
-            return "invalid", "SUB_CALL requires QUERY: <question> (or QUERY= inside the call)."
-        look = sub.group("look").upper()
-        return "subcall", SubCall(state="ORDERED", look=look, index=None, query=query)
-
     st_bind = _ST_BIND_RE.search(stripped)
     i_bind = _I_BIND_RE.search(stripped)
     j_bind = _J_BIND_RE.search(stripped)
@@ -326,36 +320,9 @@ def parse_root_action(text: str, default_query: str = "") -> tuple[str, object]:
         qline = _QUERY_LINE_RE.search(stripped)
         query = qline.group("query").strip() if qline else ""
     if not query:
-        query = (default_query or "").strip()
-    if not query:
         return "invalid", "SUB_CALL requires QUERY: <question> (or QUERY= inside the call)."
 
     return "subcall", SubCall(state=state, look=look, index=index, query=query, find=find, end=end)
-
-
-_FOUND_RE = re.compile(r"(?i)SUMMARY:\s*FOUND\b")
-_NO_ANSWER_RE = re.compile(
-    r"(?is)^(not[\s_-]*found|nothing(?:\s+relevant)?|n/?a|none|"
-    r"no(?:t)?(?:\s+an?)?\s*answer|unknown|unanswerable|"
-    r"(?:i\s+)?(?:do\s+not|don't)\s+know|cannot\s+(?:find|determine)|"
-    r"no\s+information)\s*[.!]?\s*$"
-)
-
-
-def _unwrap_answer_shell(text: str) -> str:
-    body = (text or "").strip()
-    pairs = {"'": "'", '"': '"', "[": "]", "(": ")", "{": "}"}
-    while len(body) >= 2 and pairs.get(body[0]) == body[-1]:
-        body = body[1:-1].strip()
-    return body
-
-
-def _is_no_answer(text: str) -> bool:
-    """True when the root abstained rather than naming a fact."""
-    body = _unwrap_answer_shell(_strip_thinking(text or ""))
-    if not body:
-        return True
-    return bool(_NO_ANSWER_RE.match(re.sub(r"\s+", " ", body)))
 
 
 def _source_chunks(document: str, artifact: dict) -> list[Hit]:
@@ -411,57 +378,12 @@ def _split_turns(history: list[dict]) -> list[list[dict]]:
     return turns
 
 
-_THINK_RE = re.compile(r"<think(ing)?>.*?</think(ing)?>", re.IGNORECASE | re.DOTALL)
-_THINK_CLOSE_RE = re.compile(r"</think\s*>", re.IGNORECASE)
-_SUMMARY_RE = re.compile(r"(?i)SUMMARY\s*:")
-
-# A child that ignores the SUMMARY protocol would otherwise dump its whole
-# deliberation into the root's history, which is what the protocol exists to
-# prevent. Keep a bounded tail instead of the entire generation.
-UNLABELLED_SUMMARY_CHARS = 600
-
-
-def _strip_thinking(text: str) -> str:
-    """Drop think traces so FINAL/SUB_CALL parsers see only protocol text.
-
-    Handles paired ``<think>...</think>`` and the vLLM Qwen3.5 case where the
-    opening tag is omitted and only a trailing ``</think>`` remains. When the
-    model never closes the think block, leave the text intact: parse_root_action
-    ignores placeholder finals and still finds real SUB_CALLs inside the CoT.
-    """
-    clean = _THINK_RE.sub("", text or "")
-    parts = _THINK_CLOSE_RE.split(clean, maxsplit=1)
-    if len(parts) == 2:
-        return parts[1].strip()
-    return clean.strip()
-
-
-def _answer_format_note(answer_format: str | None) -> str:
-    """The graded value is what follows the dataset's answer cue, not the cue."""
-    cue = (answer_format or "").strip()
-    if not cue:
-        return "Write only the direct answer."
-    return f'The task asks for "{cue} <value>", so write only <value>, in exactly that form.'
-
-
-def _retrieval_query(task: str) -> str:
-    """Use the benchmark's final `query:` line, or the whole task as fallback."""
-    matches = re.findall(r"(?im)^\s*query\s*:\s*(.+?)\s*$", task)
-    return matches[-1].strip() if matches else task.strip()
-
-
-def _child_summary_for_root(text: str, limit: int = UNLABELLED_SUMMARY_CHARS) -> str:
-    """Only what the child wrote after its last SUMMARY: reaches the root."""
-    clean = _strip_thinking(text)
-    matches = list(_SUMMARY_RE.finditer(clean))
-    if matches:
-        body = clean[matches[-1].end() :].strip()
-        if body:
-            return "SUMMARY: " + body
-    if not clean:
-        return "SUMMARY: NOTHING RELEVANT"
-    tail = clean[-limit:].strip()
-    return "SUMMARY: " + tail
+def _ensure_summary(text: str) -> str:
+    """Guarantee a SUMMARY block in what the root stores from a child call."""
+    body = (text or "").strip()
+    if re.search(r"(?im)^SUMMARY\s*:", body):
+        return body
+    return f"{body}\nSUMMARY: {body}" if body else "ANSWER: NOTHING RELEVANT\nSUMMARY: empty child reply"
 
 
 def _flatten(turns: Sequence[Sequence[dict]]) -> list[dict]:
@@ -526,12 +448,8 @@ class SkylightRLM:
         max_sub_calls: Optional[int] = 200,
         debug: bool = False,
         organization_dir: Optional[str] = None,
-        root_sampling: Optional[dict] = None,
-        vanilla_max_prompt_tokens: Optional[int] = None,
-        enable_thinking: bool = True,
     ):
         self.root = root_client
-        self.root_sampling = ROOT_SAMPLING if root_sampling is None else root_sampling
         self.sub = sub_client or root_client
         self.max_steps = max_steps
         self.chunk_chars = chunk_chars
@@ -543,36 +461,6 @@ class SkylightRLM:
         self.max_sub_calls = max_sub_calls
         self.debug = debug
         self.organization_dir = organization_dir
-        self.vanilla_max_prompt_tokens = vanilla_max_prompt_tokens
-        self.enable_thinking = enable_thinking
-
-    def _thinking_template(self, extra: dict) -> dict:
-        template = dict(extra.get("chat_template_kwargs") or {})
-        template["enable_thinking"] = bool(self.enable_thinking)
-        return template
-
-    def _root_chat_kwargs(self) -> dict:
-        """Root action turn: keep sampling penalties; thinking follows ``enable_thinking``."""
-        extra = dict(getattr(self.root, "extra_body", None) or {})
-        extra.update(self.root_sampling)
-        extra["chat_template_kwargs"] = self._thinking_template(extra)
-        # Thinking traces need headroom; the protocol answer still comes after </think>.
-        max_tokens = 2048 if self.enable_thinking else 256
-        return {"extra_body": extra, "max_tokens": max_tokens}
-
-    def _sub_chat_kwargs(self) -> dict:
-        """Chunk extractor; thinking follows ``enable_thinking``."""
-        extra = dict(getattr(self.sub, "extra_body", None) or {})
-        extra["chat_template_kwargs"] = self._thinking_template(extra)
-        max_tokens = 1024 if self.enable_thinking else 192
-        return {"extra_body": extra, "max_tokens": max_tokens}
-
-    def _vanilla_chat_kwargs(self) -> dict:
-        """Full-document last step; thinking follows ``enable_thinking``."""
-        extra = dict(getattr(self.sub, "extra_body", None) or {})
-        extra["chat_template_kwargs"] = self._thinking_template(extra)
-        max_tokens = 2048 if self.enable_thinking else 1024
-        return {"extra_body": extra, "max_tokens": max_tokens}
 
     def run(self, context: str, task: str, answer_format: str | None = None) -> SkylightResult:
         artifact, _, cache_hit = organize(context, "bm25-graph", self.organization_dir)
@@ -603,8 +491,9 @@ class SkylightRLM:
                 last_idx=max(0, n_chunks - 1),
                 chunk_chars=self.chunk_chars,
                 task=task,
-                retrieval_query=_retrieval_query(task),
-                answer_format_note=_answer_format_note(answer_format),
+                answer_format_note=(
+                    f"\nFormat the value inside final_answer={{...}} as: {answer_format}\n" if answer_format else ""
+                ),
             ),
         }
         begin_msg = {
@@ -683,13 +572,12 @@ class SkylightRLM:
         def root_reply() -> tuple[str, list[dict]]:
             nonlocal forced_drop_turns
             n_turns = len(_split_turns(full_history))
-            root_kwargs = self._root_chat_kwargs()
             sent: list[dict] = []
             for _ in range(12):
                 sent, _ = build_sent()
                 ctx_tokens = self.tok.count_messages(sent)
                 try:
-                    reply = self.root.chat(sent, **root_kwargs)
+                    reply = self.root.chat(sent)
                 except Exception as exc:  # noqa: BLE001
                     if not _is_context_overflow(exc) or forced_drop_turns >= n_turns:
                         raise
@@ -702,82 +590,53 @@ class SkylightRLM:
                 return reply, sent
             raise RuntimeError("root context overflow could not be resolved by eviction")
 
-        def remaining_sub_calls() -> Optional[int]:
-            if self.max_sub_calls is None:
-                return None
-            return max(0, self.max_sub_calls - metrics["sub_calls"])
-
-        def chunk_messages(query: str, chunk: Hit) -> list[dict]:
-            return [
-                {"role": "system", "content": SUB_SYSTEM_PROMPT},
-                {"role": "user", "content": f"Question: {query}\n\nPassage:\n{chunk.text}"},
-            ]
-
         def ask_chunk(query: str, chunk: Hit, who: str) -> str:
-            """One INDEX-style sub-read. Counts as one SUB_CALL."""
+            """One sub-model call: question + this chunk only. No SCAN/LOOK protocol."""
+            if self.max_sub_calls is not None and metrics["sub_calls"] >= self.max_sub_calls:
+                raise RuntimeError(f"max_sub_calls ({self.max_sub_calls}) exceeded")
             metrics["sub_calls"] += 1
             metrics["chunks_read"] += 1
-            messages = chunk_messages(query, chunk)
-            ans = (self.sub.chat(messages, **self._sub_chat_kwargs()) or "").strip()
+            messages = [
+                {"role": "system", "content": SUB_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": (
+                        f"Question: {query}\n\n" "Write ANSWER and SUMMARY as instructed.\n\n" f"Passage:\n{chunk.text}"
+                    ),
+                },
+            ]
+            ans = clip((self.sub.chat(messages) or "").strip())
             call_log.append(who)
             emit_debug(who, messages, ans)
-            return clip(_child_summary_for_root(ans))
-
-        def ask_scan(query: str, chunks: Sequence[Hit], whos: Sequence[str]) -> list[str]:
-            """All SCAN/FULLSCAN chunks in one vLLM batch. Counts as one SUB_CALL."""
-            if not chunks:
-                return []
-            metrics["sub_calls"] += 1
-            metrics["chunks_read"] += len(chunks)
-            jobs = [chunk_messages(query, chunk) for chunk in chunks]
-            kwargs = self._sub_chat_kwargs()
-            batch = getattr(self.sub, "chat_batch", None)
-            if batch is not None:
-                raw = batch(jobs, **kwargs)
-            else:
-                raw = [self.sub.chat(j, **kwargs) for j in jobs]
-            out: list[str] = []
-            for who, messages, ans in zip(whos, jobs, raw):
-                text = clip(_child_summary_for_root((ans or "").strip()))
-                call_log.append(who)
-                emit_debug(who, messages, ans or "")
-                out.append(text)
-            return out
+            return _ensure_summary(ans)
 
         def ask_vanilla(query: str, who: str) -> str:
             """One sub-model call over the full document (vanilla last resort)."""
+            if self.max_sub_calls is not None and metrics["sub_calls"] >= self.max_sub_calls:
+                raise RuntimeError(f"max_sub_calls ({self.max_sub_calls}) exceeded")
             metrics["sub_calls"] += 1
             metrics["chunks_read"] += n_chunks
             messages = [
                 {"role": "system", "content": SUB_SYSTEM_PROMPT},
                 {
                     "role": "user",
-                    "content": f"Question: {query}\n\nDocument:\n{context}",
+                    "content": (
+                        f"Question: {query}\n\n" "Write ANSWER and SUMMARY as instructed.\n\n" f"Document:\n{context}"
+                    ),
                 },
             ]
-            ans = (self.sub.chat(messages, **self._sub_chat_kwargs()) or "").strip()
+            ans = clip((self.sub.chat(messages) or "").strip())
             call_log.append(who)
             emit_debug(who, messages, ans)
-            return clip(_child_summary_for_root(ans))
-
-        # "The document was exhausted" is about coverage, not about the FULLSCAN
-        # token: SCAN(0,n-1) reads every chunk too. Chunks are identified by
-        # source offset because each STATE reorders the positions.
-        scanned_starts: set[int] = set()
-        any_found = False
+            return _ensure_summary(ans)
 
         def observations_for(call: SubCall, root_step: int) -> list[str]:
-            nonlocal any_found
             child_n = 0
 
             def child_who() -> str:
                 nonlocal child_n
                 child_n += 1
                 return f"ROOT({root_step}) -> CHILD({child_n})"
-
-            budget = remaining_sub_calls()
-            if budget == 0:
-                return [BUDGET_SPENT_MSG.format(spent=metrics["sub_calls"])]
 
             if call.look == "VANILLA":
                 ans = ask_vanilla(call.query, child_who())
@@ -800,8 +659,6 @@ class SkylightRLM:
                 if not 0 <= call.index < n:
                     return [f"[error] INDEX({call.index}) out of range; valid indices are 0..{n - 1}"]
                 ans = ask_chunk(call.query, ordered[call.index], child_who())
-                if _FOUND_RE.search(ans or ""):
-                    any_found = True
                 return [f"[INDEX {call.index} | {call.state_label}]\n{ans}"]
 
             if call.look == "SCAN":
@@ -820,76 +677,14 @@ class SkylightRLM:
                 start, finish = 0, n - 1
 
             tag = "SCAN" if call.look == "SCAN" else "FULLSCAN"
-            if timed_out():
-                raise TimeoutError("run_timeout exceeded during scan")
-            indices = list(range(start, finish + 1))
-            chunk_list = [ordered[i] for i in indices]
-            whos = [child_who() for _ in indices]
-            answers = ask_scan(call.query, chunk_list, whos)
-            scanned_starts.update(c.start for c in chunk_list)
-            if any(_FOUND_RE.search(a or "") for a in answers):
-                any_found = True
-            return [f"[{tag} {i} ({start}..{finish}) | {call.state_label}]\n{ans}" for i, ans in zip(indices, answers)]
+            out: list[str] = []
+            for i in range(start, finish + 1):
+                if timed_out():
+                    raise TimeoutError("run_timeout exceeded during scan")
+                ans = ask_chunk(call.query, ordered[i], child_who())
+                out.append(f"[{tag} {i} ({start}..{finish}) | {call.state_label}]\n{ans}")
+            return out
 
-        def vanilla_last_step(step: int) -> SkylightResult | None:
-            """One full-document call, only if the untruncated prompt fits."""
-            fmt = f"\nFormat your answer as: {answer_format}" if answer_format else ""
-            prompt = f"Document:\n{context}\n\nTask: {task}\nAnswer concisely.{fmt}"
-            messages = [{"role": "user", "content": prompt}]
-            n_tok = self.tok.count_messages(messages)
-            metrics["vanilla_prompt_tokens"] = n_tok
-            cap = self.vanilla_max_prompt_tokens
-            if cap is not None and n_tok > cap:
-                metrics["vanilla_last_step"] = "skipped_too_long"
-                return None
-            who = f"VANILLA({step})"
-            try:
-                raw = (self.sub.chat(messages, **self._vanilla_chat_kwargs()) or "").strip()
-            except Exception as exc:  # noqa: BLE001
-                if _is_context_overflow(exc):
-                    metrics["vanilla_last_step"] = "skipped_overflow"
-                    return None
-                raise
-            metrics["vanilla_last_step"] = "ok"
-            metrics["sub_calls"] += 1
-            call_log.append(who)
-            emit_debug(who, messages, raw)
-            kind, payload = parse_root_action(raw, default_query=_retrieval_query(task))
-            answer = str(payload) if kind == "final" else _strip_thinking(raw)
-            transcript.append({"step": step, "role": "vanilla", "content": raw})
-            transcript.append({"step": step, "role": "final", "content": answer})
-            return SkylightResult(
-                answer=answer or None,
-                steps=step,
-                finished=True,
-                transcript=transcript,
-                end_reason="vanilla",
-                metrics=metrics,
-            )
-
-        def finish_without_answer(step: int, end_reason: str) -> SkylightResult:
-            # Last-resort vanilla is only for "we read the whole document and
-            # still found nothing". Partial coverage, or a chunk that did report
-            # FOUND, is not that case.
-            metrics["chunks_scanned"] = len(scanned_starts)
-            if len(scanned_starts) < n_chunks:
-                metrics["vanilla_last_step"] = "skipped_partial_scan"
-            elif any_found:
-                metrics["vanilla_last_step"] = "skipped_found"
-            else:
-                vanilla = vanilla_last_step(step)
-                if vanilla is not None:
-                    return vanilla
-            return SkylightResult(
-                answer=None,
-                steps=step,
-                finished=False,
-                transcript=transcript,
-                end_reason=end_reason,
-                metrics=metrics,
-            )
-
-        budget_notified = False
         for step in range(1, self.max_steps + 1):
             if timed_out():
                 return SkylightResult(
@@ -900,8 +695,6 @@ class SkylightRLM:
                     end_reason="run_timeout",
                     metrics=metrics,
                 )
-            if step == self.max_steps:
-                return finish_without_answer(step, "max_steps")
             try:
                 reply, sent = root_reply()
             except Exception as exc:  # noqa: BLE001
@@ -919,15 +712,12 @@ class SkylightRLM:
             emit_debug(who, sent, reply)
 
             transcript.append({"step": step, "role": "assistant", "content": reply})
-            kind, payload = parse_root_action(reply, default_query=_retrieval_query(task))
+            kind, payload = parse_root_action(reply)
 
             if kind == "final":
                 answer = str(payload)
                 full_history.append({"role": "assistant", "content": reply})
                 transcript.append({"step": step, "role": "final", "content": answer})
-                if _is_no_answer(answer):
-                    metrics["abstained"] = True
-                    return finish_without_answer(step, "no_answer")
                 return SkylightResult(
                     answer=answer,
                     steps=step,
@@ -946,9 +736,7 @@ class SkylightRLM:
                     "  SUB_CALL(STATE=ORDERED|UNORDERED|BM25|RFIND(text),\n"
                     "           LOOK=INDEX(i)|SCAN(i)|SCAN(i,j)|FULLSCAN|VANILLA)\n"
                     "or:\n"
-                    "  final_answer={...}\n"
-                    "FULLSCAN and VANILLA are LOOK values, not STATE values: write\n"
-                    "SUB_CALL(STATE=ORDERED, LOOK=FULLSCAN)."
+                    "  final_answer={{...}}"
                 )
                 full_history.append({"role": "assistant", "content": reply})
                 full_history.append({"role": "user", "content": nudge})
@@ -982,14 +770,14 @@ class SkylightRLM:
                 full_history.append({"role": "user", "content": obs})
                 transcript.append({"step": step, "role": "observation", "content": obs})
 
-            # Once retrieval is spent, further SUB_CALLs cannot make progress.
-            # Give the root one turn to answer from history, then stop.
-            if remaining_sub_calls() == 0:
-                if budget_notified:
-                    return finish_without_answer(step, "budget_exhausted")
-                budget_notified = True
-
-        return finish_without_answer(self.max_steps, "max_steps")
+        return SkylightResult(
+            answer=None,
+            steps=self.max_steps,
+            finished=False,
+            transcript=transcript,
+            end_reason="max_steps",
+            metrics=metrics,
+        )
 
 
 def _demo() -> None:

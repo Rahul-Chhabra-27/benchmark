@@ -36,6 +36,9 @@ from .organization import CONFIG as ORGANIZATION_CONFIG
 from .organization import ORDERS, ModelTokens, ordered_hits, organize, pack
 from .original_rlm import OriginalRLM
 from .retrieval import Hit
+from .rlm_exp1 import RLM as Exp1RLM
+from .rlm_exp1 import LookEndpointConfig, LookStrategy
+from .rlm_exp1 import VLLMClient as Exp1VLLMClient
 from .rlm import (
     CHUNK_ORDER_REVISION,
     CHUNK_ORDERS,
@@ -101,7 +104,9 @@ def answer_list_example(dataset: Optional[str], task: Optional[str], mode: str, 
     note: they are paired against structured arms that were. Every other agentic run
     keeps the prompt it was scored with.
     """
-    if dataset != "loft" or not task or not (mode == "structured" or (mode in ("rlm", "clean-rlm") and ordered_rlm)):
+    if dataset != "loft" or not task or not (
+        mode == "structured" or (mode in ("rlm", "clean-rlm", "rlm-exp1") and ordered_rlm)
+    ):
         return ""
     return LOFT_LIST_ANSWER_EXAMPLE if compare.loft_score_key(task) == "coverage" else ""
 
@@ -474,6 +479,14 @@ def write_run_artifacts(
 
         rlm_metrics = [m for m in scored_frame["metrics"] if isinstance(m, dict)]
         runtime["sub_slice_unlocatable_calls"] = int(sum(m.get("sub_slice_unlocatable_calls", 0) for m in rlm_metrics))
+        if any("look_cost" in m for m in rlm_metrics):
+            runtime["look_gpu_tokens"] = int(sum(m.get("look_gpu_tokens", 0) for m in rlm_metrics))
+            runtime["look_offloaded_tokens"] = int(sum(m.get("look_offloaded_tokens", 0) for m in rlm_metrics))
+            runtime["look_cost"] = int(sum(m.get("look_cost", 0) for m in rlm_metrics))
+            runtime["look_calls"] = {
+                look.value: int(sum(m.get("look_calls", {}).get(look.value, 0) for m in rlm_metrics))
+                for look in LookStrategy
+            }
         coverage = [
             m.get("document_coverage_fraction") for m in rlm_metrics if m.get("document_coverage_fraction") is not None
         ]
@@ -818,13 +831,15 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
     model_slug = args.root_model.replace("/", "_")
     task_slug = (args.data_dir or "default").replace("/", "_")
     components = [dataset_name, task_slug, model_slug, mode]
+    if mode == "rlm-exp1":
+        components.append(f"lookmem{args.look_memory_tokens}")
     # Only when it is not the whole subset: `all` is what every existing run used,
     # so naming it would rename every existing directory for no new information.
     if getattr(args, "split", "all") != "all":
         components.append(f"split-{args.split}")
-    if mode in ("rlm", "clean-rlm", "skylight") and args.max_context_tokens is not None:
+    if mode in ("rlm", "clean-rlm", "rlm-exp1", "skylight") and args.max_context_tokens is not None:
         components.append(f"ctx{args.max_context_tokens}")
-    if mode in ("rlm", "clean-rlm") and scratchpad is not None:
+    if mode in ("rlm", "clean-rlm", "rlm-exp1") and scratchpad is not None:
         components.append("scratchpad")
     if mode in ("rlm", "clean-rlm") and args.sub_backend == "kvzip":
         # Backend-prefixed ("kvzip-kvzip1GB", not a bare "kvzip1GB"): kvpress's
@@ -841,13 +856,17 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
     # differently, land in a fresh directory, and silently start over instead of
     # hitting the _prior_resolved_chars guard. Only hand-picked sizes are named.
     sizing_mode = getattr(args, "subcall_sizing_mode", "fixed")
-    if mode in ("rlm", "clean-rlm") and sizing_mode == "fixed" and args.max_subcall_chars != DEFAULT_MAX_SUBCALL_CHARS:
+    if (
+        mode in ("rlm", "clean-rlm", "rlm-exp1")
+        and sizing_mode == "fixed"
+        and args.max_subcall_chars != DEFAULT_MAX_SUBCALL_CHARS
+    ):
         components.append(f"sub{args.max_subcall_chars}")
     # A floor changes both the prompt and the slices, so a floored run must never
     # share a checkpoint with the unfloored run of the same subset. Only stamped
     # when non-zero, so every existing run directory keeps its name.
     if (
-        mode in ("rlm", "clean-rlm")
+        mode in ("rlm", "clean-rlm", "rlm-exp1")
         and getattr(args, "min_subcall_chars", 0)
         and not getattr(args, "fixed_chunk", False)
     ):
@@ -863,7 +882,7 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
         components.append("fixed")
     # Last, and only when retrieval is on, so every directory written before this
     # arm existed keeps its exact name and its checkpoint stays reachable.
-    if mode in ("rlm", "clean-rlm") and getattr(args, "search_k", 0):
+    if mode in ("rlm", "clean-rlm", "rlm-exp1") and getattr(args, "search_k", 0):
         components.append(f"bm25k{args.search_k}")
         if (args.search_window, args.search_overlap) != (DEFAULT_SEARCH_WINDOW, DEFAULT_SEARCH_OVERLAP):
             components.append(f"win{args.search_window}o{args.search_overlap}")
@@ -953,7 +972,7 @@ def build_run_dir_components(args: argparse.Namespace, mode: str, scratchpad: Sc
     # The agentic arm reading a chunk set chosen outside the run. It still carries
     # `bm25k<N>` from the block above, because search() is how the chunks arrive and
     # k still bounds them; this component is what says the windows are not BM25's.
-    if mode in ("rlm", "clean-rlm") and getattr(args, "chunks_source", None):
+    if mode in ("rlm", "clean-rlm", "rlm-exp1") and getattr(args, "chunks_source", None):
         components.append(f"chunks-{args.chunks_source}{args.chunks_k}")
         if getattr(args, "chunks_tag", None):
             components.append(f"sel-{args.chunks_tag}")
@@ -984,7 +1003,7 @@ def main() -> None:
     ap.add_argument(
         "--mode",
         default="both",
-        choices=["vanilla", "rlm", "clean-rlm", "structured", "skylight", "original", "both"],
+        choices=["vanilla", "rlm", "clean-rlm", "rlm-exp1", "structured", "skylight", "original", "both"],
     )
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument(
@@ -1022,6 +1041,17 @@ def main() -> None:
         help="served model id for recursive sub-calls (cheap is fine)",
     )
     ap.add_argument("--base-url", default="http://localhost:8000/v1", help="OpenAI-compatible server, e.g. vLLM")
+    ap.add_argument(
+        "--look-host",
+        default="localhost",
+        help="host for rlm-exp1 LOOK servers (fixed ports: full=8111, 2x=8222, 4x=8333)",
+    )
+    ap.add_argument(
+        "--look-memory-tokens",
+        type=int,
+        default=8192,
+        help="rlm-exp1 per-LOOK GPU KV capacity m, in kept tokens",
+    )
     ap.add_argument("--max-steps", type=int, default=12)
     ap.add_argument("--vanilla-char-limit", type=int, default=400_000)
     ap.add_argument(
@@ -1499,8 +1529,10 @@ def main() -> None:
         help="disable Qwen3 thinking mode (chat_template_kwargs.enable_thinking=False)",
     )
     args = ap.parse_args()
-    if args.mode == "clean-rlm" and args.sub_backend != "http":
-        ap.error("--mode clean-rlm needs explicit --sub-backend http")
+    if args.mode in ("clean-rlm", "rlm-exp1") and args.sub_backend != "http":
+        ap.error(f"--mode {args.mode} needs explicit --sub-backend http")
+    if args.look_memory_tokens <= 0:
+        ap.error("--look-memory-tokens must be positive")
     if args.sub_backend == "nim":  # deprecated alias; the slug never carried it
         args.sub_backend = "http"
 
@@ -1612,7 +1644,7 @@ def main() -> None:
             # flag would change nothing while still stamping `bm25k5` into the run
             # directory -- naming an agentic retrieval depth the run never had.
             ap.error("--mode structured has no REPL for search() to live in; use --chunks-k, not --search-k")
-    elif args.mode in ("rlm", "clean-rlm") and args.chunks_source is not None:
+    elif args.mode in ("rlm", "clean-rlm", "rlm-exp1") and args.chunks_source is not None:
         # A FROZEN chunk set read by the AGENTIC root: search() returns the same
         # windows for every query, so what varies between two such runs is only which
         # windows were chosen. `bm25` is not a duplicate of --search-k here -- an
@@ -1925,12 +1957,25 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     modes = ["vanilla", "rlm"] if args.mode == "both" else [args.mode]
 
-    client_type = CleanVLLMClient if args.mode == "clean-rlm" else LLMClient
+    if args.mode == "clean-rlm":
+        client_type = CleanVLLMClient
+    elif args.mode == "rlm-exp1":
+        client_type = Exp1VLLMClient
+    else:
+        client_type = LLMClient
     root = client_type(model=args.root_model, base_url=args.base_url)
     sub: Any
     if args.mode in ("skylight", "original") and args.sub_backend != "http":
         ap.error(f"--mode {args.mode} needs --sub-backend http")
-    if args.sub_backend == "kvzip":
+    look_clients: dict[LookStrategy, Exp1VLLMClient] | None = None
+    if args.mode == "rlm-exp1":
+        endpoint_config = LookEndpointConfig(host=args.look_host)
+        look_clients = {
+            look: Exp1VLLMClient(model=args.sub_model, base_url=endpoint)
+            for look, endpoint in endpoint_config.endpoints().items()
+        }
+        sub = look_clients[LookStrategy.CHUNK]
+    elif args.sub_backend == "kvzip":
         if modes == ["vanilla"]:
             ap.error("--sub-backend kvzip only affects RLM sub-calls; use --mode rlm (or both)")
         # Imported lazily: the http path must stay importable in a venv without
@@ -1956,6 +2001,9 @@ def main() -> None:
     if args.no_think:
         eb = {"chat_template_kwargs": {"enable_thinking": False}}
         root.extra_body = sub.extra_body = eb
+        for client in (look_clients or {}).values():
+            client.extra_body = eb
+    metered_subs = list((look_clients or {}).values()) or [sub]
 
     # A B x F cell of an ordered-chunk arm: the read cap is N = B x F, derived from the
     # sub model's own bytes per token, so a resume always resolves the same N. Refused
@@ -2127,6 +2175,31 @@ def main() -> None:
         if args.mode == "clean-rlm"
         else None
     )
+    exp1_rlm = (
+        Exp1RLM(
+            root_client=root,
+            look_clients=look_clients,
+            look_memory_tokens=args.look_memory_tokens,
+            max_steps=args.max_steps,
+            budget=budget,
+            scratchpad=scratchpad,
+            exec_timeout=args.exec_timeout or None,
+            run_timeout=args.run_timeout or None,
+            max_sub_calls=args.max_sub_calls or None,
+            max_subcall_chars=args.max_subcall_chars,
+            min_subcall_chars=args.min_subcall_chars,
+            min_sub_calls_before_abstain=args.min_sub_calls_before_abstain,
+            max_unproductive_steps=args.max_unproductive_steps,
+            max_error_steps=args.max_error_steps,
+            search_k=args.search_k,
+            search_window_chars=args.search_window,
+            search_overlap_chars=args.search_overlap,
+            max_search_calls=args.max_search_calls,
+            search_ablate=args.search_ablate,
+        )
+        if args.mode == "rlm-exp1"
+        else None
+    )
     skylight = SkylightRLM(
         root_client=root,
         sub_client=sub,
@@ -2220,10 +2293,12 @@ def main() -> None:
                 if ex["id"] in done:
                     continue
                 t0 = time.time()
-                tok0 = root.usage.total_tokens + sub.usage.total_tokens
-                prompt0 = root.usage.prompt_tokens + sub.usage.prompt_tokens
-                completion0 = root.usage.completion_tokens + sub.usage.completion_tokens
-                sub0 = sub.usage.calls
+                tok0 = root.usage.total_tokens + sum(client.usage.total_tokens for client in metered_subs)
+                prompt0 = root.usage.prompt_tokens + sum(client.usage.prompt_tokens for client in metered_subs)
+                completion0 = root.usage.completion_tokens + sum(
+                    client.usage.completion_tokens for client in metered_subs
+                )
+                sub0 = sum(client.usage.calls for client in metered_subs)
                 record = {
                     "id": ex["id"],
                     "dataset": dataset_name,
@@ -2288,13 +2363,25 @@ def main() -> None:
                                 args.organization_dir,
                                 organizations,
                             )
-                            runner = clean_rlm if mode == "clean-rlm" else rlm
+                            runner = (
+                                clean_rlm
+                                if mode == "clean-rlm"
+                                else exp1_rlm
+                                if mode == "rlm-exp1"
+                                else rlm
+                            )
                             r = runner.run(
                                 ex["context"], question, answer_format=answer_format, ordered_chunks=chunk_view
                             )
                             r.metrics.update(view_stats)
                         else:
-                            runner = clean_rlm if mode == "clean-rlm" else rlm
+                            runner = (
+                                clean_rlm
+                                if mode == "clean-rlm"
+                                else exp1_rlm
+                                if mode == "rlm-exp1"
+                                else rlm
+                            )
                             r = runner.run(
                                 ex["context"],
                                 question,
@@ -2350,7 +2437,7 @@ def main() -> None:
                 # not establish whether retrieval supplied sufficient evidence.
                 spans = (
                     (record.get("metrics") or {}).pop("search_retrieved_spans", None)
-                    if mode in ("rlm", "clean-rlm", "structured")
+                    if mode in ("rlm", "clean-rlm", "rlm-exp1", "structured")
                     else None
                 )
                 if spans:
@@ -2372,11 +2459,19 @@ def main() -> None:
                     record.update(chunk_diagnostics(chunk_view, ranks_read, ex["answers"]))
                 record["correct"] = is_correct(record.get("pred"), ex["answers"])
                 record["latency_s"] = round(time.time() - t0, 2)
-                record["tokens"] = root.usage.total_tokens + sub.usage.total_tokens - tok0
+                record["tokens"] = (
+                    root.usage.total_tokens + sum(client.usage.total_tokens for client in metered_subs) - tok0
+                )
                 # The same server-counted usage, split into input and output.
-                record["prompt_tokens"] = root.usage.prompt_tokens + sub.usage.prompt_tokens - prompt0
-                record["completion_tokens"] = root.usage.completion_tokens + sub.usage.completion_tokens - completion0
-                record["sub_calls"] = sub.usage.calls - sub0
+                record["prompt_tokens"] = (
+                    root.usage.prompt_tokens + sum(client.usage.prompt_tokens for client in metered_subs) - prompt0
+                )
+                record["completion_tokens"] = (
+                    root.usage.completion_tokens
+                    + sum(client.usage.completion_tokens for client in metered_subs)
+                    - completion0
+                )
+                record["sub_calls"] = sum(client.usage.calls for client in metered_subs) - sub0
                 record["ctx_chars"] = len(ex["context"])
                 fout.write(json.dumps(record) + "\n")
                 fout.flush()
@@ -2430,6 +2525,17 @@ def build_run_config(
         "root_model": args.root_model,
         "sub_model": args.sub_model,
         "base_url": args.base_url,
+        **(
+            {
+                "look_memory_tokens": args.look_memory_tokens,
+                "look_endpoints": {
+                    look.value: endpoint
+                    for look, endpoint in LookEndpointConfig(host=args.look_host).endpoints().items()
+                },
+            }
+            if mode == "rlm-exp1"
+            else {}
+        ),
         "limit": args.limit,
         "split": args.split,
         "sample_fraction": args.sample_fraction,

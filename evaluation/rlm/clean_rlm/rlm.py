@@ -322,14 +322,14 @@ class RLM(ReplMixin, StructuredMixin):
             every short answer, since any question mentioning "12" licensed the
             ungrounded answer 12, and every multiple-choice task enumerates its
             labels in the prompt -- so that whole class of tasks had no guard at all.
-            The ordered-chunk arms also accept an answer composed from several reads
-            (revision 6, composed_answer_grounded); legacy runs keep the word-for-word test.
+            An answer composed from several reads is also grounded
+            (composed_answer_grounded): the word-for-word test alone discarded answers
+            whose every content word had been observed, because the root joined a title
+            and an id it read on two calls into the requested answer template.
             """
             if val in seen_output or _mentions(task, val):
                 return True
-            return self.chunk_order is not None and composed_answer_grounded(
-                val, seen_output, f"{task}\n{answer_format or ''}"
-            )
+            return composed_answer_grounded(val, seen_output, f"{task}\n{answer_format or ''}")
 
         def _abstention_earned() -> bool:
             """Has this run read enough of the document to claim the answer is absent?
