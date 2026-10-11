@@ -55,6 +55,11 @@ is what makes `compare.py` able to put the two side by side.
 
 ## Further reading
 
+- [**RUNNING.md**](RUNNING.md) — how to run every RLM experiment (base vanilla/RLM,
+  ordered-chunk arms, B × F cells, KVzip arms) on an infolab host or any GPU machine.
+- [**CAMPAIGNS.md**](CAMPAIGNS.md) — every finished RLM campaign in one place: the
+  question, the setup, the headline numbers, and where the full record and raw
+  results live.
 - [**RLM.md**](RLM.md) — how RLM and kvpress coexist, and how sub-call chunk sizes are
   derived from a KV memory budget.
 - [**evaluation/rlm/README.md**](evaluation/rlm/README.md) — running the RLM arms,

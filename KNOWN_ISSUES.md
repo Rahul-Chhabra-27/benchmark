@@ -5,7 +5,7 @@ the reason. Everything here is a live limitation, not a TODO someone forgot —
 if you hit one of these, this file is the explanation.
 
 For what *was* fixed, see the `refactor/nim-removal-cleanup` commits. For the
-earlier RLM audit, see `fix_rlm.md`.
+earlier RLM audit, see [`CAMPAIGNS.md` §2](CAMPAIGNS.md#2-the-rlm-audit-generation-2-fixes).
 
 ## Test failures that are expected
 

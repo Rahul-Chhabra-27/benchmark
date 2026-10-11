@@ -46,12 +46,38 @@ if ss -ltn 2>/dev/null | grep -q ":$PORT "; then
   exit 1
 fi
 
+# CPU BINDING. Shared hosts run other people's CPU-heavy jobs beside ours, and a
+# server free to spread over every core competes with all of them. CPUS pins the
+# server and every process it forks (the engine core included -- affinity is
+# inherited) to a named core list, ideally physical cores local to the GPU's NUMA
+# node (`nvidia-smi topo -m`, `lscpu -e`). Unset = unbound, as before.
+# UV_USE_IO_URING=0 below closes the one hole in that: uvloop's libuv otherwise
+# starts an io_uring submission-polling thread (`iou-sqp-<pid>`) whose affinity is
+# the kernel's, not the taskset mask -- measured on cat as the single thread of the
+# server at 0-31 while every other thread sat on its four cores.
+CPUS=${CPUS:-}
+PIN=""
+[ -n "$CPUS" ] && PIN="taskset -c $CPUS"
+THREADS=${THREADS:-4}
+
 mkdir -p "$(dirname "$LOG")"
+# GPU may be an index or a UUID (GPU-xxxx). nvidia-smi -i takes either, but vLLM
+# 0.8.5 parses CUDA_VISIBLE_DEVICES as integers and dies on a UUID at startup, so a
+# UUID is resolved to its index here -- under CUDA_DEVICE_ORDER=PCI_BUS_ID that is
+# the index nvidia-smi prints. Check the result with
+# `nvidia-smi --query-compute-apps=gpu_uuid,pid --format=csv` once it has loaded.
+case "$GPU" in
+  GPU-*)
+    GPU_INDEX=$(nvidia-smi --query-gpu=index,uuid --format=csv,noheader | awk -F', ' -v u="$GPU" '$2==u{print $1}')
+    if [ -z "$GPU_INDEX" ]; then echo "no GPU with UUID $GPU on this host" >&2; exit 1; fi ;;
+  *) GPU_INDEX=$GPU ;;
+esac
 tmux new-session -d -s "$SESSION" \
-  "CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=$GPU HF_HOME=$HF HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
-   $VLLM serve $MODEL --served-model-name $MODEL --port $PORT \
+  "CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=$GPU_INDEX HF_HOME=$HF HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+   OMP_NUM_THREADS=$THREADS MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false UV_USE_IO_URING=0 \
+   $PIN $VLLM serve $MODEL --served-model-name $MODEL --port $PORT \
    --max-model-len $MAX_LEN --gpu-memory-utilization $GPU_UTIL --enforce-eager -O0 2>&1 | tee $LOG"
-echo "serving $MODEL on GPU $GPU, port $PORT, tmux session $SESSION"
+echo "serving $MODEL on GPU $GPU, port $PORT, tmux session $SESSION${CPUS:+, cpus $CPUS}"
 echo "weights load from NFS and can take several minutes; wait for a real generation:"
 echo "  until curl -s --max-time 60 -o /dev/null -w '%{http_code}' http://localhost:$PORT/v1/chat/completions \\"
 echo "      -H 'Content-Type: application/json' \\"
