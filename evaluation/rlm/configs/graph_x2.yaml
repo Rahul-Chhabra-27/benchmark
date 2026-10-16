@@ -1,0 +1,7 @@
+# Ordering + compression: bm25-graph chunks, B = 1024 MB, every read 2 x B tokens pressed 2x.
+extends: _defaults.yaml
+name: graph_x2_1024mb
+ordering: bm25-graph
+compression:
+  factor: 2
+  budget_mb: 1024

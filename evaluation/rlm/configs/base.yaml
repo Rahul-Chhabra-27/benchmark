@@ -1,0 +1,4 @@
+# The base RLM: no ordering, no compression. Every other config adds one thing to this.
+extends: _defaults.yaml
+name: base
+ordering: none

@@ -1,0 +1,4 @@
+# Ordering only: chunks ranked by BM25 against the question (query-aware).
+extends: _defaults.yaml
+name: order_query
+ordering: bm25-query

@@ -1,0 +1,20 @@
+# Shared by every experiment below (each one `extends` this file and changes only
+# what it is about). Override anything for one run with
+#   python -m evaluation.rlm.core run <config> --set data.limit=3 --set name=smoke
+data:
+  dataset: loft
+  tasks: [nq, hotpotqa, musique, qampari, quest]
+  split: test
+  limit: 55
+models:
+  root: Qwen/Qwen3-4B-Instruct-2507
+  base_url: http://localhost:8002/v1
+  thinking: false
+rlm:
+  max_steps: 30
+  max_sub_calls: 40
+  exec_timeout_s: 60
+  run_timeout_s: 900
+  output_chars: 4000
+  read_tokens: 8192
+output_dir: evaluation/results/rlm/core

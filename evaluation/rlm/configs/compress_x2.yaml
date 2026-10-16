@@ -1,0 +1,7 @@
+# Compression only: B = 1024 MB of KV per read, each read 2 x B tokens pressed by KVzip.
+extends: _defaults.yaml
+name: compress_x2_1024mb
+ordering: none
+compression:
+  factor: 2
+  budget_mb: 1024
