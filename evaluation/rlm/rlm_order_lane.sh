@@ -16,6 +16,7 @@
 #   LIMIT=3 RESULTS=/tmp/gautammahale/rlmorder/results_pilot  for the pilot; LIMIT=55 for the
 #   campaign. Raw output goes to cat-local scratch and is archived to NAS after each stage.
 #   BUDGET_MB=512 FACTOR=4 CUDA_VISIBLE_DEVICES=0  runs the B x F cell instead (see below).
+#   SPLIT=dev runs LOFT's dev rows (default test). IDS_FILE=<file> runs only those ids.
 set -euo pipefail
 arm=${1:?arm: bm25-graph|bm25-query}; cpu=${2:?cpu core to pin to}; shift 2
 DATASET=${DATASET:-loft}
@@ -64,6 +65,17 @@ else
   sub_flags=(--sub-backend http)
 fi
 
+# IDS_FILE runs exactly the ids it lists instead of the first LIMIT rows: one group of a
+# factor_picker plan (ids/<task>__x<F>.txt). An ids file names rows of ONE subset.
+rows=(--limit "$LIMIT")
+if [ -n "${IDS_FILE:-}" ]; then
+  if [ "$(echo $SUBSETS | wc -w)" -ne 1 ]; then
+    echo "IDS_FILE lists rows of one subset; pass exactly one subset, not: $SUBSETS" >&2
+    exit 1
+  fi
+  rows=(--ids-file "$IDS_FILE")
+fi
+
 # Lab storage policy: on a host with an infolab group, write as infolab. A RunPod pod or
 # another cloud VM has no such group, and the check does not apply there.
 if getent group infolab >/dev/null 2>&1 && [ "$(id -gn)" != infolab ]; then
@@ -83,12 +95,12 @@ case "$body" in
 esac
 
 for s in $SUBSETS; do
-  if [ "$DATASET" = loft ]; then data_dir="${s}_128k"; split="--split test"; else data_dir="$s"; split=""; fi
-  echo "################ $arm $DATASET/$data_dir limit=$LIMIT cpu=$cpu $(date +%T)"
+  if [ "$DATASET" = loft ]; then data_dir="${s}_128k"; split="--split ${SPLIT:-test}"; else data_dir="$s"; split=""; fi
+  echo "################ $arm $DATASET/$data_dir ${rows[*]} cpu=$cpu $(date +%T)"
   # $split is word-split on purpose: empty for RULER, which has no dev/test split.
   # shellcheck disable=SC2086
   taskset -c "$cpu" "$PY" -m evaluation.rlm.run_benchmark --dataset "$DATASET" --data-dir "$data_dir" \
-      $split --limit "$LIMIT" --mode rlm --chunk-order "$arm" --organization-dir "$ORG" \
+      $split "${rows[@]}" --mode rlm --chunk-order "$arm" --organization-dir "$ORG" \
       --max-steps "$MAX_STEPS" \
       --root-model "$MODEL" --sub-model "$MODEL" --base-url "$BASE_URL" "${sub_flags[@]}" \
       --out "$RESULTS"
