@@ -1,11 +1,13 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""python -m evaluation.rlm.minimal_rlm {check,run} CONFIG.yaml [--set key=value ...]
+"""python -m evaluation.rlm.minimal_rlm {list,check,run} [NAME] [--set key=value ...]
 
-    check   validate the config and print what it will do (no model is loaded)
-    run     run it; re-running resumes
+    list         the experiments in experiments.yaml
+    check NAME   what one experiment will do, and its root prompt (no model is loaded)
+    run NAME     run it; re-running resumes
 
 --set overrides a key for this invocation, e.g. --set data.limit=3 --set name=smoke.
+--file reads another experiments file instead of the one next to this module.
 """
 
 from __future__ import annotations
@@ -16,8 +18,8 @@ from pathlib import Path
 
 import yaml
 
-from .config import ExperimentConfig, config_to_dict, load_config
-from .loop import RLM
+from .config import EXPERIMENTS_FILE, ExperimentConfig, config_to_dict, load_experiment, read_experiments
+from .rlm import RLM
 from .run import make_limits
 
 
@@ -62,19 +64,32 @@ def describe(config: ExperimentConfig) -> str:
 
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(prog="python -m evaluation.rlm.minimal_rlm", description=__doc__.split("\n")[0])
-    ap.add_argument("command", choices=["check", "run"])
-    ap.add_argument("config")
+    ap.add_argument("command", choices=["list", "check", "run"])
+    ap.add_argument("name", nargs="?", help="an experiment in the experiments file")
+    ap.add_argument("--file", type=Path, default=EXPERIMENTS_FILE, help="experiments file (default: experiments.yaml)")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE")
-    ap.add_argument("--show-prompt", action="store_true", help="check: also print the root prompt")
     args = ap.parse_args(argv)
-    config = load_config(args.config, **_overrides(args.set))
+
+    if args.command == "list":
+        for name in read_experiments(args.file)[1]:
+            config = load_experiment(name, args.file)
+            c = config.compression
+            factors = "x" + "/".join(str(f) for f in c.factors)
+            compression = "none" if c.budget_mb is None else f"{factors} at {c.budget_mb:g} MB"
+            extras = "".join(
+                f"  {k}" for k, on in (("offload", c.offload), ("cost shown", config.cost.show_root)) if on
+            )
+            print(f"  {name:<18} ordering={config.ordering:<11} compression={compression}{extras}")
+        return
+    if not args.name:
+        ap.error(f"{args.command} needs an experiment name; see `list`")
+    config = load_experiment(args.name, args.file, _overrides(args.set))
     print(describe(config))
     if args.command == "check":
-        if args.show_prompt:
-            print("\n--- root prompt (with a placeholder question) ---")
-            rlm = RLM(None, None, make_limits(config), config.ordering)  # type: ignore[arg-type]
-            print(rlm.system_prompt("<question>", 500_000, 250, 2000, "Final Answer:"))
-        print("\n--- resolved config ---")
+        rlm = RLM(None, None, make_limits(config), config.ordering)  # type: ignore[arg-type]
+        print("\n--- root prompt (with a placeholder question) ---")
+        print(rlm.system_prompt("<question>", 500_000, 250, 2000, "Final Answer:"))
+        print("\n--- resolved settings ---")
         print(json.dumps(config_to_dict(config), indent=2))
         return
     from .run import run_experiment

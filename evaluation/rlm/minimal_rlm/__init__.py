@@ -1,20 +1,17 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""A clean, config-driven RLM. See README.md in this folder.
+"""A minimal, config-driven RLM. Three files and one experiments file:
 
-    config.py    the experiment file: data, models, ordering, compression, limits
-    prompts.py   every word the models see: a short base prompt + one block per option
-    ordering.py  none | bm25-query | bm25-graph -> the `chunks` list
-    readers.py   how llm_query reads: plain http, or kvpress at factor F
-    repl.py      the persistent Python REPL the root writes into
-    loop.py      the RLM loop itself
-    stats.py     one record per sub-call
-    run.py       config -> per-question loop -> result files
+    config.py         the settings, read from experiments.yaml
+    rlm.py            the RLM itself: prompts, ordering, readers, REPL, loop, per-call records
+    run.py            settings -> every question -> result files
+    experiments.yaml  every experiment: shared defaults, then what each one changes
 
-    python -m evaluation.rlm.minimal_rlm run evaluation/rlm/minimal_rlm/configs/graph.yaml
+    python -m evaluation.rlm.minimal_rlm list
+    python -m evaluation.rlm.minimal_rlm run order_graph
 """
 
-from .config import ExperimentConfig, config_from_dict, load_config
-from .loop import RLM, Limits, Result
+from .config import ExperimentConfig, config_from_dict, load_experiment
+from .rlm import RLM, Limits, Result
 
-__all__ = ["ExperimentConfig", "Limits", "RLM", "Result", "config_from_dict", "load_config"]
+__all__ = ["ExperimentConfig", "Limits", "RLM", "Result", "config_from_dict", "load_experiment"]

@@ -3,7 +3,7 @@
 #
 #   PICKER=spread:0.3 SUBSETS="hotpotqa" BUDGET_MB=1024 bash scripts/rlm/run_picked.sh
 #
-# What it does, in order (evaluation/rlm/compression_picker/README.md has the details):
+# What it does, in order (evaluation/rlm/compression_picker.py explains each step):
 #   1. plan      the picker chooses F in FACTORS for every question -- no model involved --
 #                and writes PLAN/plan.jsonl and one ids file per (subset, F)
 #   2. run       each ids file runs as an ordinary B x F cell through rlm_order_lane.sh
@@ -48,6 +48,43 @@ VLLM=${VLLM:-/mnt/nas/gautammahale/benchmark/.venv/bin/vllm}
 mkdir -p "$RESULTS" "$LOGS"
 picker() { (cd "$REPO" && PYTHONPATH=. "$KVZIP_PYTHON" -m evaluation.rlm.compression_picker "$@"); }
 
+# The root server: reuse a vLLM already generating on PORT, or start one with serve_root.sh
+# (and stop it on exit unless KEEP_SERVER=1).
+_rs_started=""
+
+root_server_generates() {
+  # A real generation, not /v1/models: a wedged vLLM still answers the static routes.
+  curl -s --max-time 60 "http://localhost:$PORT/v1/chat/completions" -H "Content-Type: application/json" \
+    -d "{\"model\":\"$MODEL\",\"messages\":[{\"role\":\"user\",\"content\":\"ok\"}],\"max_tokens\":4}" |
+    grep -q '"content"'
+}
+
+root_server_up() {
+  if root_server_generates; then
+    echo "using the server already generating on :$PORT"
+    return 0
+  fi
+  _rs_started=${SESSION:-picked_root}
+  GPU=$GPU PORT=$PORT GPU_UTIL=$GPU_UTIL VLLM=$VLLM HF_HOME=$HF_HOME CPUS=${SERVER_CPUS:-} \
+    LOG=$LOGS/server.log SESSION=$_rs_started bash "$here/serve_root.sh" >/dev/null || {
+    _rs_started=""
+    return 1
+  }
+  echo "starting the root server on GPU $GPU ($_rs_started); waiting for it to generate..."
+  for _ in $(seq 120); do
+    root_server_generates && { echo "server ready"; return 0; }
+    sleep 15
+  done
+  echo "the server did not come up in 30 minutes; see $LOGS/server.log" >&2
+  return 1
+}
+
+root_server_down() {
+  [ -n "$_rs_started" ] && [ "${KEEP_SERVER:-0}" != 1 ] || return 0
+  tmux kill-session -t "$_rs_started" 2>/dev/null && echo "stopped the server (tmux $_rs_started)"
+  return 0
+}
+
 echo "=== 1. plan: $PICKER over $DATASET $SUBSETS ($SPLIT${LIMIT:+, first $LIMIT}), B=${BUDGET_MB}MB, F in {$FACTORS}"
 # shellcheck disable=SC2086  # SUBSETS and FACTORS are word lists on purpose.
 picker plan --dataset "$DATASET" --tasks $SUBSETS --budget-mb "$BUDGET_MB" --factors $FACTORS \
@@ -61,8 +98,6 @@ if [ "${DRY_RUN:-0}" = 1 ]; then
 fi
 
 echo "=== 2. run ${#groups[@]} cells"
-# shellcheck source=root_server.sh
-source "$here/root_server.sh"
 trap root_server_down EXIT
 root_server_up || exit 1
 failed=0

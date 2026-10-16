@@ -1,4 +1,0 @@
-# Ordering only: chunks grouped by a similarity graph built before the question (query-agnostic).
-extends: _defaults.yaml
-name: order_graph
-ordering: bm25-graph

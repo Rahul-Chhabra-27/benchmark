@@ -30,10 +30,7 @@ from evaluation.benchmarks.results import score_prediction_frame
 from ..client import LLMClient
 from ..datasets import load_examples
 from .config import ExperimentConfig, config_to_dict
-from .loop import RLM, Limits, Result
-from .ordering import build_chunks, chunk_chars
-from .readers import Reader, make_reader
-from .stats import summarize
+from .rlm import RLM, Limits, Reader, Result, build_chunks, chunk_chars, make_reader, summarize
 
 LIST_TASKS = ("qampari", "quest")  # LOFT tasks scored by coverage over a list
 

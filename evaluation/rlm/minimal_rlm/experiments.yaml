@@ -1,0 +1,58 @@
+# Every minimal_rlm experiment, in one file.
+#
+#   python -m evaluation.rlm.minimal_rlm list                      # what is here
+#   python -m evaluation.rlm.minimal_rlm check graph_x2            # what one will do, no model loaded
+#   python -m evaluation.rlm.minimal_rlm run graph_x2 --set data.limit=3
+#
+# `defaults` applies to every experiment; an experiment lists only what it changes.
+# Results go to <output_dir>/<experiment name>/<task>/.
+
+defaults:
+  data:
+    dataset: loft
+    tasks: [nq, hotpotqa, musique, qampari, quest]
+    split: test
+    limit: 55
+  models:
+    root: Qwen/Qwen3-4B-Instruct-2507
+    base_url: http://localhost:8002/v1
+    thinking: false
+  rlm:
+    max_steps: 30
+    max_sub_calls: 40
+    exec_timeout_s: 60
+    run_timeout_s: 900
+    output_chars: 4000
+    read_tokens: 8192        # max tokens one read carries when no budget is set
+  output_dir: evaluation/results/rlm/minimal_rlm
+
+experiments:
+  # The base RLM: no ordering, no compression.
+  base:
+    ordering: none
+
+  # Ordering only.
+  order_query:               # chunks ranked by BM25 against the question (query-aware)
+    ordering: bm25-query
+  order_graph:               # chunks grouped by a similarity graph built before the question
+    ordering: bm25-graph
+
+  # Compression only: B = 1024 MB of KV per read, each read 2 x B tokens pressed by KVzip.
+  compress_x2:
+    ordering: none
+    compression: {budget_mb: 1024, factor: 2}
+
+  # Ordering + compression, with F = 1 (no press) as the control at the same budget.
+  graph_x1:
+    ordering: bm25-graph
+    compression: {budget_mb: 1024, factor: 1}
+  graph_x2:
+    ordering: bm25-graph
+    compression: {budget_mb: 1024, factor: 2}
+
+  # The professor's setting: the root chooses the factor per read, reads larger than B x F
+  # offload the excess KV to CPU, and every read reports its cost.
+  graph_cost_aware:
+    ordering: bm25-graph
+    compression: {budget_mb: 1024, factor: 1, choices: [1, 2, 4, 8], offload: true}
+    cost: {gpu_token: 0, offloaded_token: 100, show_root: true}

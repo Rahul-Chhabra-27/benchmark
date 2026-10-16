@@ -8,7 +8,6 @@ SLURM batch jobs (`sbatch …`) are in [`../slurm/`](../slurm).
 | script | what it does |
 |---|---|
 | `serve_root.sh` | start the root vLLM server on one GPU (in tmux) |
-| `root_server.sh` | helpers the launchers source: reuse a running server or start one, stop it after |
 | `run_bxf.sh` | one command for a B × F grid of the ordered-chunk arms: start server, run every cell, print the table |
 | `run_picked.sh` | one command for `compression_picker`: pick F per question, run the groups, score |
 | `rlm_order_lane.sh` | one lane (one arm, one CPU core) of the ordered-chunk campaign; `run_bxf.sh` and `run_picked.sh` call it |
@@ -24,7 +23,7 @@ Launchers tied to one finished campaign, kept so it can be re-run as it was:
 | `campaigns/fixed_chunk_grid/run_grid.sh` | fixed chunk × KV-retention grid |
 | `campaigns/query_agnostic_chunks/lane.sh`, `…/notes_lane.sh` | query-agnostic chunk selection (2026-09) |
 
-The clean RLM needs no script: `python -m evaluation.rlm.minimal_rlm run evaluation/rlm/minimal_rlm/configs/<config>.yaml`.
+The minimal RLM needs no script: `python -m evaluation.rlm.minimal_rlm run <experiment>` (experiments are listed in `evaluation/rlm/minimal_rlm/experiments.yaml`).
 
 ## `official_rlm/` — the official recursive-llm library (from apd10-dev)
 

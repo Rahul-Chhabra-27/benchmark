@@ -1,24 +1,13 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""One experiment = one YAML file. Every option the RLM has is a key here.
+"""The settings of an experiment, and how they are read from experiments.yaml.
 
-    name: hotpotqa_graph_x2
-    data:
-      dataset: loft
-      tasks: [hotpotqa]          # LOFT: _128k is added
-      split: test
-      limit: 55
-    models:
-      root: Qwen/Qwen3-4B-Instruct-2507
-      base_url: http://localhost:8002/v1
-    ordering: bm25-graph         # none | bm25-query | bm25-graph
-    compression:
-      factor: 2                  # 1 = no kvpress | 2 | 4 | 8
-      budget_mb: 1024            # B: KV one read may keep; reads carry B x F tokens
-    rlm:
-      max_steps: 30
-
-Unknown keys are refused, so a typo cannot silently run the default.
+experiments.yaml (next to this file) holds every experiment: a `defaults` section that
+applies to all of them, and an `experiments` section where each named experiment lists
+only what it changes. Every option the RLM has is a key here: `data`, `models`,
+`ordering` (none | bm25-query | bm25-graph), `compression` (factor, budget_mb, choices,
+offload), `cost`, `rlm` (limits). Unknown keys are refused, so a typo cannot silently
+run the default.
 """
 
 from __future__ import annotations
@@ -229,22 +218,27 @@ def _merge(base: dict, top: dict) -> dict:
     return out
 
 
-def read_yaml(path: str | Path, _seen: tuple = ()) -> dict:
-    """A config file, with `extends: other.yaml` (relative to it) merged underneath."""
-    path = Path(path).resolve()
-    if path in _seen:
-        raise ValueError(f"config extends itself in a loop: {' -> '.join(str(p) for p in (*_seen, path))}")
-    raw = yaml.safe_load(path.read_text()) or {}
-    parent = raw.pop("extends", None)
-    if parent is None:
-        return raw
-    return _merge(read_yaml(path.parent / parent, (*_seen, path)), raw)
+EXPERIMENTS_FILE = Path(__file__).with_name("experiments.yaml")
 
 
-def load_config(path: str | Path, **overrides: Any) -> ExperimentConfig:
-    """Read a YAML experiment. `overrides` replace top-level or `section.key` values."""
-    raw = read_yaml(path)
-    for key, value in overrides.items():
+def read_experiments(path: str | Path = EXPERIMENTS_FILE) -> tuple[dict, dict]:
+    """(defaults, experiments) from an experiments file."""
+    raw = yaml.safe_load(Path(path).read_text()) or {}
+    unknown = sorted(set(raw) - {"defaults", "experiments"})
+    if unknown:
+        raise ValueError(f"{path}: unknown top-level key(s) {unknown}; use `defaults` and `experiments`")
+    return raw.get("defaults") or {}, raw.get("experiments") or {}
+
+
+def load_experiment(
+    experiment: str, path: str | Path = EXPERIMENTS_FILE, overrides: Optional[dict] = None
+) -> ExperimentConfig:
+    """One named experiment: its keys over `defaults`, then `overrides` ({"key" or "section.key": value})."""
+    defaults, experiments = read_experiments(path)
+    if experiment not in experiments:
+        raise ValueError(f"no experiment {experiment!r} in {path}; choose from {sorted(experiments)}")
+    raw = _merge(defaults, {"name": experiment, **(experiments[experiment] or {})})
+    for key, value in (overrides or {}).items():
         section, _, leaf = key.partition(".")
         if leaf:
             raw.setdefault(section, {})[leaf] = value
