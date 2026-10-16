@@ -26,7 +26,7 @@ In the REPL:
 
 Search `context` with Python (find, regular expressions, slicing), read the relevant parts
 with llm_query, then call FINAL. Variables persist between turns. You have {max_steps} turns.
-{ordering}
+{ordering}{memory}
 Question:
 {question}
 {answer_format}"""
@@ -48,6 +48,25 @@ ORDERING_NOTES = {
         "\nterms, then read it together with its neighbours.\n"
     ),
 }
+
+# The memory / cost block: only present when a config turns on factor choice, offloading
+# or cost reporting, so every other config renders exactly the prompt it always did.
+FACTOR_NOTE = (
+    "\nMemory: one read keeps at most {budget:,} tokens of KV memory (B). llm_query(question, text, factor=F)"
+    "\nwith F in {factors} reads up to B x F tokens, compressed F times: F=1 is exact, a higher F reads"
+    "\nwider but keeps less detail. Without factor= a read uses F={default}.\n"
+)
+OFFLOAD_NOTE = (
+    "\nA read may be larger than B x F (up to {cap:,} tokens): the memory beyond B is offloaded to CPU"
+    "\nand fetched back when the read is answered.\n"
+)
+COST_NOTE = (
+    "\nCost: every read reports what it cost: {gpu:g} per memory token kept on the GPU, {offloaded:g} per"
+    "\ntoken offloaded to CPU. Answer correctly at the lowest total cost.\n"
+)
+COST_LINE = (
+    "[cost: read {read:,} tokens at x{factor} -> {gpu:,} on GPU, {offloaded:,} offloaded; {cost:g} (total {total:g})]"
+)
 
 ANSWER_FORMAT = "Answer format: {answer_format}"
 LIST_ANSWER_FORMAT = 'Answer format: {answer_format} followed by a list, e.g. ["first", "second", "third"]'
@@ -73,9 +92,24 @@ def system_prompt(
     chunk_chars: int = 0,
     answer_format: Optional[str] = None,
     list_answer: bool = False,
+    budget_tokens: Optional[int] = None,
+    factors: tuple[int, ...] = (1,),
+    default_factor: int = 1,
+    offload_cap: Optional[int] = None,
+    cost: Optional[tuple[float, float]] = None,
 ) -> str:
-    """The root's system prompt for one question under one config."""
+    """The root's system prompt for one question under one config.
+
+    `offload_cap` is set when offloading is on; `cost` (gpu, offloaded) when costs are shown.
+    """
     ordered = ordering != "none"
+    memory = ""
+    if budget_tokens is not None and len(factors) > 1:
+        memory += FACTOR_NOTE.format(budget=budget_tokens, factors=list(factors), default=default_factor)
+    if offload_cap is not None:
+        memory += OFFLOAD_NOTE.format(cap=offload_cap)
+    if cost is not None:
+        memory += COST_NOTE.format(gpu=cost[0], offloaded=cost[1])
     if answer_format:
         fmt = (LIST_ANSWER_FORMAT if list_answer else ANSWER_FORMAT).format(answer_format=answer_format.strip())
     else:
@@ -88,6 +122,7 @@ def system_prompt(
         read_chars=read_tokens * CHARS_PER_TOKEN,
         max_steps=max_steps,
         ordering=ORDERING_NOTES.get(ordering, ""),
+        memory=memory,
         question=question.strip(),
         answer_format=fmt,
     )

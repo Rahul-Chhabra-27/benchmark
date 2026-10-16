@@ -37,7 +37,8 @@ class Arm:
 def describe(config: dict) -> Optional[tuple[str, str, str]]:
     """(label, kind, dataset) for a run's config, or None if it is not an RLM-family run."""
     if "ordering" in config and isinstance(config.get("compression"), dict):  # minimal_rlm
-        factor = int(config["compression"].get("factor") or 1)
+        compression = config["compression"]
+        factor = max([int(compression.get("factor") or 1), *(int(f) for f in compression.get("choices") or [])])
         ordering = config.get("ordering") or "none"
         kind = "compressed" if factor > 1 else "ordered" if ordering != "none" else "rlm"
         return f"minimal_rlm:{config['name']}", kind, config["data"]["dataset"]

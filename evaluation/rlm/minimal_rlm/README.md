@@ -51,6 +51,7 @@ different config — give a changed experiment a new `name`.
 | `compress_x2.yaml` | none | ×2 at 1024 MB |
 | `graph_x1.yaml` | bm25-graph | ×1 at 1024 MB (the control) |
 | `graph_x2.yaml` | bm25-graph | ×2 at 1024 MB |
+| `graph_cost_aware.yaml` | bm25-graph | root chooses ×1–×8 per read, offloading, cost shown |
 
 ## What the root is told
 
@@ -98,13 +99,33 @@ limit the root actually used. Near 0 means the root reads tiny slices and a bigg
 | `stats.py` | the per-call record and its per-question summary |
 | `run.py` | config → every question → result files |
 
-## Next options (not built yet)
+## Choosing compression, offloading and cost
 
-- **cost per sub-call**: GPU-resident tokens vs tokens fetched from CPU, reported to the
-  root after each read, so it can trade accuracy against cost;
-- **offloading**: a read larger than B × F is allowed, the excess counted as fetched
-  from CPU (and costed) instead of refused;
-- **decision statistics**: per run, when the root compressed or read wide, and whether
-  that read contributed to the final answer.
+Three more keys, all off by default (so every config above renders the same prompt):
 
-Each lands as a config key with a default that leaves every config above unchanged.
+```yaml
+compression:
+  budget_mb: 1024
+  factor: 1                # the default factor
+  choices: [1, 2, 4, 8]    # the root may choose per read: llm_query(q, text, factor=4)
+  offload: true            # reads larger than B x F are allowed; KV beyond B counts as offloaded
+cost:
+  gpu_token: 0             # per KV token kept on the GPU
+  offloaded_token: 100     # per KV token fetched back from CPU
+  show_root: true          # tell the root each read's cost and the running total
+```
+
+A read of n tokens at factor F keeps n / F tokens of KV: up to B on the GPU, the rest
+offloaded; its cost is GPU tokens x `gpu_token` + offloaded tokens x `offloaded_token`.
+One in-process kvpress model serves every factor (its press is set per read, F = 1 is no
+press), so choosing a factor needs no extra servers. Offloading is accounting only for now:
+kvpress keeps the KV on the GPU, so a read is capped at `max_read_tokens` (default B x the
+largest factor -- an x4 read with 2x offloaded reaches as far as an x8 read).
+
+`graph_cost_aware.yaml` is this setting with bm25-graph ordering. Every read's record then
+also has `gpu_tokens`, `offloaded_tokens`, `cost`, `compression_needed` (F > 1: would it NOT
+have fit in B uncompressed?) and `contributed` (did its answer feed FINAL's?), and
+`metrics.json` adds `cost_mean`, `offloaded_tokens_mean`, `factors` (reads per factor),
+`compressed_unneeded` and `contributing_calls`.
+
+The questions to judge it on are the hard set: see `../hard_questions/`.

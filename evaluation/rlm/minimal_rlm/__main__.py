@@ -17,7 +17,8 @@ from pathlib import Path
 import yaml
 
 from .config import ExperimentConfig, config_to_dict, load_config
-from .prompts import system_prompt
+from .loop import RLM
+from .run import make_limits
 
 
 def _overrides(pairs: list[str]) -> dict:
@@ -32,11 +33,17 @@ def _overrides(pairs: list[str]) -> dict:
 
 def describe(config: ExperimentConfig) -> str:
     c = config.compression
-    reads = (
-        f"in-process kvpress, B={c.budget_tokens:,} tokens ({c.budget_mb:g} MB) x F={c.factor}"
-        if c.in_process
-        else "plain reads over http (no kvpress)"
-    )
+    if c.in_process:
+        chosen = (
+            f"F chosen per read from {list(c.factors)} (default {c.factor})" if len(c.factors) > 1 else f"F={c.factor}"
+        )
+        reads = f"in-process kvpress, B={c.budget_tokens:,} tokens ({c.budget_mb:g} MB), {chosen}"
+        if c.offload:
+            reads += ", offloading on"
+    else:
+        reads = "plain reads over http (no kvpress)"
+    shown = ", shown to the root" if config.cost.show_root else ", recorded only"
+    costs = f"gpu {config.cost.gpu_token:g}/token, offloaded {config.cost.offloaded_token:g}/token{shown}"
     return "\n".join(
         [
             f"experiment   {config.name}",
@@ -44,7 +51,8 @@ def describe(config: ExperimentConfig) -> str:
             f"limit={config.data.limit}",
             f"root         {config.models.root} @ {config.models.base_url}",
             f"ordering     {config.ordering}",
-            f"reads        {reads}; one read <= {config.read_tokens:,} tokens",
+            f"reads        {reads}; one read <= {config.largest_read_tokens:,} tokens",
+            f"cost         {costs}",
             f"limits       {config.rlm.max_steps} turns, {config.rlm.max_sub_calls} reads, "
             f"{config.rlm.run_timeout_s:g}s per question",
             f"output       {Path(config.output_dir) / config.name}/<task>/",
@@ -64,19 +72,8 @@ def main(argv: list[str] | None = None) -> None:
     if args.command == "check":
         if args.show_prompt:
             print("\n--- root prompt (with a placeholder question) ---")
-            print(
-                system_prompt(
-                    question="<question>",
-                    context_chars=500_000,
-                    read_tokens=config.read_tokens,
-                    max_steps=config.rlm.max_steps,
-                    output_chars=config.rlm.output_chars,
-                    ordering=config.ordering,
-                    n_chunks=250,
-                    chunk_chars=2000,
-                    answer_format="Final Answer:",
-                )
-            )
+            rlm = RLM(None, None, make_limits(config), config.ordering)  # type: ignore[arg-type]
+            print(rlm.system_prompt("<question>", 500_000, 250, 2000, "Final Answer:"))
         print("\n--- resolved config ---")
         print(json.dumps(config_to_dict(config), indent=2))
         return

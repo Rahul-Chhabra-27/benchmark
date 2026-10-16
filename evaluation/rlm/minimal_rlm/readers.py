@@ -3,11 +3,13 @@
 """How one llm_query reads its text: the `compression` option.
 
     HttpReader  plain reads through the vLLM server (no budget set)
-    KVReader    reads through the in-process kvpress model at factor F (budget set);
-                F = 1 is the same model with no press, the control for every F > 1
+    KVReader    reads through ONE in-process kvpress model, whose press is set per read:
+                F = 1 is that model with no press (the control), F > 1 presses by 1 - 1/F.
+                So the root can choose a different factor on every call, with no extra
+                servers and one copy of the weights on the GPU.
 
-Both count the tokens they read and keep, which is what the per-call statistics
-(and later the cost model) are built from.
+Both count the tokens they read; the loop turns that into kept / GPU / offloaded
+tokens and a cost (stats.Placement).
 """
 
 from __future__ import annotations
@@ -26,22 +28,17 @@ from .prompts import CHARS_PER_TOKEN, SUB_PROMPT
 class Read:
     answer: str
     read_tokens: int  # tokens of document text the sub-model was given
-    kept_tokens: int  # tokens of KV it kept after compression (= read_tokens at F = 1)
     seconds: float
 
 
 class Reader(Protocol):
-    factor: int
-
     def count_tokens(self, text: str) -> int: ...
 
-    def read(self, question: str, text: str) -> Read: ...
+    def read(self, question: str, text: str, factor: int = 1) -> Read: ...
 
 
 class HttpReader:
-    """Dense sub-calls to the OpenAI-compatible server."""
-
-    factor = 1
+    """Dense sub-calls to the OpenAI-compatible server (factor 1 only)."""
 
     def __init__(self, client: Any):
         self.client = client
@@ -49,28 +46,41 @@ class HttpReader:
     def count_tokens(self, text: str) -> int:
         return math.ceil(len(text) / CHARS_PER_TOKEN)
 
-    def read(self, question: str, text: str) -> Read:
+    def read(self, question: str, text: str, factor: int = 1) -> Read:
+        if factor != 1:
+            raise ValueError("http reads are uncompressed; a factor > 1 needs compression.budget_mb")
         started = time.monotonic()
         answer = self.client.chat([{"role": "user", "content": f"{SUB_PROMPT.format(question=question)}\n\n{text}"}])
-        tokens = self.count_tokens(text)
-        return Read(str(answer or ""), tokens, tokens, time.monotonic() - started)
+        return Read(str(answer or ""), self.count_tokens(text), time.monotonic() - started)
 
 
 class KVReader:
     """Sub-calls through kvpress: the text is the compressed side, the question is not."""
 
-    def __init__(self, sub: Any, factor: int):
+    def __init__(self, sub: Any):
         self.sub = sub
-        self.factor = factor
+        self.press = sub.press  # the KVzipPress, or None when no allowed factor compresses
 
     def count_tokens(self, text: str) -> int:
         return int(self.sub.token_len(text))
 
-    def read(self, question: str, text: str) -> Read:
+    def _use(self, factor: int) -> None:
+        """Press the next read by exactly 1 - 1/F (no press at all for F = 1)."""
+        if factor == 1:
+            self.sub.press = None
+        else:
+            if self.press is None:
+                raise ValueError(f"factor {factor} needs a press; the reader was built without one")
+            self.press.compression_ratio = 1 - 1 / factor
+            self.sub.press = self.press
+            self.sub.press_min_tokens = 1  # every read at F > 1 is pressed, so F is exact
+        self.sub.compression_factor = float(factor)
+
+    def read(self, question: str, text: str, factor: int = 1) -> Read:
+        self._use(factor)
         started = time.monotonic()
         answer = self.sub.chat_split(question=SUB_PROMPT.format(question=question), context=text)
-        tokens = self.count_tokens(text)
-        return Read(str(answer or ""), tokens, math.ceil(tokens / self.factor), time.monotonic() - started)
+        return Read(str(answer or ""), self.count_tokens(text), time.monotonic() - started)
 
 
 def make_reader(config: ExperimentConfig) -> Reader:
@@ -83,12 +93,13 @@ def make_reader(config: ExperimentConfig) -> Reader:
         return HttpReader(client)
     from ..kvzip_backend import KVzipSubClient  # torch and kvpress, only when needed
 
+    largest = max(compression.factors)
     sub = KVzipSubClient(
         model=config.models.sub_model,
-        press_name="kvzip" if compression.factor > 1 else "no_press",
+        press_name="kvzip" if largest > 1 else "no_press",
         memory_budget=compression.budget_mb,
         memory_budget_unit="MB",
-        max_context_tokens=config.read_tokens,
-        compression_factor=compression.factor,
+        max_context_tokens=config.largest_read_tokens,
+        compression_factor=largest,
     )
-    return KVReader(sub, compression.factor)
+    return KVReader(sub)

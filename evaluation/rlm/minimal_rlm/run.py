@@ -45,9 +45,10 @@ def make_root(config: ExperimentConfig) -> LLMClient:
     return root
 
 
-def make_rlm(config: ExperimentConfig, root: Any, reader: Reader) -> RLM:
+def make_limits(config: ExperimentConfig) -> Limits:
+    """Everything the loop enforces and records, from a config."""
     rlm = config.rlm
-    limits = Limits(
+    return Limits(
         max_steps=rlm.max_steps,
         max_sub_calls=rlm.max_sub_calls,
         exec_timeout_s=rlm.exec_timeout_s,
@@ -55,8 +56,18 @@ def make_rlm(config: ExperimentConfig, root: Any, reader: Reader) -> RLM:
         output_chars=rlm.output_chars,
         read_tokens=config.read_tokens,
         budget_tokens=config.compression.budget_tokens,
+        factors=config.compression.factors,
+        default_factor=config.compression.factor,
+        read_limits={f: config.read_limit(f) for f in config.compression.factors},
+        offload=config.compression.offload,
+        gpu_token_cost=config.cost.gpu_token,
+        offloaded_token_cost=config.cost.offloaded_token,
+        show_cost=config.cost.show_root,
     )
-    return RLM(root, reader, limits, config.ordering)
+
+
+def make_rlm(config: ExperimentConfig, root: Any, reader: Reader) -> RLM:
+    return RLM(root, reader, make_limits(config), config.ordering)
 
 
 def loose_match(pred: Optional[str], answers: Iterable[str]) -> bool:
@@ -133,6 +144,14 @@ def task_metrics(dataset: str, records: list[dict]) -> dict:
         "sub_calls_mean": sum(r["sub_calls"] for r in reads) / len(reads) if reads else 0.0,
         "refused_calls": sum(r["refused_calls"] for r in reads),
         "read_fill_mean": (sum(r.get("read_fill_mean", 0.0) for r in reads) / len(reads) if reads else 0.0),
+        # Cost and the decisions behind it (see stats.summarize): what a question cost on
+        # average, how much KV went to CPU, which factors were used, and how often a read
+        # was compressed although it would have fit uncompressed.
+        "cost_mean": sum(r.get("cost", 0.0) for r in reads) / len(reads) if reads else 0.0,
+        "offloaded_tokens_mean": sum(r.get("offloaded_tokens", 0) for r in reads) / len(reads) if reads else 0.0,
+        "factors": dict(sum((Counter(r.get("factors", {})) for r in reads), Counter())),
+        "compressed_unneeded": sum(r.get("compressed_unneeded", 0) for r in reads),
+        "contributing_calls": sum(r.get("contributing_calls", 0) for r in reads),
     }
     return metrics
 

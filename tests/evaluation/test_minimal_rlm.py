@@ -42,8 +42,6 @@ class ScriptedRoot:
 
 
 class FakeReader:
-    factor = 1
-
     def __init__(self, answer="Paris"):
         self.answer = answer
         self.reads = []
@@ -51,9 +49,9 @@ class FakeReader:
     def count_tokens(self, text):
         return len(text) // 4
 
-    def read(self, question, text):
+    def read(self, question, text, factor=1):
         self.reads.append((question, text))
-        return Read(self.answer, len(text) // 4, len(text) // 4, 0.0)
+        return Read(self.answer, len(text) // 4, 0.0)
 
 
 def rlm(replies, reader=None, **limits):
@@ -84,7 +82,7 @@ def test_budget_sets_reads_to_b_times_f():
     "bad, message",
     [
         (minimal(ordering="random"), "ordering must be one of"),
-        (minimal(compression={"factor": 3, "budget_mb": 1024}), "factor must be one of"),
+        (minimal(compression={"factor": 3, "budget_mb": 1024}), "factors must be in"),
         (minimal(compression={"factor": 2}), "needs compression.budget_mb"),
         (minimal(rlm={"max_stpes": 3}), "unknown key"),
         (minimal(colour="red"), "unknown key"),
@@ -114,7 +112,7 @@ def test_every_shipped_config_loads():
 def test_check_command_prints_the_plan(capsys):
     cli.main(["check", str(CONFIGS / "graph_x2.yaml"), "--set", "data.limit=3", "--show-prompt"])
     out = capsys.readouterr().out
-    assert "B=6,944 tokens (1024 MB) x F=2" in out and "limit=3" in out and "grouped by topic" in out
+    assert "B=6,944 tokens (1024 MB), F=2" in out and "limit=3" in out and "grouped by topic" in out
 
 
 # --------------------------------------------------------------------------- prompt
@@ -248,19 +246,42 @@ def test_chunk_lists_are_read_and_counted():
 # --------------------------------------------------------------------------- readers and ordering
 
 
-def test_kv_reader_compresses_the_text_side_and_counts_kept_tokens():
-    class Sub:
-        def token_len(self, text):
-            return len(text)
+class FakePress:
+    compression_ratio = 0.0
 
-        def chat_split(self, question, context):
-            self.call = (question, context)
-            return "answer"
 
-    sub = Sub()
-    read = KVReader(sub, factor=4).read("Who?", "z" * 10)
-    assert (read.answer, read.read_tokens, read.kept_tokens) == ("answer", 10, 3)
-    assert sub.call[1] == "z" * 10 and "Who?" in sub.call[0]
+class FakeSub:
+    """Stands in for KVzipSubClient: records the press in force at each read."""
+
+    def __init__(self, press):
+        self.press, self.press_min_tokens, self.compression_factor, self.seen = press, 512, None, []
+
+    def token_len(self, text):
+        return len(text)
+
+    def chat_split(self, question, context):
+        ratio = None if self.press is None else self.press.compression_ratio
+        self.seen.append((question, context, ratio, self.compression_factor))
+        return "answer"
+
+
+def test_kv_reader_compresses_the_text_side():
+    sub = FakeSub(FakePress())
+    read = KVReader(sub).read("Who?", "z" * 10, factor=4)
+    assert (read.answer, read.read_tokens) == ("answer", 10)
+    question, context, ratio, factor = sub.seen[0]
+    assert context == "z" * 10 and "Who?" in question and ratio == 0.75 and factor == 4.0
+
+
+def test_kv_reader_switches_the_press_on_every_read():
+    sub = FakeSub(FakePress())
+    reader = KVReader(sub)
+    for factor in (8, 1, 2):
+        reader.read("q", "text", factor=factor)
+    assert [(ratio, f) for _, _, ratio, f in sub.seen] == [(0.875, 8.0), (None, 1.0), (0.5, 2.0)]
+    assert sub.press_min_tokens == 1  # a pressed read is always pressed, so F is exact
+    with pytest.raises(ValueError, match="needs a press"):
+        KVReader(FakeSub(None)).read("q", "text", factor=2)
 
 
 def test_query_text_strips_the_loft_wrapper():

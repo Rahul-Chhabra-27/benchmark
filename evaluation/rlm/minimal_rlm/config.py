@@ -74,9 +74,21 @@ class ModelConfig:
 
 @dataclass(frozen=True)
 class CompressionConfig:
-    factor: int = 1  # 1 = plain reads, no kvpress
+    factor: int = 1  # 1 = plain reads, no kvpress; with `choices`, the default factor
     budget_mb: Optional[float] = None
     kv_bytes_per_token: int = KV_BYTES_PER_TOKEN
+    # Factors the root may choose per read with llm_query(..., factor=F). Empty: only `factor`.
+    choices: tuple[int, ...] = ()
+    # Allow a read larger than B x F: the KV beyond B is counted as offloaded to CPU (and
+    # costed) instead of the read being refused. Accounting only -- kvpress keeps the KV on
+    # the GPU -- so a read is still capped, at max_read_tokens (default B x the largest factor:
+    # as wide as the widest compressed read, so e.g. x4 + 2x offloaded reads as far as x8).
+    offload: bool = False
+    max_read_tokens: Optional[int] = None
+
+    @property
+    def factors(self) -> tuple[int, ...]:
+        return tuple(sorted(set(self.choices))) if self.choices else (self.factor,)
 
     @property
     def budget_tokens(self) -> Optional[int]:
@@ -92,6 +104,15 @@ class CompressionConfig:
         press -- the no_press control every compressed cell is compared against.
         """
         return self.budget_mb is not None
+
+
+@dataclass(frozen=True)
+class CostConfig:
+    """What a read costs, so a run reports accuracy AND cost (and the root can minimise it)."""
+
+    gpu_token: float = 0.0  # one KV token kept in GPU memory
+    offloaded_token: float = 100.0  # one KV token fetched back from CPU
+    show_root: bool = False  # tell the root each read's cost and the running total
 
 
 @dataclass(frozen=True)
@@ -111,15 +132,29 @@ class ExperimentConfig:
     models: ModelConfig = field(default_factory=ModelConfig)
     ordering: str = "none"
     compression: CompressionConfig = field(default_factory=CompressionConfig)
+    cost: CostConfig = field(default_factory=CostConfig)
     rlm: RLMConfig = field(default_factory=RLMConfig)
     output_dir: str = "evaluation/results/rlm/minimal_rlm"
     organization_dir: Optional[str] = None  # bm25-graph cache; default <output_dir>/organization
 
+    def read_limit(self, factor: int) -> int:
+        """The most tokens one read at `factor` may carry: B x F, the offload cap, or rlm.read_tokens."""
+        c = self.compression
+        if c.budget_tokens is None:
+            return self.rlm.read_tokens
+        if c.offload:
+            return c.max_read_tokens or c.budget_tokens * max(c.factors)
+        return c.budget_tokens * factor
+
     @property
     def read_tokens(self) -> int:
-        """The most tokens one llm_query may read: N = B x F, or rlm.read_tokens."""
-        budget = self.compression.budget_tokens
-        return budget * self.compression.factor if budget is not None else self.rlm.read_tokens
+        """The read limit at the default factor (what the root is told first)."""
+        return self.read_limit(self.compression.factor)
+
+    @property
+    def largest_read_tokens(self) -> int:
+        """The read limit at the largest allowed factor: what the sub model must hold."""
+        return max(self.read_limit(f) for f in self.compression.factors)
 
     def validate(self) -> "ExperimentConfig":
         if not self.data.tasks:
@@ -128,10 +163,18 @@ class ExperimentConfig:
             raise ValueError("data.ids_file and data.limit both choose which questions run; set only one")
         if self.ordering not in ORDERINGS:
             raise ValueError(f"ordering must be one of {ORDERINGS}, got {self.ordering!r}")
-        if self.compression.factor not in FACTORS:
-            raise ValueError(f"compression.factor must be one of {FACTORS}, got {self.compression.factor}")
-        if self.compression.factor > 1 and self.compression.budget_mb is None:
-            raise ValueError("compression.factor > 1 needs compression.budget_mb (B), so a read is B x F tokens")
+        c = self.compression
+        bad = [f for f in (c.factor, *c.factors) if f not in FACTORS]
+        if bad:
+            raise ValueError(f"compression factors must be in {FACTORS}, got {bad}")
+        if c.factor not in c.factors:
+            raise ValueError(f"compression.factor {c.factor} must be one of compression.choices {list(c.factors)}")
+        if max(c.factors) > 1 and c.budget_mb is None:
+            raise ValueError("a compression factor > 1 needs compression.budget_mb (B), so a read is B x F tokens")
+        if c.offload and c.budget_mb is None:
+            raise ValueError("compression.offload needs compression.budget_mb: offloaded is KV beyond B")
+        if c.max_read_tokens is not None and c.max_read_tokens < 1:
+            raise ValueError("compression.max_read_tokens must be positive")
         if self.compression.budget_mb is not None and self.compression.budget_tokens < 1:
             raise ValueError(f"compression.budget_mb={self.compression.budget_mb} holds no KV token")
         for name in ("max_steps", "max_sub_calls", "output_chars", "read_tokens"):
@@ -153,6 +196,12 @@ def _build(cls, raw: Any, where: str):
     return cls(**raw)
 
 
+def _tuple_choices(section: Any) -> Any:
+    if isinstance(section, dict) and section.get("choices") is not None:
+        return {**section, "choices": tuple(int(f) for f in section["choices"])}
+    return section
+
+
 def config_from_dict(raw: dict) -> ExperimentConfig:
     raw = dict(raw or {})
     if "name" not in raw or "data" not in raw:
@@ -163,7 +212,8 @@ def config_from_dict(raw: dict) -> ExperimentConfig:
     sections = {
         "data": _build(DataConfig, data, "data"),
         "models": _build(ModelConfig, raw.pop("models", None), "models"),
-        "compression": _build(CompressionConfig, raw.pop("compression", None), "compression"),
+        "compression": _build(CompressionConfig, _tuple_choices(raw.pop("compression", None)), "compression"),
+        "cost": _build(CostConfig, raw.pop("cost", None), "cost"),
         "rlm": _build(RLMConfig, raw.pop("rlm", None), "rlm"),
     }
     if raw.get("ordering") is None:  # YAML reads a bare `none` as the string, but `null` as None
@@ -206,6 +256,7 @@ def load_config(path: str | Path, **overrides: Any) -> ExperimentConfig:
 def config_to_dict(config: ExperimentConfig) -> dict:
     out = asdict(config)
     out["data"]["tasks"] = list(config.data.tasks)
+    out["compression"]["choices"] = list(config.compression.choices)  # YAML cannot hold a tuple
     out["read_tokens"] = config.read_tokens
     out["budget_tokens"] = config.compression.budget_tokens
     return out
