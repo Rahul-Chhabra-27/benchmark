@@ -648,6 +648,11 @@ class TestRefusals:
         argv[argv.index("rlm")] = "structured"
         assert "needs --mode rlm" in self.refused(argv)
 
+    def test_skylight_does_not_take_a_precomputed_chunk_order(self):
+        argv = [*self.BASE]
+        argv[argv.index("rlm")] = "skylight"
+        assert "needs --mode rlm" in self.refused(argv)
+
     def test_search_is_refused(self):
         assert "no search()" in self.refused([*self.BASE, "--search-k", "5"])
 
