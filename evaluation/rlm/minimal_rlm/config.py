@@ -43,6 +43,15 @@ class DataConfig:
     split: Optional[str] = "test"
     limit: Optional[int] = None
     loft_length: str = "128k"
+    # Only these question ids (one per line), e.g. a hard_questions validation set.
+    # Ids of other tasks in the same file are ignored, so one file can serve every task.
+    ids_file: Optional[str] = None
+
+    def ids(self) -> Optional[set[str]]:
+        if self.ids_file is None:
+            return None
+        lines = Path(self.ids_file).read_text().splitlines()
+        return {line.strip() for line in lines if line.strip() and not line.startswith("#")}
 
     def task_dirs(self) -> list[str]:
         """LOFT subsets may be named bare (`hotpotqa`); the loader wants `hotpotqa_128k`."""
@@ -115,6 +124,8 @@ class ExperimentConfig:
     def validate(self) -> "ExperimentConfig":
         if not self.data.tasks:
             raise ValueError("data.tasks is empty")
+        if self.data.ids_file is not None and self.data.limit is not None:
+            raise ValueError("data.ids_file and data.limit both choose which questions run; set only one")
         if self.ordering not in ORDERINGS:
             raise ValueError(f"ordering must be one of {ORDERINGS}, got {self.ordering!r}")
         if self.compression.factor not in FACTORS:

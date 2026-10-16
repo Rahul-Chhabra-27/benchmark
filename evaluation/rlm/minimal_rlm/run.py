@@ -200,8 +200,14 @@ def run_experiment(
     """Run every task of a config. `root`, `reader` and `load` are injectable for tests."""
     rlm = make_rlm(config, root or make_root(config), reader or make_reader(config))
     results = {}
+    wanted = config.data.ids()
     for task in config.data.task_dirs():
         log(f"=== {config.name}: {task} (ordering={config.ordering}, F={config.compression.factor})")
         examples = load(config.data.dataset, task, config.data.limit, config.data.split)
+        if wanted is not None:
+            examples = [e for e in examples if e["id"] in wanted]
+            if not examples:
+                log(f"    no id of {task} is in {config.data.ids_file}; skipped")
+                continue
         results[task] = run_task(config, task, rlm, examples, log)
     return results
