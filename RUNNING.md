@@ -224,14 +224,14 @@ listening:
 ```bash
 cd $REPO
 GPU=0 PORT=8002 GPU_UTIL=0.5 CPUS=2-5 VLLM=$VLLM HF_HOME=$HF_HOME \
-LOG=$S/logs/server.log SESSION=ro_root bash evaluation/rlm/serve_root.sh
+LOG=$S/logs/server.log SESSION=ro_root bash scripts/rlm/serve_root.sh
 ```
 
 - `GPU` takes a device index or a UUID. vLLM 0.8.5 crashes on a UUID, so the script resolves
   it to an index for you.
 - `CPUS` pins the server to a few cores, which keeps it polite on a shared host.
 - For a vanilla arm at 128k, the server needs `--max-model-len 139264` and about 0.65 of the
-  card (§4.2). `evaluation/rlm/loft128k/run_infolab.sh serve` (§8) sizes this for you.
+  card (§4.2). `scripts/rlm/loft128k/run_infolab.sh serve` (§8) sizes this for you.
 
 ### 4.5 Is it ready?
 
@@ -418,7 +418,7 @@ for arm in bm25-graph bm25-query; do
                "niah_multikey_2 qa_2" "niah_multikey_3 niah_multivalue" "niah_multiquery"; do
     tmux new-session -d -s "ro_${arm#bm25-}_p$i" \
       "sg infolab -c \"DATASET=ruler128k LIMIT=3 REPO=$REPO PY=$PY HF_HOME=$HF_HOME RESULTS=$R \
-         bash $REPO/evaluation/rlm/rlm_order_lane.sh $arm $core $tasks > $S/logs/ruler_pilot_${arm}_p$i.log 2>&1\""
+         bash $REPO/scripts/rlm/rlm_order_lane.sh $arm $core $tasks > $S/logs/ruler_pilot_${arm}_p$i.log 2>&1\""
     core=$((core+1)); i=$((i+1))
   done
 done
@@ -435,7 +435,7 @@ for arm in bm25-graph bm25-query; do
   for s in nq hotpotqa musique qampari quest; do
     tmux new-session -d -s "ro_${arm#bm25-}_$s" \
       "sg infolab -c \"DATASET=loft LIMIT=3 REPO=$REPO PY=$PY HF_HOME=$HF_HOME RESULTS=$R \
-         bash $REPO/evaluation/rlm/rlm_order_lane.sh $arm $core $s > $S/logs/loft_pilot_${arm}_$s.log 2>&1\""
+         bash $REPO/scripts/rlm/rlm_order_lane.sh $arm $core $s > $S/logs/loft_pilot_${arm}_$s.log 2>&1\""
     core=$((core+1))
   done
 done
@@ -488,7 +488,7 @@ bash reads a script while it runs it, so never pull while a lane is running.
 ```bash
 cd $REPO && git pull --ff-only
 sg infolab -c "DATASET=ruler128k STAGE=ruler_full SCRATCH=$S PY=$PY HF_HOME=$HF_HOME \
-  ARCHIVE=/mnt/nas/$USER/archive/rlmorder SERVER=ro_root bash evaluation/rlm/rlm_order_postrun.sh"
+  ARCHIVE=/mnt/nas/$USER/archive/rlmorder SERVER=ro_root bash scripts/rlm/rlm_order_postrun.sh"
 # LOFT: DATASET=loft STAGE=full
 ```
 
@@ -555,7 +555,7 @@ ssh cat.cse.iitb.ac.in
 cd ~/rlmorder/checkout          # your clone of the repository
 git checkout gautam-dev && git pull
 tmux new -s bxf                 # optional, but it keeps the run alive if your connection drops
-bash evaluation/rlm/run_bxf.sh
+bash scripts/rlm/run_bxf.sh
 ```
 
 The script:
@@ -589,7 +589,7 @@ Put the settings you want in front of the same command:
 
 ```bash
 LIMIT=55 SUBSETS="nq hotpotqa musique qampari quest" BUDGETS_MB="512 1024" FACTORS="1 2 4 8" \
-  bash evaluation/rlm/run_bxf.sh
+  bash scripts/rlm/run_bxf.sh
 ```
 
 The cells run one at a time. **If it stops part-way, run the same command again:** it skips
@@ -612,7 +612,7 @@ To run one cell by hand, give a lane `BUDGET_MB` and `FACTOR`:
 
 ```bash
 sg infolab -c "BUDGET_MB=512 FACTOR=4 CUDA_VISIBLE_DEVICES=0 DATASET=loft LIMIT=2 RESULTS=$S/results_bxf \
-  HF_HOME=$HF_HOME bash $REPO/evaluation/rlm/rlm_order_lane.sh bm25-query 6 nq"
+  HF_HOME=$HF_HOME bash $REPO/scripts/rlm/rlm_order_lane.sh bm25-query 6 nq"
 ```
 
 Each cell writes to `$RESULTS/bxf_<B>MB_x<F>`. Gate one cell's directory at a time, as in
@@ -672,22 +672,22 @@ NAS:
 ```bash
 tmux new -s rlm
 export RLM_SCRATCH=/tmp/$USER VENV=/tmp/$USER/venvs/rlm-vllm085   # caches and venv on local disk
-bash evaluation/rlm/loft128k/run_infolab.sh setup
-bash evaluation/rlm/loft128k/run_infolab.sh auto
+bash scripts/rlm/loft128k/run_infolab.sh setup
+bash scripts/rlm/loft128k/run_infolab.sh auto
 ```
 
 Smoke first, cheaply, at 32k:
 
 ```bash
-DATASETS="nq" LENGTH=32k LIMIT=3 SERVERS=1 bash evaluation/rlm/loft128k/run_infolab.sh auto
+DATASETS="nq" LENGTH=32k LIMIT=3 SERVERS=1 bash scripts/rlm/loft128k/run_infolab.sh auto
 ```
 
 Then repeat at `LENGTH=128k LIMIT=2` for the real memory check. To drive the two halves by
 hand instead, in two tmux windows:
 
 ```bash
-GPU=1 bash evaluation/rlm/loft128k/run_infolab.sh serve
-DATASETS="nq" bash evaluation/rlm/loft128k/run_infolab.sh run
+GPU=1 bash scripts/rlm/loft128k/run_infolab.sh serve
+DATASETS="nq" bash scripts/rlm/loft128k/run_infolab.sh run
 ```
 
 The KV-compression arms:
@@ -695,16 +695,16 @@ The KV-compression arms:
 ```bash
 # one-example smoke, arm 4a then 4b, at 32k
 KVPRESS_ARMS=1 KV_RATIOS=0.5 KV_ARMS=4a DATASETS=nq LENGTH=32k LIMIT=1 SERVERS=1 \
-    bash evaluation/rlm/loft128k/run_infolab.sh auto
+    bash scripts/rlm/loft128k/run_infolab.sh auto
 KVPRESS_ARMS=1 KV_RATIOS=0.5 KV_ARMS=4b DATASETS=nq LENGTH=32k LIMIT=1 SERVERS=1 \
-    bash evaluation/rlm/loft128k/run_infolab.sh auto
+    bash scripts/rlm/loft128k/run_infolab.sh auto
 
 # the real grid: 5 datasets x {0.5, 0.75} x {4a, 4b}
-KVPRESS_ARMS=1 LENGTH=128k bash evaluation/rlm/loft128k/run_infolab.sh auto
+KVPRESS_ARMS=1 LENGTH=128k bash scripts/rlm/loft128k/run_infolab.sh auto
 
 # cell 5: press-only baseline through evaluate.py (smoke with FRACTION=0.02)
-DATASETS=nq KV_RATIOS=0.5 FRACTION=0.02 bash evaluation/rlm/loft128k/run_infolab.sh kvzip-baseline
-bash evaluation/rlm/loft128k/run_infolab.sh kvzip-baseline
+DATASETS=nq KV_RATIOS=0.5 FRACTION=0.02 bash scripts/rlm/loft128k/run_infolab.sh kvzip-baseline
+bash scripts/rlm/loft128k/run_infolab.sh kvzip-baseline
 ```
 
 `KVPRESS_ARMS=1` runs **only** the arm-4 lanes, and puts two models on one card:
@@ -790,7 +790,7 @@ DATASETS=hotpotqa BUDGETS=4096 FACTORS=8 LIMIT=10 \
   GPU=1 PORT=8000 \
   REPO_ROOT="$REPO" KVZIP_PYTHON="$KVPY" RLM_DATA_DIR="$RLM_DATA_DIR" HF_HOME="$HF_HOME" \
   RESULTS=$BASE/fixedgrid/myrun \
-  bash evaluation/rlm/fixedgrid/run_grid.sh
+  bash scripts/rlm/fixedgrid/run_grid.sh
 ```
 
 | var | default | note |
@@ -905,7 +905,7 @@ PYTHONPATH=. $PY -m evaluation.rlm.rlm_order_stage --dataset all --weights
 
 ```bash
 GPU=0 PORT=8002 GPU_UTIL=0.5 VLLM=$VLLM HF_HOME=$HF_HOME LOG=$S/logs/server.log SESSION=ro_root \
-  bash evaluation/rlm/serve_root.sh
+  bash scripts/rlm/serve_root.sh
 ```
 
 Then wait for a real generation (§4.5). Keep `--max-model-len 65536 --enforce-eager -O0`, so
@@ -924,7 +924,7 @@ for arm in bm25-graph bm25-query; do
                "niah_multikey_2 qa_2" "niah_multikey_3 niah_multivalue" "niah_multiquery"; do
     tmux new-session -d -s "ro_${arm#bm25-}_p$i" \
       "DATASET=ruler128k LIMIT=3 REPO=$REPO PY=$PY HF_HOME=$HF_HOME RESULTS=$R \
-       bash $REPO/evaluation/rlm/rlm_order_lane.sh $arm $((core % n)) $tasks > $S/logs/ruler_pilot_${arm}_p$i.log 2>&1"
+       bash $REPO/scripts/rlm/rlm_order_lane.sh $arm $((core % n)) $tasks > $S/logs/ruler_pilot_${arm}_p$i.log 2>&1"
     core=$((core+1)); i=$((i+1))
   done
 done
@@ -942,7 +942,7 @@ PYTHONPATH=. HF_HUB_OFFLINE=1 $PY -m evaluation.rlm.rlm_order_gate $S/results_lo
 
 ```bash
 DATASET=ruler128k STAGE=ruler_full SCRATCH=$S PY=$PY HF_HOME=$HF_HOME ARCHIVE=$S/archive SERVER=ro_root \
-  bash evaluation/rlm/rlm_order_postrun.sh
+  bash scripts/rlm/rlm_order_postrun.sh
 ```
 
 **Take the results with you, then stop the pod.** A running pod bills by the hour, and a volume
@@ -959,9 +959,9 @@ NAS. Set `HF_HOME` (the download folder), `KVZIP_PYTHON` (the repo env's python)
 **SLURM.**
 - **Stage on the login node,** where there is internet. Compute nodes are often air-gapped,
   so run them with `HF_HUB_OFFLINE=1`.
-- **`evaluation/rlm/slurm/download_data.sh`** prefetches the shared datasets into
+- **`scripts/rlm/download_data.sh`** prefetches the shared datasets into
   `$HF_HOME`.
-- **`evaluation/rlm/loft128k/slurm/loft128k_a100.slurm`** is an array job that starts one vLLM
+- **`slurm/loft128k_a100.slurm`** is an array job that starts one vLLM
   per dataset. It has **never been submitted**, so verify the partition with `sinfo -s`
   before trusting it.
 - **LOFT's data comes from the third-party `f20180301` namespace** on the Hub, which must

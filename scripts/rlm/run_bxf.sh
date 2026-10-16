@@ -1,10 +1,10 @@
 #!/bin/bash
 # Run B x F cells of the ordered-chunk arms end to end, with one command.
 #
-#   bash evaluation/rlm/run_bxf.sh          # the smoke test: nq, 2 rows, both arms, 512 MB x F = 1 and 4
+#   bash scripts/rlm/run_bxf.sh          # the smoke test: nq, 2 rows, both arms, 512 MB x F = 1 and 4
 #
 #   LIMIT=55 SUBSETS="nq hotpotqa musique qampari quest" BUDGETS_MB="512 1024" FACTORS="1 2 4 8" \
-#     bash evaluation/rlm/run_bxf.sh        # a real grid
+#     bash scripts/rlm/run_bxf.sh        # a real grid
 #
 # What it does, in order:
 #   1. starts the root vLLM server on GPU (unless one on PORT already generates) and waits for it;

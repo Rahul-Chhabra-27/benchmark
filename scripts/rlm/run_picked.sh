@@ -1,7 +1,7 @@
 #!/bin/bash
 # Pick ONE compression factor per question up front, run, and score -- one command.
 #
-#   PICKER=spread:0.3 SUBSETS="hotpotqa" BUDGET_MB=1024 bash evaluation/rlm/run_picked.sh
+#   PICKER=spread:0.3 SUBSETS="hotpotqa" BUDGET_MB=1024 bash scripts/rlm/run_picked.sh
 #
 # What it does, in order (evaluation/rlm/factor_picker/README.md has the details):
 #   1. plan      the picker chooses F in FACTORS for every question -- no model involved --

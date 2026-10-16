@@ -225,7 +225,7 @@ Through the LOFT runner this is arm **4c**, alongside the hand-sized 4a and 4b:
 ```bash
 KVPRESS_ARMS=1 KV_ARMS=4c KV_BUDGETS="0.512 1" KV_TARGET_RATIO=0.75 \
     DATASETS=nq LENGTH=32k LIMIT=1 SERVERS=1 \
-    bash evaluation/rlm/loft128k/run_infolab.sh auto
+    bash scripts/rlm/loft128k/run_infolab.sh auto
 ```
 
 `KV_BUDGETS` replaces the old `KV_RATIOS` for the arm-4 lanes — the press takes a budget and

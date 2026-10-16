@@ -5,7 +5,7 @@
 # Pull the checkout FIRST, then run this from it -- bash reads a script as it runs, so a
 # pull must never rewrite this file under a running copy:
 #   ssh cat.cse.iitb.ac.in 'cd /mnt/home/gautammahale/rlmorder/checkout && git pull -q --ff-only \
-#     && sg infolab -c "bash evaluation/rlm/rlm_order_postrun.sh"'
+#     && sg infolab -c "bash scripts/rlm/rlm_order_postrun.sh"'
 #
 # DATASET=loft (default) gates against the structured graph-order campaign and reports the
 # loft128k_guards context rows; DATASET=ruler128k has neither. STAGE names the logs

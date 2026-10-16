@@ -39,7 +39,7 @@ uv sync --extra eval && source .venv/bin/activate
 cd evaluation && ./evaluate.sh
 
 # KVPress: a memory-budget matrix (SLURM array job)
-sbatch run-eval.sh yml/<config>.yaml <profile> <worker-count>
+sbatch slurm/run-eval.sh yml/<config>.yaml <profile> <worker-count>
 
 # RLM: serve a model, then run both arms against it
 vllm serve Qwen/Qwen3-4B-Instruct-2507 --port 8000

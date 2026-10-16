@@ -5,7 +5,7 @@
 #
 # Usage (from repository root, with a server on $PORT):
 #   DATASET=nq PORT=8000 RESULTS=evaluation/results/loft128k \
-#     bash evaluation/rlm/loft128k/run_cells.sh
+#     bash scripts/rlm/loft128k/run_cells.sh
 #
 # Arms: vanilla, rlm, rlm+scratchpad. `--mode both` covers the first two in one
 # pass so the vanilla arm is not recomputed for the scratchpad comparison.

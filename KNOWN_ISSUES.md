@@ -92,7 +92,7 @@ keep the diff reviewable. `make style` was already failing on master for
   with tiktoken while the server reports its own tokenizer's count. The
   server-reported number is preferred where available (`Usage.last_prompt_tokens`).
 
-## LOFT campaign tooling (`evaluation/rlm/loft128k/`)
+## LOFT campaign tooling (`scripts/rlm/loft128k/`)
 
 Found in the 2026-08-29 pre-campaign audit. The blocking and GPU-safety ones were
 fixed (need-based `util_for` + `ROOT_NEED_MIB`, `MIN_FREE_MIB` 30000→33000,

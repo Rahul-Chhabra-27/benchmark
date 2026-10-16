@@ -11,7 +11,7 @@
 # model does not need tensor parallelism -- the value of a DGX node here is five
 # INDEPENDENT servers running the grid data-parallel, not sharding one model.
 #
-#   sbatch --partition=<dgx> --qos=<dgx> evaluation/rlm/loft128k/slurm/loft128k_a100.slurm
+#   sbatch --partition=<dgx> --qos=<dgx> slurm/loft128k_a100.slurm
 #
 # PARTITION: run `sinfo -s` first. The directives below default to a40, which is
 # known to exist and fits (48 GB is enough for 4B + one 128k sequence), but the
@@ -46,7 +46,7 @@ RESULTS="${RESULTS:-evaluation/results/loft128k}"
 export HF_HOME="${HF_HOME:-$HOME/hf_cache}"
 export RLM_DATA_DIR="${RLM_DATA_DIR:-$HOME/rlm_data}"
 # Compute nodes have no outbound internet. Everything must already be in HF_HOME
-# via `bash evaluation/rlm/slurm/download_data.sh` on the login node.
+# via `bash scripts/rlm/download_data.sh` on the login node.
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export VLLM_USE_FLASHINFER_SAMPLER=0
@@ -82,6 +82,6 @@ trap 'kill $VLLM_PID 2>/dev/null || true' EXIT
 # --- run ----------------------------------------------------------------------
 DATASET="$DATASET" LENGTH=128k PORT="$PORT" LIMIT="$LIMIT" \
     RESULTS="$RESULTS" MODEL="$MODEL" \
-    bash evaluation/rlm/loft128k/run_cells.sh
+    bash scripts/rlm/loft128k/run_cells.sh
 
 echo "=== $(date '+%F %T') :: array task $SLURM_ARRAY_TASK_ID ($DATASET) complete ==="

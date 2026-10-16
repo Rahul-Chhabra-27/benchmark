@@ -15,4 +15,4 @@ export BASE_URL=http://localhost:8001/v1
 export LIMIT=55 SPLIT=test
 mkdir -p "$RESULTS" /mnt/home/gautammahale/qagnostic/logs
 cd "$REPO"
-bash evaluation/rlm/structured_grid.sh "$1" "$2" 2>&1 | tee -a "/mnt/home/gautammahale/qagnostic/logs/$1_$2.log"
+bash scripts/rlm/structured_grid.sh "$1" "$2" 2>&1 | tee -a "/mnt/home/gautammahale/qagnostic/logs/$1_$2.log"

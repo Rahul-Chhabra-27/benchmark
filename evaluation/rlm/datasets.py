@@ -74,7 +74,7 @@ def load_longbench_v2(limit: int | None = None):
     """Reads the JSONL cached by slurm/download_data.sh."""
     path = DATA_DIR / "longbench_v2.jsonl"
     if not path.exists():
-        raise FileNotFoundError(f"{path} missing — run slurm/download_data.sh on the login node first.")
+        raise FileNotFoundError(f"{path} missing — run scripts/rlm/download_data.sh on the login node first.")
     with open(path) as f:
         for i, line in enumerate(f):
             if limit and i >= limit:
@@ -92,7 +92,7 @@ def load_longbench_v2(limit: int | None = None):
 def load_oolong(limit: int | None = None):
     path = DATA_DIR / "oolong.jsonl"
     if not path.exists():
-        raise FileNotFoundError(f"{path} missing — run slurm/download_data.sh on the login node first.")
+        raise FileNotFoundError(f"{path} missing — run scripts/rlm/download_data.sh on the login node first.")
     with open(path) as f:
         for i, line in enumerate(f):
             if limit and i >= limit:

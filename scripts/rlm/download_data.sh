@@ -1,15 +1,15 @@
 #!/bin/bash
 # Run on the LOGIN node (needs internet). Populate the shared Hugging Face cache.
-# Usage (from repository root): bash evaluation/rlm/slurm/download_data.sh
+# Usage (from repository root): bash scripts/rlm/download_data.sh
 #
 # Compute nodes are air-gapped and run with HF_HUB_OFFLINE=1, so anything not
 # cached here fails at load time inside the job. LOFT_LENGTHS selects which LOFT
 # splits to pull; the default is the 128k grid. `1m` is large and opt-in.
-#   LOFT_LENGTHS="32k 128k" bash evaluation/rlm/slurm/download_data.sh
+#   LOFT_LENGTHS="32k 128k" bash scripts/rlm/download_data.sh
 #
 # STAGE selects which benchmark groups to cache (default: all three), so a run
 # that only needs one is not blocked by another's upstream layout changing:
-#   STAGE=loft LOFT_LENGTHS="1m" bash evaluation/rlm/slurm/download_data.sh
+#   STAGE=loft LOFT_LENGTHS="1m" bash scripts/rlm/download_data.sh
 set -euo pipefail
 
 LOFT_LENGTHS="${LOFT_LENGTHS:-128k}"

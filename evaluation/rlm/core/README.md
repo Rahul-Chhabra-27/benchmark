@@ -12,7 +12,7 @@ python -m evaluation.rlm.core run   evaluation/rlm/configs/base.yaml --set data.
 ```
 
 The root model needs an OpenAI-compatible server at `models.base_url`
-(`bash evaluation/rlm/serve_root.sh`). A config with `compression.budget_mb` also loads
+(`bash scripts/rlm/serve_root.sh`). A config with `compression.budget_mb` also loads
 the sub model in-process on the GPU (kvpress).
 
 ## A config

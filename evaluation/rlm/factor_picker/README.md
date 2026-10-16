@@ -48,9 +48,9 @@ it is the one setting, and the one `calibrate` tunes.
 
 ```bash
 PICKER=spread:0.3 SUBSETS="hotpotqa nq" BUDGET_MB=1024 LIMIT=55 \
-  bash evaluation/rlm/run_picked.sh
+  bash scripts/rlm/run_picked.sh
 
-DRY_RUN=1 PICKER=spread:0.3 SUBSETS="hotpotqa" bash evaluation/rlm/run_picked.sh   # plan only
+DRY_RUN=1 PICKER=spread:0.3 SUBSETS="hotpotqa" bash scripts/rlm/run_picked.sh   # plan only
 ```
 
 Add `BASELINES=<results root of the full fixed-F sweep>` to compare against every fixed F
@@ -62,7 +62,7 @@ and the oracle on the same rows. Each plan gets its own `OUT/plans/<name>` and
 ```bash
 # a. fixed-F runs of the dev rows, one per factor (LOFT ships 10 dev rows per task)
 SPLIT=dev LIMIT=10 SUBSETS="nq hotpotqa musique qampari quest" BUDGETS_MB=1024 \
-  FACTORS="1 2 4 8" ARMS=bm25-graph bash evaluation/rlm/run_bxf.sh
+  FACTORS="1 2 4 8" ARMS=bm25-graph bash scripts/rlm/run_bxf.sh
 
 # b. choose the picker on those dev runs
 python -m evaluation.rlm.factor_picker calibrate --tasks nq hotpotqa musique qampari quest \
@@ -70,7 +70,7 @@ python -m evaluation.rlm.factor_picker calibrate --tasks nq hotpotqa musique qam
 
 # c. plan, run and score the test rows with the chosen picker
 PICKER=calibrated:cal_1024MB.json SUBSETS="nq hotpotqa musique qampari quest" BUDGET_MB=1024 \
-  LIMIT=55 BASELINES=<test sweep root> bash evaluation/rlm/run_picked.sh
+  LIMIT=55 BASELINES=<test sweep root> bash scripts/rlm/run_picked.sh
 ```
 
 **Without any new GPU run**: if the full fixed-F cells already exist for the same rows,
