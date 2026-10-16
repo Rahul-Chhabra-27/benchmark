@@ -27,7 +27,7 @@ of 1×/2×/4×/8×. Includes all scores and run audit notes;
 | `kvpress/` | The compression library. Presses live in `kvpress/presses/`; `KVPressTextGenerationPipeline` in `kvpress/pipeline.py` is the user-facing API. |
 | `evaluation/` | Benchmark harness: datasets, canonical scorers, and the KVPress runner (`evaluate.py`, `run_matrix.py`). |
 | `evaluation/rlm/` | The RLM harness — REPL scaffold, sub-call backends, and its runner. See `evaluation/rlm/README.md`. |
-| `direct_baseline/` | Uncompressed HF baseline (`model.generate()`), deliberately importing no kvpress code. |
+| `baselines/full_context/` | Uncompressed HF baseline (`model.generate()`), deliberately importing no kvpress code. |
 | `tests/` | Unit tests for presses, the pipeline, and the evaluation harness. |
 
 ## Running things
@@ -39,7 +39,7 @@ uv sync --extra eval && source .venv/bin/activate
 cd evaluation && ./evaluate.sh
 
 # KVPress: a memory-budget matrix (SLURM array job)
-sbatch slurm/run-eval.sh yml/<config>.yaml <profile> <worker-count>
+sbatch slurm/run-eval.sh matrix_configs/<config>.yaml <profile> <worker-count>
 
 # RLM: serve a model, then run both arms against it
 vllm serve Qwen/Qwen3-4B-Instruct-2507 --port 8000

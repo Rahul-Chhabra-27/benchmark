@@ -1467,7 +1467,7 @@ class RLM:
             # the harness attribute the payload to real document spans: a payload
             # the MODEL joins is not findable in the document, so it records no
             # coverage and reads downstream exactly like a cell whose sub-model
-            # never ran (fixedgrid/audit_cells.py treats coverage 0 as that tell).
+            # never ran (fixed_chunk_grid/audit_cells.py treats coverage 0 as that tell).
             hit_spans: Optional[list[tuple[int, int]]] = None
             # An ordered-chunk read: a slice of `chunks`, or one chunk, is read IN THE
             # ORDER GIVEN with each chunk labelled by its own offsets -- the structured

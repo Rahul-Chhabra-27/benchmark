@@ -66,7 +66,7 @@ else
 fi
 
 # IDS_FILE runs exactly the ids it lists instead of the first LIMIT rows: one group of a
-# factor_picker plan (ids/<task>__x<F>.txt). An ids file names rows of ONE subset.
+# compression_picker plan (ids/<task>__x<F>.txt). An ids file names rows of ONE subset.
 rows=(--limit "$LIMIT")
 if [ -n "${IDS_FILE:-}" ]; then
   if [ "$(echo $SUBSETS | wc -w)" -ne 1 ]; then

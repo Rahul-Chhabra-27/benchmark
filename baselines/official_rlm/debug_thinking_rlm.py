@@ -11,9 +11,9 @@ from pathlib import Path
 
 from openai import OpenAI
 
-REPO = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
-sys.path.insert(0, str(REPO / "baselines" / "recursive-llm" / "src"))
+sys.path.insert(0, str(REPO / "baselines" / "official_rlm" / "recursive-llm" / "src"))
 
 ENDPOINT = os.environ.get("DEBUG_ENDPOINT", "http://127.0.0.1:8012/v1")
 MODEL = os.environ.get("DEBUG_MODEL", "Qwen/Qwen3.5-4B")
@@ -29,7 +29,7 @@ def dump_raw_completion() -> dict:
             "role": "system",
             "content": (
                 "You are a Recursive Language Model. Reply with either one Python "
-                "statement or a standalone FINAL(\"answer\")."
+                'statement or a standalone FINAL("answer").'
             ),
         },
         {
@@ -64,12 +64,12 @@ def dump_raw_completion() -> dict:
 
 def dump_rlm_steps() -> None:
     from rlm import RLM
-    from rlm.repl import _extract_code
     from rlm.parser import extract_final
+    from rlm.repl import _extract_code
 
     raw = json.loads((OUT / "raw_completion.json").read_text())
     content = raw.get("content") or ""
-    from baselines.run_benchmark import install_vllm_reasoning_split, split_vllm_reasoning
+    from baselines.official_rlm.run_benchmark import install_vllm_reasoning_split, split_vllm_reasoning
 
     print("=== protocol parse of raw content ===")
     print("extract_final_raw", extract_final(content))
@@ -102,7 +102,11 @@ def dump_rlm_steps() -> None:
     (OUT / "rlm_tiny.json").write_text(json.dumps(dump, indent=2, default=str) + "\n")
     print("=== tiny RLM ===")
     print("succeeded", result.succeeded, "answer", getattr(result, "answer", None))
-    print("error", getattr(result, "error_type", None), getattr(result, "error", None)[:200] if getattr(result, "error", None) else None)
+    print(
+        "error",
+        getattr(result, "error_type", None),
+        getattr(result, "error", None)[:200] if getattr(result, "error", None) else None,
+    )
     for event in dump.get("trajectory") or []:
         if event.get("kind") not in ("model_call_end", "repl_step", "final_answer", "rlm_error"):
             continue
@@ -112,7 +116,8 @@ def dump_rlm_steps() -> None:
             if data.get(key):
                 preview = str(data[key])[:300].replace("\n", "\\n")
                 break
-        print(f"  {event.get('kind')} { {k: data.get(k) for k in ('status', 'code_chars', 'response_chars') if k in data} } {preview!r}")
+        fields = {k: data.get(k) for k in ("status", "code_chars", "response_chars") if k in data}
+        print(f"  {event.get('kind')} {fields} {preview!r}")
 
 
 if __name__ == "__main__":

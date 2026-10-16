@@ -6,9 +6,9 @@ file**, so "ordering only", "compression only" and "ordering + compression" are
 different config files, not different code.
 
 ```bash
-python -m evaluation.rlm.core check evaluation/rlm/configs/graph_x2.yaml --show-prompt  # what it will do
-python -m evaluation.rlm.core run   evaluation/rlm/configs/graph_x2.yaml                # run it (resumes)
-python -m evaluation.rlm.core run   evaluation/rlm/configs/base.yaml --set data.limit=3 --set name=smoke
+python -m evaluation.rlm.minimal_rlm check evaluation/rlm/minimal_rlm/configs/graph_x2.yaml --show-prompt  # what it will do
+python -m evaluation.rlm.minimal_rlm run   evaluation/rlm/minimal_rlm/configs/graph_x2.yaml                # run it (resumes)
+python -m evaluation.rlm.minimal_rlm run   evaluation/rlm/minimal_rlm/configs/base.yaml --set data.limit=3 --set name=smoke
 ```
 
 The root model needs an OpenAI-compatible server at `models.base_url`
@@ -41,7 +41,7 @@ compression:
 Unknown keys are refused, and a run never resumes into a directory written by a
 different config — give a changed experiment a new `name`.
 
-`evaluation/rlm/configs/` ships the starting matrix:
+`evaluation/rlm/minimal_rlm/configs/` ships the starting matrix:
 
 | config | ordering | compression |
 |---|---|---|

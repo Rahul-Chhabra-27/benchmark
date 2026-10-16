@@ -231,7 +231,7 @@ LOG=$S/logs/server.log SESSION=ro_root bash scripts/rlm/serve_root.sh
   it to an index for you.
 - `CPUS` pins the server to a few cores, which keeps it polite on a shared host.
 - For a vanilla arm at 128k, the server needs `--max-model-len 139264` and about 0.65 of the
-  card (§4.2). `scripts/rlm/loft128k/run_infolab.sh serve` (§8) sizes this for you.
+  card (§4.2). `scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh serve` (§8) sizes this for you.
 
 ### 4.5 Is it ready?
 
@@ -672,22 +672,22 @@ NAS:
 ```bash
 tmux new -s rlm
 export RLM_SCRATCH=/tmp/$USER VENV=/tmp/$USER/venvs/rlm-vllm085   # caches and venv on local disk
-bash scripts/rlm/loft128k/run_infolab.sh setup
-bash scripts/rlm/loft128k/run_infolab.sh auto
+bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh setup
+bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh auto
 ```
 
 Smoke first, cheaply, at 32k:
 
 ```bash
-DATASETS="nq" LENGTH=32k LIMIT=3 SERVERS=1 bash scripts/rlm/loft128k/run_infolab.sh auto
+DATASETS="nq" LENGTH=32k LIMIT=3 SERVERS=1 bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh auto
 ```
 
 Then repeat at `LENGTH=128k LIMIT=2` for the real memory check. To drive the two halves by
 hand instead, in two tmux windows:
 
 ```bash
-GPU=1 bash scripts/rlm/loft128k/run_infolab.sh serve
-DATASETS="nq" bash scripts/rlm/loft128k/run_infolab.sh run
+GPU=1 bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh serve
+DATASETS="nq" bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh run
 ```
 
 The KV-compression arms:
@@ -695,16 +695,16 @@ The KV-compression arms:
 ```bash
 # one-example smoke, arm 4a then 4b, at 32k
 KVPRESS_ARMS=1 KV_RATIOS=0.5 KV_ARMS=4a DATASETS=nq LENGTH=32k LIMIT=1 SERVERS=1 \
-    bash scripts/rlm/loft128k/run_infolab.sh auto
+    bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh auto
 KVPRESS_ARMS=1 KV_RATIOS=0.5 KV_ARMS=4b DATASETS=nq LENGTH=32k LIMIT=1 SERVERS=1 \
-    bash scripts/rlm/loft128k/run_infolab.sh auto
+    bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh auto
 
 # the real grid: 5 datasets x {0.5, 0.75} x {4a, 4b}
-KVPRESS_ARMS=1 LENGTH=128k bash scripts/rlm/loft128k/run_infolab.sh auto
+KVPRESS_ARMS=1 LENGTH=128k bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh auto
 
 # cell 5: press-only baseline through evaluate.py (smoke with FRACTION=0.02)
-DATASETS=nq KV_RATIOS=0.5 FRACTION=0.02 bash scripts/rlm/loft128k/run_infolab.sh kvzip-baseline
-bash scripts/rlm/loft128k/run_infolab.sh kvzip-baseline
+DATASETS=nq KV_RATIOS=0.5 FRACTION=0.02 bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh kvzip-baseline
+bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh kvzip-baseline
 ```
 
 `KVPRESS_ARMS=1` runs **only** the arm-4 lanes, and puts two models on one card:
@@ -789,8 +789,8 @@ cd "$REPO"
 DATASETS=hotpotqa BUDGETS=4096 FACTORS=8 LIMIT=10 \
   GPU=1 PORT=8000 \
   REPO_ROOT="$REPO" KVZIP_PYTHON="$KVPY" RLM_DATA_DIR="$RLM_DATA_DIR" HF_HOME="$HF_HOME" \
-  RESULTS=$BASE/fixedgrid/myrun \
-  bash scripts/rlm/fixedgrid/run_grid.sh
+  RESULTS=$BASE/fixed_chunk_grid/myrun \
+  bash scripts/rlm/campaigns/fixed_chunk_grid/run_grid.sh
 ```
 
 | var | default | note |
@@ -823,7 +823,7 @@ CUDA_VISIBLE_DEVICES=$GPU "$KVPY" -m evaluation.rlm.run_benchmark \
   --memory-budget "$B" --memory-budget-unit tokens \
   --max-subcall-chars auto --compression-factor "$F" --fixed-chunk \
   --max-sub-calls "$CALLS" --sub-max-tokens 128 --sub-min-free-gib "$MINFREE" \
-  --out $BASE/fixedgrid/myrun
+  --out $BASE/fixed_chunk_grid/myrun
 ```
 
 **A healthy cell** has:
@@ -836,8 +836,8 @@ CUDA_VISIBLE_DEVICES=$GPU "$KVPY" -m evaluation.rlm.run_benchmark \
 sub-model never really ran, then render the tables:
 
 ```bash
-python evaluation/rlm/fixedgrid/audit_cells.py $BASE/fixedgrid/myrun --quiet   # exits 1 on any flagged cell
-python evaluation/rlm/fixedgrid/grid_table.py --results $BASE/fixedgrid/myrun
+python evaluation/rlm/fixed_chunk_grid/audit_cells.py $BASE/fixed_chunk_grid/myrun --quiet   # exits 1 on any flagged cell
+python evaluation/rlm/fixed_chunk_grid/grid_table.py --results $BASE/fixed_chunk_grid/myrun
 ```
 
 To go faster, run more lanes with **disjoint** `DATASETS`, `BUDGETS` or `FACTORS`. Give each

@@ -103,7 +103,7 @@ class ExperimentConfig:
     ordering: str = "none"
     compression: CompressionConfig = field(default_factory=CompressionConfig)
     rlm: RLMConfig = field(default_factory=RLMConfig)
-    output_dir: str = "evaluation/results/rlm/core"
+    output_dir: str = "evaluation/results/rlm/minimal_rlm"
     organization_dir: Optional[str] = None  # bm25-graph cache; default <output_dir>/organization
 
     @property

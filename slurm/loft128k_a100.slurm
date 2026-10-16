@@ -82,6 +82,6 @@ trap 'kill $VLLM_PID 2>/dev/null || true' EXIT
 # --- run ----------------------------------------------------------------------
 DATASET="$DATASET" LENGTH=128k PORT="$PORT" LIMIT="$LIMIT" \
     RESULTS="$RESULTS" MODEL="$MODEL" \
-    bash scripts/rlm/loft128k/run_cells.sh
+    bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_cells.sh
 
 echo "=== $(date '+%F %T') :: array task $SLURM_ARRAY_TASK_ID ($DATASET) complete ==="

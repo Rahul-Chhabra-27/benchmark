@@ -33,7 +33,7 @@ The harness talks to whatever `--base-url` points at (default
 `http://localhost:8000/v1`). The two supported deployment shapes:
 
 - **Bare-metal GPU host** (infolab-style, no scheduler):
-  `scripts/rlm/loft128k/run_infolab.sh` launches one vLLM server per GPU and
+  `scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh` launches one vLLM server per GPU and
   drives `run_cells.sh`, which runs the benchmark arms against it.
 - **SLURM**: `slurm/loft128k_a100.slurm` is an array job
   that starts one vLLM server per dataset on its allocated GPU and runs the same
@@ -66,7 +66,7 @@ The steps below are the generic outline.
    `python -m evaluation.rlm.run_benchmark --dataset niah --limit 5 --mode both`
    For a shared RULER-32K subset:
    `python -m evaluation.rlm.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5 --mode both`.
-5. **Full runs**: `bash scripts/rlm/loft128k/run_infolab.sh` (bare metal) or
+5. **Full runs**: `bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh` (bare metal) or
    `sbatch slurm/loft128k_a100.slurm` (SLURM).
 6. **Score & compare**: `python -m evaluation.compare --backend rlm`
 

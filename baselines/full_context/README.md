@@ -50,14 +50,14 @@ Submit the one-row LOFT NQ-32K smoke test to a DGX node:
 
 ```bash
 cd /home/rethinkingai-self/25m0820/kvpress
-/opt/slurm/bin/sbatch slurm/direct_baseline/qwen35_27b_gptq_int4_loft32k_smoke_dgx.sh
+/opt/slurm/bin/sbatch slurm/full_context_baseline/qwen35_27b_gptq_int4_loft32k_smoke_dgx.sh
 ```
 
 After the smoke test, the complete LOFT jobs are ready as:
 
 ```bash
-/opt/slurm/bin/sbatch slurm/direct_baseline/qwen35_27b_gptq_int4_loft32k_dgx.sh
-/opt/slurm/bin/sbatch slurm/direct_baseline/qwen35_27b_gptq_int4_loft128k_dgx.sh
+/opt/slurm/bin/sbatch slurm/full_context_baseline/qwen35_27b_gptq_int4_loft32k_dgx.sh
+/opt/slurm/bin/sbatch slurm/full_context_baseline/qwen35_27b_gptq_int4_loft128k_dgx.sh
 ```
 
 For another benchmark, copy `configs/example_all_datasets.yaml` and select the
@@ -72,5 +72,5 @@ Each task writes resumable `predictions.jsonl`, `predictions.csv`,
 This check is CPU-only and performs no model or dataset loading:
 
 ```bash
-python direct_baseline/verify_independence.py
+python baselines/full_context/verify_independence.py
 ```

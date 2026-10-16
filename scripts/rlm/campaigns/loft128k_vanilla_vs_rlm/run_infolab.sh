@@ -10,11 +10,11 @@
 # Always run under tmux -- an ssh drop otherwise kills the servers and the workers.
 #
 #   tmux new -s rlm
-#   bash scripts/rlm/loft128k/run_infolab.sh auto          # full grid
+#   bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh auto          # full grid
 #
 # Or drive the two halves by hand, in two tmux windows:
-#   GPU=1 bash scripts/rlm/loft128k/run_infolab.sh serve
-#   DATASETS="nq" LIMIT=3 LENGTH=32k bash scripts/rlm/loft128k/run_infolab.sh run
+#   GPU=1 bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh serve
+#   DATASETS="nq" LIMIT=3 LENGTH=32k bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh run
 #
 # SIZING on a 48 GB card. Qwen3-4B-2507 is 36 layers x 8 KV heads x 128 head_dim
 # = 144 KiB per token, so one 139264-token sequence needs ~19.1 GiB of KV on top
@@ -430,7 +430,7 @@ run)
             RESULTS="$RESULTS" MODEL="$MODEL" LOGS="$LOGS" \
             VENV="$VENV" KVZIP_PYTHON="$KVZIP_PYTHON" \
             ${SUB_GPU_FOR_RUN:+RLM_SUB_GPU="$SUB_GPU_FOR_RUN"} \
-            bash scripts/rlm/loft128k/run_cells.sh
+            bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_cells.sh
     done
     ;;
 
@@ -510,7 +510,7 @@ auto)
                         RESULTS="$RESULTS" MODEL="$MODEL" LOGS="$LOGS" \
                         VENV="$VENV" KVZIP_PYTHON="$KVZIP_PYTHON" \
                         RLM_SUB_GPU="$sub_gpu" \
-                        bash scripts/rlm/loft128k/run_cells.sh || true
+                        bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_cells.sh || true
                 fi
             done
         ) &

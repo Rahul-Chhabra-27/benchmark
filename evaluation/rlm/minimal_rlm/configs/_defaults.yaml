@@ -1,6 +1,6 @@
 # Shared by every experiment below (each one `extends` this file and changes only
 # what it is about). Override anything for one run with
-#   python -m evaluation.rlm.core run <config> --set data.limit=3 --set name=smoke
+#   python -m evaluation.rlm.minimal_rlm run <config> --set data.limit=3 --set name=smoke
 data:
   dataset: loft
   tasks: [nq, hotpotqa, musique, qampari, quest]
@@ -17,4 +17,4 @@ rlm:
   run_timeout_s: 900
   output_chars: 4000
   read_tokens: 8192
-output_dir: evaluation/results/rlm/core
+output_dir: evaluation/results/rlm/minimal_rlm

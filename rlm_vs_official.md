@@ -4,8 +4,8 @@ This is a comparison of the two LOFT-128k n=20 arms that share a REPL-over-`cont
 
 | | Official | Ours (`none`) |
 |---|---|---|
-| Code | `baselines/recursive-llm` (`src/rlm/core.py`) | `evaluation/rlm/rlm.py` |
-| Runner | `baselines/run_benchmark.py` | `python -m evaluation.rlm.run_benchmark --mode rlm` |
+| Code | `baselines/official_rlm/recursive-llm` (`src/rlm/core.py`) | `evaluation/rlm/rlm.py` |
+| Runner | `baselines/official_rlm/run_benchmark.py` | `python -m evaluation.rlm.run_benchmark --mode rlm` |
 | Results | `evaluation/results/rlm/recursive-llm/loft128k-n20-think-split/` | `evaluation/results/rlm/loft128k-qwen35-n20-order-grid/` cells **without** `__order-*` |
 
 Both campaigns used the same vLLM servers (Qwen3.5-4B/9B/27B), thinking ON, 30 root turns, test split, first 20 rows.
@@ -29,7 +29,7 @@ That is the shared RLM paradigm (Zhang, Kraska & Khattab, 2025). The loops diver
 1. executable Python (no `FINAL` inside it), or
 2. a standalone protocol directive `FINAL("answer")` or `FINAL_VAR(name)` as the **entire** message.
 
-`FINAL` is parsed with `re.fullmatch` in `baselines/recursive-llm/src/rlm/parser.py`. If the model fences the code, writes `FINAL(...)` inside Python, or mixes thought + code, the turn is not an answer. `FINAL` is not a Python function; calling it in the REPL does nothing.
+`FINAL` is parsed with `re.fullmatch` in `baselines/official_rlm/recursive-llm/src/rlm/parser.py`. If the model fences the code, writes `FINAL(...)` inside Python, or mixes thought + code, the turn is not an answer. `FINAL` is not a Python function; calling it in the REPL does nothing.
 
 **Ours.** Each root reply must be a fenced ` ```python ``` ` block. The harness executes only the first block. `FINAL(...)` and `FINAL_NONE(...)` are **REPL builtins**. A guessed string literal (`FINAL("42")`) is rejected unless that string already appeared in real REPL output (`seen_output`). Abstention is a first-class ending (`FINAL_NONE`), not a missing `FINAL`.
 
@@ -62,7 +62,7 @@ Locate is still `find` / regex; the prompt tells the root to search **distinctiv
 
 ## Prompt
 
-**Official** (`baselines/recursive-llm/src/rlm/prompts.py`): short paper prompt. “You cannot see the context. Write Python. `FINAL` is a protocol directive, not a function.” Examples are `print(context[:500])`, `re.findall`, `context.find`. Depth / `max_depth` are stated explicitly.
+**Official** (`baselines/official_rlm/recursive-llm/src/rlm/prompts.py`): short paper prompt. “You cannot see the context. Write Python. `FINAL` is a protocol directive, not a function.” Examples are `print(context[:500])`, `re.findall`, `context.find`. Depth / `max_depth` are stated explicitly.
 
 **Ours:** a long strategy prompt (`ROOT_SYSTEM_PROMPT` in `evaluation/rlm/rlm.py`). It forbids simulating REPL output, forbids guessing, requires `FINAL` on a computed value, allows `FINAL_NONE` after a real read, and injects the LOFT task into the system message. On `none`, `answer_list_format` is **off** (the bm25 arms of the same grid used `auto` on qampari/quest — a confound, not a `none` vs official difference).
 

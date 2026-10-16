@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""python -m evaluation.rlm.core {check,run} CONFIG.yaml [--set key=value ...]
+"""python -m evaluation.rlm.minimal_rlm {check,run} CONFIG.yaml [--set key=value ...]
 
     check   validate the config and print what it will do (no model is loaded)
     run     run it; re-running resumes
@@ -53,7 +53,7 @@ def describe(config: ExperimentConfig) -> str:
 
 
 def main(argv: list[str] | None = None) -> None:
-    ap = argparse.ArgumentParser(prog="python -m evaluation.rlm.core", description=__doc__.split("\n")[0])
+    ap = argparse.ArgumentParser(prog="python -m evaluation.rlm.minimal_rlm", description=__doc__.split("\n")[0])
     ap.add_argument("command", choices=["check", "run"])
     ap.add_argument("config")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE")

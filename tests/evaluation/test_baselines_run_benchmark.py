@@ -11,7 +11,7 @@ from types import SimpleNamespace
 import pytest
 import yaml
 
-from baselines.run_benchmark import (
+from baselines.official_rlm.run_benchmark import (
     LOFT_128K_TASKS,
     build_query,
     build_rlm,
@@ -175,7 +175,7 @@ def test_build_rlm_configurations():
 
 def test_split_vllm_reasoning_makes_final_and_repl_parseable():
     pytest.importorskip("litellm")
-    from baselines.run_benchmark import ensure_recursive_llm_on_path
+    from baselines.official_rlm.run_benchmark import ensure_recursive_llm_on_path
 
     ensure_recursive_llm_on_path()
     from rlm.parser import extract_final
@@ -214,7 +214,9 @@ def test_split_vllm_reasoning_makes_final_and_repl_parseable():
 def test_recursive_llm_paths_point_at_local_checkout():
     root = recursive_llm_root()
     if not (root / "src" / "rlm").is_dir():
-        pytest.skip("the recursive-llm checkout is not present (baselines/recursive-llm is an empty submodule)")
+        pytest.skip(
+            "the recursive-llm checkout is not present (baselines/official_rlm/recursive-llm is an empty submodule)"
+        )
     assert root.name == "recursive-llm"
     assert (root / "src" / "rlm").is_dir()
     python = recursive_llm_python()

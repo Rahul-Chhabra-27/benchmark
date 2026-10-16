@@ -154,7 +154,7 @@ KVzip matrix.
 - **The evidence is thin:** one subset, n=20.
 - **Some cells are not measurements.** The cells at N = 131,072, and some at 65,536, had
   their sub-model refuse slices for GPU memory. The headline cells were clean.
-- **Run `evaluation/rlm/fixedgrid/audit_cells.py` on any tree before trusting a cell.**
+- **Run `evaluation/rlm/fixed_chunk_grid/audit_cells.py` on any tree before trusting a cell.**
 - **The recommended next step was not another grid.** It was the N ≈ 8k cells (F = 1, 2, 4,
   8) at 100+ rows on all six subsets.
 

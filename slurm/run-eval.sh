@@ -1,7 +1,7 @@
 #!/bin/bash
 # Generic sbatch script for any run_matrix.py evaluation job. Pass
 # partition/qos/time/array/job-name via `sbatch` CLI flags (they override the
-# #SBATCH defaults below) and pass the yml/profile/worker-count/extra flags as
+# #SBATCH defaults below) and pass the matrix_configs/profile/worker-count/extra flags as
 # script arguments. Never needs editing -- one file for every job.
 #
 # Usage:
@@ -16,16 +16,16 @@
 # Examples:
 #   # single-shot job (loft32k, one worker owns all 5 tasks)
 #   sbatch --job-name=loft32k --partition=dgx --qos=dgx --time=2-00:00:00 \
-#       run-eval.sh yml/evaluate_loft32k_qwen35_27b_gptq_all_budgets.yaml \
+#       run-eval.sh matrix_configs/evaluate_loft32k_qwen35_27b_gptq_all_budgets.yaml \
 #       loft32k-qwen35-27b-gptq-all-budgets 1
 #
 #   # 3-worker array job (ruler64k, sharded across a Slurm array)
 #   sbatch --job-name=ruler64k --partition=dgx --qos=dgx --time=2-00:00:00 --array=0-2 \
-#       run-eval.sh yml/evaluate_ruler64k_qwen35_27b_gptq_all_budgets.yaml ruler64k 3
+#       run-eval.sh matrix_configs/evaluate_ruler64k_qwen35_27b_gptq_all_budgets.yaml ruler64k 3
 #
 #   # smoke test (single task, single budget, small fraction)
 #   sbatch --job-name=ruler64k-smoke --partition=dgx --qos=dgx --time=02:00:00 \
-#       run-eval.sh yml/evaluate_ruler64k_qwen35_27b_gptq_all_budgets.yaml ruler64k 1 \
+#       run-eval.sh matrix_configs/evaluate_ruler64k_qwen35_27b_gptq_all_budgets.yaml ruler64k 1 \
 #       --max-tasks=1 --max-memory-budgets=1 --fraction=0.02
 #
 #SBATCH --job-name=kvpress-eval
@@ -43,7 +43,7 @@ set -euo pipefail
 
 if [ "$#" -lt 3 ]; then
     echo "usage: $0 <config-file|default> <profile> <worker-count> [extra run_matrix.py args...]" >&2
-    echo "  config-file is resolved relative to evaluation/, e.g. yml/loft128k.yaml" >&2
+    echo "  config-file is resolved relative to evaluation/, e.g. matrix_configs/loft128k.yaml" >&2
     exit 2
 fi
 

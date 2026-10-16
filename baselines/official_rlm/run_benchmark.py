@@ -7,14 +7,14 @@ Python and may call `rlm_query` / `recursive_llm` (aliases; the latter is the
 paper name) on selected slices. At the default max_depth=1 that call is one
 plain LM completion.
 
-The process always runs in ``baselines/recursive-llm/.venv`` (the lockfile
+The process always runs in ``baselines/official_rlm/recursive-llm/.venv`` (the lockfile
 environment from that project). Invoking this file from another interpreter
 re-execs into that venv. Do not install recursive-llm into the main repo venv.
 
 Usage:
   ~/agentic-longcontext/baselines/recursive-llm/.venv/bin/python \\
-      baselines/run_benchmark.py --endpoint http://localhost:8000/v1 --limit 1
-  python baselines/run_benchmark.py --endpoint http://127.0.0.1:8000 \\
+      baselines/official_rlm/run_benchmark.py --endpoint http://localhost:8000/v1 --limit 1
+  python baselines/official_rlm/run_benchmark.py --endpoint http://127.0.0.1:8000 \\
       --model Qwen/Qwen3-4B-Instruct-2507 --task nq_128k --split test
 
 Create the original environment with:
@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import Any, Iterable, Optional, Sequence
 from urllib.parse import urlparse, urlunparse
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
@@ -147,8 +147,8 @@ def recursive_llm_root() -> Path:
     override = os.environ.get("RECURSIVE_LLM_ROOT")
     if override:
         return Path(override).expanduser().resolve()
-    home = Path.home() / "agentic-longcontext" / "baselines" / "recursive-llm"
-    repo = REPO_ROOT / "baselines" / "recursive-llm"
+    home = Path.home() / "agentic-longcontext" / "baselines" / "official_rlm" / "recursive-llm"
+    repo = REPO_ROOT / "baselines" / "official_rlm" / "recursive-llm"
     for candidate in (home, repo):
         if (candidate / "src" / "rlm").is_dir():
             return candidate.resolve()

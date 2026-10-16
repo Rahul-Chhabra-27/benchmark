@@ -10,7 +10,7 @@ SLURM batch jobs (`sbatch …`) are in [`../slurm/`](../slurm/).
 | `serve_root.sh` | start the root vLLM server on one GPU (in tmux) |
 | `root_server.sh` | helpers the launchers source: reuse a running server or start one, stop it after |
 | `run_bxf.sh` | one command for a B × F grid of the ordered-chunk arms: start server, run every cell, print the table |
-| `run_picked.sh` | one command for `factor_picker`: pick F per question, run the groups, score |
+| `run_picked.sh` | one command for `compression_picker`: pick F per question, run the groups, score |
 | `rlm_order_lane.sh` | one lane (one arm, one CPU core) of the ordered-chunk campaign; `run_bxf.sh` and `run_picked.sh` call it |
 | `rlm_order_postrun.sh` | after a stage's lanes finish: gate the results, stop the server, archive |
 | `structured_grid.sh` | the chunk-geometry campaign for the structured (map → reduce) arm |
@@ -20,13 +20,13 @@ Launchers tied to one finished campaign, kept so it can be re-run as it was:
 
 | script | campaign |
 |---|---|
-| `loft128k/run_infolab.sh`, `loft128k/run_cells.sh` | LOFT-128k vanilla vs RLM on the infolab hosts |
-| `fixedgrid/run_grid.sh` | fixed chunk × KV-retention grid |
-| `qagnostic/lane.sh`, `qagnostic/notes_lane.sh` | query-agnostic chunk selection (2026-09) |
+| `campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh`, `…/run_cells.sh` | LOFT-128k vanilla vs RLM on the infolab hosts |
+| `campaigns/fixed_chunk_grid/run_grid.sh` | fixed chunk × KV-retention grid |
+| `campaigns/query_agnostic_chunks/lane.sh`, `…/notes_lane.sh` | query-agnostic chunk selection (2026-09) |
 
-The clean RLM needs no script: `python -m evaluation.rlm.core run evaluation/rlm/configs/<config>.yaml`.
+The clean RLM needs no script: `python -m evaluation.rlm.minimal_rlm run evaluation/rlm/minimal_rlm/configs/<config>.yaml`.
 
-## `baselines/` — the official recursive-llm library (from apd10-dev)
+## `official_rlm/` — the official recursive-llm library (from apd10-dev)
 
 | script | what it does |
 |---|---|

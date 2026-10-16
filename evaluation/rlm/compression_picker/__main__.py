@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""Command line: python -m evaluation.rlm.factor_picker {plan,calibrate,assemble} ...
+"""Command line: python -m evaluation.rlm.compression_picker {plan,calibrate,assemble} ...
 
     plan       pick F per question (no model), write plan dir + ids files
     calibrate  choose the picker on dev, from fixed-F dev runs
@@ -99,7 +99,7 @@ def cmd_assemble(args: argparse.Namespace) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    ap = argparse.ArgumentParser(prog="python -m evaluation.rlm.factor_picker", description=__doc__.split("\n")[0])
+    ap = argparse.ArgumentParser(prog="python -m evaluation.rlm.compression_picker", description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="command", required=True)
 
     plan = sub.add_parser("plan", help="pick F per question and write the plan")

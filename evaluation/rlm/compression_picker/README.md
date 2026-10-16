@@ -1,4 +1,4 @@
-# factor_picker — one compression factor per question, chosen up front
+# compression_picker — one compression factor per question, chosen up front
 
 At a fixed memory budget **B**, the compression factor **F** decides how much text each
 RLM sub-call reads (**N = B × F** tokens) and how hard kvpress (KVzip) compresses it.
@@ -65,7 +65,7 @@ SPLIT=dev LIMIT=10 SUBSETS="nq hotpotqa musique qampari quest" BUDGETS_MB=1024 \
   FACTORS="1 2 4 8" ARMS=bm25-graph bash scripts/rlm/run_bxf.sh
 
 # b. choose the picker on those dev runs
-python -m evaluation.rlm.factor_picker calibrate --tasks nq hotpotqa musique qampari quest \
+python -m evaluation.rlm.compression_picker calibrate --tasks nq hotpotqa musique qampari quest \
   --budget-mb 1024 --dev-results <dev results root> --out cal_1024MB.json
 
 # c. plan, run and score the test rows with the chosen picker
@@ -77,9 +77,9 @@ PICKER=calibrated:cal_1024MB.json SUBSETS="nq hotpotqa musique qampari quest" BU
 the picked result is just each question's answer looked up in the cell of its F:
 
 ```bash
-python -m evaluation.rlm.factor_picker plan --tasks hotpotqa --budget-mb 1024 --limit 55 \
+python -m evaluation.rlm.compression_picker plan --tasks hotpotqa --budget-mb 1024 --limit 55 \
   --picker spread:0.3 --out plans/spread
-python -m evaluation.rlm.factor_picker assemble --plan plans/spread \
+python -m evaluation.rlm.compression_picker assemble --plan plans/spread \
   --results <sweep root> --baselines <sweep root>
 ```
 

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""The clean, config-driven RLM (evaluation/rlm/core): config, prompt, REPL, loop, runner."""
+"""The clean, config-driven RLM (evaluation/rlm/minimal_rlm): config, prompt, REPL, loop, runner."""
 
 import json
 import time
@@ -9,16 +9,16 @@ from pathlib import Path
 import pytest
 import yaml
 
-from evaluation.rlm.core import __main__ as cli
-from evaluation.rlm.core.config import config_from_dict, load_config
-from evaluation.rlm.core.loop import RLM, Limits
-from evaluation.rlm.core.ordering import build_chunks, query_text
-from evaluation.rlm.core.prompts import NO_CODE_BLOCK, system_prompt
-from evaluation.rlm.core.readers import KVReader, Read
-from evaluation.rlm.core.repl import Repl, extract_code
-from evaluation.rlm.core.run import run_experiment
+from evaluation.rlm.minimal_rlm import __main__ as cli
+from evaluation.rlm.minimal_rlm.config import config_from_dict, load_config
+from evaluation.rlm.minimal_rlm.loop import RLM, Limits
+from evaluation.rlm.minimal_rlm.ordering import build_chunks, query_text
+from evaluation.rlm.minimal_rlm.prompts import NO_CODE_BLOCK, system_prompt
+from evaluation.rlm.minimal_rlm.readers import KVReader, Read
+from evaluation.rlm.minimal_rlm.repl import Repl, extract_code
+from evaluation.rlm.minimal_rlm.run import run_experiment
 
-CONFIGS = Path(__file__).resolve().parents[2] / "evaluation" / "rlm" / "configs"
+CONFIGS = Path(__file__).resolve().parents[2] / "evaluation" / "rlm" / "minimal_rlm" / "configs"
 
 
 def code(body: str) -> str:

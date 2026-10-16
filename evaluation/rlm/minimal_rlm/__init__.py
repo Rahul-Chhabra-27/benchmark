@@ -11,7 +11,7 @@
     stats.py     one record per sub-call
     run.py       config -> per-question loop -> result files
 
-    python -m evaluation.rlm.core run evaluation/rlm/configs/graph.yaml
+    python -m evaluation.rlm.minimal_rlm run evaluation/rlm/minimal_rlm/configs/graph.yaml
 """
 
 from .config import ExperimentConfig, config_from_dict, load_config

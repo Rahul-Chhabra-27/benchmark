@@ -22,7 +22,7 @@ from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 
 # Only benchmark data preparation and canonical metrics are shared with the
 # main repository. The inference path below never imports the kvpress package.
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
@@ -31,7 +31,6 @@ from evaluation.benchmarks.needle_in_haystack.utils import insert_needle_in_hays
 from evaluation.benchmarks.registry import DATASET_REGISTRY  # noqa: E402
 from evaluation.benchmarks.results import score_prediction_frame  # noqa: E402
 from evaluation.textstats import think_tag_stats  # noqa: E402
-
 
 LOGGER = logging.getLogger("direct_baseline")
 FORBIDDEN_CONFIG_KEYS = {
@@ -79,9 +78,7 @@ class BaselineConfig:
     def from_mapping(cls, raw: dict[str, Any]) -> "BaselineConfig":
         forbidden = sorted(FORBIDDEN_CONFIG_KEYS.intersection(raw))
         if forbidden:
-            raise ValueError(
-                "Direct baseline configs cannot contain compression options: " + ", ".join(forbidden)
-            )
+            raise ValueError("Direct baseline configs cannot contain compression options: " + ", ".join(forbidden))
         known = {field.name for field in fields(cls)}
         unknown = sorted(set(raw) - known)
         if unknown:
