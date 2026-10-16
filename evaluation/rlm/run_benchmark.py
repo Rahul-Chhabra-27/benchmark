@@ -36,9 +36,16 @@ from .organization import CONFIG as ORGANIZATION_CONFIG
 from .organization import ORDERS, ModelTokens, ordered_hits, organize, pack
 from .original_rlm import OriginalRLM
 from .retrieval import Hit
-from .rlm_exp1 import RLM as Exp1RLM
-from .rlm_exp1 import LookEndpointConfig, LookStrategy
-from .rlm_exp1 import VLLMClient as Exp1VLLMClient
+
+# rlm_exp1 (LOOK routing with GPU / offloaded-token costs) was wired in on apd10-dev
+# before the module itself was pushed. Without it every other mode must still run,
+# so the import is optional and --mode rlm-exp1 refuses until the module lands.
+try:
+    from .rlm_exp1 import RLM as Exp1RLM
+    from .rlm_exp1 import LookEndpointConfig, LookStrategy
+    from .rlm_exp1 import VLLMClient as Exp1VLLMClient
+except ImportError:  # pragma: no cover - depends on whether rlm_exp1 is present
+    Exp1RLM = LookEndpointConfig = LookStrategy = Exp1VLLMClient = None  # type: ignore[assignment,misc]
 from .rlm import (
     CHUNK_ORDER_REVISION,
     CHUNK_ORDERS,
@@ -104,8 +111,10 @@ def answer_list_example(dataset: Optional[str], task: Optional[str], mode: str, 
     note: they are paired against structured arms that were. Every other agentic run
     keeps the prompt it was scored with.
     """
-    if dataset != "loft" or not task or not (
-        mode == "structured" or (mode in ("rlm", "clean-rlm", "rlm-exp1") and ordered_rlm)
+    if (
+        dataset != "loft"
+        or not task
+        or not (mode == "structured" or (mode in ("rlm", "clean-rlm", "rlm-exp1") and ordered_rlm))
     ):
         return ""
     return LOFT_LIST_ANSWER_EXAMPLE if compare.loft_score_key(task) == "coverage" else ""
@@ -1529,6 +1538,8 @@ def main() -> None:
         help="disable Qwen3 thinking mode (chat_template_kwargs.enable_thinking=False)",
     )
     args = ap.parse_args()
+    if args.mode == "rlm-exp1" and Exp1RLM is None:
+        ap.error("--mode rlm-exp1 needs evaluation/rlm/rlm_exp1/, which has not been pushed yet")
     if args.mode in ("clean-rlm", "rlm-exp1") and args.sub_backend != "http":
         ap.error(f"--mode {args.mode} needs explicit --sub-backend http")
     if args.look_memory_tokens <= 0:
@@ -2372,25 +2383,13 @@ def main() -> None:
                                 args.organization_dir,
                                 organizations,
                             )
-                            runner = (
-                                clean_rlm
-                                if mode == "clean-rlm"
-                                else exp1_rlm
-                                if mode == "rlm-exp1"
-                                else rlm
-                            )
+                            runner = clean_rlm if mode == "clean-rlm" else exp1_rlm if mode == "rlm-exp1" else rlm
                             r = runner.run(
                                 ex["context"], question, answer_format=answer_format, ordered_chunks=chunk_view
                             )
                             r.metrics.update(view_stats)
                         else:
-                            runner = (
-                                clean_rlm
-                                if mode == "clean-rlm"
-                                else exp1_rlm
-                                if mode == "rlm-exp1"
-                                else rlm
-                            )
+                            runner = clean_rlm if mode == "clean-rlm" else exp1_rlm if mode == "rlm-exp1" else rlm
                             r = runner.run(
                                 ex["context"],
                                 question,

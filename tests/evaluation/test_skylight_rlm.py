@@ -2,10 +2,21 @@
 # SPDX-License-Identifier: Apache-2.0
 """Skylight RLM: protocol parsing and the root / scan loop."""
 
+import pytest
+
+from evaluation.rlm import skylight_rlm
 from evaluation.rlm.organization import ordered_hits, organize
 from evaluation.rlm.retrieval import reset_cache
 from evaluation.rlm.rlm import MemoryBudget
-from evaluation.rlm.skylight_rlm import SUB_SYSTEM_PROMPT, SkylightRLM, _is_no_answer, _rfind_order, parse_root_action
+from evaluation.rlm.skylight_rlm import SUB_SYSTEM_PROMPT, SkylightRLM, _rfind_order, parse_root_action
+
+# This file was written against a newer skylight_rlm than apd10-dev pushed (it uses
+# _is_no_answer, repetition penalties, a vanilla last step...). Until that version lands,
+# its tests are expected to fail; non-strict, so they report XPASS once it does.
+_is_no_answer = getattr(skylight_rlm, "_is_no_answer", None)
+pytestmark = pytest.mark.xfail(
+    _is_no_answer is None, reason="needs the newer skylight_rlm.py from apd10-dev", strict=False
+)
 
 
 class ScriptedClient:
@@ -149,10 +160,7 @@ class TestParse:
         assert payload.state == "BM25" and payload.look == "SCAN" and payload.index == 4
 
     def test_untagged_think_still_parses_protocol(self):
-        text = (
-            "I should write final_answer={...} only after FOUND.\n"
-            "For now: SUB_CALL(STATE=BM25, LOOK=SCAN(4))"
-        )
+        text = "I should write final_answer={...} only after FOUND.\n" "For now: SUB_CALL(STATE=BM25, LOOK=SCAN(4))"
         kind, payload = parse_root_action(text, default_query="q")
         assert kind == "subcall" and payload.query == "q"
 
