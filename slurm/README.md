@@ -11,4 +11,4 @@ names its partition and GPU; edit it (or pass `sbatch` flags) for another cluste
 | `baselines/full_context/qwen35_27b_gptq_int4_loft32k_dgx.sh` | the same on LOFT-32k |
 | `baselines/full_context/qwen35_27b_gptq_int4_loft32k_smoke_dgx.sh` | a short smoke test of that baseline |
 
-Interactive launchers (`bash …`) are in [`../scripts/`](../scripts/).
+Interactive launchers (`bash …`) are in [`../scripts/`](../scripts).

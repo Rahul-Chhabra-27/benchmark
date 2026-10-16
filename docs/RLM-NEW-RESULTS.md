@@ -24,7 +24,7 @@ describe simulated KV retention, not measured GPU-memory consumption or savings.
 ## Results
 
 The primary metric is **Subspan EM (%)**, with 55 examples in every cell.
-The [CSV](RLM-new-loft128k.csv) also includes EM and F1 as **0–1 fractions**,
+The [CSV](data/RLM-new-loft128k.csv) also includes EM and F1 as **0–1 fractions**,
 configuration details, and per-cell audit counts.
 
 | Dataset | Logical KV budget | 1× (uncompressed) | 2× | 4× | 8× |

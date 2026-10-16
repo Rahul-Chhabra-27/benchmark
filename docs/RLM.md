@@ -1,6 +1,6 @@
 # RLM Sub-Calls over a KV Memory Budget
 
-[**RLM(new): September 5–7 LOFT-128k results**](RLM-new-README.md) — all 27 configurations, scores, and audit notes.
+[**RLM(new): September 5–7 LOFT-128k results**](RLM-NEW-RESULTS.md) — all 27 configurations, scores, and audit notes.
 
 This repository hosts two ways of surviving a context that does not fit in the model's
 window, and one experiment that combines them. **KVPress** compresses the KV cache so the
@@ -31,8 +31,8 @@ derived from the KV memory budget rather than picked by hand.
 
 ## 1. How RLM and KVPress coexist
 
-Files: [`evaluation/rlm/rlm.py`](evaluation/rlm/rlm.py),
-[`evaluation/rlm/kvzip_backend.py`](evaluation/rlm/kvzip_backend.py)
+Files: [`evaluation/rlm/rlm.py`](../evaluation/rlm/rlm.py),
+[`evaluation/rlm/kvzip_backend.py`](../evaluation/rlm/kvzip_backend.py)
 
 The harnesses share everything except inference:
 
@@ -82,7 +82,7 @@ not about this implementation's memory use.
 
 ## 2. Why the two backends' numbers are comparable
 
-File: [`evaluation/compare.py`](evaluation/compare.py)
+File: [`evaluation/compare.py`](../evaluation/compare.py)
 
 Two properties make a KVPress row and an RLM row commensurable:
 
@@ -94,7 +94,7 @@ Two properties make a KVPress row and an RLM row commensurable:
 
 Five asymmetries are recorded rather than hidden, because ignoring any of them flatters
 RLM. The two below are the original pair; abstentions, retrieval and provided chunks were
-added later and are documented in full in [`evaluation/rlm/README.md`](evaluation/rlm/README.md)
+added later and are documented in full in [`evaluation/rlm/README.md`](../evaluation/rlm/README.md)
 -- which is the authoritative list, not this one:
 
 - **Errors.** An RLM example that dies on an API error is dropped from the score and counted
@@ -109,7 +109,7 @@ added later and are documented in full in [`evaluation/rlm/README.md`](evaluatio
 
 ## 3. The memory-budget math that already existed
 
-File: [`kvpress/pipeline.py`](kvpress/pipeline.py)
+File: [`kvpress/pipeline.py`](../kvpress/pipeline.py)
 
 Budgets are **decimal**, and must stay that way to match the published LOFT/RULER numbers in
 `evaluation/matrix_constants.py`:
@@ -141,7 +141,7 @@ Two consequences worth internalising:
 
 ## 4. Deriving the sub-call chunk size
 
-File: [`evaluation/rlm/sizing.py`](evaluation/rlm/sizing.py)
+File: [`evaluation/rlm/sizing.py`](../evaluation/rlm/sizing.py)
 
 Point (1) above is the lever. The realized ratio depends on how big a slice the root sends,
 so if the slice size is chosen by hand and the budget by sweep, the two drift and every arm
@@ -325,10 +325,10 @@ Recorded so they are not rediscovered as bugs. The list was longer; see
 
 ## See also
 
-- [`evaluation/rlm/README.md`](evaluation/rlm/README.md) — the RLM harness itself: guards,
+- [`evaluation/rlm/README.md`](../evaluation/rlm/README.md) — the RLM harness itself: guards,
   scratchpad, benchmarks, metrics.
 - [`RUNNING.md`](RUNNING.md) — how to run every arm, including the KVzip sub-call arms
   (§8).
 - [`CAMPAIGNS.md`](CAMPAIGNS.md) — the finished campaigns, including the LOFT-128k
   arm-by-arm campaign (§1) and the audit that produced the generation-2 changes (§2).
-- [`evaluation/README.md`](evaluation/README.md) — the KVPress evaluation matrix.
+- [`evaluation/README.md`](../evaluation/README.md) — the KVPress evaluation matrix.

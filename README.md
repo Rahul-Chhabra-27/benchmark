@@ -15,10 +15,10 @@ downloadable prediction files.
 
 ## RLM(new) results
 
-[**LOFT-128k results after the September 5 changes**](RLM-new-README.md) —
+[**LOFT-128k results after the September 5 changes**](docs/RLM-NEW-RESULTS.md) —
 Qwen3-4B, 27 configurations with logical KV budgets of 2/4/8 GB and chunk factors
 of 1×/2×/4×/8×. Includes all scores and run audit notes;
-[download the complete CSV](RLM-new-loft128k.csv).
+[download the complete CSV](docs/data/RLM-new-loft128k.csv).
 
 ## Layout
 
@@ -55,15 +55,15 @@ is what makes `compare.py` able to put the two side by side.
 
 ## Further reading
 
-- [**RUNNING.md**](RUNNING.md) — how to run every RLM experiment (base vanilla/RLM,
+- [**RUNNING.md**](docs/RUNNING.md) — how to run every RLM experiment (base vanilla/RLM,
   ordered-chunk arms, B × F cells, KVzip arms) on an infolab host or any GPU machine.
-- [**CAMPAIGNS.md**](CAMPAIGNS.md) — every finished RLM campaign in one place: the
+- [**CAMPAIGNS.md**](docs/CAMPAIGNS.md) — every finished RLM campaign in one place: the
   question, the setup, the headline numbers, and where the full record and raw
   results live.
-- [**RLM.md**](RLM.md) — how RLM and kvpress coexist, and how sub-call chunk sizes are
+- [**RLM.md**](docs/RLM.md) — how RLM and kvpress coexist, and how sub-call chunk sizes are
   derived from a KV memory budget.
 - [**evaluation/rlm/README.md**](evaluation/rlm/README.md) — running the RLM arms,
   the guards, and what makes the two backends comparable.
-- [**KNOWN_ISSUES.md**](KNOWN_ISSUES.md) — expected test failures, deliberate design
+- [**KNOWN_ISSUES.md**](docs/KNOWN_ISSUES.md) — expected test failures, deliberate design
   limitations, and upstream bugs left in place. Read this before filing anything.
 - [**AGENTS.md**](AGENTS.md) — contribution conventions (SPDX headers, DCO, formatting).

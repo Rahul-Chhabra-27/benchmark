@@ -1,7 +1,7 @@
 # scripts — everything you run from a terminal
 
 Run every script from the repository root: `bash scripts/rlm/run_bxf.sh`.
-SLURM batch jobs (`sbatch …`) are in [`../slurm/`](../slurm/).
+SLURM batch jobs (`sbatch …`) are in [`../slurm/`](../slurm).
 
 ## `rlm/` — the RLM experiments
 

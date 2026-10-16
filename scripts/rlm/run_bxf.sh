@@ -12,7 +12,7 @@
 #   3. prints one table of scores and per-cell checks (bxf_summary.py);
 #   4. stops the server, if it was the one that started it.
 # It exits 0 only if every cell ran and passed its checks. Re-running it resumes: rows
-# already done are skipped. See RUNNING.md §7 at the repository root.
+# already done are skipped. See docs/RUNNING.md §7.
 set -uo pipefail
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 

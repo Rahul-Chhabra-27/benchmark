@@ -1,4 +1,4 @@
-# The model-server venv: vLLM only. See RUNNING.md §2 at the repository root.
+# The model-server venv: vLLM only. See docs/RUNNING.md §2 at the repository root.
 #
 #   uv pip install -p $S/venv-vllm -r evaluation/rlm/requirements-server.txt --torch-backend=cu128
 #

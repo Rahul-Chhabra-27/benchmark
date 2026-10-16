@@ -6,11 +6,11 @@ but share the benchmark registry, Hugging Face loaders, canonical scorers, and
 the `predictions.csv` / `metrics.json` / `config.yaml` result contract. Run all
 commands below from the repository root.
 
-**To run anything, follow [`RUNNING.md`](../../RUNNING.md) at the repository root.** It
+**To run anything, follow [`RUNNING.md`](../../docs/RUNNING.md) at the repository root.** It
 covers the base vanilla/RLM run, the ordered-chunk arms (the agentic root handed every
 chunk in BM25 order, on LOFT-128k and RULER-128k), B × F cells and the KVzip arms, on an
 infolab server or on RunPod. What each finished campaign found is in
-[`CAMPAIGNS.md`](../../CAMPAIGNS.md).
+[`CAMPAIGNS.md`](../../docs/CAMPAIGNS.md).
 
 Either ordered arm can also run as a **B × F cell**, reading through an in-process KVzip
 model instead of the served one: `--sub-backend kvzip --memory-budget <B>
@@ -20,7 +20,7 @@ is the factor every read is pressed by (F = 1 is the uncompressed control and ta
 3,472 tokens, so 512 MB × 4 caps a read at 13,888 tokens, each pressed to a quarter. A cell
 the GPU or the model window cannot hold is refused before any example runs. The lane takes
 the same cell as `BUDGET_MB=512 FACTOR=4`. To run cells with one command, see
-[`RUNNING.md` §7](../../RUNNING.md#7-b--f-cells) (`bash scripts/rlm/run_bxf.sh`).
+[`RUNNING.md` §7](../../docs/RUNNING.md#7-b--f-cells) (`bash scripts/rlm/run_bxf.sh`).
 
 ## Goal
 Quantify how Recursive Language Models (RLMs) compare against vanilla long-context
@@ -52,7 +52,7 @@ download datasets (HF) ──> $HF_HOME ──> vllm serve <model> --port 8000
 ```
 
 ## Steps
-**On an infolab host, follow [`RUNNING.md` §5](../../RUNNING.md#5-base-run-vanilla-and-rlm)
+**On an infolab host, follow [`RUNNING.md` §5](../../docs/RUNNING.md#5-base-run-vanilla-and-rlm)
 instead**: one GPU, two venvs, plain commands, from a fresh account to a scored LOFT run.
 The steps below are the generic outline.
 

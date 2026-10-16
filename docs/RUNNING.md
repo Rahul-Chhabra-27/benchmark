@@ -5,7 +5,7 @@ run. It covers an infolab GPU host and any other GPU machine. Run every command 
 repository root unless a step says otherwise.
 
 - **What each campaign found:** [`CAMPAIGNS.md`](CAMPAIGNS.md).
-- **The harness's flags and guards:** [`evaluation/rlm/README.md`](evaluation/rlm/README.md).
+- **The harness's flags and guards:** [`evaluation/rlm/README.md`](../evaluation/rlm/README.md).
 - **The design:** [`RLM.md`](RLM.md).
 
 ## 0. Pick your experiment

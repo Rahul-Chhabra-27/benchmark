@@ -20,7 +20,7 @@ behavior. KVzip has a separate custom integration described below.
 
 ## 1. New model adapter
 
-File: [`kvpress/model_adapter.py`](kvpress/model_adapter.py)
+File: [`kvpress/model_adapter.py`](../../kvpress/model_adapter.py)
 
 The adapter interface is:
 
@@ -96,7 +96,7 @@ cache metadata
 
 ## 2. Press hook changes
 
-File: [`kvpress/presses/base_press.py`](kvpress/presses/base_press.py)
+File: [`kvpress/presses/base_press.py`](../../kvpress/presses/base_press.py)
 
 The old direct layer loop was replaced with adapter discovery:
 
@@ -131,7 +131,7 @@ only to full-attention layers.
 
 ## 3. Pipeline changes
 
-File: [`kvpress/pipeline.py`](kvpress/pipeline.py)
+File: [`kvpress/pipeline.py`](../../kvpress/pipeline.py)
 
 KV memory now comes from the adapter:
 
@@ -164,7 +164,7 @@ delegates to the selected adapter.
 
 ## 4. Evaluation and loading changes
 
-File: [`evaluation/evaluate.py`](evaluation/evaluate.py)
+File: [`evaluation/evaluate.py`](../../evaluation/evaluate.py)
 
 Qwen3.5 checkpoints are detected through `AutoConfig`. They are loaded with
 `Qwen3_5ForConditionalGeneration` and `AutoTokenizer`, then passed directly to
@@ -182,14 +182,14 @@ for _, attention in adapter.iter_kv_attention_layers(self.pipeline.model):
 
 ## 5. Query/key normalization
 
-File: [`kvpress/utils.py`](kvpress/utils.py)
+File: [`kvpress/utils.py`](../../kvpress/utils.py)
 
 `Qwen3_5Attention` is included with Qwen3 and Gemma3 when applying `q_norm`
 and `k_norm` to pre-RoPE query/key states.
 
 ## 6. Tests
 
-File: [`tests/test_model_adapter.py`](tests/test_model_adapter.py)
+File: [`tests/test_model_adapter.py`](../../tests/test_model_adapter.py)
 
 Tests cover:
 
@@ -232,7 +232,7 @@ benchmark_artifacts/results/synthetic_kv/64k/runs/results_synthetic_kv_64k_qwen2
 ```
 
 The large local model directory is excluded through the `Qwen2.5-*` entry in
-[`.gitignore`](.gitignore).
+[`.gitignore`](../../.gitignore).
 
 ## 8. Verification
 
