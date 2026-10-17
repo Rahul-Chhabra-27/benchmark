@@ -12,7 +12,7 @@ deliberate act, since it re-baselines every arm that reads it.
 
 import time
 
-from evaluation.rlm.rlm import (
+from evaluation.rlm.harness.rlm import (
     EXAMPLE_LLM_QUERY_DENSE,
     EXAMPLE_LLM_QUERY_SPLIT,
     LLM_QUERY_HELP_DENSE,
@@ -20,7 +20,7 @@ from evaluation.rlm.rlm import (
     RLM,
     SUB_SYSTEM_PROMPT,
 )
-from evaluation.rlm.sizing import fixed_chunk_char_cap
+from evaluation.rlm.shared.sizing import fixed_chunk_char_cap
 
 
 class FakeClient:

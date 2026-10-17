@@ -14,12 +14,11 @@ The sweep was not merely mis-measured; it could not be run.
 import unittest
 
 from evaluation.compare import headline_score, loft_score_key
-from evaluation.rlm.chunkset import ChunkSet, ChunkSetError, document_digest, window_spans
-from evaluation.rlm.oracle_chunks import gold_windows, select
-from evaluation.rlm.retrieval import Hit
-from evaluation.rlm.rlm import RLM, DEFAULT_REDUCE_FINDING_CHARS, _hop_query, _truncate_hits, bare_query
-from evaluation.rlm.run_benchmark import answer_list_example, build_run_dir_components
-
+from evaluation.rlm.chunk_sources.chunkset import ChunkSet, ChunkSetError, document_digest, window_spans
+from evaluation.rlm.chunk_sources.oracle_chunks import gold_windows, select
+from evaluation.rlm.harness.rlm import DEFAULT_REDUCE_FINDING_CHARS, RLM, _hop_query, _truncate_hits, bare_query
+from evaluation.rlm.harness.run_benchmark import answer_list_example, build_run_dir_components
+from evaluation.rlm.shared.retrieval import Hit
 from tests.evaluation.test_rlm_run_benchmark import _args
 
 DOCUMENT = "".join(f"passage {i} mentions widget {i} and nothing else at all. " for i in range(400))
@@ -338,7 +337,7 @@ class StructuredPayloadGuardTest(unittest.TestCase):
         import sys
         from unittest import mock
 
-        import evaluation.rlm.run_benchmark as rb
+        import evaluation.rlm.harness.run_benchmark as rb
 
         with mock.patch.object(sys, "argv", ["run_benchmark", *argv]), self.assertRaises(SystemExit):
             with contextlib.redirect_stderr(io.StringIO()) as err:

@@ -11,7 +11,7 @@ identical cell, forced grounded answer on the third.
 
 import pytest
 
-from evaluation.rlm.rlm import RLM
+from evaluation.rlm.harness.rlm import RLM
 
 
 class FakeClient:
@@ -158,9 +158,7 @@ def test_it_breaks_sooner_than_the_repetition_breaker_would():
     assert len(set(RAMBLING_CELLS)) == len(RAMBLING_CELLS)
 
     with_guard = _rlm(FakeClient(list(RAMBLING_CELLS)), FakeClient(["a"])).run("ctx", "task")
-    without = _rlm(
-        FakeClient(list(RAMBLING_CELLS)), FakeClient(["a"]), max_unproductive_steps=0
-    ).run("ctx", "task")
+    without = _rlm(FakeClient(list(RAMBLING_CELLS)), FakeClient(["a"]), max_unproductive_steps=0).run("ctx", "task")
 
     assert with_guard.end_reason == "unproductive_broken"
     assert with_guard.steps < without.steps
@@ -239,9 +237,7 @@ def test_it_breaks_sooner_than_the_repetition_breaker_would_on_broken_code():
     assert len(set(RAISING_CELLS)) == len(RAISING_CELLS)
 
     with_guard = _rlm(FakeClient(list(RAISING_CELLS)), FakeClient(["a"])).run("ctx", "task")
-    without = _rlm(FakeClient(list(RAISING_CELLS)), FakeClient(["a"]), max_error_steps=0).run(
-        "ctx", "task"
-    )
+    without = _rlm(FakeClient(list(RAISING_CELLS)), FakeClient(["a"]), max_error_steps=0).run("ctx", "task")
 
     assert with_guard.end_reason == "error_loop_broken"
     assert with_guard.steps < without.steps

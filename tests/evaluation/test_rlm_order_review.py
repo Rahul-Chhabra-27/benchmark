@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """rlm_order_review: which rows an acceptance review samples, and why each one is there."""
 
-from evaluation.rlm.rlm_order_review import cause, needs_review
+from evaluation.rlm.campaigns.rlm_order_review import cause, needs_review
 
 
 def row(end="final_called", reads=1, **metrics):

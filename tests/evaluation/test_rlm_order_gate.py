@@ -9,8 +9,8 @@ import json
 import pytest
 import yaml
 
-from evaluation.rlm import rlm_order_gate as gate
-from evaluation.rlm.rlm import CHUNK_ORDER_REVISION, WORKED_SESSION_RANKED
+from evaluation.rlm.campaigns import rlm_order_gate as gate
+from evaluation.rlm.harness.rlm import CHUNK_ORDER_REVISION, WORKED_SESSION_RANKED
 
 
 def record(i=0):

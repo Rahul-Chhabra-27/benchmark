@@ -6,11 +6,11 @@ but share the benchmark registry, Hugging Face loaders, canonical scorers, and
 the `predictions.csv` / `metrics.json` / `config.yaml` result contract. Run all
 commands below from the repository root.
 
-**To run anything, follow [`RUNNING.md`](../../RUNNING.md) at the repository root.** It
+**To run anything, follow [`RUNNING.md`](../../docs/RUNNING.md) at the repository root.** It
 covers the base vanilla/RLM run, the ordered-chunk arms (the agentic root handed every
 chunk in BM25 order, on LOFT-128k and RULER-128k), B × F cells and the KVzip arms, on an
 infolab server or on RunPod. What each finished campaign found is in
-[`CAMPAIGNS.md`](../../CAMPAIGNS.md).
+[`CAMPAIGNS.md`](../../docs/CAMPAIGNS.md).
 
 Either ordered arm can also run as a **B × F cell**, reading through an in-process KVzip
 model instead of the served one: `--sub-backend kvzip --memory-budget <B>
@@ -20,7 +20,18 @@ is the factor every read is pressed by (F = 1 is the uncompressed control and ta
 3,472 tokens, so 512 MB × 4 caps a read at 13,888 tokens, each pressed to a quarter. A cell
 the GPU or the model window cannot hold is refused before any example runs. The lane takes
 the same cell as `BUDGET_MB=512 FACTOR=4`. To run cells with one command, see
-[`RUNNING.md` §7](../../RUNNING.md#7-b--f-cells) (`bash evaluation/rlm/run_bxf.sh`).
+[`RUNNING.md` §7](../../docs/RUNNING.md#7-b--f-cells) (`bash scripts/rlm/run_bxf.sh`).
+
+## Folders
+- `shared/`: datasets, vLLM client, KVzip sub-calls, B × F sizing, BM25, bm25-graph order
+- `harness/`: `run_benchmark.py` and the RLMs it runs with `--mode`:
+  `rlm.py` (tuned), `clean_rlm/` (modular, no KVzip), `original_rlm.py` (paper protocol),
+  `skylight_rlm.py` (chunk commands, no REPL)
+- `configurable_rlm/`: `loop: base | tuned` with ordering and compression, set in
+  `experiments.yaml` (see the root [README](../../README.md))
+- `chunk_sources/`: chunks chosen outside the RLM (oracle, query-free, notes)
+- `analysis/`: `hard_questions.py`, `paired.py`, `bxf_summary.py`, `compression_picker.py`, …
+- `campaigns/`: tooling for finished campaigns (`rlm_order_*`, `fixed_chunk_grid/`)
 
 ## Goal
 Quantify how Recursive Language Models (RLMs) compare against vanilla long-context
@@ -33,11 +44,11 @@ The harness talks to whatever `--base-url` points at (default
 `http://localhost:8000/v1`). The two supported deployment shapes:
 
 - **Bare-metal GPU host** (infolab-style, no scheduler):
-  `evaluation/rlm/loft128k/run_infolab.sh` launches one vLLM server per GPU and
+  `scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh` launches one vLLM server per GPU and
   drives `run_cells.sh`, which runs the benchmark arms against it.
-- **SLURM**: `evaluation/rlm/loft128k/slurm/loft128k_a100.slurm` is an array job
+- **SLURM**: `slurm/loft128k_a100.slurm` is an array job
   that starts one vLLM server per dataset on its allocated GPU and runs the same
-  cells. `evaluation/rlm/slurm/download_data.sh` prefetches HF datasets on a
+  cells. `scripts/rlm/download_data.sh` prefetches HF datasets on a
   login node for air-gapped compute nodes.
 
 ## Pipeline
@@ -52,22 +63,22 @@ download datasets (HF) ──> $HF_HOME ──> vllm serve <model> --port 8000
 ```
 
 ## Steps
-**On an infolab host, follow [`RUNNING.md` §5](../../RUNNING.md#5-base-run-vanilla-and-rlm)
+**On an infolab host, follow [`RUNNING.md` §5](../../docs/RUNNING.md#5-base-run-vanilla-and-rlm)
 instead**: one GPU, two venvs, plain commands, from a fresh account to a scored LOFT run.
 The steps below are the generic outline.
 
 1. **Environment**: `uv sync --extra eval`, then `source .venv/bin/activate`.
 2. **Data prep** (login node if compute nodes lack internet):
-   `bash evaluation/rlm/slurm/download_data.sh` — caches the shared datasets
+   `bash scripts/rlm/download_data.sh` — caches the shared datasets
    under `$HF_HOME`. Synthetic NIAH/RULER-style tasks are generated locally.
 3. **Serve a model**: `vllm serve Qwen/Qwen3-4B-Instruct-2507 --port 8000`
    (or use `run_infolab.sh`, which does this per GPU with the right flags).
 4. **Smoke test** (~5 examples):
-   `python -m evaluation.rlm.run_benchmark --dataset niah --limit 5 --mode both`
+   `python -m evaluation.rlm.harness.run_benchmark --dataset niah --limit 5 --mode both`
    For a shared RULER-32K subset:
-   `python -m evaluation.rlm.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5 --mode both`.
-5. **Full runs**: `bash evaluation/rlm/loft128k/run_infolab.sh` (bare metal) or
-   `sbatch evaluation/rlm/loft128k/slurm/loft128k_a100.slurm` (SLURM).
+   `python -m evaluation.rlm.harness.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5 --mode both`.
+5. **Full runs**: `bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh` (bare metal) or
+   `sbatch slurm/loft128k_a100.slurm` (SLURM).
 6. **Score & compare**: `python -m evaluation.compare --backend rlm`
 
 Each RLM run gets its own directory containing a resumable `checkpoint.jsonl`,
@@ -231,7 +242,7 @@ non-improvement, not an untried idea.
 ## Serving it (`serve_root.sh`)
 
 ```bash
-GPU=4 evaluation/rlm/serve_root.sh          # one card, one endpoint, every lane
+GPU=4 scripts/rlm/serve_root.sh          # one card, one endpoint, every lane
 ```
 
 The whole structured campaign is HTTP against **one** vLLM: root calls, sub-calls and
@@ -260,7 +271,7 @@ necessarily the index CUDA gives you.
 ## The reader's ceiling (`oracle_chunks.py`)
 
 ```bash
-python -m evaluation.rlm.oracle_chunks --dataset loft --data-dir musique_128k \
+python -m evaluation.rlm.chunk_sources.oracle_chunks --dataset loft --data-dir musique_128k \
   --split test --limit 55 --window 2000 --overlap 400 --k 5 --out-dir <dir>
 ```
 
@@ -283,7 +294,7 @@ Two things it always does, and both matter:
 ## Reading a sweep back (`structured_decompose.py`)
 
 ```bash
-python -m evaluation.rlm.structured_decompose --results <tree> --csv cells.csv
+python -m evaluation.rlm.analysis.structured_decompose --results <tree> --csv cells.csv
 ```
 
 Renders score by window x k, then walks k upward and splits each step into the

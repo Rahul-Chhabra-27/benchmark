@@ -19,10 +19,9 @@ from unittest import mock
 
 import yaml
 
-from evaluation.rlm import run_benchmark as rb
-from evaluation.rlm.datasets import _restrict
-from evaluation.rlm.rlm import Scratchpad, vanilla_answer
-from evaluation.rlm.run_benchmark import (
+from evaluation.rlm.harness import run_benchmark as rb
+from evaluation.rlm.harness.rlm import Scratchpad, vanilla_answer
+from evaluation.rlm.harness.run_benchmark import (
     RESUME_CRITICAL_KEYS,
     build_run_config,
     build_run_dir_components,
@@ -31,6 +30,7 @@ from evaluation.rlm.run_benchmark import (
     resume_conflicts,
     write_run_artifacts,
 )
+from evaluation.rlm.shared.datasets import _restrict
 
 
 def _checkpoint(records: list[dict]) -> tuple[Path, Path]:

@@ -9,12 +9,12 @@ other RLM tests never runs in CI.
 Pure -- no torch, no GPU, no model. The reference numbers throughout are
 Qwen3-4B-Instruct-2507: 36 layers x 2 (K+V) x 8 KV heads x 128 head_dim x 2
 bytes = 147,456 bytes/token, which is the "144 KiB per token" quoted in
-RUNNING.md.
+docs/RUNNING.md.
 """
 
 import unittest
 
-from evaluation.rlm.sizing import (
+from evaluation.rlm.shared.sizing import (
     CHARS_PER_TOKEN_BOUNDS,
     DEFAULT_CHARS_PER_TOKEN,
     FIXED_CHUNK_CHAR_OVERSHOOT,

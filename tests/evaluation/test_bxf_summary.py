@@ -4,7 +4,7 @@
 
 import json
 
-from evaluation.rlm import bxf_summary
+from evaluation.rlm.analysis import bxf_summary
 from tests.evaluation.test_rlm_order_gate import KV_CONFIG, kv_record, write_run
 
 CELL = dict(

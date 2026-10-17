@@ -10,8 +10,8 @@ stay distinguishable from one another.
 
 import unittest
 
-from evaluation.rlm.retrieval import Hit
-from evaluation.rlm.rlm import RLM, STRUCTURED_NOTHING, _cluster_hits, _map_groups, bare_query
+from evaluation.rlm.harness.rlm import RLM, STRUCTURED_NOTHING, _cluster_hits, _map_groups, bare_query
+from evaluation.rlm.shared.retrieval import Hit
 
 DOCUMENT = "".join(f"passage {i} says thing {i}. " for i in range(400))
 

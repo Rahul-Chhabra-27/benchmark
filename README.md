@@ -1,69 +1,79 @@
 # KVPress + RLM long-context benchmarking
 
-A fork of [NVIDIA kvpress](https://github.com/NVIDIA/kvpress) (KV-cache compression
-for 🤗 transformers) extended with a Recursive Language Model (RLM) harness, so the
-two approaches to long context can be measured against each other on the same
-datasets, with the same scorers, on one cost axis.
-
-All inference is **local**: an OpenAI-compatible server (vLLM) on the GPU host for
-the RLM arms, and an in-process HF pipeline for the KVPress arms. There is no
-hosted-API path.
-
-[**Open the benchmark results dashboard**](https://effortless-cupcake-470e7a.netlify.app/)
-— completed dataset benchmarks, memory-budget sweeps, model variants, metrics, and
-downloadable prediction files.
-
-## RLM(new) results
-
-[**LOFT-128k results after the September 5 changes**](RLM-new-README.md) —
-Qwen3-4B, 27 configurations with logical KV budgets of 2/4/8 GB and chunk factors
-of 1×/2×/4×/8×. Includes all scores and run audit notes;
-[download the complete CSV](RLM-new-loft128k.csv).
+KV-cache compression (kvpress) and Recursive Language Models (RLM), measured on the same
+datasets and scorers. [Results dashboard](https://effortless-cupcake-470e7a.netlify.app/)
 
 ## Layout
+- `evaluation/rlm/configurable_rlm/`: the RLM to run; every setting is in `experiments.yaml`
+- `evaluation/rlm/harness/`: original runner (`run_benchmark.py`) and tuned RLM (`rlm.py`)
+- `evaluation/rlm/{shared,analysis,campaigns,chunk_sources}/`: building blocks, result tools
+- `evaluation/benchmarks/`: datasets and scorers
+- `scripts/rlm/`: server and sweep launchers
+- `kvpress/`: the compression library
+- `docs/`: detailed guide (`RUNNING.md`), past campaigns, design
 
-| Path | What it is |
-|---|---|
-| `kvpress/` | The compression library. Presses live in `kvpress/presses/`; `KVPressTextGenerationPipeline` in `kvpress/pipeline.py` is the user-facing API. |
-| `evaluation/` | Benchmark harness: datasets, canonical scorers, and the KVPress runner (`evaluate.py`, `run_matrix.py`). |
-| `evaluation/rlm/` | The RLM harness — REPL scaffold, sub-call backends, and its runner. See `evaluation/rlm/README.md`. |
-| `direct_baseline/` | Uncompressed HF baseline (`model.generate()`), deliberately importing no kvpress code. |
-| `tests/` | Unit tests for presses, the pipeline, and the evaluation harness. |
+## Infolab rules
+- Hosts: `ant bee cat dog elk fox` (`<host>.cse.iitb.ac.in`); no scheduler, GPUs shared.
+- Work in `tmux`. Take one free GPU (`nvidia-smi`: ~0 MiB and 0 %).
+- Code in `$HOME`; environments, caches and results in `/tmp/$USER`; archive to `/mnt/nas/$USER`.
+- Write as group `infolab` (`exec newgrp infolab`).
 
-## Running things
-
+## Setup (once per host)
 ```bash
-uv sync --extra eval && source .venv/bin/activate
-
-# KVPress: one press/ratio sweep locally
-cd evaluation && ./evaluate.sh
-
-# KVPress: a memory-budget matrix (SLURM array job)
-sbatch run-eval.sh yml/<config>.yaml <profile> <worker-count>
-
-# RLM: serve a model, then run both arms against it
-vllm serve Qwen/Qwen3-4B-Instruct-2507 --port 8000
-python -m evaluation.rlm.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5
-
-# Join both backends into one comparison table
-python -m evaluation.compare --dataset ruler32k
+git clone git@github.com:skylight-org/agentic-longcontext.git ~/rlm && cd ~/rlm
+git checkout cleanup/clean-rlm
+export S=/tmp/$USER/rlm && mkdir -p $S
+export VLLM=/mnt/nas/gautammahale/benchmark/.venv/bin/vllm           # server env (vLLM 0.8.5)
+export PY=/mnt/nas/gautammahale/benchmark/.venv-kvpress/bin/python   # repo env (kvpress, openai)
+export HF_HOME=/mnt/nas/gautammahale/hf_cache                        # model and datasets
+$PY -m pytest tests/evaluation -q                                    # 3 known failures, all on master too
 ```
+- Build your own envs instead: `docs/RUNNING.md` §2.
 
-Every run — either backend — writes the same four artifacts to its own directory:
-`predictions.csv`, `metrics.json`, `config.yaml`, `README.md`. That shared contract
-is what makes `compare.py` able to put the two side by side.
+## Start the server
+```bash
+GPU=0 PORT=8002 GPU_UTIL=0.5 VLLM=$VLLM HF_HOME=$HF_HOME LOG=$S/logs/server.log SESSION=rlm_root \
+  bash scripts/rlm/serve_root.sh
+```
+- Vanilla (whole document in the window): add `MAX_LEN=139264 GPU_UTIL=0.65`.
+- Ready check and stopping it: `docs/RUNNING.md` §4.
 
-## Further reading
+## Run experiments
+```bash
+$PY -m evaluation.rlm.configurable_rlm list                      # all experiments
+$PY -m evaluation.rlm.configurable_rlm check tuned_graph         # what it runs, no model loaded
+$PY -m evaluation.rlm.configurable_rlm run tuned_graph --set data.limit=3
+```
+- Settings in `experiments.yaml`: `loop` (base | tuned), `ordering` (none | bm25-query | bm25-graph),
+  `compression` (`budget_mb`, `factor`).
+- `loop: tuned` is the original `rlm.py`, run with the earlier campaigns' flags.
+- Another port: `--set models.base_url=http://localhost:<PORT>/v1`.
+- Compression experiments: pick the card with `CUDA_VISIBLE_DEVICES`.
+- Re-running resumes.
 
-- [**RUNNING.md**](RUNNING.md) — how to run every RLM experiment (base vanilla/RLM,
-  ordered-chunk arms, B × F cells, KVzip arms) on an infolab host or any GPU machine.
-- [**CAMPAIGNS.md**](CAMPAIGNS.md) — every finished RLM campaign in one place: the
-  question, the setup, the headline numbers, and where the full record and raw
-  results live.
-- [**RLM.md**](RLM.md) — how RLM and kvpress coexist, and how sub-call chunk sizes are
-  derived from a KV memory budget.
-- [**evaluation/rlm/README.md**](evaluation/rlm/README.md) — running the RLM arms,
-  the guards, and what makes the two backends comparable.
-- [**KNOWN_ISSUES.md**](KNOWN_ISSUES.md) — expected test failures, deliberate design
-  limitations, and upstream bugs left in place. Read this before filing anything.
-- [**AGENTS.md**](AGENTS.md) — contribution conventions (SPDX headers, DCO, formatting).
+## `configurable_rlm` files
+- `experiments.yaml`: every experiment; shared `defaults`, then what each one changes
+- `config.py`: reads and checks `experiments.yaml` (unknown keys are refused)
+- `rlm.py`: the base RLM: short prompt, Python REPL, loop, `llm_query`, `FINAL`, plain reads
+- `ordering.py`: adds the `chunks` list in bm25-query or bm25-graph order
+- `compression.py`: KVzip reads under a budget B; factor per read, offloading, cost
+- `tuned.py`: `loop: tuned`; runs the original `harness/rlm.py` unchanged, with the earlier campaigns' flags
+- `run.py`: runs an experiment over its questions; writes results; resumes
+- `__main__.py`: the `list` / `check` / `run` commands
+- `__init__.py`: package entry points
+
+## Sweeps
+```bash
+LIMIT=55 SUBSETS="nq hotpotqa" BUDGETS_MB="512 1024" FACTORS="1 2 4" ARMS=bm25-graph bash scripts/rlm/run_bxf.sh
+SUBSETS="nq hotpotqa" LIMIT=55 OUT=$S/hard PY=$PY bash scripts/rlm/run_hard_set.sh   # server with MAX_LEN=139264
+```
+- `run_bxf.sh`: B × F cells, then a results table. Add `SPLIT=dev` for the dev rows.
+- `run_hard_set.sh`: questions vanilla solves but RLM + ordering misses →
+  `$S/hard/hard_set/ids/`. Run them with `--set data.ids_file=<file>`.
+
+## Results
+- `evaluation/results/rlm/configurable_rlm/<experiment>/<task>/`: `metrics.json`, `predictions.csv`.
+- Score: F1 (nq, hotpotqa, musique), coverage (qampari, quest).
+
+## More
+- `docs/RUNNING.md`: full guide · `docs/CAMPAIGNS.md`: past results · `docs/KNOWN_ISSUES.md`.

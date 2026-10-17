@@ -18,7 +18,7 @@ from pathlib import Path
 # Anchored on this file, not on the caller's working directory. As a relative
 # string this only resolved from the repository root, so `compare.py` and
 # `run_benchmark.py --out` silently pointed somewhere else when run from
-# `evaluation/` -- which is where run-eval.sh puts you.
+# `evaluation/` -- which is where slurm/run-eval.sh puts you.
 _REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 
 # The tree holding every backend's run directories. compare.py walks this.

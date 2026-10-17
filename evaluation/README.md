@@ -8,7 +8,7 @@ The same repository also contains a Recursive Language Model baseline for
 vanilla-vs-RLM long-context comparisons. It shares this evaluator's benchmark
 registry, dataset loaders, scorers, and result artifact names while retaining an
 independent inference path. See the [RLM benchmark guide](rlm/README.md), and
-[RLM.md](../RLM.md) for how the two backends relate and how RLM sub-call chunk sizes are
+[RLM.md](../docs/RLM.md) for how the two backends relate and how RLM sub-call chunk sizes are
 derived from a KV memory budget.
 
 ### Quick Start 🚀

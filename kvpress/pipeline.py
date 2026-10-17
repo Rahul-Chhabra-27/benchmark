@@ -3,8 +3,8 @@
 
 
 import contextlib
-import os
 import logging
+import os
 from typing import Any, Callable, Optional
 
 import torch
@@ -12,13 +12,13 @@ from transformers import AutoModelForCausalLM, Cache, Pipeline
 from transformers.pipelines import PIPELINE_REGISTRY
 from transformers.pipelines.base import GenericTensor
 
+from kvpress.model_adapter import get_model_adapter
 from kvpress.presses.base_press import BasePress
 from kvpress.presses.decoding_press import DecodingPress
 from kvpress.presses.dms_press import DMSPress
 from kvpress.presses.finch_press import FinchPress
 from kvpress.presses.key_rerotation_press import KeyRerotationPress
 from kvpress.presses.prefill_decoding_press import PrefillDecodingPress
-from kvpress.model_adapter import get_model_adapter
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def compute_token_budget_from_memory(
     Module-level so callers that need the budget WITHOUT running a generation can
     reuse it rather than re-deriving the arithmetic -- notably the RLM harness,
     which sizes its sub-call chunks from the same budget the presses are given
-    (see ``evaluation/rlm/sizing.py``). Depends only on the model, so it needs no
+    (see ``evaluation/rlm/shared/sizing.py``). Depends only on the model, so it needs no
     pipeline instance.
 
     Returns the token budget, bytes per token, and budget in bytes.
@@ -460,8 +460,7 @@ class KVPressTextGenerationPipeline(Pipeline):
             top_values, top_ids = torch.topk(logits, k=5)
             top_tokens = [self.tokenizer.decode([token_id.item()]) for token_id in top_ids]
             logger.info(
-                "GEN_DEBUG first_logits finite=%s min=%.6f max=%.6f "
-                "top_ids=%s top_tokens=%r top_logits=%s",
+                "GEN_DEBUG first_logits finite=%s min=%.6f max=%.6f " "top_ids=%s top_tokens=%r top_logits=%s",
                 bool(torch.isfinite(logits).all()),
                 logits.min().item(),
                 logits.max().item(),

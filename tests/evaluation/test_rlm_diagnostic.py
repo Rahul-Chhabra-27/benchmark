@@ -5,7 +5,7 @@ import sys
 
 import pytest
 
-from evaluation.rlm.diagnostic import DiagnosticTrace
+from evaluation.rlm.analysis.diagnostic import DiagnosticTrace
 from tests.evaluation.test_rlm_chunk_order import graph_view, query_view, run_once
 
 
@@ -48,7 +48,7 @@ def test_exception_restores_profiler(tmp_path):
 def test_model_exchange_allowlist(tmp_path, monkeypatch):
     from types import SimpleNamespace
 
-    from evaluation.rlm.client import LLMClient
+    from evaluation.rlm.shared.client import LLMClient
 
     monkeypatch.setattr(LLMClient, "__post_init__", lambda self: None)
     client = LLMClient("fake-model")

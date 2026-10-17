@@ -10,9 +10,9 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from evaluation.rlm.chunkset import ChunkRecord, ChunkSet, ChunkSetError, document_digest, window_spans
-from evaluation.rlm.query_free_chunks import every_window, lead, random_windows, stride, tag_for
-from evaluation.rlm.run_benchmark import build_run_dir_components
+from evaluation.rlm.chunk_sources.chunkset import ChunkRecord, ChunkSet, ChunkSetError, document_digest, window_spans
+from evaluation.rlm.chunk_sources.query_free_chunks import every_window, lead, random_windows, stride, tag_for
+from evaluation.rlm.harness.run_benchmark import build_run_dir_components
 from tests.evaluation.test_rlm_run_benchmark import _args
 
 DOCUMENT = ("alpha beta gamma delta epsilon zeta eta theta " * 400)[:9000]
@@ -148,8 +148,8 @@ class MaxClusterCharsTest(unittest.TestCase):
         self.assertEqual(self._set([0, 3]).max_cluster_chars(), 2000)
 
     def test_it_agrees_with_the_clustering_the_map_step_actually_does(self):
-        from evaluation.rlm.rlm import _cluster_hits
-        from evaluation.rlm.retrieval import Hit
+        from evaluation.rlm.harness.rlm import _cluster_hits
+        from evaluation.rlm.shared.retrieval import Hit
 
         for windows in ([0, 1, 2], [0, 3], [0, 1, 4, 5], every_window(len(GRID))):
             hits = [
@@ -195,7 +195,7 @@ class GuardTest(unittest.TestCase):
         import sys
         from unittest import mock
 
-        import evaluation.rlm.run_benchmark as rb
+        import evaluation.rlm.harness.run_benchmark as rb
 
         with mock.patch.object(sys, "argv", ["run_benchmark", *argv]), self.assertRaises(SystemExit):
             with contextlib.redirect_stderr(io.StringIO()) as err:
@@ -227,10 +227,14 @@ class GuardTest(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             message = self._run(
                 *self.BASE,
-                "--chunks-file", self._chunk_file(tmp, every_window(len(GRID))),
-                "--chunks-k", "6",
-                "--max-subcall-chars", "4000",
-                "--max-sub-calls", "0",
+                "--chunks-file",
+                self._chunk_file(tmp, every_window(len(GRID))),
+                "--chunks-k",
+                "6",
+                "--max-subcall-chars",
+                "4000",
+                "--max-sub-calls",
+                "0",
             )
         self.assertIn("--structured-map-granularity window", message)
         self.assertIn("single 9000-char passage", message)
@@ -239,10 +243,14 @@ class GuardTest(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             message = self._run(
                 *self.BASE,
-                "--chunks-file", self._chunk_file(tmp, [0, 3]),
-                "--chunks-k", "6",
-                "--max-subcall-chars", "4000",
-                "--limit", "0",
+                "--chunks-file",
+                self._chunk_file(tmp, [0, 3]),
+                "--chunks-k",
+                "6",
+                "--max-subcall-chars",
+                "4000",
+                "--limit",
+                "0",
             )
         self.assertNotIn("--structured-map-granularity window", message)
         self.assertIn("--limit must be positive", message)  # it stopped for an unrelated reason
@@ -254,10 +262,14 @@ class GuardTest(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             message = self._run(
                 *self.BASE,
-                "--chunks-file", self._chunk_file(tmp, every_window(len(GRID))),
-                "--chunks-k", "6",
-                "--structured-map-granularity", "window",
-                "--max-sub-calls", "4",
+                "--chunks-file",
+                self._chunk_file(tmp, every_window(len(GRID))),
+                "--chunks-k",
+                "6",
+                "--structured-map-granularity",
+                "window",
+                "--max-sub-calls",
+                "4",
             )
         self.assertIn("--max-sub-calls 0", message)
         self.assertIn("counts as a FINDING", message)
@@ -266,11 +278,16 @@ class GuardTest(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             message = self._run(
                 *self.BASE,
-                "--chunks-file", self._chunk_file(tmp, every_window(len(GRID))),
-                "--chunks-k", "6",
-                "--structured-map-granularity", "window",
-                "--max-sub-calls", "0",
-                "--limit", "0",
+                "--chunks-file",
+                self._chunk_file(tmp, every_window(len(GRID))),
+                "--chunks-k",
+                "6",
+                "--structured-map-granularity",
+                "window",
+                "--max-sub-calls",
+                "0",
+                "--limit",
+                "0",
             )
         self.assertNotIn("counts as a FINDING", message)
         self.assertIn("--limit must be positive", message)
@@ -279,9 +296,12 @@ class GuardTest(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             message = self._run(
                 *self.BASE,
-                "--chunks-file", self._chunk_file(tmp, [0, 3], tag="stride"),
-                "--chunks-tag", "lead",
-                "--chunks-k", "6",
+                "--chunks-file",
+                self._chunk_file(tmp, [0, 3], tag="stride"),
+                "--chunks-tag",
+                "lead",
+                "--chunks-k",
+                "6",
             )
         self.assertIn("disagrees with the chunk file", message)
 

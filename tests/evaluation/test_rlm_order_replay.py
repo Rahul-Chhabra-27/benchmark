@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """rlm_order_replay: which FINAL literals revision 5 rejected, and which revision 6 accepts."""
 
-from evaluation.rlm.rlm_order_replay import final_literal, first_accepted
+from evaluation.rlm.campaigns.rlm_order_replay import final_literal, first_accepted
 
 READ = 'a = llm_query("q", chunks[:2])\nprint(a)'
 

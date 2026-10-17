@@ -1,0 +1,679 @@
+# SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+"""configurable_rlm: the base RLM (config, prompt, REPL, loop, runner) and the compression add-on on top."""
+
+import ast
+import json
+import time
+from pathlib import Path
+
+import pytest
+import yaml
+
+from evaluation.rlm.configurable_rlm import __main__ as cli
+from evaluation.rlm.configurable_rlm import rlm as base
+from evaluation.rlm.configurable_rlm import tuned
+from evaluation.rlm.configurable_rlm.compression import CompressedReader, Placement
+from evaluation.rlm.configurable_rlm.config import config_from_dict, load_experiment, read_experiments
+from evaluation.rlm.configurable_rlm.ordering import Ordering, build_chunks, query_text
+from evaluation.rlm.configurable_rlm.rlm import (
+    NO_CODE_BLOCK,
+    RLM,
+    Limits,
+    PlainReader,
+    Repl,
+    contributed,
+    extract_code,
+    read_limit_help,
+    system_prompt,
+)
+from evaluation.rlm.configurable_rlm.run import run_experiment
+
+
+def code(body: str) -> str:
+    return f"```python\n{body}\n```"
+
+
+class ScriptedRoot:
+    """A root model that replies from a script and records what it was sent."""
+
+    def __init__(self, replies):
+        self.replies = list(replies)
+        self.sent = []
+
+    def chat(self, messages, **kw):
+        self.sent.append([dict(m) for m in messages])
+        return self.replies.pop(0) if self.replies else code("print('idle')")
+
+
+class FakeClient:
+    """The sub-model behind a PlainReader: records each prompt, answers from a script."""
+
+    def __init__(self, answer="Paris"):
+        self.answer, self.prompts = answer, []
+
+    def chat(self, messages, **kw):
+        self.prompts.append(messages[-1]["content"])
+        return self.answer
+
+
+def plain(answer="Paris", limit=8192):
+    return PlainReader(FakeClient(answer), limit)
+
+
+def rlm(replies, reader=None, **limits):
+    return RLM(ScriptedRoot(replies), reader or plain(), Limits(**limits))
+
+
+# --------------------------------------------------------------------------- config
+
+
+def minimal(**extra):
+    return {"name": "t", "data": {"tasks": ["hotpotqa"]}, **extra}
+
+
+def test_defaults_and_loft_task_names():
+    config = config_from_dict(minimal())
+    assert config.ordering == "none" and config.compression.factor == 1
+    assert config.data.task_dirs() == ["hotpotqa_128k"]
+    assert config.read_tokens == 8192 and not config.compression.in_process
+
+
+def test_budget_sets_reads_to_b_times_f():
+    config = config_from_dict(minimal(compression={"factor": 4, "budget_mb": 1024}))
+    assert config.compression.budget_tokens == 6944 and config.read_tokens == 4 * 6944
+    assert config.compression.in_process
+
+
+@pytest.mark.parametrize(
+    "bad, message",
+    [
+        (minimal(ordering="random"), "ordering must be one of"),
+        (minimal(compression={"factor": 3, "budget_mb": 1024}), "factors must be in"),
+        (minimal(compression={"factor": 2}), "needs compression.budget_mb"),
+        (minimal(cost={"show_root": True}), "show_root needs compression.budget_mb"),
+        (minimal(rlm={"max_stpes": 3}), "unknown key"),
+        (minimal(colour="red"), "unknown key"),
+        ({"name": "t"}, "at least `name` and `data`"),
+    ],
+)
+def test_bad_configs_are_refused(bad, message):
+    with pytest.raises(ValueError, match=message):
+        config_from_dict(bad)
+
+
+def test_an_experiment_is_its_keys_over_the_defaults(tmp_path):
+    path = tmp_path / "experiments.yaml"
+    path.write_text(
+        yaml.safe_dump(
+            {
+                "defaults": {"data": {"tasks": ["nq"], "limit": 5}, "rlm": {"max_steps": 9}},
+                "experiments": {"x": {"ordering": "bm25-graph"}},
+            }
+        )
+    )
+    config = load_experiment("x", path, {"data.limit": 2, "name": "smoke"})
+    assert (config.name, config.ordering, config.data.limit, config.rlm.max_steps) == ("smoke", "bm25-graph", 2, 9)
+    assert config.data.tasks == ("nq",)
+    with pytest.raises(ValueError, match="no experiment 'y'"):
+        load_experiment("y", path)
+
+
+def test_every_shipped_experiment_loads():
+    _, experiments = read_experiments()
+    names = [load_experiment(name).name for name in experiments]
+    assert len(names) >= 11 and {"graph_cost_aware", "tuned", "tuned_graph_x2"} <= set(names)
+
+
+def test_list_and_check_commands(capsys):
+    cli.main(["list"])
+    assert "graph_cost_aware" in capsys.readouterr().out
+    cli.main(["check", "graph_x2", "--set", "data.limit=3"])
+    out = capsys.readouterr().out
+    assert "B=6,944 tokens (1024 MB), F=2" in out and "limit=3" in out and "grouped by topic" in out
+    cli.main(["check", "graph_cost_aware"])
+    assert "offloaded to CPU" in capsys.readouterr().out  # the add-on's prompt lines, without loading a model
+
+
+# --------------------------------------------------------------------------- the base knows nothing of compression
+
+
+def test_the_base_rlm_imports_none_of_its_features():
+    tree = ast.parse(Path(base.__file__).read_text())
+    imported = [n.module or "" for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)]
+    assert not [m for m in imported if any(f in m for f in ("compression", "ordering", "tuned"))]
+
+
+def test_a_plain_run_refuses_a_compression_option():
+    result = rlm([code("print(llm_query('q', 'abcd', factor=4))")], max_steps=1).run("doc", "q")
+    assert "takes no ['factor']" in result.calls[0].refused
+
+
+# --------------------------------------------------------------------------- prompt
+
+
+def test_prompt_adds_only_what_a_feature_adds():
+    common = dict(question="Q?", context_chars=1000, read_help=read_limit_help(100), max_steps=5, output_chars=50)
+    plain_prompt = system_prompt(**common)
+    ordering = Ordering("bm25-graph")
+    graph = system_prompt(**common, feature_tools=ordering.tool_help(), feature_notes=ordering.notes())
+    assert "chunks" not in plain_prompt and "cut into 250 pieces" in graph and "grouped by topic" in graph
+    assert "One call reads at most 100 tokens" in plain_prompt
+    listed = system_prompt(**common, answer_format="Final Answer:", list_answer=True)
+    assert '["first", "second", "third"]' in listed
+
+
+# --------------------------------------------------------------------------- repl
+
+
+def test_repl_persists_echoes_and_reports_errors():
+    repl = Repl({}, timeout=None)
+    assert repl.run("x = 2", 100) == "[no output]"
+    assert repl.run("x * 21", 100).strip() == "42"
+    assert "ZeroDivisionError" in repl.run("1 / 0", 1000)
+    assert "SyntaxError" in repl.run("def (", 1000)
+
+
+def test_repl_truncates_long_output_in_the_middle():
+    out = Repl({}, timeout=None).run("print('a' * 500 + 'b' * 500)", 100)
+    assert out.startswith("a" * 50) and out.rstrip().endswith("b" * 40) and "characters cut" in out
+
+
+def test_repl_stops_a_runaway_cell_but_not_a_slow_sub_call():
+    repl = Repl({}, timeout=0.5)
+    assert "[TIMEOUT]" in repl.run("while True: pass", 200)
+
+    def slow():
+        with repl.outside():
+            time.sleep(0.8)  # longer than the timeout, but paused
+        return "done"
+
+    repl.namespace["slow"] = slow
+    assert repl.run("slow()", 200).strip() == "done"
+
+
+def test_what_a_sub_call_prints_never_reaches_the_root(capsys):
+    repl = Repl({}, timeout=None)
+
+    def noisy_read():
+        with repl.outside():
+            print("library warning")  # e.g. a transformers log line during a sub-call
+        return "answer"
+
+    repl.namespace["noisy_read"] = noisy_read
+    assert repl.run("print(noisy_read())", 200).strip() == "answer"
+    assert "library warning" in capsys.readouterr().out
+
+
+def test_extract_code_takes_the_first_block():
+    assert extract_code("text\n```python\na = 1\n```\n```python\nb = 2\n```") == "a = 1"
+    assert extract_code("no code here") is None
+
+
+# --------------------------------------------------------------------------- loop
+
+
+def test_read_then_final():
+    reader = plain("Paris")
+    result = rlm([code("ans = llm_query('Capital?', context[:400])\nprint(ans)"), code("FINAL(ans)")], reader).run(
+        "x" * 1000, "What is the capital?"
+    )
+    assert (result.answer, result.end_reason, result.steps) == ("Paris", "final", 2)
+    (call,) = result.calls
+    assert (call.step, call.details["read_tokens"], call.refused, call.answer) == (1, 100, "", "Paris")
+    (prompt,) = reader.client.prompts
+    assert "Capital?" in prompt and prompt.endswith("x" * 400)
+
+
+def test_reads_over_the_limit_and_past_the_call_cap_are_refused():
+    loop = rlm(
+        [code("print(llm_query('q', context))"), code("for _ in range(3): print(llm_query('q', 'abcd'))")],
+        reader=plain(limit=10),
+        max_sub_calls=2,
+        max_steps=2,
+    )
+    result = loop.run("y" * 400, "q")
+    refused = [c.refused for c in result.calls]
+    assert "100 tokens" in refused[0] and "at most 10" in refused[0]
+    assert [bool(r) for r in refused] == [True, False, False, True]
+    assert "limit of 2 llm_query calls" in refused[-1]
+
+
+def test_a_reply_without_code_is_told_so_and_the_run_continues():
+    root = ScriptedRoot(["I think it is Paris.", code("FINAL('Paris')")])
+    result = RLM(root, plain(), Limits()).run("doc", "q")
+    assert result.answer == "Paris" and result.steps == 2
+    assert NO_CODE_BLOCK in root.sent[1][-1]["content"]
+
+
+def test_max_steps_ends_the_run_without_an_answer():
+    result = rlm([], max_steps=3).run("doc", "q")
+    assert (result.answer, result.end_reason, result.steps) == (None, "max_steps", 3)
+
+
+def test_root_window_overflow_drops_the_oldest_turn():
+    class Overflow(Exception):
+        status_code = 400
+
+    root = ScriptedRoot([code("print(1)"), code("FINAL('x')")])
+    loop = RLM(root, plain(), Limits())
+    original, calls = root.chat, {"n": 0}
+
+    def chat(messages, **kw):
+        calls["n"] += 1
+        if calls["n"] == 2:
+            raise Overflow("This model's maximum context length is 32768 tokens")
+        return original(messages, **kw)
+
+    root.chat = chat
+    result = loop.run("doc", "q")
+    assert result.answer == "x"
+    assert len(root.sent[-1]) == 2  # system + begin: the one earlier turn was dropped
+
+
+def test_the_ordering_feature_hands_the_root_chunks():
+    document = "a" * 2000 + "b" * 2000 + "c" * 2000
+    root = ScriptedRoot([code("llm_query('q', chunks[0:2])"), code("FINAL('ok')")])
+    loop = RLM(root, plain("ok"), Limits(), [Ordering("bm25-query")])
+    result = loop.run(document, "q")
+    assert result.calls[0].chunks == 2 and result.calls[0].details["read_tokens"] == 1001  # 4002 chars
+    assert "cut into 3 pieces" in root.sent[0][0]["content"]
+    with pytest.raises(ValueError, match="unknown ordering"):
+        Ordering("none")
+
+
+def test_reads_are_marked_contributing_when_the_question_ends():
+    result = rlm([code("a = llm_query('q', 'abcd')"), code("FINAL('Paris')")], plain("The capital is Paris")).run(
+        "doc", "q"
+    )
+    assert result.calls[0].contributed is True
+    assert result.summary["contributing_calls"] == 1 and result.summary["sub_calls"] == 1
+    assert contributed("nothing relevant here", "Paris") is False
+
+
+# --------------------------------------------------------------------------- ordering
+
+
+def test_query_text_strips_the_loft_wrapper():
+    assert query_text("Based on the documents above...\nquery: Who won?\n") == "Who won?"
+    assert query_text("Plain question?") == "Plain question?"
+
+
+def test_orderings_cover_the_whole_document(tmp_path):
+    doc = "".join(f"filler{i} " * 250 for i in range(5))[:10_000] + "quasar " * 10
+    ranked = build_chunks(doc, "query: quasar?", "bm25-query", None)
+    assert ranked[0].text.count("quasar") == 10
+    graph = build_chunks(doc, "anything", "bm25-graph", str(tmp_path))
+    assert sorted((c.start, c.end) for c in graph) == sorted((c.start, c.end) for c in ranked)
+    assert build_chunks(doc, "q", "none", None) == []
+
+
+# --------------------------------------------------------------------------- runner
+
+
+def examples():
+    return [
+        {
+            "id": f"loft:hotpotqa_128k:{i}",
+            "task": "hotpotqa_128k",
+            "question": f"query: question {i}?",
+            "context": "The capital of France is Paris. " * 20,
+            "answers": ["Paris"],
+            "answer_prefix": "Final Answer: ",
+        }
+        for i in range(2)
+    ]
+
+
+def test_run_experiment_writes_results_and_resumes(tmp_path):
+    config = config_from_dict(minimal(output_dir=str(tmp_path), rlm={"max_steps": 3}))
+    script = [code("a = llm_query('q', context[:200])"), code("FINAL(a)")] * 2
+    logs = []
+    results = run_experiment(
+        config, root=ScriptedRoot(script), reader=plain(), load=lambda *a: examples(), log=logs.append
+    )
+    metrics = results["hotpotqa_128k"]
+    assert metrics["f1"] == 1.0 and metrics["runtime"]["scored"] == 2
+    assert metrics["runtime"]["end_reasons"] == {"final": 2} and metrics["runtime"]["reads_mean"]["sub_calls"] == 1.0
+    run_dir = tmp_path / "t" / "hotpotqa_128k"
+    assert {p.name for p in run_dir.iterdir()} >= {"config.yaml", "checkpoint.jsonl", "predictions.csv", "metrics.json"}
+    record = json.loads((run_dir / "checkpoint.jsonl").read_text().splitlines()[0])
+    assert record["calls"][0]["read_tokens"] == 50 and record["reads"]["sub_calls"] == 1
+
+    again = ScriptedRoot([])
+    run_experiment(config, root=again, reader=plain(), load=lambda *a: examples(), log=logs.append)
+    assert again.sent == []  # both questions were already answered
+
+
+def test_a_different_config_never_resumes_into_an_old_directory(tmp_path):
+    first = config_from_dict(minimal(output_dir=str(tmp_path)))
+    root = ScriptedRoot([code("FINAL('x')")] * 2)
+    run_experiment(first, root=root, reader=plain(), load=lambda *a: examples(), log=lambda _: None)
+    changed = config_from_dict(minimal(output_dir=str(tmp_path), ordering="bm25-query"))
+    with pytest.raises(SystemExit, match="different config"):
+        run_experiment(changed, root=ScriptedRoot([]), reader=plain(), load=lambda *a: examples(), log=lambda _: None)
+
+
+def test_a_failing_sub_model_is_shown_to_the_root_not_fatal(tmp_path):
+    class Broken(PlainReader):
+        def read(self, question, text, **options):
+            raise RuntimeError("GPU fell over")
+
+    config = config_from_dict(minimal(output_dir=str(tmp_path)))
+    root = ScriptedRoot([code("llm_query('q', 'abc')")] * 2)
+    # The reader error escapes llm_query inside the cell, so the REPL reports it and the
+    # run continues: a sub-model failure is an observation, not a lost question.
+    run_experiment(
+        config, root=root, reader=Broken(FakeClient(), 100), load=lambda *a: examples()[:1], log=lambda _: None
+    )
+    record = json.loads((tmp_path / "t" / "hotpotqa_128k" / "checkpoint.jsonl").read_text())
+    assert record["error"] is None and record["end_reason"] == "max_steps"
+
+
+# =========================================================================== the compression add-on
+
+B = 100  # KV tokens one read may keep; FakeSub counts len(text) // 4 tokens
+
+
+class FakePress:
+    compression_ratio = 0.0
+
+
+class FakeSub:
+    """Stands in for KVzipSubClient: records the press in force at each read."""
+
+    def __init__(self, press=None, answer="Paris"):
+        self.press, self.answer = press, answer
+        self.press_min_tokens, self.compression_factor, self.seen = 512, None, []
+
+    def token_len(self, text):
+        return len(text) // 4
+
+    def chat_split(self, question, context, **kw):
+        ratio = None if self.press is None else self.press.compression_ratio
+        self.seen.append((question, context, ratio, self.compression_factor))
+        self.kwargs = kw
+        self.last_gpu_peak_bytes = 2_500_000_000 if kw.get("offload") else 9_000_000_000
+        return self.answer
+
+
+def compressed(answer="Paris", **extra):
+    settings = dict(budget_tokens=B, factors=(1, 2, 4, 8), read_limits={1: B, 2: 2 * B, 4: 4 * B, 8: 8 * B})
+    return CompressedReader(FakeSub(FakePress(), answer), **{**settings, **extra})
+
+
+def run(cells, final="FINAL(a)", reader=None):
+    """One question whose root executes `cells` (each a code string), then `final`."""
+    root = ScriptedRoot([code(c) for c in cells] + [code(final)])
+    return RLM(root, reader or compressed(), Limits()).run("x" * 40_000, "Capital of France?"), root
+
+
+def test_placement_splits_kept_kv_between_gpu_and_cpu():
+    assert Placement.of(300, 2, B) == Placement(kept=150, gpu=100, offloaded=50)
+    assert Placement.of(300, 4, B) == Placement(kept=75, gpu=75, offloaded=0)
+    assert Placement(150, 100, 50).cost(gpu_token=1, offloaded_token=100) == 100 + 5000
+
+
+def test_one_model_switches_its_press_on_every_read():
+    reader = compressed()
+    for factor in (8, 1, 2):
+        reader.read("Who?", "z" * 40, factor=factor)
+    question, context, _, _ = reader.sub.seen[0]
+    assert context == "z" * 40 and "Who?" in question  # only the text side is compressed
+    assert [(ratio, f) for _, _, ratio, f in reader.sub.seen] == [(0.875, 8.0), (None, 1.0), (0.5, 2.0)]
+    assert reader.sub.press_min_tokens == 1  # a pressed read is always pressed, so F is exact
+    with pytest.raises(ValueError, match="needs a press"):
+        CompressedReader(FakeSub(None), budget_tokens=B, factors=(1, 2)).read("q", "text", factor=2)
+
+
+def cost_config(**compression):
+    return config_from_dict(
+        {
+            "name": "c",
+            "data": {"tasks": ["hotpotqa"]},
+            "compression": {"budget_mb": 1024, "factor": 1, "choices": [1, 2, 4, 8], **compression},
+            "cost": {"show_root": True},
+        }
+    )
+
+
+def test_read_limits_per_factor_with_and_without_offloading():
+    plain_limits = cost_config()
+    assert plain_limits.compression.factors == (1, 2, 4, 8)
+    assert [plain_limits.read_limit(f) for f in (1, 2, 8)] == [6944, 13888, 55552]
+    offloading = cost_config(offload=True)
+    assert {offloading.read_limit(f) for f in (1, 2, 8)} == {55552}  # as wide as the widest compressed read
+    assert cost_config(offload=True, max_read_tokens=20000).read_limit(1) == 20000
+    reader = CompressedReader.from_config(offloading)  # no model needed to describe it
+    assert reader.offload and reader.show_cost and reader.read_limits[2] == 55552
+
+
+@pytest.mark.parametrize(
+    "compression, message",
+    [
+        ({"choices": [1, 3]}, "must be in"),
+        ({"factor": 4, "choices": [1, 2]}, "must be one of compression.choices"),
+        ({"budget_mb": None}, "needs compression.budget_mb"),
+        ({"budget_mb": None, "choices": [1], "offload": True}, "offload needs compression.budget_mb"),
+    ],
+)
+def test_bad_compression_settings_are_refused(compression, message):
+    with pytest.raises(ValueError, match=message):
+        cost_config(**compression)
+
+
+def test_the_root_picks_a_factor_per_read():
+    result, _ = run(["a = llm_query('q', context[:1600], factor=4)", "b = llm_query('q', context[:400])"])
+    got = [(c.details["factor"], c.details["read_tokens"], c.details["kept_tokens"]) for c in result.calls]
+    assert got == [(4, 400, 100), (1, 100, 100)]
+
+
+def test_an_unavailable_factor_or_an_oversized_read_is_refused():
+    result, _ = run(["print(llm_query('q', 'abcd', factor=3))", "print(llm_query('q', context[:2000], factor=2))"])
+    assert "factor=3 is not available" in result.calls[0].refused
+    assert "at most 200" in result.calls[1].refused  # 500 tokens > B x 2
+
+
+def test_offloading_admits_a_wider_read_and_costs_it():
+    reader = compressed(offload=True, read_limits={f: 800 for f in (1, 2, 4, 8)})
+    result, _ = run(["a = llm_query('q', context[:2000], factor=2)"], reader=reader)
+    d = result.calls[0].details
+    assert not result.calls[0].refused
+    assert (d["read_tokens"], d["kept_tokens"], d["gpu_tokens"], d["offloaded_tokens"]) == (500, 250, 100, 150)
+    assert d["cost"] == 150 * 100  # gpu tokens cost 0 by default
+
+
+def test_the_root_sees_each_reads_cost_only_when_asked():
+    cells = ["print(llm_query('q', context[:2000], factor=2))", "print(llm_query('q', context[:2000], factor=2))"]
+    caps = {f: 800 for f in (1, 2, 4, 8)}
+    _, shown = run(cells, reader=compressed(offload=True, read_limits=caps, show_cost=True))
+    observation = shown.sent[2][-1]["content"]
+    assert "[cost: read 500 tokens at x2 -> 100 on GPU, 150 offloaded; 15000 (total 30000)]" in observation
+    _, hidden = run(cells, reader=compressed(offload=True, read_limits=caps))
+    assert "[cost:" not in hidden.sent[2][-1]["content"]
+
+
+def test_the_cost_line_never_counts_toward_contributed():
+    reader = compressed(answer="nothing relevant", show_cost=True)
+    result, _ = run(["a = llm_query('q', context[:400])"], final="FINAL('100')", reader=reader)
+    assert result.calls[0].contributed is False  # the "100 on GPU" in the cost line is not the answer
+
+
+def test_prompt_mentions_memory_offloading_and_cost_only_when_on():
+    plain_prompt = RLM(None, plain(), Limits()).system_prompt("q", 1000)
+    assert "Memory:" not in plain_prompt and "offloaded" not in plain_prompt and "Cost:" not in plain_prompt
+    full = RLM(None, compressed(offload=True, show_cost=True), Limits()).system_prompt("q", 1000)
+    assert "factor=F" in full and "offloaded to CPU" in full and "100 per" in full
+
+
+def test_reads_are_marked_needed_and_summarised():
+    cells = [
+        "a = llm_query('q', context[:200], factor=2)",  # 50 tokens: fits B uncompressed -> compression unneeded
+        "b = llm_query('q', context[:1600], factor=4)",  # 400 tokens > B -> compression needed
+    ]
+    result, _ = run(cells, final="FINAL('Paris')", reader=compressed(answer="The capital is Paris"))
+    assert [c.details["compression_needed"] for c in result.calls] == [False, True]
+    assert all(c.contributed for c in result.calls)
+    assert result.summary["compressed_unneeded"] == 1 and result.summary["factors"] == {"x2": 1, "x4": 1}
+
+
+def test_run_metrics_report_cost_and_factor_use(tmp_path):
+    config = config_from_dict(
+        {
+            "name": "c",
+            "data": {"tasks": ["hotpotqa"]},
+            "output_dir": str(tmp_path),
+            "compression": {"budget_mb": 1.5, "factor": 1, "choices": [1, 2], "offload": True, "max_read_tokens": 1000},
+        }
+    )
+    reader = CompressedReader.from_config(config, FakeSub(FakePress()))
+    script = [code("a = llm_query('q', context[:200], factor=2)"), code("FINAL(a)")] * 2
+    runtime = run_experiment(
+        config, root=ScriptedRoot(script), reader=reader, load=lambda *a: examples(), log=lambda _: None
+    )["hotpotqa_128k"]["runtime"]
+    reads = runtime["reads_mean"]
+    assert reads["factors"] == {"x2": 2} and reads["cost"] > 0 and reads["offloaded_tokens"] > 0
+    saved = (tmp_path / "c" / "hotpotqa_128k" / "config.yaml").read_text()
+    assert "choices:" in saved  # the resolved config (with its tuple of choices) round-trips through YAML
+    record = json.loads((tmp_path / "c" / "hotpotqa_128k" / "checkpoint.jsonl").read_text().splitlines()[0])
+    assert record["calls"][0]["offloaded_tokens"] > 0 and record["reads"]["cost"] > 0
+
+
+def test_final_does_not_echo_its_answer_as_output():
+    result = rlm([code("FINAL('Paris')")]).run("doc", "q")
+    assert result.transcript[0]["printed"] == "[no output]"
+
+
+# =========================================================================== loop: tuned (our original rlm.py)
+
+
+def tuned_config(**extra):
+    return config_from_dict({"name": "t", "data": {"tasks": ["hotpotqa"], "limit": 3}, "loop": "tuned", **extra})
+
+
+def flag(cmd, name):
+    return cmd[cmd.index(name) + 1]
+
+
+def test_a_tuned_experiment_becomes_the_original_runners_command():
+    config = tuned_config(ordering="bm25-graph", compression={"budget_mb": 1024, "factor": 2}, rlm={"max_steps": 50})
+    cmd = tuned.command(config, "hotpotqa_128k", python="python")
+    assert cmd[:3] == ["python", "-m", "evaluation.rlm.harness.run_benchmark"]
+    assert flag(cmd, "--mode") == "rlm" and flag(cmd, "--data-dir") == "hotpotqa_128k" and flag(cmd, "--limit") == "3"
+    assert flag(cmd, "--chunk-order") == "bm25-graph" and flag(cmd, "--max-steps") == "50"
+    assert (flag(cmd, "--sub-backend"), flag(cmd, "--press"), flag(cmd, "--memory-budget")) == (
+        "kvzip",
+        "kvzip",
+        "1024",
+    )
+    assert flag(cmd, "--compression-factor") == "2" and flag(cmd, "--sub-min-free-gib") == "13"
+    assert "--no-think" not in cmd  # thinking unset: the server's default, as the launchers left it
+    for at_default in ("--max-sub-calls", "--exec-timeout", "--run-timeout"):
+        assert at_default not in cmd  # equal to run_benchmark's defaults, so left off like the launchers did
+
+
+def test_a_plain_tuned_run_has_no_ordering_or_kvzip_flags():
+    config = tuned_config(
+        models={"thinking": False}, data={"tasks": ["nq"], "ids_file": "ids.txt"}, rlm={"run_timeout_s": 600}
+    )
+    cmd = tuned.command(config, "nq_128k", python="python")
+    assert "--chunk-order" not in cmd and "--sub-backend" not in cmd and "--no-think" in cmd
+    assert flag(cmd, "--run-timeout") == "600"  # differs from the default, so passed
+    assert flag(cmd, "--ids-file") == "ids.txt" and "--limit" not in cmd
+    f1 = tuned.command(tuned_config(compression={"budget_mb": 512, "factor": 1}), "x", python="python")
+    assert flag(f1, "--press") == "no_press"  # F = 1 is the uncompressed control at the same budget
+    assert flag(f1, "--max-subcall-chars") == "auto"  # without ordering rlm.py sizes slices from B and F
+    graph = tuned.command(tuned_config(ordering="bm25-graph", compression={"budget_mb": 512, "factor": 2}), "x")
+    assert "--max-subcall-chars" not in graph  # with ordering it reads fixed B x F cells
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"compression": {"budget_mb": 1024, "choices": [1, 2]}},
+        {"compression": {"budget_mb": 1024, "offload": True}},
+        {"compression": {"budget_mb": 1024}, "cost": {"show_root": True}},
+    ],
+)
+def test_a_tuned_experiment_refuses_what_rlm_py_does_not_have(extra):
+    with pytest.raises(ValueError, match="loop: tuned runs our original rlm.py"):
+        tuned_config(**extra)
+    with pytest.raises(ValueError, match="loop must be one of"):
+        tuned_config(loop="fancy")
+
+
+def test_run_tuned_runs_each_task_and_reads_back_its_metrics(tmp_path):
+    config = tuned_config(output_dir=str(tmp_path))
+    ran = []
+
+    def fake_runner(cmd):
+        ran.append(cmd)
+        run = tmp_path / "t" / "loft__hotpotqa_128k__rlm"
+        run.mkdir(parents=True)
+        (run / "config.yaml").write_text(yaml.safe_dump({"backend": "rlm", "mode": "rlm", "data_dir": "hotpotqa_128k"}))
+        (run / "metrics.json").write_text(json.dumps({"f1": 0.5}))
+        return 0
+
+    assert tuned.run_tuned(config, log=lambda _: None, execute=fake_runner) == {"hotpotqa_128k": {"f1": 0.5}}
+    assert len(ran) == 1 and flag(ran[0], "--out") == str(tmp_path / "t")
+    with pytest.raises(SystemExit, match="exited with 1"):
+        tuned.run_tuned(config, log=lambda _: None, execute=lambda cmd: 1)
+
+
+def test_check_prints_the_command_for_a_tuned_experiment(capsys):
+    cli.main(["check", "tuned_graph", "--set", "data.tasks=[nq]"])
+    out = capsys.readouterr().out
+    assert (
+        "our original rlm.py" in out
+        and "evaluation.rlm.harness.run_benchmark" in out
+        and "--chunk-order bm25-graph" in out
+    )
+
+
+def test_the_tuned_command_matches_rlm_order_lanes_flags():
+    config = tuned_config(ordering="bm25-graph", compression={"budget_mb": 512, "factor": 4}, rlm={"max_steps": 50})
+    cmd = tuned.command(config, "nq_128k", python="python")
+    flags = [a for a in cmd if a.startswith("--")]
+    # the order rlm_order_lane.sh writes them in, with its sub_flags for a B x F cell
+    assert flags == [
+        "--dataset",
+        "--data-dir",
+        "--split",
+        "--limit",
+        "--mode",
+        "--chunk-order",
+        "--organization-dir",
+        "--max-steps",
+        "--root-model",
+        "--sub-model",
+        "--base-url",
+        "--sub-backend",
+        "--press",
+        "--memory-budget",
+        "--memory-budget-unit",
+        "--compression-factor",
+        "--sub-min-free-gib",
+        "--out",
+    ]
+    assert tuned.min_free_gib(512, 4) == 13 and tuned.min_free_gib(2048, 8) == 40  # the lane's awk formula
+
+
+def test_real_offloading_runs_oversized_reads_with_an_offloaded_cache():
+    caps = {f: 800 for f in (1, 2, 4, 8)}
+    reader = compressed(offload=True, real_offload=True, read_limits=caps)
+    reader.read("q", "x" * 2000, factor=2)  # 500 tokens at x2 keeps 250 > B = 100: offloaded
+    assert reader.sub.kwargs == {"offload": True}
+    big = reader.read("q", "x" * 2000, factor=2)
+    reader.read("q", "x" * 200, factor=2)  # 25 kept: fits in B, so a normal read
+    assert reader.sub.kwargs == {}
+    assert big.details["offload_mode"] == "real" and big.details["gpu_peak_mb"] == 2500.0
+    counted = compressed(offload=True, read_limits=caps).read("q", "x" * 2000, factor=2)
+    assert counted.details["offload_mode"] == "count"
+
+
+def test_offload_mode_settings_are_checked():
+    assert cost_config(offload=True, offload_mode="real").compression.offload_mode == "real"
+    with pytest.raises(ValueError, match="needs compression.offload: true"):
+        cost_config(offload_mode="real")
+    with pytest.raises(ValueError, match="must be count or real"):
+        cost_config(offload=True, offload_mode="sometimes")

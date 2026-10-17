@@ -11,7 +11,7 @@ from unittest import mock
 
 import pandas as pd
 
-from evaluation.rlm import run_benchmark as rb
+from evaluation.rlm.harness import run_benchmark as rb
 from tests.evaluation.test_rlm_run_benchmark import _args
 
 ORDERED = dict(
@@ -74,14 +74,30 @@ class RuntimeTest(unittest.TestCase):
                 "prompt_tokens": [100, 300],
                 "completion_tokens": [10, 30],
                 "metrics": [
-                    dict(group_count=2, group_chunk_counts=[3, 1], reader_input_tokens=[50, 20],
-                         reader_served_prompt_tokens=[50, 20], reducer_input_tokens=40, retained_finding_count=2,
-                         reducer_finding_chars=80, organization_sha256="d", organization_build_cpu_seconds=1.5,
-                         packing_cpu_seconds=0.1),
-                    dict(group_count=4, group_chunk_counts=[1, 1, 1, 1], reader_input_tokens=[60, 10, 10, 10],
-                         reader_served_prompt_tokens=[61, 10, 10, None], reducer_input_tokens=90,
-                         retained_finding_count=1, reducer_finding_chars=20, organization_sha256="d",
-                         organization_build_cpu_seconds=1.5, packing_cpu_seconds=0.3),
+                    dict(
+                        group_count=2,
+                        group_chunk_counts=[3, 1],
+                        reader_input_tokens=[50, 20],
+                        reader_served_prompt_tokens=[50, 20],
+                        reducer_input_tokens=40,
+                        retained_finding_count=2,
+                        reducer_finding_chars=80,
+                        organization_sha256="d",
+                        organization_build_cpu_seconds=1.5,
+                        packing_cpu_seconds=0.1,
+                    ),
+                    dict(
+                        group_count=4,
+                        group_chunk_counts=[1, 1, 1, 1],
+                        reader_input_tokens=[60, 10, 10, 10],
+                        reader_served_prompt_tokens=[61, 10, 10, None],
+                        reducer_input_tokens=90,
+                        retained_finding_count=1,
+                        reducer_finding_chars=20,
+                        organization_sha256="d",
+                        organization_build_cpu_seconds=1.5,
+                        packing_cpu_seconds=0.3,
+                    ),
                 ],
             }
         )
@@ -97,8 +113,19 @@ class RuntimeTest(unittest.TestCase):
 
 
 class RefusalTest(unittest.TestCase):
-    BASE = ["run_benchmark", "--dataset", "loft", "--data-dir", "nq_128k", "--mode", "structured",
-            "--structured-order", "source", "--max-sub-calls", "0"]
+    BASE = [
+        "run_benchmark",
+        "--dataset",
+        "loft",
+        "--data-dir",
+        "nq_128k",
+        "--mode",
+        "structured",
+        "--structured-order",
+        "source",
+        "--max-sub-calls",
+        "0",
+    ]
 
     def refused(self, argv):
         with tempfile.TemporaryDirectory() as tmp:
@@ -129,8 +156,19 @@ class RefusalTest(unittest.TestCase):
         self.assertIn("exceeds", self.refused([*self.BASE, "--structured-group-input-tokens", "65500"]))
 
     def test_ordered_flags_without_an_order_are_refused(self):
-        argv = ["run_benchmark", "--dataset", "loft", "--data-dir", "nq_128k", "--mode", "structured",
-                "--chunks-source", "bm25", "--structured-group-input-tokens", "4096"]
+        argv = [
+            "run_benchmark",
+            "--dataset",
+            "loft",
+            "--data-dir",
+            "nq_128k",
+            "--mode",
+            "structured",
+            "--chunks-source",
+            "bm25",
+            "--structured-group-input-tokens",
+            "4096",
+        ]
         self.assertIn("only apply with --structured-order", self.refused(argv))
 
 
