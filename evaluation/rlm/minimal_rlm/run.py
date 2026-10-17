@@ -30,7 +30,7 @@ from evaluation.benchmarks.results import score_prediction_frame
 from ..client import LLMClient
 from ..datasets import load_examples
 from .config import ExperimentConfig, config_to_dict
-from .rlm import RLM, Limits, Reader, Result, build_chunks, chunk_chars, make_reader, summarize
+from .rlm import RLM, Limits, Reader, Result, build_chunks, chunk_chars, plain_reader
 
 LIST_TASKS = ("qampari", "quest")  # LOFT tasks scored by coverage over a list
 
@@ -43,7 +43,7 @@ def make_root(config: ExperimentConfig) -> LLMClient:
 
 
 def make_limits(config: ExperimentConfig) -> Limits:
-    """Everything the loop enforces and records, from a config."""
+    """The base loop's limits, from a config."""
     rlm = config.rlm
     return Limits(
         max_steps=rlm.max_steps,
@@ -51,16 +51,22 @@ def make_limits(config: ExperimentConfig) -> Limits:
         exec_timeout_s=rlm.exec_timeout_s,
         run_timeout_s=rlm.run_timeout_s,
         output_chars=rlm.output_chars,
-        read_tokens=config.read_tokens,
-        budget_tokens=config.compression.budget_tokens,
-        factors=config.compression.factors,
-        default_factor=config.compression.factor,
-        read_limits={f: config.read_limit(f) for f in config.compression.factors},
-        offload=config.compression.offload,
-        gpu_token_cost=config.cost.gpu_token,
-        offloaded_token_cost=config.cost.offloaded_token,
-        show_cost=config.cost.show_root,
     )
+
+
+def make_reader(config: ExperimentConfig, load_model: bool = True) -> Reader:
+    """Plain reads, or -- when the experiment sets a KV budget -- the compression add-on.
+
+    load_model=False builds the reader without loading the kvpress model, which is enough
+    to render the prompt (`check`).
+    """
+    if not config.compression.in_process:
+        return plain_reader(
+            config.models.sub_model, config.models.base_url, config.rlm.read_tokens, config.models.thinking
+        )
+    from .compression import CompressedReader, load_kv_model  # the add-on, only when asked for
+
+    return CompressedReader.from_config(config, load_kv_model(config) if load_model else None)
 
 
 def make_rlm(config: ExperimentConfig, root: Any, reader: Reader) -> RLM:
@@ -118,10 +124,22 @@ def record_for(example: dict, task: str, result: Result) -> dict:
         "latency_s": round(result.seconds, 3),
         "correct": loose_match(result.answer, example["answers"]),
         "error": None,
-        "reads": summarize(result.calls),
+        "reads": result.summary,
         "calls": [c.to_dict() for c in result.calls],
     }
     return record
+
+
+def fold(summaries: list[dict]) -> dict:
+    """Per-question summaries -> one: numbers averaged, {category: count} dicts summed."""
+    out: dict = {}
+    for key in dict.fromkeys(k for summary in summaries for k in summary):
+        values = [summary[key] for summary in summaries if key in summary]
+        if all(isinstance(v, dict) for v in values):
+            out[key] = dict(sum((Counter(v) for v in values), Counter()))
+        elif all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in values):
+            out[key] = sum(values) / len(values)
+    return out
 
 
 def task_metrics(dataset: str, records: list[dict]) -> dict:
@@ -138,17 +156,10 @@ def task_metrics(dataset: str, records: list[dict]) -> dict:
         "progress_match_loose": float(scored["correct"].mean()) if len(scored) else 0.0,
         "steps_mean": float(scored["steps"].mean()) if len(scored) else 0.0,
         "end_reasons": dict(Counter(scored["end_reason"])),
-        "sub_calls_mean": sum(r["sub_calls"] for r in reads) / len(reads) if reads else 0.0,
-        "refused_calls": sum(r["refused_calls"] for r in reads),
-        "read_fill_mean": (sum(r.get("read_fill_mean", 0.0) for r in reads) / len(reads) if reads else 0.0),
-        # Cost and the decisions behind it (see stats.summarize): what a question cost on
-        # average, how much KV went to CPU, which factors were used, and how often a read
-        # was compressed although it would have fit uncompressed.
-        "cost_mean": sum(r.get("cost", 0.0) for r in reads) / len(reads) if reads else 0.0,
-        "offloaded_tokens_mean": sum(r.get("offloaded_tokens", 0) for r in reads) / len(reads) if reads else 0.0,
-        "factors": dict(sum((Counter(r.get("factors", {})) for r in reads), Counter())),
-        "compressed_unneeded": sum(r.get("compressed_unneeded", 0) for r in reads),
-        "contributing_calls": sum(r.get("contributing_calls", 0) for r in reads),
+        # Every number a question's reads reported (by the loop and by the reader -- e.g.
+        # cost, offloaded tokens and factors used with the compression add-on), averaged
+        # over questions; counts per category (like factors) are summed instead.
+        "reads_mean": fold(reads),
     }
     return metrics
 

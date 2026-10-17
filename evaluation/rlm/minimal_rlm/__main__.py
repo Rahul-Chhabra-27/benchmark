@@ -20,7 +20,7 @@ import yaml
 
 from .config import EXPERIMENTS_FILE, ExperimentConfig, config_to_dict, load_experiment, read_experiments
 from .rlm import RLM
-from .run import make_limits
+from .run import make_limits, make_reader
 
 
 def _overrides(pairs: list[str]) -> dict:
@@ -86,7 +86,7 @@ def main(argv: list[str] | None = None) -> None:
     config = load_experiment(args.name, args.file, _overrides(args.set))
     print(describe(config))
     if args.command == "check":
-        rlm = RLM(None, None, make_limits(config), config.ordering)  # type: ignore[arg-type]
+        rlm = RLM(None, make_reader(config, load_model=False), make_limits(config), config.ordering)
         print("\n--- root prompt (with a placeholder question) ---")
         print(rlm.system_prompt("<question>", 500_000, 250, 2000, "Final Answer:"))
         print("\n--- resolved settings ---")

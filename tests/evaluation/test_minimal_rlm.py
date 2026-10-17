@@ -1,31 +1,33 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""The clean, config-driven RLM (evaluation/rlm/minimal_rlm): config, prompt, REPL, loop, runner."""
+"""minimal_rlm: the base RLM (config, prompt, REPL, loop, runner) and the compression add-on on top."""
 
+import ast
 import json
 import time
+from pathlib import Path
 
 import pytest
 import yaml
 
 from evaluation.rlm.minimal_rlm import __main__ as cli
+from evaluation.rlm.minimal_rlm import rlm as base
+from evaluation.rlm.minimal_rlm.compression import CompressedReader, Placement
 from evaluation.rlm.minimal_rlm.config import config_from_dict, load_experiment, read_experiments
 from evaluation.rlm.minimal_rlm.rlm import (
     NO_CODE_BLOCK,
     RLM,
-    KVReader,
     Limits,
-    Placement,
-    Read,
+    PlainReader,
     Repl,
     build_chunks,
     contributed,
     extract_code,
     query_text,
-    summarize,
+    read_limit_help,
     system_prompt,
 )
-from evaluation.rlm.minimal_rlm.run import make_limits, run_experiment
+from evaluation.rlm.minimal_rlm.run import run_experiment
 
 
 def code(body: str) -> str:
@@ -35,34 +37,32 @@ def code(body: str) -> str:
 class ScriptedRoot:
     """A root model that replies from a script and records what it was sent."""
 
-    def __init__(self, replies, fail_first=None):
+    def __init__(self, replies):
         self.replies = list(replies)
         self.sent = []
-        self.fail_first = fail_first
 
     def chat(self, messages, **kw):
         self.sent.append([dict(m) for m in messages])
-        if self.fail_first is not None:
-            exc, self.fail_first = self.fail_first, None
-            raise exc
         return self.replies.pop(0) if self.replies else code("print('idle')")
 
 
-class FakeReader:
+class FakeClient:
+    """The sub-model behind a PlainReader: records each prompt, answers from a script."""
+
     def __init__(self, answer="Paris"):
-        self.answer = answer
-        self.reads = []
+        self.answer, self.prompts = answer, []
 
-    def count_tokens(self, text):
-        return len(text) // 4
+    def chat(self, messages, **kw):
+        self.prompts.append(messages[-1]["content"])
+        return self.answer
 
-    def read(self, question, text, factor=1):
-        self.reads.append((question, text))
-        return Read(self.answer, len(text) // 4, 0.0)
+
+def plain(answer="Paris", limit=8192):
+    return PlainReader(FakeClient(answer), limit)
 
 
 def rlm(replies, reader=None, **limits):
-    return RLM(ScriptedRoot(replies), reader or FakeReader(), Limits(**limits))
+    return RLM(ScriptedRoot(replies), reader or plain(), Limits(**limits))
 
 
 # --------------------------------------------------------------------------- config
@@ -91,6 +91,7 @@ def test_budget_sets_reads_to_b_times_f():
         (minimal(ordering="random"), "ordering must be one of"),
         (minimal(compression={"factor": 3, "budget_mb": 1024}), "factors must be in"),
         (minimal(compression={"factor": 2}), "needs compression.budget_mb"),
+        (minimal(cost={"show_root": True}), "show_root needs compression.budget_mb"),
         (minimal(rlm={"max_stpes": 3}), "unknown key"),
         (minimal(colour="red"), "unknown key"),
         ({"name": "t"}, "at least `name` and `data`"),
@@ -130,16 +131,33 @@ def test_list_and_check_commands(capsys):
     cli.main(["check", "graph_x2", "--set", "data.limit=3"])
     out = capsys.readouterr().out
     assert "B=6,944 tokens (1024 MB), F=2" in out and "limit=3" in out and "grouped by topic" in out
+    cli.main(["check", "graph_cost_aware"])
+    assert "offloaded to CPU" in capsys.readouterr().out  # the add-on's prompt lines, without loading a model
+
+
+# --------------------------------------------------------------------------- the base knows nothing of compression
+
+
+def test_the_base_rlm_does_not_import_the_compression_add_on():
+    tree = ast.parse(Path(base.__file__).read_text())
+    imported = [n.module or "" for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)]
+    assert not [m for m in imported if "compression" in m]
+
+
+def test_a_plain_run_refuses_a_compression_option():
+    result = rlm([code("print(llm_query('q', 'abcd', factor=4))")], max_steps=1).run("doc", "q")
+    assert "takes no ['factor']" in result.calls[0].refused
 
 
 # --------------------------------------------------------------------------- prompt
 
 
 def test_prompt_adds_only_what_an_option_adds():
-    common = dict(question="Q?", context_chars=1000, read_tokens=100, max_steps=5, output_chars=50)
-    base = system_prompt(**common)
+    common = dict(question="Q?", context_chars=1000, read_help=read_limit_help(100), max_steps=5, output_chars=50)
+    plain_prompt = system_prompt(**common)
     graph = system_prompt(**common, ordering="bm25-graph", n_chunks=7, chunk_chars=2000)
-    assert "chunks" not in base and "cut into 7 pieces" in graph and "grouped by topic" in graph
+    assert "chunks" not in plain_prompt and "cut into 7 pieces" in graph and "grouped by topic" in graph
+    assert "One call reads at most 100 tokens" in plain_prompt
     listed = system_prompt(**common, answer_format="Final Answer:", list_answer=True)
     assert '["first", "second", "third"]' in listed
 
@@ -195,20 +213,21 @@ def test_extract_code_takes_the_first_block():
 
 
 def test_read_then_final():
-    reader = FakeReader("Paris")
+    reader = plain("Paris")
     result = rlm([code("ans = llm_query('Capital?', context[:400])\nprint(ans)"), code("FINAL(ans)")], reader).run(
         "x" * 1000, "What is the capital?"
     )
     assert (result.answer, result.end_reason, result.steps) == ("Paris", "final", 2)
     (call,) = result.calls
-    assert (call.step, call.read_tokens, call.refused, call.answer) == (1, 100, "", "Paris")
-    assert reader.reads == [("Capital?", "x" * 400)]
+    assert (call.step, call.details["read_tokens"], call.refused, call.answer) == (1, 100, "", "Paris")
+    (prompt,) = reader.client.prompts
+    assert "Capital?" in prompt and prompt.endswith("x" * 400)
 
 
 def test_reads_over_the_limit_and_past_the_call_cap_are_refused():
     loop = rlm(
         [code("print(llm_query('q', context))"), code("for _ in range(3): print(llm_query('q', 'abcd'))")],
-        read_tokens=10,
+        reader=plain(limit=10),
         max_sub_calls=2,
         max_steps=2,
     )
@@ -221,7 +240,7 @@ def test_reads_over_the_limit_and_past_the_call_cap_are_refused():
 
 def test_a_reply_without_code_is_told_so_and_the_run_continues():
     root = ScriptedRoot(["I think it is Paris.", code("FINAL('Paris')")])
-    result = RLM(root, FakeReader(), Limits()).run("doc", "q")
+    result = RLM(root, plain(), Limits()).run("doc", "q")
     assert result.answer == "Paris" and result.steps == 2
     assert NO_CODE_BLOCK in root.sent[1][-1]["content"]
 
@@ -236,9 +255,8 @@ def test_root_window_overflow_drops_the_oldest_turn():
         status_code = 400
 
     root = ScriptedRoot([code("print(1)"), code("FINAL('x')")])
-    loop = RLM(root, FakeReader(), Limits())
-    original = root.chat
-    calls = {"n": 0}
+    loop = RLM(root, plain(), Limits())
+    original, calls = root.chat, {"n": 0}
 
     def chat(messages, **kw):
         calls["n"] += 1
@@ -253,52 +271,24 @@ def test_root_window_overflow_drops_the_oldest_turn():
 
 
 def test_chunk_lists_are_read_and_counted():
-    chunks = build_chunks("a" * 2000 + "b" * 2000 + "c" * 2000, "q", "bm25-query", None)
-    reader = FakeReader("ok")
+    document = "a" * 2000 + "b" * 2000 + "c" * 2000
+    chunks = build_chunks(document, "q", "bm25-query", None)
+    reader = plain("ok")
     loop = RLM(ScriptedRoot([code("llm_query('q', chunks[0:2])"), code("FINAL('ok')")]), reader, Limits())
-    result = loop.run("a" * 2000 + "b" * 2000 + "c" * 2000, "q", chunks=chunks, chunk_chars=2000)
-    assert result.calls[0].chunks == 2 and len(reader.reads[0][1]) == 4002
+    result = loop.run(document, "q", chunks=chunks, chunk_chars=2000)
+    assert result.calls[0].chunks == 2 and result.calls[0].details["read_tokens"] == 1001  # 4002 chars
 
 
-# --------------------------------------------------------------------------- readers and ordering
+def test_reads_are_marked_contributing_when_the_question_ends():
+    result = rlm([code("a = llm_query('q', 'abcd')"), code("FINAL('Paris')")], plain("The capital is Paris")).run(
+        "doc", "q"
+    )
+    assert result.calls[0].contributed is True
+    assert result.summary["contributing_calls"] == 1 and result.summary["sub_calls"] == 1
+    assert contributed("nothing relevant here", "Paris") is False
 
 
-class FakePress:
-    compression_ratio = 0.0
-
-
-class FakeSub:
-    """Stands in for KVzipSubClient: records the press in force at each read."""
-
-    def __init__(self, press):
-        self.press, self.press_min_tokens, self.compression_factor, self.seen = press, 512, None, []
-
-    def token_len(self, text):
-        return len(text)
-
-    def chat_split(self, question, context):
-        ratio = None if self.press is None else self.press.compression_ratio
-        self.seen.append((question, context, ratio, self.compression_factor))
-        return "answer"
-
-
-def test_kv_reader_compresses_the_text_side():
-    sub = FakeSub(FakePress())
-    read = KVReader(sub).read("Who?", "z" * 10, factor=4)
-    assert (read.answer, read.read_tokens) == ("answer", 10)
-    question, context, ratio, factor = sub.seen[0]
-    assert context == "z" * 10 and "Who?" in question and ratio == 0.75 and factor == 4.0
-
-
-def test_kv_reader_switches_the_press_on_every_read():
-    sub = FakeSub(FakePress())
-    reader = KVReader(sub)
-    for factor in (8, 1, 2):
-        reader.read("q", "text", factor=factor)
-    assert [(ratio, f) for _, _, ratio, f in sub.seen] == [(0.875, 8.0), (None, 1.0), (0.5, 2.0)]
-    assert sub.press_min_tokens == 1  # a pressed read is always pressed, so F is exact
-    with pytest.raises(ValueError, match="needs a press"):
-        KVReader(FakeSub(None)).read("q", "text", factor=2)
+# --------------------------------------------------------------------------- ordering
 
 
 def test_query_text_strips_the_loft_wrapper():
@@ -335,79 +325,100 @@ def examples():
 def test_run_experiment_writes_results_and_resumes(tmp_path):
     config = config_from_dict(minimal(output_dir=str(tmp_path), rlm={"max_steps": 3}))
     script = [code("a = llm_query('q', context[:200])"), code("FINAL(a)")] * 2
-    root = ScriptedRoot(script)
     logs = []
-    results = run_experiment(config, root=root, reader=FakeReader("Paris"), load=lambda *a: examples(), log=logs.append)
+    results = run_experiment(
+        config, root=ScriptedRoot(script), reader=plain(), load=lambda *a: examples(), log=logs.append
+    )
     metrics = results["hotpotqa_128k"]
     assert metrics["f1"] == 1.0 and metrics["runtime"]["scored"] == 2
-    assert metrics["runtime"]["end_reasons"] == {"final": 2} and metrics["runtime"]["sub_calls_mean"] == 1.0
+    assert metrics["runtime"]["end_reasons"] == {"final": 2} and metrics["runtime"]["reads_mean"]["sub_calls"] == 1.0
     run_dir = tmp_path / "t" / "hotpotqa_128k"
     assert {p.name for p in run_dir.iterdir()} >= {"config.yaml", "checkpoint.jsonl", "predictions.csv", "metrics.json"}
     record = json.loads((run_dir / "checkpoint.jsonl").read_text().splitlines()[0])
     assert record["calls"][0]["read_tokens"] == 50 and record["reads"]["sub_calls"] == 1
 
     again = ScriptedRoot([])
-    run_experiment(config, root=again, reader=FakeReader(), load=lambda *a: examples(), log=logs.append)
+    run_experiment(config, root=again, reader=plain(), load=lambda *a: examples(), log=logs.append)
     assert again.sent == []  # both questions were already answered
 
 
 def test_a_different_config_never_resumes_into_an_old_directory(tmp_path):
     first = config_from_dict(minimal(output_dir=str(tmp_path)))
-    run_experiment(
-        first,
-        root=ScriptedRoot([code("FINAL('x')")] * 2),
-        reader=FakeReader(),
-        load=lambda *a: examples(),
-        log=lambda _: None,
-    )
+    root = ScriptedRoot([code("FINAL('x')")] * 2)
+    run_experiment(first, root=root, reader=plain(), load=lambda *a: examples(), log=lambda _: None)
     changed = config_from_dict(minimal(output_dir=str(tmp_path), ordering="bm25-query"))
     with pytest.raises(SystemExit, match="different config"):
-        run_experiment(
-            changed, root=ScriptedRoot([]), reader=FakeReader(), load=lambda *a: examples(), log=lambda _: None
-        )
+        run_experiment(changed, root=ScriptedRoot([]), reader=plain(), load=lambda *a: examples(), log=lambda _: None)
 
 
 def test_a_failing_sub_model_is_shown_to_the_root_not_fatal(tmp_path):
-    class Broken(FakeReader):
-        def read(self, question, text):
+    class Broken(PlainReader):
+        def read(self, question, text, **options):
             raise RuntimeError("GPU fell over")
 
     config = config_from_dict(minimal(output_dir=str(tmp_path)))
     root = ScriptedRoot([code("llm_query('q', 'abc')")] * 2)
     # The reader error escapes llm_query inside the cell, so the REPL reports it and the
     # run continues: a sub-model failure is an observation, not a lost question.
-    run_experiment(config, root=root, reader=Broken(), load=lambda *a: examples()[:1], log=lambda _: None)
+    run_experiment(
+        config, root=root, reader=Broken(FakeClient(), 100), load=lambda *a: examples()[:1], log=lambda _: None
+    )
     record = json.loads((tmp_path / "t" / "hotpotqa_128k" / "checkpoint.jsonl").read_text())
     assert record["error"] is None and record["end_reason"] == "max_steps"
 
 
-# =========================================================================== factor choice, offloading, cost
+# =========================================================================== the compression add-on
 
-B = 100  # KV tokens one read may keep; FakeReader counts len(text) // 4 tokens
-
-
-def limits(**extra):
-    base = dict(budget_tokens=B, factors=(1, 2, 4, 8), read_limits={1: B, 2: 2 * B, 4: 4 * B, 8: 8 * B})
-    return Limits(**{**base, **extra})
+B = 100  # KV tokens one read may keep; FakeSub counts len(text) // 4 tokens
 
 
-def run(cells, final="FINAL(a)", reader=None, **extra):
-    """Run one question whose root executes `cells` (each a code string), then `final`."""
+class FakePress:
+    compression_ratio = 0.0
+
+
+class FakeSub:
+    """Stands in for KVzipSubClient: records the press in force at each read."""
+
+    def __init__(self, press=None, answer="Paris"):
+        self.press, self.answer = press, answer
+        self.press_min_tokens, self.compression_factor, self.seen = 512, None, []
+
+    def token_len(self, text):
+        return len(text) // 4
+
+    def chat_split(self, question, context):
+        ratio = None if self.press is None else self.press.compression_ratio
+        self.seen.append((question, context, ratio, self.compression_factor))
+        return self.answer
+
+
+def compressed(answer="Paris", **extra):
+    settings = dict(budget_tokens=B, factors=(1, 2, 4, 8), read_limits={1: B, 2: 2 * B, 4: 4 * B, 8: 8 * B})
+    return CompressedReader(FakeSub(FakePress(), answer), **{**settings, **extra})
+
+
+def run(cells, final="FINAL(a)", reader=None):
+    """One question whose root executes `cells` (each a code string), then `final`."""
     root = ScriptedRoot([code(c) for c in cells] + [code(final)])
-    return RLM(root, reader or FakeReader("Paris"), limits(**extra)).run("x" * 40_000, "Capital of France?"), root
-
-
-# --------------------------------------------------------------------------- placement and cost
+    return RLM(root, reader or compressed(), Limits()).run("x" * 40_000, "Capital of France?"), root
 
 
 def test_placement_splits_kept_kv_between_gpu_and_cpu():
     assert Placement.of(300, 2, B) == Placement(kept=150, gpu=100, offloaded=50)
     assert Placement.of(300, 4, B) == Placement(kept=75, gpu=75, offloaded=0)
-    assert Placement.of(300, 1, None) == Placement(kept=300, gpu=300, offloaded=0)  # no budget, no offload
     assert Placement(150, 100, 50).cost(gpu_token=1, offloaded_token=100) == 100 + 5000
 
 
-# --------------------------------------------------------------------------- config
+def test_one_model_switches_its_press_on_every_read():
+    reader = compressed()
+    for factor in (8, 1, 2):
+        reader.read("Who?", "z" * 40, factor=factor)
+    question, context, _, _ = reader.sub.seen[0]
+    assert context == "z" * 40 and "Who?" in question  # only the text side is compressed
+    assert [(ratio, f) for _, _, ratio, f in reader.sub.seen] == [(0.875, 8.0), (None, 1.0), (0.5, 2.0)]
+    assert reader.sub.press_min_tokens == 1  # a pressed read is always pressed, so F is exact
+    with pytest.raises(ValueError, match="needs a press"):
+        CompressedReader(FakeSub(None), budget_tokens=B, factors=(1, 2)).read("q", "text", factor=2)
 
 
 def cost_config(**compression):
@@ -422,14 +433,14 @@ def cost_config(**compression):
 
 
 def test_read_limits_per_factor_with_and_without_offloading():
-    plain = cost_config()
-    assert plain.compression.factors == (1, 2, 4, 8)
-    assert [plain.read_limit(f) for f in (1, 2, 8)] == [6944, 13888, 55552]
+    plain_limits = cost_config()
+    assert plain_limits.compression.factors == (1, 2, 4, 8)
+    assert [plain_limits.read_limit(f) for f in (1, 2, 8)] == [6944, 13888, 55552]
     offloading = cost_config(offload=True)
     assert {offloading.read_limit(f) for f in (1, 2, 8)} == {55552}  # as wide as the widest compressed read
     assert cost_config(offload=True, max_read_tokens=20000).read_limit(1) == 20000
-    built = make_limits(offloading)
-    assert built.offload and built.show_cost and built.read_limit(2) == 55552
+    reader = CompressedReader.from_config(offloading)  # no model needed to describe it
+    assert reader.offload and reader.show_cost and reader.read_limits[2] == 55552
 
 
 @pytest.mark.parametrize(
@@ -446,12 +457,10 @@ def test_bad_compression_settings_are_refused(compression, message):
         cost_config(**compression)
 
 
-# --------------------------------------------------------------------------- the root's choices
-
-
 def test_the_root_picks_a_factor_per_read():
     result, _ = run(["a = llm_query('q', context[:1600], factor=4)", "b = llm_query('q', context[:400])"])
-    assert [(c.factor, c.read_tokens, c.kept_tokens) for c in result.calls] == [(4, 400, 100), (1, 100, 100)]
+    got = [(c.details["factor"], c.details["read_tokens"], c.details["kept_tokens"]) for c in result.calls]
+    assert got == [(4, 400, 100), (1, 100, 100)]
 
 
 def test_an_unavailable_factor_or_an_oversized_read_is_refused():
@@ -461,47 +470,46 @@ def test_an_unavailable_factor_or_an_oversized_read_is_refused():
 
 
 def test_offloading_admits_a_wider_read_and_costs_it():
-    result, _ = run(
-        ["a = llm_query('q', context[:2000], factor=2)"], offload=True, read_limits={f: 800 for f in (1, 2, 4, 8)}
-    )
-    call = result.calls[0]
-    assert not call.refused
-    assert (call.read_tokens, call.kept_tokens, call.gpu_tokens, call.offloaded_tokens) == (500, 250, 100, 150)
-    assert call.cost == 150 * 100  # gpu tokens cost 0 by default
+    reader = compressed(offload=True, read_limits={f: 800 for f in (1, 2, 4, 8)})
+    result, _ = run(["a = llm_query('q', context[:2000], factor=2)"], reader=reader)
+    d = result.calls[0].details
+    assert not result.calls[0].refused
+    assert (d["read_tokens"], d["kept_tokens"], d["gpu_tokens"], d["offloaded_tokens"]) == (500, 250, 100, 150)
+    assert d["cost"] == 150 * 100  # gpu tokens cost 0 by default
 
 
 def test_the_root_sees_each_reads_cost_only_when_asked():
     cells = ["print(llm_query('q', context[:2000], factor=2))", "print(llm_query('q', context[:2000], factor=2))"]
     caps = {f: 800 for f in (1, 2, 4, 8)}
-    _, shown = run(cells, offload=True, read_limits=caps, show_cost=True)
+    _, shown = run(cells, reader=compressed(offload=True, read_limits=caps, show_cost=True))
     observation = shown.sent[2][-1]["content"]
     assert "[cost: read 500 tokens at x2 -> 100 on GPU, 150 offloaded; 15000 (total 30000)]" in observation
-    _, hidden = run(cells, offload=True, read_limits=caps)
+    _, hidden = run(cells, reader=compressed(offload=True, read_limits=caps))
     assert "[cost:" not in hidden.sent[2][-1]["content"]
 
 
+def test_the_cost_line_never_counts_toward_contributed():
+    reader = compressed(answer="nothing relevant", show_cost=True)
+    result, _ = run(["a = llm_query('q', context[:400])"], final="FINAL('100')", reader=reader)
+    assert result.calls[0].contributed is False  # the "100 on GPU" in the cost line is not the answer
+
+
 def test_prompt_mentions_memory_offloading_and_cost_only_when_on():
-    plain = RLM(None, None, Limits()).system_prompt("q", 1000)
-    assert "Memory:" not in plain and "offloaded" not in plain and "Cost:" not in plain
-    full = RLM(None, None, limits(offload=True, show_cost=True)).system_prompt("q", 1000)
+    plain_prompt = RLM(None, plain(), Limits()).system_prompt("q", 1000)
+    assert "Memory:" not in plain_prompt and "offloaded" not in plain_prompt and "Cost:" not in plain_prompt
+    full = RLM(None, compressed(offload=True, show_cost=True), Limits()).system_prompt("q", 1000)
     assert "factor=F" in full and "offloaded to CPU" in full and "100 per" in full
 
 
-# --------------------------------------------------------------------------- end-of-question marks
-
-
-def test_reads_are_marked_needed_and_contributing():
-    reader = FakeReader("The capital is Paris")
+def test_reads_are_marked_needed_and_summarised():
     cells = [
         "a = llm_query('q', context[:200], factor=2)",  # 50 tokens: fits B uncompressed -> compression unneeded
         "b = llm_query('q', context[:1600], factor=4)",  # 400 tokens > B -> compression needed
     ]
-    result, _ = run(cells, final="FINAL('Paris')", reader=reader)
-    assert [c.compression_needed for c in result.calls] == [False, True]
+    result, _ = run(cells, final="FINAL('Paris')", reader=compressed(answer="The capital is Paris"))
+    assert [c.details["compression_needed"] for c in result.calls] == [False, True]
     assert all(c.contributed for c in result.calls)
-    summary = summarize(result.calls)
-    assert summary["compressed_unneeded"] == 1 and summary["factors"] == {"x2": 1, "x4": 1}
-    assert contributed("nothing relevant here", "Paris") is False
+    assert result.summary["compressed_unneeded"] == 1 and result.summary["factors"] == {"x2": 1, "x4": 1}
 
 
 def test_run_metrics_report_cost_and_factor_use(tmp_path):
@@ -513,11 +521,13 @@ def test_run_metrics_report_cost_and_factor_use(tmp_path):
             "compression": {"budget_mb": 1.5, "factor": 1, "choices": [1, 2], "offload": True, "max_read_tokens": 1000},
         }
     )
+    reader = CompressedReader.from_config(config, FakeSub(FakePress()))
     script = [code("a = llm_query('q', context[:200], factor=2)"), code("FINAL(a)")] * 2
-    metrics = run_experiment(
-        config, root=ScriptedRoot(script), reader=FakeReader("Paris"), load=lambda *a: examples(), log=lambda _: None
+    runtime = run_experiment(
+        config, root=ScriptedRoot(script), reader=reader, load=lambda *a: examples(), log=lambda _: None
     )["hotpotqa_128k"]["runtime"]
-    assert metrics["factors"] == {"x2": 2} and metrics["cost_mean"] > 0 and metrics["offloaded_tokens_mean"] > 0
+    reads = runtime["reads_mean"]
+    assert reads["factors"] == {"x2": 2} and reads["cost"] > 0 and reads["offloaded_tokens"] > 0
     saved = (tmp_path / "c" / "hotpotqa_128k" / "config.yaml").read_text()
     assert "choices:" in saved  # the resolved config (with its tuple of choices) round-trips through YAML
     record = json.loads((tmp_path / "c" / "hotpotqa_128k" / "checkpoint.jsonl").read_text().splitlines()[0])

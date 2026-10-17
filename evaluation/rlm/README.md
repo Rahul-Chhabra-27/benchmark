@@ -32,11 +32,20 @@ the same cell as `BUDGET_MB=512 FACTOR=4`. To run cells with one command, see
 | `original_rlm.py` | the RLM paper's protocol inside this harness (from apd10-dev) | `run_benchmark --mode original` |
 | `skylight_rlm.py` | an agent that reads chunks by command, without a REPL (from apd10-dev) | `run_benchmark --mode skylight` |
 
-**`minimal_rlm/`** is three files and one experiments file. `experiments.yaml` holds every
-experiment: shared `defaults`, then what each named experiment changes — `ordering`
-(none | bm25-query | bm25-graph), `compression` (`factor`, `budget_mb`; `choices` lets the
-root pick a factor per read, `offload` admits reads beyond B × F and counts the excess KV as
-offloaded), and `cost` (GPU vs offloaded tokens, optionally shown to the root).
+**`minimal_rlm/`** is a clean base RLM with features added on top, never inside it:
+
+| file | holds |
+|---|---|
+| `rlm.py` | the base RLM: prompt, ordering, REPL, loop, plain reads — **no compression code** |
+| `compression.py` | the compression add-on: KV budget B, factor per read, offloading, cost — plugged into the base as its reader only when an experiment sets `compression.budget_mb` |
+| `config.py`, `run.py` | the settings; settings → every question → result files |
+| `experiments.yaml` | every experiment: shared `defaults`, then what each named one changes |
+
+The base loop only ever calls `reader.read(question, text, **options)`, so it cannot tell
+whether compression is on. In `experiments.yaml`: `ordering` (none | bm25-query |
+bm25-graph), `compression` (`factor`, `budget_mb`; `choices` lets the root pick a factor per
+read, `offload` admits reads beyond B × F and counts the excess KV as offloaded), and `cost`
+(GPU vs offloaded tokens, optionally shown to the root).
 
 ```bash
 python -m evaluation.rlm.minimal_rlm list                     # every experiment

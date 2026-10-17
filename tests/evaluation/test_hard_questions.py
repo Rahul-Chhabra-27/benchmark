@@ -101,7 +101,7 @@ def test_command_writes_the_validation_ids_and_a_report(runs, capsys):
 
 
 def test_minimal_rlm_runs_only_the_ids_in_a_file(tmp_path):
-    from tests.evaluation.test_minimal_rlm import FakeReader, ScriptedRoot, code, examples
+    from tests.evaluation.test_minimal_rlm import ScriptedRoot, code, examples, plain
 
     ids = tmp_path / "hard.txt"
     ids.write_text("loft:hotpotqa_128k:1\nloft:nq_128k:7\n")  # another task's id is ignored
@@ -109,7 +109,7 @@ def test_minimal_rlm_runs_only_the_ids_in_a_file(tmp_path):
         {"name": "t", "data": {"tasks": ["hotpotqa"], "ids_file": str(ids)}, "output_dir": str(tmp_path)}
     )
     root = ScriptedRoot([code("FINAL('Paris')")])
-    run_experiment(config, root=root, reader=FakeReader(), load=lambda *a: examples(), log=lambda _: None)
+    run_experiment(config, root=root, reader=plain(), load=lambda *a: examples(), log=lambda _: None)
     done = [json.loads(line)["id"] for line in (tmp_path / "t" / TASK / "checkpoint.jsonl").read_text().splitlines()]
     assert done == ["loft:hotpotqa_128k:1"]
     with pytest.raises(ValueError, match="set only one"):

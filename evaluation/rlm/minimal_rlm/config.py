@@ -162,6 +162,8 @@ class ExperimentConfig:
             raise ValueError("a compression factor > 1 needs compression.budget_mb (B), so a read is B x F tokens")
         if c.offload and c.budget_mb is None:
             raise ValueError("compression.offload needs compression.budget_mb: offloaded is KV beyond B")
+        if self.cost.show_root and c.budget_mb is None:
+            raise ValueError("cost.show_root needs compression.budget_mb: costs are about KV kept and offloaded")
         if c.max_read_tokens is not None and c.max_read_tokens < 1:
             raise ValueError("compression.max_read_tokens must be positive")
         if self.compression.budget_mb is not None and self.compression.budget_tokens < 1:
