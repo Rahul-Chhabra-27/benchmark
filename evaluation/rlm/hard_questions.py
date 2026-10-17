@@ -9,7 +9,7 @@ Ordering gave the biggest jump. This finds the questions still wrong AFTER order
     both_solve / rlm_only / nobody
 
 validation_set = vanilla_only + compression_rescues, written as one ids file per task.
-Run it with `python -m evaluation.rlm.minimal_rlm run <experiment> --set data.ids_file=<file>`
+Run it with `python -m evaluation.rlm.configurable_rlm run <experiment> --set data.ids_file=<file>`
 or `run_benchmark --ids-file <file>`.
 
 Steps on a host with results (LOFT-128k, 55 test rows per task):
@@ -47,7 +47,7 @@ from .compression_picker import score_records
 #     compressed  RLM whose reads are KV-compressed (F > 1)    rlm+bm25-graph 1024MB x2
 #     other       anything else (structured, skylight, ...)    structured
 #
-# Both the older harness (run_benchmark.py) and minimal_rlm write a config.yaml
+# Both the older harness (run_benchmark.py) and configurable_rlm write a config.yaml
 # next to their checkpoint.jsonl; both are understood.
 
 
@@ -64,12 +64,12 @@ class Arm:
 
 def describe(config: dict) -> Optional[tuple[str, str, str]]:
     """(label, kind, dataset) for a run's config, or None if it is not an RLM-family run."""
-    if "ordering" in config and isinstance(config.get("compression"), dict):  # minimal_rlm
+    if "ordering" in config and isinstance(config.get("compression"), dict):  # configurable_rlm
         compression = config["compression"]
         factor = max([int(compression.get("factor") or 1), *(int(f) for f in compression.get("choices") or [])])
         ordering = config.get("ordering") or "none"
         kind = "compressed" if factor > 1 else "ordered" if ordering != "none" else "rlm"
-        return f"minimal_rlm:{config['name']}", kind, config["data"]["dataset"]
+        return f"configurable_rlm:{config['name']}", kind, config["data"]["dataset"]
     if config.get("backend") != "rlm":
         return None
     mode, dataset = config.get("mode"), config.get("dataset")
@@ -254,7 +254,7 @@ def main(argv: list[str] | None = None) -> None:
     print("\n" + report)
     print(f"{len(written)} ids files in {args.out / 'ids'}; run one as a validation set with")
     print(
-        "  python -m evaluation.rlm.minimal_rlm run <config>.yaml "
+        "  python -m evaluation.rlm.configurable_rlm run <config>.yaml "
         f"--set data.ids_file={args.out / 'ids'}/<task>__validation_set.txt"
     )
 

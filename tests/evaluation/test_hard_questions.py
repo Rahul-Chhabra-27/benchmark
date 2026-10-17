@@ -9,8 +9,8 @@ import yaml
 
 from evaluation.rlm import hard_questions as cli
 from evaluation.rlm.hard_questions import classify, describe, discover, score_matrix, summarize
-from evaluation.rlm.minimal_rlm.config import config_from_dict
-from evaluation.rlm.minimal_rlm.run import run_experiment
+from evaluation.rlm.configurable_rlm.config import config_from_dict
+from evaluation.rlm.configurable_rlm.run import run_experiment
 
 TASK = "hotpotqa_128k"
 VANILLA = dict(backend="rlm", mode="vanilla", dataset="loft")
@@ -57,7 +57,7 @@ def test_arms_are_labelled_from_their_configs():
     assert describe(dict(ORDERED, chunk_order=None)) == ("rlm", "rlm", "loft")
     assert describe(dict(VANILLA, mode="structured"))[1] == "other"
     minimal = {"name": "graph_x4", "ordering": "bm25-graph", "compression": {"factor": 4}, "data": {"dataset": "loft"}}
-    assert describe(minimal) == ("minimal_rlm:graph_x4", "compressed", "loft")
+    assert describe(minimal) == ("configurable_rlm:graph_x4", "compressed", "loft")
     assert describe({"backend": "kvpress"}) is None
 
 
@@ -100,8 +100,8 @@ def test_command_writes_the_validation_ids_and_a_report(runs, capsys):
     assert "rlm+bm25-graph 1024MB x2" in capsys.readouterr().out
 
 
-def test_minimal_rlm_runs_only_the_ids_in_a_file(tmp_path):
-    from tests.evaluation.test_minimal_rlm import ScriptedRoot, code, examples, plain
+def test_configurable_rlm_runs_only_the_ids_in_a_file(tmp_path):
+    from tests.evaluation.test_configurable_rlm import ScriptedRoot, code, examples, plain
 
     ids = tmp_path / "hard.txt"
     ids.write_text("loft:hotpotqa_128k:1\nloft:nq_128k:7\n")  # another task's id is ignored

@@ -120,10 +120,11 @@ class ExperimentConfig:
     data: DataConfig
     models: ModelConfig = field(default_factory=ModelConfig)
     ordering: str = "none"
+    tuning: bool = False  # our prompt tuning and guards (tuning.py) on top of the base RLM
     compression: CompressionConfig = field(default_factory=CompressionConfig)
     cost: CostConfig = field(default_factory=CostConfig)
     rlm: RLMConfig = field(default_factory=RLMConfig)
-    output_dir: str = "evaluation/results/rlm/minimal_rlm"
+    output_dir: str = "evaluation/results/rlm/configurable_rlm"
     organization_dir: Optional[str] = None  # bm25-graph cache; default <output_dir>/organization
 
     def read_limit(self, factor: int) -> int:

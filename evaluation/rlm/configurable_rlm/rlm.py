@@ -3,16 +3,18 @@
 """The base RLM: the RLM idea and nothing more, in the order a reader needs it.
 
     prompts   every word the root and sub model see
-    ordering  none | bm25-query | bm25-graph -> the `chunks` list
     records   one CallRecord per sub-call
     reading   the Reader interface, and PlainReader (uncompressed reads over http)
+    features  the Feature hooks other files plug into
     repl      the persistent Python REPL the root writes into
     loop      the RLM loop and its llm_query / FINAL tools
 
-Features are added ON TOP of this base, never inside it: the loop only ever calls
-`reader.read(question, text, **options)`. Compression (KV budget, factor choice,
-offloading, cost) is such a reader, in compression.py, plugged in only when an
-experiment asks for it; this file does not know it exists.
+Everything else is added ON TOP of this base, never inside it, through two seams:
+  a Reader decides how llm_query reads -- compression.py is one (KV budget, factor
+    choice, offloading, cost);
+  Features add tools, prompt lines and checks -- ordering.py (the `chunks` list) and
+    tuning.py (our prompt tuning and guards) are two.
+This file imports none of them.
 """
 
 from __future__ import annotations
@@ -31,16 +33,13 @@ from dataclasses import asdict, dataclass, field, replace
 from typing import Any, Iterable, Iterator, Optional, Protocol, Sequence
 
 from ..client import LLMClient
-from ..organization import CONFIG as GRID
-from ..organization import ordered_hits, organize
-from ..retrieval import Hit, get_index
 
 # ======================================================================================
 # Prompts: every word the models are shown
 # ======================================================================================
-# A short base prompt. An option adds only its own lines: ordering adds the `chunks` tool
-# and a note on its order; a reader (e.g. the compression add-on) supplies the sentence
-# on how much one read may carry and any notes of its own.
+# A short base prompt. A feature adds only its own lines (tools in the tool list, notes
+# after the instructions); the reader supplies the sentence on how much one read may
+# carry and any notes of its own.
 
 
 BASE_PROMPT = """\
@@ -50,13 +49,13 @@ output is shown to you in the next message (at most {output_chars} characters).
 
 In the REPL:
   context                       the whole document, a string of {context_chars:,} characters
-{tools}  llm_query(question, text)     a sub-model reads `text` and answers `question`. It sees
+{feature_tools}  llm_query(question, text)     a sub-model reads `text` and answers `question`. It sees
                                 nothing else. {read_help}
   FINAL(answer)                 end with your answer. Call it only on something you read.
 
 Search `context` with Python (find, regular expressions, slicing), read the relevant parts
 with llm_query, then call FINAL. Variables persist between turns. You have {max_steps} turns.
-{ordering}{reader_notes}
+{feature_notes}{reader_notes}
 Question:
 {question}
 {answer_format}"""
@@ -65,24 +64,6 @@ READ_LIMIT_HELP = (
     "One call reads at most {tokens:,} tokens\n"
     "                                (about {chars:,} characters); a longer text is refused."
 )
-
-CHUNKS_TOOL = """\
-  chunks                        the document cut into {n_chunks} pieces of ~{chunk_chars} characters,
-                                in the order described below. Each has .text, .start, .end;
-                                llm_query(question, chunks[i:j]) reads a list of chunks.
-"""
-
-ORDERING_NOTES = {
-    "bm25-query": (
-        "\n`chunks` is sorted by BM25 keyword relevance to the question: chunks[0] matches best."
-        "\nThe answer is usually near the top.\n"
-    ),
-    "bm25-graph": (
-        "\n`chunks` is grouped by topic, before the question was known: chunks sharing names and"
-        "\nrare words sit next to each other. Find a chunk mentioning the question's distinctive"
-        "\nterms, then read it together with its neighbours.\n"
-    ),
-}
 
 ANSWER_FORMAT = "Answer format: {answer_format}"
 LIST_ANSWER_FORMAT = 'Answer format: {answer_format} followed by a list, e.g. ["first", "second", "third"]'
@@ -108,11 +89,10 @@ def system_prompt(
     read_help: str,
     max_steps: int,
     output_chars: int,
-    ordering: str = "none",
-    n_chunks: int = 0,
-    chunk_chars: int = 0,
     answer_format: Optional[str] = None,
     list_answer: bool = False,
+    feature_tools: str = "",
+    feature_notes: str = "",
     reader_notes: str = "",
 ) -> str:
     """The root's system prompt for one question."""
@@ -123,57 +103,14 @@ def system_prompt(
     return BASE_PROMPT.format(
         output_chars=output_chars,
         context_chars=context_chars,
-        tools=CHUNKS_TOOL.format(n_chunks=n_chunks, chunk_chars=chunk_chars) if ordering != "none" else "",
+        feature_tools=feature_tools,
         read_help=read_help,
         max_steps=max_steps,
-        ordering=ORDERING_NOTES.get(ordering, ""),
+        feature_notes=feature_notes,
         reader_notes=reader_notes,
         question=question.strip(),
         answer_format=fmt,
     )
-
-
-# ======================================================================================
-# Ordering: the `chunks` list
-# ======================================================================================
-# The `ordering` option: hand the root the document as an ordered list of chunks.
-#
-#     none        no `chunks`; the root searches `context` itself
-#     bm25-query  chunks ranked by BM25 against the question (query-aware)
-#     bm25-graph  chunks grouped by a similarity graph built once per document,
-#                 before any question is seen (query-agnostic; cached on disk)
-#
-# Both orders use the same grid: 2000-character chunks, no overlap.
-
-
-def query_text(question: str) -> str:
-    """The question without LOFT's citation boilerplate (the text after a `query:` line).
-
-    Left in, words like "documents" and "answer" match every chunk equally.
-    """
-    lines = question.splitlines()
-    for index in range(len(lines) - 1, -1, -1):
-        stripped = lines[index].lstrip()
-        if stripped[:6].lower() == "query:":
-            return "\n".join([stripped[6:], *lines[index + 1 :]]).strip()
-    return question.strip()
-
-
-def build_chunks(document: str, question: str, ordering: str, organization_dir: Optional[str]) -> list[Hit]:
-    """Every chunk of the document, in the given order. Empty for `none`."""
-    if ordering == "none":
-        return []
-    if ordering == "bm25-graph":
-        artifact, _, _ = organize(document, "bm25-graph", organization_dir)
-        return ordered_hits(document, artifact)
-    if ordering == "bm25-query":
-        index = get_index(document, GRID["chunk_chars"], GRID["overlap"])
-        return index.rank_all(query_text(question))
-    raise ValueError(f"unknown ordering {ordering!r}")
-
-
-def chunk_chars() -> int:
-    return int(GRID["chunk_chars"])
 
 
 # ======================================================================================
@@ -319,6 +256,46 @@ def plain_reader(model: str, base_url: str, limit_tokens: int, thinking: bool = 
 
 
 # ======================================================================================
+# Features: the hooks other files plug into
+# ======================================================================================
+# A Feature is something added on top of the base RLM. Every hook is optional and the
+# loop calls them in order, knowing nothing about what a feature does:
+#
+#     prepare(document, question)   a new question starts
+#     tools(result)                 extra names in the REPL (e.g. `chunks`, FINAL_NONE)
+#     tool_help() / notes()         lines added to the prompt's tool list / after it
+#     check_final(answer, code, result)   "" to accept a FINAL, or a rejection message
+#     after_turn(output, result)    a note for the root's next message ("" for none)
+#     summary(result)               numbers for the question's summary
+#
+# A feature may end the question itself by setting result.done and result.ending
+# (tuning's FINAL_NONE ends it as "abstained").
+
+
+class Feature:
+    def prepare(self, document: str, question: str) -> None:
+        pass
+
+    def tools(self, result: "Result") -> dict:
+        return {}
+
+    def tool_help(self) -> str:
+        return ""
+
+    def notes(self) -> str:
+        return ""
+
+    def check_final(self, answer: str, code: str, result: "Result") -> str:
+        return ""
+
+    def after_turn(self, output: str, result: "Result") -> str:
+        return ""
+
+    def summary(self, result: "Result") -> dict:
+        return {}
+
+
+# ======================================================================================
 # The REPL the root writes code into
 # ======================================================================================
 # The persistent Python REPL the root writes code into.
@@ -416,21 +393,21 @@ class Repl:
 # The root writes code, the REPL runs it, until FINAL or a limit.
 #
 #     turn:  root reply -> first ```python block -> run it -> show its output
-#     tools: context, [chunks], llm_query(question, text_or_chunks, **options), FINAL(answer)
-#     ends:  final | max_steps | run_timeout | root_error
-#
-# Ordering arrives as a chunk list (or none); how a read happens is the Reader's business.
+#     tools: context, llm_query(question, text_or_chunks, **options), FINAL(answer), + features'
+#     ends:  final | max_steps | run_timeout | root_error | whatever a feature ends with
 
 
 @dataclass
 class Result:
     answer: Optional[str]
     steps: int
-    end_reason: str  # final | max_steps | run_timeout | root_error
+    end_reason: str  # final | max_steps | run_timeout | root_error | (a feature's ending)
     calls: list[CallRecord] = field(default_factory=list)
     transcript: list[dict] = field(default_factory=list)
     seconds: float = 0.0
-    summary: dict = field(default_factory=dict)  # the question's reads, summarised
+    summary: dict = field(default_factory=dict)  # the question's reads (and features), summarised
+    done: bool = False  # set by FINAL, or by a feature that ends the question
+    ending: str = ""  # why it is done
     # Each call's full sub-model answer (None if refused), for the end-of-question marks.
     read_answers: list[Optional[str]] = field(default_factory=list, repr=False)
 
@@ -451,18 +428,16 @@ def is_context_overflow(exc: Exception) -> bool:
 
 
 class RLM:
-    def __init__(self, root: Any, reader: Reader, limits: Limits, ordering: str = "none"):
+    def __init__(self, root: Any, reader: Reader, limits: Limits, features: Sequence[Feature] = ()):
         self.root = root
         self.reader = reader
         self.limits = limits
-        self.ordering = ordering
+        self.features = list(features)
 
     def system_prompt(
         self,
         question: str,
         context_chars: int,
-        n_chunks: int = 0,
-        chunk_chars: int = 0,
         answer_format: Optional[str] = None,
         list_answer: bool = False,
     ) -> str:
@@ -473,11 +448,10 @@ class RLM:
             read_help=self.reader.read_help,
             max_steps=self.limits.max_steps,
             output_chars=self.limits.output_chars,
-            ordering=self.ordering,
-            n_chunks=n_chunks,
-            chunk_chars=chunk_chars,
             answer_format=answer_format,
             list_answer=list_answer,
+            feature_tools="".join(f.tool_help() for f in self.features),
+            feature_notes="".join(f.notes() for f in self.features),
             reader_notes=self.reader.notes,
         )
 
@@ -485,18 +459,20 @@ class RLM:
         self,
         document: str,
         question: str,
-        chunks: Sequence[Hit] = (),
         answer_format: Optional[str] = None,
         list_answer: bool = False,
-        chunk_chars: int = 0,
     ) -> Result:
         limits = self.limits
         started = time.monotonic()
         result = Result(answer=None, steps=0, end_reason="max_steps")
         self.reader.begin()
+        for feature in self.features:
+            feature.prepare(document, question)
         repl = Repl({}, limits.exec_timeout_s)
-        repl.namespace.update(self._tools(document, chunks, repl, result))
-        system = self.system_prompt(question, len(document), len(chunks), chunk_chars, answer_format, list_answer)
+        repl.namespace.update(self._tools(document, repl, result))
+        for feature in self.features:
+            repl.namespace.update(feature.tools(result))
+        system = self.system_prompt(question, len(document), answer_format, list_answer)
         messages = [{"role": "system", "content": system}, {"role": "user", "content": BEGIN}]
         for step in range(1, limits.max_steps + 1):
             if time.monotonic() - started > limits.run_timeout_s:
@@ -509,9 +485,20 @@ class RLM:
                 break
             code = extract_code(reply)
             output = NO_CODE_BLOCK if code is None else repl.run(code, limits.output_chars)
-            result.transcript.append({"step": step, "reply": reply, "output": output})
-            if result.answer is not None:
-                result.end_reason = "final"
+            # Recorded before the features look: `printed` is what the code itself printed,
+            # `output` what the root is shown (with any rejection or note a feature adds).
+            turn = {"step": step, "reply": reply, "output": output, "printed": output}
+            result.transcript.append(turn)
+            if result.done and result.ending == "final":
+                rejections = [m for f in self.features if (m := f.check_final(result.answer or "", code or "", result))]
+                if rejections:
+                    result.answer, result.done, result.ending = None, False, ""
+                    turn["output"] += "\n" + "\n".join(rejections)
+            notes = [n for f in self.features if (n := f.after_turn(turn["output"], result))]
+            turn["output"] += "".join("\n" + n for n in notes)
+            output = turn["output"]
+            if result.done:
+                result.end_reason = result.ending
                 break
             messages += [
                 {"role": "assistant", "content": reply},
@@ -524,6 +511,8 @@ class RLM:
         ]
         made = [c.details for c in result.calls if not c.refused]
         result.summary = {**summarize_calls(result.calls), **self.reader.summarize(made)}
+        for feature in self.features:
+            result.summary.update(feature.summary(result))
         return result
 
     def _root_reply(self, messages: list[dict]) -> Optional[str]:
@@ -537,7 +526,7 @@ class RLM:
                     return None
                 del messages[2:4]
 
-    def _tools(self, document: str, chunks: Sequence[Hit], repl: Repl, result: Result) -> dict:
+    def _tools(self, document: str, repl: Repl, result: Result) -> dict:
         limits, reader = self.limits, self.reader
 
         def llm_query(question: str, text: Any = "", **options: Any) -> str:
@@ -566,11 +555,8 @@ class RLM:
                 return read.refused
             return f"{read.answer}\n{read.note}" if read.note else read.answer
 
-        def FINAL(answer: Any) -> str:  # noqa: N802 - the name the prompt uses
-            result.answer = str(answer)
-            return result.answer
+        def FINAL(answer: Any) -> None:  # noqa: N802 - the name the prompt uses
+            # Returns nothing, so the REPL never echoes the answer back as if it were output.
+            result.answer, result.done, result.ending = str(answer), True, "final"
 
-        tools: dict[str, Any] = {"context": document, "llm_query": llm_query, "FINAL": FINAL}
-        if chunks:
-            tools["chunks"] = list(chunks)
-        return tools
+        return {"context": document, "llm_query": llm_query, "FINAL": FINAL}

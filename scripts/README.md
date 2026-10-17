@@ -23,7 +23,7 @@ Launchers tied to one finished campaign, kept so it can be re-run as it was:
 | `campaigns/fixed_chunk_grid/run_grid.sh` | fixed chunk × KV-retention grid |
 | `campaigns/query_agnostic_chunks/lane.sh`, `…/notes_lane.sh` | query-agnostic chunk selection (2026-09) |
 
-The minimal RLM needs no script: `python -m evaluation.rlm.minimal_rlm run <experiment>` (experiments are listed in `evaluation/rlm/minimal_rlm/experiments.yaml`).
+The configurable RLM needs no script: `python -m evaluation.rlm.configurable_rlm run <experiment>` (experiments are listed in `evaluation/rlm/configurable_rlm/experiments.yaml`).
 
 ## `official_rlm/` — the official recursive-llm library (from apd10-dev)
 

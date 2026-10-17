@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""minimal_rlm: the base RLM (config, prompt, REPL, loop, runner) and the compression add-on on top."""
+"""configurable_rlm: the base RLM (config, prompt, REPL, loop, runner) and the compression add-on on top."""
 
 import ast
 import json
@@ -10,24 +10,24 @@ from pathlib import Path
 import pytest
 import yaml
 
-from evaluation.rlm.minimal_rlm import __main__ as cli
-from evaluation.rlm.minimal_rlm import rlm as base
-from evaluation.rlm.minimal_rlm.compression import CompressedReader, Placement
-from evaluation.rlm.minimal_rlm.config import config_from_dict, load_experiment, read_experiments
-from evaluation.rlm.minimal_rlm.rlm import (
+from evaluation.rlm.configurable_rlm import __main__ as cli
+from evaluation.rlm.configurable_rlm import rlm as base
+from evaluation.rlm.configurable_rlm.compression import CompressedReader, Placement
+from evaluation.rlm.configurable_rlm.config import config_from_dict, load_experiment, read_experiments
+from evaluation.rlm.configurable_rlm.ordering import Ordering, build_chunks, query_text
+from evaluation.rlm.configurable_rlm.rlm import (
     NO_CODE_BLOCK,
     RLM,
     Limits,
     PlainReader,
     Repl,
-    build_chunks,
     contributed,
     extract_code,
-    query_text,
     read_limit_help,
     system_prompt,
 )
-from evaluation.rlm.minimal_rlm.run import run_experiment
+from evaluation.rlm.configurable_rlm.run import run_experiment
+from evaluation.rlm.configurable_rlm.tuning import Tuning
 
 
 def code(body: str) -> str:
@@ -122,7 +122,7 @@ def test_an_experiment_is_its_keys_over_the_defaults(tmp_path):
 def test_every_shipped_experiment_loads():
     _, experiments = read_experiments()
     names = [load_experiment(name).name for name in experiments]
-    assert len(names) >= 7 and "graph_cost_aware" in names
+    assert len(names) >= 9 and {"graph_cost_aware", "order_graph_tuned"} <= set(names)
 
 
 def test_list_and_check_commands(capsys):
@@ -138,10 +138,10 @@ def test_list_and_check_commands(capsys):
 # --------------------------------------------------------------------------- the base knows nothing of compression
 
 
-def test_the_base_rlm_does_not_import_the_compression_add_on():
+def test_the_base_rlm_imports_none_of_its_features():
     tree = ast.parse(Path(base.__file__).read_text())
     imported = [n.module or "" for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)]
-    assert not [m for m in imported if "compression" in m]
+    assert not [m for m in imported if any(f in m for f in ("compression", "ordering", "tuning"))]
 
 
 def test_a_plain_run_refuses_a_compression_option():
@@ -152,11 +152,12 @@ def test_a_plain_run_refuses_a_compression_option():
 # --------------------------------------------------------------------------- prompt
 
 
-def test_prompt_adds_only_what_an_option_adds():
+def test_prompt_adds_only_what_a_feature_adds():
     common = dict(question="Q?", context_chars=1000, read_help=read_limit_help(100), max_steps=5, output_chars=50)
     plain_prompt = system_prompt(**common)
-    graph = system_prompt(**common, ordering="bm25-graph", n_chunks=7, chunk_chars=2000)
-    assert "chunks" not in plain_prompt and "cut into 7 pieces" in graph and "grouped by topic" in graph
+    ordering = Ordering("bm25-graph")
+    graph = system_prompt(**common, feature_tools=ordering.tool_help(), feature_notes=ordering.notes())
+    assert "chunks" not in plain_prompt and "cut into 250 pieces" in graph and "grouped by topic" in graph
     assert "One call reads at most 100 tokens" in plain_prompt
     listed = system_prompt(**common, answer_format="Final Answer:", list_answer=True)
     assert '["first", "second", "third"]' in listed
@@ -270,13 +271,15 @@ def test_root_window_overflow_drops_the_oldest_turn():
     assert len(root.sent[-1]) == 2  # system + begin: the one earlier turn was dropped
 
 
-def test_chunk_lists_are_read_and_counted():
+def test_the_ordering_feature_hands_the_root_chunks():
     document = "a" * 2000 + "b" * 2000 + "c" * 2000
-    chunks = build_chunks(document, "q", "bm25-query", None)
-    reader = plain("ok")
-    loop = RLM(ScriptedRoot([code("llm_query('q', chunks[0:2])"), code("FINAL('ok')")]), reader, Limits())
-    result = loop.run(document, "q", chunks=chunks, chunk_chars=2000)
+    root = ScriptedRoot([code("llm_query('q', chunks[0:2])"), code("FINAL('ok')")])
+    loop = RLM(root, plain("ok"), Limits(), [Ordering("bm25-query")])
+    result = loop.run(document, "q")
     assert result.calls[0].chunks == 2 and result.calls[0].details["read_tokens"] == 1001  # 4002 chars
+    assert "cut into 3 pieces" in root.sent[0][0]["content"]
+    with pytest.raises(ValueError, match="unknown ordering"):
+        Ordering("none")
 
 
 def test_reads_are_marked_contributing_when_the_question_ends():
@@ -532,3 +535,70 @@ def test_run_metrics_report_cost_and_factor_use(tmp_path):
     assert "choices:" in saved  # the resolved config (with its tuple of choices) round-trips through YAML
     record = json.loads((tmp_path / "c" / "hotpotqa_128k" / "checkpoint.jsonl").read_text().splitlines()[0])
     assert record["calls"][0]["offloaded_tokens"] > 0 and record["reads"]["cost"] > 0
+
+
+# =========================================================================== the tuning feature
+
+
+def tuned(replies, reader=None, ordering="none", **limits):
+    return RLM(ScriptedRoot(replies), reader or plain(), Limits(**limits), [Tuning(ordering)])
+
+
+def test_tuning_adds_our_rules_and_final_none_only_when_on():
+    base_prompt = RLM(None, plain(), Limits()).system_prompt("q", 1000)
+    tuned_prompt = RLM(None, plain(), Limits(), [Tuning()]).system_prompt("q", 1000)
+    assert "FINAL_NONE" not in base_prompt and "Rules:" not in base_prompt
+    assert "FINAL_NONE(reason)" in tuned_prompt and "SEARCH TERMS" in tuned_prompt and "invoice total" in tuned_prompt
+    graph = RLM(None, plain(), Limits(), [Ordering("bm25-graph"), Tuning("bm25-graph")]).system_prompt("q", 1000)
+    assert "shark film" in graph  # the worked session rlm.py shows for this ordering
+
+
+def test_final_none_is_refused_until_the_document_was_read():
+    result = tuned(
+        [code("FINAL_NONE('not there')"), code("a = llm_query('q', 'abcd')"), code("FINAL_NONE('absent')")]
+    ).run("doc", "q")
+    assert (result.end_reason, result.answer, result.steps) == ("abstained", None, 3)
+    assert "REJECTED: you called FINAL_NONE" in result.transcript[0]["output"]
+    assert result.summary["abstain_nudges"] == 1 and result.summary["abstain_reason"] == "absent"
+
+
+def test_with_ordered_chunks_an_abstention_needs_three_reads():
+    cells = [
+        code("a = llm_query('q', 'abcd')"),
+        code("FINAL_NONE('x')"),
+        code("FINAL_NONE('x')"),
+        code("FINAL_NONE('x')"),
+    ]
+    result = tuned(cells, ordering="bm25-graph").run("doc", "q")
+    assert result.summary["abstain_nudges"] == 2 and result.end_reason == "abstained"  # refused twice, then believed
+
+
+def test_a_guessed_literal_final_is_rejected_but_a_computed_one_is_not():
+    cells = [code("FINAL('Berlin')"), code("ans = llm_query('q', 'abcd')"), code("FINAL(ans)")]
+    result = tuned(cells, plain("Paris")).run("doc", "q")
+    assert (result.answer, result.end_reason) == ("Paris", "final")
+    assert "REJECTED: FINAL('Berlin')" in result.transcript[0]["output"] and result.summary["rejected_finals"] == 1
+    seen = tuned([code("print('it is Paris')"), code("FINAL('Paris')")]).run("doc", "q")
+    assert seen.answer == "Paris"  # a literal the run has seen is grounded
+
+
+def test_repeated_guessing_ends_the_question_without_an_answer():
+    result = tuned([code("FINAL('Berlin')")] * 3).run("doc", "q")
+    assert (result.answer, result.end_reason, result.steps) == (None, "ungrounded_final", 3)
+
+
+def test_error_loops_end_and_silent_loops_get_a_nudge():
+    errors = tuned([code("1 / 0")] * 3).run("doc", "q")
+    assert errors.end_reason == "error_loop" and errors.steps == 3
+    silent = tuned([code("x = 1")] * 3, max_steps=3).run("doc", "q")
+    assert "printed nothing" in silent.transcript[2]["output"]
+
+
+def test_a_literal_printed_in_the_same_cell_is_grounded():
+    result = tuned([code("print('the answer is Paris')\nFINAL('Paris')")]).run("doc", "q")
+    assert (result.answer, result.end_reason, result.steps) == ("Paris", "final", 1)
+
+
+def test_final_does_not_echo_its_answer_as_output():
+    result = rlm([code("FINAL('Paris')")]).run("doc", "q")
+    assert result.transcript[0]["printed"] == "[no output]"

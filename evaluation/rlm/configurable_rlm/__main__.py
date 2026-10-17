@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""python -m evaluation.rlm.minimal_rlm {list,check,run} [NAME] [--set key=value ...]
+"""python -m evaluation.rlm.configurable_rlm {list,check,run} [NAME] [--set key=value ...]
 
     list         the experiments in experiments.yaml
     check NAME   what one experiment will do, and its root prompt (no model is loaded)
@@ -20,7 +20,7 @@ import yaml
 
 from .config import EXPERIMENTS_FILE, ExperimentConfig, config_to_dict, load_experiment, read_experiments
 from .rlm import RLM
-from .run import make_limits, make_reader
+from .run import make_features, make_limits, make_reader
 
 
 def _overrides(pairs: list[str]) -> dict:
@@ -53,6 +53,7 @@ def describe(config: ExperimentConfig) -> str:
             f"limit={config.data.limit}",
             f"root         {config.models.root} @ {config.models.base_url}",
             f"ordering     {config.ordering}",
+            f"tuning       {'on (our prompt tuning and guards)' if config.tuning else 'off (base prompt)'}",
             f"reads        {reads}; one read <= {config.largest_read_tokens:,} tokens",
             f"cost         {costs}",
             f"limits       {config.rlm.max_steps} turns, {config.rlm.max_sub_calls} reads, "
@@ -63,7 +64,7 @@ def describe(config: ExperimentConfig) -> str:
 
 
 def main(argv: list[str] | None = None) -> None:
-    ap = argparse.ArgumentParser(prog="python -m evaluation.rlm.minimal_rlm", description=__doc__.split("\n")[0])
+    ap = argparse.ArgumentParser(prog="python -m evaluation.rlm.configurable_rlm", description=__doc__.split("\n")[0])
     ap.add_argument("command", choices=["list", "check", "run"])
     ap.add_argument("name", nargs="?", help="an experiment in the experiments file")
     ap.add_argument("--file", type=Path, default=EXPERIMENTS_FILE, help="experiments file (default: experiments.yaml)")
@@ -79,16 +80,17 @@ def main(argv: list[str] | None = None) -> None:
             extras = "".join(
                 f"  {k}" for k, on in (("offload", c.offload), ("cost shown", config.cost.show_root)) if on
             )
-            print(f"  {name:<18} ordering={config.ordering:<11} compression={compression}{extras}")
+            tuned = "  tuned" if config.tuning else ""
+            print(f"  {name:<18} ordering={config.ordering:<11} compression={compression}{extras}{tuned}")
         return
     if not args.name:
         ap.error(f"{args.command} needs an experiment name; see `list`")
     config = load_experiment(args.name, args.file, _overrides(args.set))
     print(describe(config))
     if args.command == "check":
-        rlm = RLM(None, make_reader(config, load_model=False), make_limits(config), config.ordering)
+        rlm = RLM(None, make_reader(config, load_model=False), make_limits(config), make_features(config))
         print("\n--- root prompt (with a placeholder question) ---")
-        print(rlm.system_prompt("<question>", 500_000, 250, 2000, "Final Answer:"))
+        print(rlm.system_prompt("<question>", 500_000, "Final Answer:"))
         print("\n--- resolved settings ---")
         print(json.dumps(config_to_dict(config), indent=2))
         return

@@ -28,38 +28,19 @@ the same cell as `BUDGET_MB=512 FACTOR=4`. To run cells with one command, see
 |---|---|---|
 | `rlm.py` | the original, tuned RLM (long prompt, guards, KVzip B × F cells) | `run_benchmark --mode rlm` |
 | `clean_rlm/` | the same RLM split into modules, KVzip removed (from apd10-dev) | `run_benchmark --mode clean-rlm` |
-| `minimal_rlm/` | a minimal RLM driven by one experiments file (below) | `python -m evaluation.rlm.minimal_rlm run <experiment>` |
+| `configurable_rlm/` | a clean base RLM; ordering, tuning and compression are features switched on in one experiments file | `python -m evaluation.rlm.configurable_rlm run <experiment>` |
 | `original_rlm.py` | the RLM paper's protocol inside this harness (from apd10-dev) | `run_benchmark --mode original` |
 | `skylight_rlm.py` | an agent that reads chunks by command, without a REPL (from apd10-dev) | `run_benchmark --mode skylight` |
 
-**`minimal_rlm/`** is a clean base RLM with features added on top, never inside it:
-
-| file | holds |
-|---|---|
-| `rlm.py` | the base RLM: prompt, ordering, REPL, loop, plain reads — **no compression code** |
-| `compression.py` | the compression add-on: KV budget B, factor per read, offloading, cost — plugged into the base as its reader only when an experiment sets `compression.budget_mb` |
-| `config.py`, `run.py` | the settings; settings → every question → result files |
-| `experiments.yaml` | every experiment: shared `defaults`, then what each named one changes |
-
-The base loop only ever calls `reader.read(question, text, **options)`, so it cannot tell
-whether compression is on. In `experiments.yaml`: `ordering` (none | bm25-query |
-bm25-graph), `compression` (`factor`, `budget_mb`; `choices` lets the root pick a factor per
-read, `offload` admits reads beyond B × F and counts the excess KV as offloaded), and `cost`
-(GPU vs offloaded tokens, optionally shown to the root).
-
-```bash
-python -m evaluation.rlm.minimal_rlm list                     # every experiment
-python -m evaluation.rlm.minimal_rlm check graph_cost_aware   # what it will do + its prompt, no model loaded
-python -m evaluation.rlm.minimal_rlm run order_graph --set data.limit=3
-```
-
-Every sub-call is recorded (tokens read, GPU / offloaded split, cost, factor, whether
-compression was needed, whether it fed the answer) and `metrics.json` sums them.
+**`configurable_rlm/`** is a clean base RLM with ordering, our prompt tuning and
+compression as features on top, each switched on in one `experiments.yaml`. Its
+[README](configurable_rlm/README.md) has the commands, the experiments, and the status of
+the professor's requests.
 
 **`hard_questions.py`** finds the questions vanilla solves but RLM + ordering does not, and
 those only a compressed RLM solves, across any finished runs, and writes them as ids files —
 the small validation set: `python -m evaluation.rlm.hard_questions --results <root> --out hard_set`,
-then `minimal_rlm run <experiment> --set data.ids_file=hard_set/ids/<task>__validation_set.txt`.
+then `configurable_rlm run <experiment> --set data.ids_file=hard_set/ids/<task>__validation_set.txt`.
 
 **`compression_picker.py`** chooses one compression factor per question before the run
 (`bash scripts/rlm/run_picked.sh`). Each module's docstring has the details.

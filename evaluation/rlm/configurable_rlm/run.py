@@ -30,7 +30,7 @@ from evaluation.benchmarks.results import score_prediction_frame
 from ..client import LLMClient
 from ..datasets import load_examples
 from .config import ExperimentConfig, config_to_dict
-from .rlm import RLM, Limits, Reader, Result, build_chunks, chunk_chars, plain_reader
+from .rlm import RLM, Feature, Limits, Reader, Result, plain_reader
 
 LIST_TASKS = ("qampari", "quest")  # LOFT tasks scored by coverage over a list
 
@@ -69,8 +69,23 @@ def make_reader(config: ExperimentConfig, load_model: bool = True) -> Reader:
     return CompressedReader.from_config(config, load_kv_model(config) if load_model else None)
 
 
+def make_features(config: ExperimentConfig) -> list[Feature]:
+    """The features an experiment switches on, each from its own file, on top of the base."""
+    features: list[Feature] = []
+    if config.ordering != "none":
+        from .ordering import Ordering
+
+        organization_dir = config.organization_dir or str(Path(config.output_dir) / "organization")
+        features.append(Ordering(config.ordering, organization_dir))
+    if config.tuning:
+        from .tuning import Tuning
+
+        features.append(Tuning(config.ordering))
+    return features
+
+
 def make_rlm(config: ExperimentConfig, root: Any, reader: Reader) -> RLM:
-    return RLM(root, reader, make_limits(config), config.ordering)
+    return RLM(root, reader, make_limits(config), make_features(config))
 
 
 def loose_match(pred: Optional[str], answers: Iterable[str]) -> bool:
@@ -177,7 +192,6 @@ def run_task(
     transcripts = run_dir / "transcripts"
     transcripts.mkdir(exist_ok=True)
     done = _answered(checkpoint)
-    organization_dir = config.organization_dir or str(Path(config.output_dir) / "organization")
     dataset = config.data.dataset
     list_answer = dataset == "loft" and task.startswith(LIST_TASKS)
     for example in examples:
@@ -185,14 +199,11 @@ def run_task(
             continue
         started = time.monotonic()
         try:
-            chunks = build_chunks(example["context"], example["question"], config.ordering, organization_dir)
             result = rlm.run(
                 example["context"],
                 example["question"],
-                chunks=chunks,
                 answer_format=example.get("answer_prefix") or None,
                 list_answer=list_answer,
-                chunk_chars=chunk_chars(),
             )
             record = record_for(example, task, result)
             (transcripts / f"{example['id'].replace(':', '_')}.json").write_text(
@@ -229,7 +240,8 @@ def run_experiment(
     results = {}
     wanted = config.data.ids()
     for task in config.data.task_dirs():
-        log(f"=== {config.name}: {task} (ordering={config.ordering}, F={config.compression.factor})")
+        options = f"ordering={config.ordering}, tuning={config.tuning}, F={config.compression.factor}"
+        log(f"=== {config.name}: {task} ({options})")
         examples = load(config.data.dataset, task, config.data.limit, config.data.split)
         if wanted is not None:
             examples = [e for e in examples if e["id"] in wanted]
