@@ -389,9 +389,11 @@ class FakeSub:
     def token_len(self, text):
         return len(text) // 4
 
-    def chat_split(self, question, context):
+    def chat_split(self, question, context, **kw):
         ratio = None if self.press is None else self.press.compression_ratio
         self.seen.append((question, context, ratio, self.compression_factor))
+        self.kwargs = kw
+        self.last_gpu_peak_bytes = 2_500_000_000 if kw.get("offload") else 9_000_000_000
         return self.answer
 
 
@@ -654,3 +656,24 @@ def test_the_tuned_command_matches_rlm_order_lanes_flags():
         "--out",
     ]
     assert tuned.min_free_gib(512, 4) == 13 and tuned.min_free_gib(2048, 8) == 40  # the lane's awk formula
+
+
+def test_real_offloading_runs_oversized_reads_with_an_offloaded_cache():
+    caps = {f: 800 for f in (1, 2, 4, 8)}
+    reader = compressed(offload=True, real_offload=True, read_limits=caps)
+    reader.read("q", "x" * 2000, factor=2)  # 500 tokens at x2 keeps 250 > B = 100: offloaded
+    assert reader.sub.kwargs == {"offload": True}
+    big = reader.read("q", "x" * 2000, factor=2)
+    reader.read("q", "x" * 200, factor=2)  # 25 kept: fits in B, so a normal read
+    assert reader.sub.kwargs == {}
+    assert big.details["offload_mode"] == "real" and big.details["gpu_peak_mb"] == 2500.0
+    counted = compressed(offload=True, read_limits=caps).read("q", "x" * 2000, factor=2)
+    assert counted.details["offload_mode"] == "count"
+
+
+def test_offload_mode_settings_are_checked():
+    assert cost_config(offload=True, offload_mode="real").compression.offload_mode == "real"
+    with pytest.raises(ValueError, match="needs compression.offload: true"):
+        cost_config(offload_mode="real")
+    with pytest.raises(ValueError, match="must be count or real"):
+        cost_config(offload=True, offload_mode="sometimes")

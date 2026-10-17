@@ -154,7 +154,8 @@ The experiments already defined:
 | `tuned_query`, `tuned_graph` / `order_query`, `order_graph` | tuned / base | bm25-query, bm25-graph | — |
 | `tuned_x2` / `compress_x2` | tuned / base | — | ×2 |
 | `tuned_graph_x1`, `tuned_graph_x2` / `graph_x1`, `graph_x2` | tuned / base | bm25-graph | ×1 (control), ×2 |
-| `graph_cost_aware` | base | bm25-graph | the root picks ×1/2/4/8 per read, offloading, cost shown |
+| `graph_cost_aware` | base | bm25-graph | the root picks ×1/2/4/8 per read, offloading counted, cost shown |
+| `graph_cost_aware_real` | base | bm25-graph | the same, with **real** offloading (KV on the CPU, measured GPU peak) |
 
 - **`loop: tuned`** runs our original `harness/rlm.py` with the same flags our earlier campaigns
   used, so its numbers are comparable with theirs. `check` prints the exact command.
@@ -185,20 +186,43 @@ questions. The settings and the table are explained in `docs/RUNNING.md` §7.
 
 ### The hard questions (the validation set)
 
-Once a vanilla run and RLM runs exist for the same questions, list the questions vanilla
-gets right and RLM + ordering gets wrong, and run on only those:
+The questions vanilla gets right and RLM + ordering gets wrong, found in one command. Start
+the server with a window that holds a whole 128k document, so it serves both vanilla and the
+RLM:
 
 ```bash
-$PY -m evaluation.rlm.harness.run_benchmark --dataset loft --data-dir hotpotqa_128k --split test --limit 55 \
-  --mode vanilla --vanilla-char-limit 600000 --out $S/results/vanilla      # one per task
-$PY -m evaluation.rlm.analysis.hard_questions --results $S/results evaluation/results/rlm --out $S/hard_set
-$PY -m evaluation.rlm.configurable_rlm run graph_cost_aware \
-  --set data.ids_file=$S/hard_set/ids/hotpotqa_128k__validation_set.txt --set name=hard_cost_aware
+GPU=0 PORT=8002 MAX_LEN=139264 GPU_UTIL=0.65 VLLM=$VLLM HF_HOME=$HF_HOME LOG=$S/logs/server.log \
+  SESSION=rlm_root bash scripts/rlm/serve_root.sh            # wait for READY (§4)
+SUBSETS="nq hotpotqa musique qampari quest" LIMIT=55 OUT=$S/hard PY=$PY bash scripts/rlm/run_hard_set.sh
 ```
 
-`--vanilla-char-limit 600000` matters. The default (400,000) cuts LOFT-128k documents
-(about 430,000 characters), so vanilla would miss answers. The vanilla run also needs the
-server started with `MAX_LEN=139264 GPU_UTIL=0.65` (§4).
+It runs vanilla (with the whole document, `--vanilla-char-limit 600000`) and `tuned_graph` on
+the same questions, then `analysis/hard_questions.py`. The result is `$S/hard/hard_set/`:
+`summary.md`, and `ids/<task>__validation_set.txt`. Add `RLM="tuned_graph tuned_graph_x2"`
+to also find the questions only compression rescues (that needs GPU room for the
+sub-model). Then run any experiment on just those questions:
+
+```bash
+$PY -m evaluation.rlm.configurable_rlm run graph_cost_aware \
+  --set data.ids_file=$S/hard/hard_set/ids/hotpotqa_128k__validation_set.txt --set name=hard_cost_aware
+```
+
+### Offloading: counted or real
+
+With `compression: {offload: true}`, a read may be larger than B × F. The KV beyond B is
+offloaded to the CPU and costed.
+
+- **`offload_mode: count`** (the default) only counts it. kvpress keeps the KV on the GPU.
+- **`offload_mode: real`** runs such a read with an offloaded KV cache: each layer's KV lives
+  on the CPU and moves to the GPU only while that layer computes. Each read records its
+  real peak GPU memory (`gpu_peak_mb`).
+
+Try it first on 1–2 questions (`--set data.limit=1`) on a free GPU:
+
+```bash
+CUDA_VISIBLE_DEVICES=1 $PY -m evaluation.rlm.configurable_rlm run graph_cost_aware_real \
+  --set data.tasks=[hotpotqa] --set data.limit=1 --set name=offload_smoke
+```
 
 ---
 

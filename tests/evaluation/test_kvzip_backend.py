@@ -285,6 +285,22 @@ class FixedFactorTest(unittest.TestCase):
         self.assertEqual(client.pipeline.calls[-1]["memory_budget"], 512)
 
 
+class OffloadTest(unittest.TestCase):
+    """offload=True: the read runs with an offloaded KV cache, and the whole-KV fit check is skipped."""
+
+    def test_an_offloaded_read_gets_an_offloaded_cache_and_skips_the_fit_check(self):
+        client = _generating_client(4, free_bytes=1024)  # nothing fits on this "GPU"
+        client._offloaded_cache = lambda: "OFFLOADED-CACHE"
+        self.assertTrue(client.chat_split("q?", "x" * 100).startswith("[SUB-MODEL ERROR]"))
+        self.assertEqual(client.chat_split("q?", "x" * 100, offload=True), "ok")
+        self.assertEqual(client.pipeline.calls[-1]["cache"], "OFFLOADED-CACHE")
+
+    def test_a_normal_read_is_called_exactly_as_before(self):
+        client = _generating_client(4)
+        client.chat_split("q?", "x" * 100)
+        self.assertNotIn("cache", client.pipeline.calls[-1])
+
+
 class PlanOrderedReadsTest(unittest.TestCase):
     def test_n_is_the_budget_in_tokens_times_f(self):
         client = _generating_client(4)

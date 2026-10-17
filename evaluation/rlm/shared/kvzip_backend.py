@@ -425,7 +425,11 @@ class KVzipSubClient:
             # configurations for the same reason. One shared instance serving
             # every sub-call of a run must not leak scores across calls.
             self.press._reset_internal_parameters()
-        if not self._fits_in_memory(ctx_tokens):
+        # offload=True (configurable_rlm's compression add-on, offload_mode: real): the KV
+        # lives on the CPU and each layer comes to the GPU only while it computes, so the
+        # whole-KV fit check below does not apply. Every other caller is unchanged.
+        offload = bool(kw.get("offload"))
+        if not offload and not self._fits_in_memory(ctx_tokens):
             self._torch.cuda.empty_cache()
             if not self._fits_in_memory(ctx_tokens):
                 # Returned as the sub-answer (not raised) so the example survives:
@@ -434,6 +438,10 @@ class KVzipSubClient:
                 return "[SUB-MODEL ERROR] the provided text did not fit in GPU memory; retry with a smaller snippet."
         try:
             max_new = int(kw.get("max_tokens") or self.max_new_tokens)
+            extra = {"cache": self._offloaded_cache()} if offload else {}
+            cuda = self._torch.cuda
+            if hasattr(cuda, "reset_peak_memory_stats"):
+                cuda.reset_peak_memory_stats()
             # Same call shape as every LOFT/RULER benchmark run: memory_budget
             # is converted to a compression_ratio internally by the pipeline,
             # scaled to THIS call's actual context length. A B x F cell passes no
@@ -450,7 +458,10 @@ class KVzipSubClient:
                 # itself adds a small header, both of which would move factor 1x
                 # away from the identity cell.
                 max_context_length=self.max_context_tokens,
+                **extra,
             )
+            # The read's real peak GPU memory: what offloading actually saves, measured.
+            self.last_gpu_peak_bytes = cuda.max_memory_allocated() if hasattr(cuda, "max_memory_allocated") else None
             answer = str(result["answer"])
             stats = getattr(self.pipeline, "last_memory_budget_stats", {})
         except self._torch.cuda.OutOfMemoryError:
@@ -474,6 +485,15 @@ class KVzipSubClient:
             }
         )
         return answer
+
+    def _offloaded_cache(self) -> Any:
+        """A KV cache whose layers live on the CPU, each moved to the GPU only while it runs."""
+        from transformers import DynamicCache
+
+        try:
+            return DynamicCache(offloading=True)
+        except TypeError as exc:  # transformers before the layered cache (4.56)
+            raise RuntimeError("real KV offloading needs transformers >= 4.56 (DynamicCache(offloading=True))") from exc
 
     def _token_len(self, text: str) -> int:
         if not text:

@@ -77,6 +77,11 @@ class CompressionConfig:
     # the GPU -- so a read is still capped, at max_read_tokens (default B x the largest factor:
     # as wide as the widest compressed read, so e.g. x4 + 2x offloaded reads as far as x8).
     offload: bool = False
+    # count: offloaded KV is only counted (and costed); kvpress keeps it on the GPU.
+    # real: a read whose KV exceeds B runs with an offloaded cache -- each layer's KV on the
+    # CPU, moved to the GPU only while that layer computes -- and records its real peak GPU
+    # memory. Needs a GPU and transformers >= 4.56.
+    offload_mode: str = "count"
     max_read_tokens: Optional[int] = None
 
     @property
@@ -179,6 +184,10 @@ class ExperimentConfig:
             raise ValueError(f"compression.factor {c.factor} must be one of compression.choices {list(c.factors)}")
         if max(c.factors) > 1 and c.budget_mb is None:
             raise ValueError("a compression factor > 1 needs compression.budget_mb (B), so a read is B x F tokens")
+        if c.offload_mode not in ("count", "real"):
+            raise ValueError(f"compression.offload_mode must be count or real, got {c.offload_mode!r}")
+        if c.offload_mode == "real" and not c.offload:
+            raise ValueError("compression.offload_mode: real needs compression.offload: true")
         if c.offload and c.budget_mb is None:
             raise ValueError("compression.offload needs compression.budget_mb: offloaded is KV beyond B")
         if self.cost.show_root and c.budget_mb is None:

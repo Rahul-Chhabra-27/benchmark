@@ -41,7 +41,7 @@ def describe(config: ExperimentConfig) -> str:
         )
         reads = f"in-process kvpress, B={c.budget_tokens:,} tokens ({c.budget_mb:g} MB), {chosen}"
         if c.offload:
-            reads += ", offloading on"
+            reads += f", offloading on ({c.offload_mode})"
     else:
         reads = "plain reads over http (no kvpress)"
     tuned = config.loop == "tuned"

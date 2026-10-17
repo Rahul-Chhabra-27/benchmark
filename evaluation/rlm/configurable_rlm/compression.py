@@ -9,8 +9,10 @@ compression lives here:
     budget      B, the KV one read may keep on the GPU; a read at factor F carries up to B x F tokens
     factors     F = 1 is no press (the control); F > 1 presses each read by 1 - 1/F (KVzip).
                 With `choices`, the root picks F per read: llm_query(question, text, factor=4)
-    offloading  with `offload`, a read may exceed B x F: KV beyond B counts as offloaded to CPU.
-                Accounting only -- kvpress keeps the KV on the GPU -- so a read is capped
+    offloading  with `offload`, a read may exceed B x F: KV beyond B is offloaded to CPU.
+                offload_mode: count only counts it (kvpress keeps the KV on the GPU);
+                offload_mode: real runs such a read with an offloaded KV cache (each layer
+                on the CPU until it computes) and records its real peak GPU memory
     cost        GPU tokens x gpu_token + offloaded tokens x offloaded_token, per read; with
                 cost.show_root the root sees each read's cost and the running total
 
@@ -76,6 +78,7 @@ class CompressedReader:
         default_factor: int = 1,
         read_limits: Optional[Mapping[int, int]] = None,
         offload: bool = False,
+        real_offload: bool = False,
         gpu_token_cost: float = 0.0,
         offloaded_token_cost: float = 100.0,
         show_cost: bool = False,
@@ -87,6 +90,7 @@ class CompressedReader:
         self.default_factor = default_factor
         self.read_limits = dict(read_limits or {f: budget_tokens * f for f in self.factors})
         self.offload = offload
+        self.real_offload = real_offload
         self.gpu_token_cost = gpu_token_cost
         self.offloaded_token_cost = offloaded_token_cost
         self.show_cost = show_cost
@@ -111,6 +115,7 @@ class CompressedReader:
             default_factor=c.factor,
             read_limits={f: config.read_limit(f) for f in c.factors},
             offload=c.offload,
+            real_offload=c.offload_mode == "real",
             gpu_token_cost=cost.gpu_token,
             offloaded_token_cost=cost.offloaded_token,
             show_cost=cost.show_root,
@@ -163,8 +168,15 @@ class CompressedReader:
             compression_needed=(tokens > self.budget_tokens) if factor > 1 else None,
         )
         self._use(factor)
+        offloaded = self.real_offload and placement.offloaded > 0
         started = time.monotonic()
-        answer = self.sub.chat_split(question=SUB_PROMPT.format(question=question), context=text)
+        answer = self.sub.chat_split(
+            question=SUB_PROMPT.format(question=question), context=text, **({"offload": True} if offloaded else {})
+        )
+        details["offload_mode"] = ("real" if offloaded else "count") if placement.offloaded else None
+        peak = getattr(self.sub, "last_gpu_peak_bytes", None)
+        if peak is not None:
+            details["gpu_peak_mb"] = round(peak / 1e6, 1)
         note = ""
         if self.show_cost:
             note = COST_LINE.format(

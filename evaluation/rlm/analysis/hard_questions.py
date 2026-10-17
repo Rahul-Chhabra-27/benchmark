@@ -256,7 +256,7 @@ def main(argv: list[str] | None = None) -> None:
     print("\n" + report)
     print(f"{len(written)} ids files in {args.out / 'ids'}; run one as a validation set with")
     print(
-        "  python -m evaluation.rlm.configurable_rlm run <config>.yaml "
+        "  python -m evaluation.rlm.configurable_rlm run <experiment> "
         f"--set data.ids_file={args.out / 'ids'}/<task>__validation_set.txt"
     )
 
