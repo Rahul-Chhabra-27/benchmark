@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Download everything an ordered-chunk campaign reads, then prove it loads offline.
 
-    python -m evaluation.rlm.rlm_order_stage --dataset all             # LOFT-128k and RULER-128k
-    python -m evaluation.rlm.rlm_order_stage --dataset ruler128k --weights
+    python -m evaluation.rlm.campaigns.rlm_order_stage --dataset all             # LOFT-128k and RULER-128k
+    python -m evaluation.rlm.campaigns.rlm_order_stage --dataset ruler128k --weights
 
 Lanes run with HF_HUB_OFFLINE=1, so these must be in the Hugging Face cache before the
 first lane starts:
@@ -24,8 +24,8 @@ import os
 import subprocess
 import sys
 
-from ..benchmarks.registry import RULER_32K_TASKS
-from .datasets import load_examples
+from evaluation.benchmarks.registry import RULER_32K_TASKS
+from evaluation.rlm.shared.datasets import load_examples
 
 LOFT_128K = ("nq_128k", "hotpotqa_128k", "musique_128k", "qampari_128k", "quest_128k")
 DEFAULT_MODEL = "Qwen/Qwen3-4B-Instruct-2507"
@@ -88,7 +88,7 @@ def main() -> None:
         )
 
     offline = dict(os.environ, HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1")
-    command = [sys.executable, "-m", "evaluation.rlm.rlm_order_stage", "--verify-offline"]
+    command = [sys.executable, "-m", "evaluation.rlm.campaigns.rlm_order_stage", "--verify-offline"]
     done = subprocess.run(command + ["--dataset", args.dataset, "--model", args.model], env=offline)
     if done.returncode:
         sys.exit("OFFLINE LOAD FAILED: the lanes would fail the same way. Check HF_HOME and HF_DATASETS_CACHE.")

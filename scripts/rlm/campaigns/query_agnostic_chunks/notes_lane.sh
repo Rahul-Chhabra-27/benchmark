@@ -7,7 +7,7 @@ set -u
 cd /mnt/home/gautammahale/qagnostic/checkout-notes
 export HF_HOME=/mnt/nas/gautammahale/hf_cache HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 PYTHONPATH=.
 W=${2:-8000}; O=${3:-1600}
-/mnt/nas/gautammahale/venvs/rlm/bin/python -m evaluation.rlm.window_notes \
+/mnt/nas/gautammahale/venvs/rlm/bin/python -m evaluation.rlm.chunk_sources.window_notes \
   --dataset loft --data-dir "${1}_128k" --split test --window "$W" --overlap "$O" \
   --base-url http://localhost:8001/v1 \
   --out-dir /mnt/home/gautammahale/qagnostic/notes 2>&1 \

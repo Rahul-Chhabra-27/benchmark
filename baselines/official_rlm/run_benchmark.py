@@ -51,7 +51,7 @@ import yaml  # noqa: E402
 from evaluation.benchmarks.registry import LOFT_RAG_DATASETS, SCORER_REGISTRY  # noqa: E402
 from evaluation.benchmarks.results import score_prediction_frame  # noqa: E402
 from evaluation.results_layout import RLM_RESULTS_DIR  # noqa: E402
-from evaluation.rlm.datasets import load_examples  # noqa: E402
+from evaluation.rlm.shared.datasets import load_examples  # noqa: E402
 
 REEXEC_FLAG = "BASELINES_RECURSIVE_LLM_ENV"
 

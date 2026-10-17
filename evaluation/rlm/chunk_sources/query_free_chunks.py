@@ -47,9 +47,10 @@ import json
 import random
 from pathlib import Path
 
-from . import retrieval
+from evaluation.rlm.shared import retrieval
+from evaluation.rlm.shared.datasets import canonical_dataset_name, load_examples
+
 from .chunkset import document_digest, window_spans
-from .datasets import canonical_dataset_name, load_examples
 
 SELECTORS = ("lead", "stride", "random", "all")
 

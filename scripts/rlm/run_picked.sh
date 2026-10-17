@@ -3,7 +3,7 @@
 #
 #   PICKER=spread:0.3 SUBSETS="hotpotqa" BUDGET_MB=1024 bash scripts/rlm/run_picked.sh
 #
-# What it does, in order (evaluation/rlm/compression_picker.py explains each step):
+# What it does, in order (evaluation/rlm/analysis/compression_picker.py explains each step):
 #   1. plan      the picker chooses F in FACTORS for every question -- no model involved --
 #                and writes PLAN/plan.jsonl and one ids file per (subset, F)
 #   2. run       each ids file runs as an ordinary B x F cell through rlm_order_lane.sh
@@ -13,7 +13,7 @@
 #
 # DRY_RUN=1 stops after step 1 and prints the cells step 2 would run.
 # Pickers: fixed:F | spread[:RATIO] | per-task:nq=8,hotpotqa=1 | calibrated:FILE
-# (calibrated:FILE comes from `python -m evaluation.rlm.compression_picker calibrate` on dev).
+# (calibrated:FILE comes from `python -m evaluation.rlm.analysis.compression_picker calibrate` on dev).
 # Re-running resumes: rows already answered are skipped by run_benchmark.
 set -uo pipefail
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -46,7 +46,7 @@ export HF_HOME=${HF_HOME:-/mnt/nas/gautammahale/hf_cache}
 export KVZIP_PYTHON=${KVZIP_PYTHON:-/mnt/nas/gautammahale/benchmark/.venv-kvpress/bin/python}
 VLLM=${VLLM:-/mnt/nas/gautammahale/benchmark/.venv/bin/vllm}
 mkdir -p "$RESULTS" "$LOGS"
-picker() { (cd "$REPO" && PYTHONPATH=. "$KVZIP_PYTHON" -m evaluation.rlm.compression_picker "$@"); }
+picker() { (cd "$REPO" && PYTHONPATH=. "$KVZIP_PYTHON" -m evaluation.rlm.analysis.compression_picker "$@"); }
 
 # The root server: reuse a vLLM already generating on PORT, or start one with serve_root.sh
 # (and stop it on exit unless KEEP_SERVER=1).

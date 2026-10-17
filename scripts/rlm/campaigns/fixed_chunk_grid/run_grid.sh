@@ -174,7 +174,7 @@ for subset in $DATASETS; do
             if [ -n "$SPLIT" ]; then split_args=(--split "$SPLIT"); fi
 
             echo "=== $task :: B=$budget tokens :: F=${factor}x :: k=$search_k :: N=$n :: calls=$calls :: minfree=${min_free}GiB ==="
-            if ! CUDA_VISIBLE_DEVICES="$GPU" "$KVPY" -m evaluation.rlm.run_benchmark \
+            if ! CUDA_VISIBLE_DEVICES="$GPU" "$KVPY" -m evaluation.rlm.harness.run_benchmark \
                 --dataset "$DATASET_NAME" --data-dir "$task" --limit "$LIMIT" "${split_args[@]}" \
                 --base-url "http://$ROOT_HOST:$PORT/v1" \
                 --root-model "$MODEL" --sub-model "$MODEL" \

@@ -6,7 +6,7 @@ import json
 
 import yaml
 
-from evaluation.rlm.fixed_chunk_grid.audit_cells import audit
+from evaluation.rlm.campaigns.fixed_chunk_grid.audit_cells import audit
 
 
 def _cell(root, name, *, press="kvzip", pressed=1.0, coverage=0.05, transcripts=(), fixed=True):

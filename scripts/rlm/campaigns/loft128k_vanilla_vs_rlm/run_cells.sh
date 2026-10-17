@@ -178,7 +178,7 @@ if [ -n "${KVPRESS_ARMS:-}" ]; then
                 ;;
             esac
             echo "--- arm $arm: rlm+scratchpad+${KV_PRESS:-kvzip} budget ${budget}GB ---"
-            CUDA_VISIBLE_DEVICES="${RLM_SUB_GPU:-0}" "$KVPY" -m evaluation.rlm.run_benchmark \
+            CUDA_VISIBLE_DEVICES="${RLM_SUB_GPU:-0}" "$KVPY" -m evaluation.rlm.harness.run_benchmark \
                 "${KV_BASE[@]}" --memory-budget "$budget" --memory-budget-unit GB "${EXTRA[@]}" ||
                 {
                     echo "WARN: ${DATASET} arm $arm budget ${budget}GB failed"
@@ -222,11 +222,11 @@ COMMON=(
 )
 
 echo "--- arms 1+2: vanilla and rlm ---"
-python -m evaluation.rlm.run_benchmark "${COMMON[@]}" --mode both \
+python -m evaluation.rlm.harness.run_benchmark "${COMMON[@]}" --mode both \
     || echo "WARN: ${DATASET} vanilla/rlm failed; continuing to the scratchpad arm"
 
 echo "--- arm 3: rlm + scratchpad ---"
-python -m evaluation.rlm.run_benchmark "${COMMON[@]}" --mode rlm \
+python -m evaluation.rlm.harness.run_benchmark "${COMMON[@]}" --mode rlm \
     --scratchpad --max-notes-tokens "$MAX_NOTES_TOKENS" \
     || echo "WARN: ${DATASET} rlm+scratchpad failed"
 

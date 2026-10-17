@@ -14,7 +14,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from evaluation.rlm.organization import (
+from evaluation.rlm.harness.rlm import RLM, SUB_SYSTEM_PROMPT
+from evaluation.rlm.shared.organization import (
     CONFIG,
     ModelTokens,
     OrderedPayload,
@@ -24,7 +25,6 @@ from evaluation.rlm.organization import (
     pack,
     reader_messages,
 )
-from evaluation.rlm.rlm import RLM, SUB_SYSTEM_PROMPT
 
 SIZE = CONFIG["chunk_chars"]
 REPO = Path(__file__).resolve().parents[2]
@@ -140,15 +140,18 @@ class OrganizeTest(unittest.TestCase):
         # BM25 sums floats over query terms; iterating a set of strings varies with
         # PYTHONHASHSEED, which could flip near-ties between processes.
         script = (
-            "import json; from evaluation.rlm.organization import organize; "
+            "import json; from evaluation.rlm.shared.organization import organize; "
             "from tests.evaluation.test_rlm_organization import DOCUMENT; "
             "a = organize(DOCUMENT, 'bm25-graph')[0]; print(json.dumps([a['order'], a['edges']]))"
         )
         outputs = set()
         for seed in ("1", "2", "3"):
             env = dict(os.environ, PYTHONHASHSEED=seed, PYTHONPATH=str(REPO))
-            outputs.add(subprocess.run([sys.executable, "-c", script], env=env, cwd=REPO,
-                                       capture_output=True, text=True, check=True).stdout)
+            outputs.add(
+                subprocess.run(
+                    [sys.executable, "-c", script], env=env, cwd=REPO, capture_output=True, text=True, check=True
+                ).stdout
+            )
         self.assertEqual(len(outputs), 1)
 
     def test_ordered_hits_follow_the_artifact_and_carry_source_text(self):
@@ -156,7 +159,7 @@ class OrganizeTest(unittest.TestCase):
         hits = ordered_hits(DOCUMENT, artifact)
         self.assertEqual([h.start // SIZE for h in hits], artifact["order"])
         for h in hits:
-            self.assertEqual(h.text, DOCUMENT[h.start:h.end])
+            self.assertEqual(h.text, DOCUMENT[h.start : h.end])
         with self.assertRaises(ValueError):
             ordered_hits(DOCUMENT + "x", artifact)
 
@@ -202,7 +205,7 @@ class PackTest(unittest.TestCase):
         # Pieces stay contiguous and in the graph order of their parent chunk.
         self.assertEqual("".join(h.text for h in flat), "".join(h.text for h in self.hits))
         for h in flat:
-            self.assertEqual(h.text, DOCUMENT[h.start:h.end])
+            self.assertEqual(h.text, DOCUMENT[h.start : h.end])
         for g in groups:
             self.assertLessEqual(self.size(g), 400)
 
@@ -257,8 +260,14 @@ class OrderedStructuredTest(unittest.TestCase):
             **kw,
         )
         artifact, _, _ = organize(DOCUMENT, "bm25-graph")
-        groups = pack(DOCUMENT, ordered_hits(DOCUMENT, artifact), rlm.structured_question(self.TASK),
-                      SUB_SYSTEM_PROMPT, counter, budget)
+        groups = pack(
+            DOCUMENT,
+            ordered_hits(DOCUMENT, artifact),
+            rlm.structured_question(self.TASK),
+            SUB_SYSTEM_PROMPT,
+            counter,
+            budget,
+        )
         return rlm, sub, root, groups
 
     def test_reader_payloads_and_reduce_order_follow_the_groups(self):

@@ -8,8 +8,8 @@ from unittest import mock
 import pytest
 
 from evaluation.benchmarks.registry import RULER_32K_TASKS
-from evaluation.rlm import rlm_order_stage
-from evaluation.rlm.rlm_order_stage import tasks_for
+from evaluation.rlm.campaigns import rlm_order_stage
+from evaluation.rlm.campaigns.rlm_order_stage import tasks_for
 
 
 def test_the_campaign_tasks_are_staged():

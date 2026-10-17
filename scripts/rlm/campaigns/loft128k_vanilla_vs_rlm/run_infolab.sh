@@ -181,7 +181,7 @@ if [ "$1" = "setup" ]; then
     # kvpress's own KVzipPress, which needs none of that -- the clone and the two
     # builds were pure setup cost for an import nothing makes any more.
     python - <<'PY'
-from evaluation.rlm.kvzip_backend import SUB_PRESS_CHOICES  # import-graph check
+from evaluation.rlm.shared.kvzip_backend import SUB_PRESS_CHOICES  # import-graph check
 
 print(f"kvzip_backend OK: presses {SUB_PRESS_CHOICES}")
 PY

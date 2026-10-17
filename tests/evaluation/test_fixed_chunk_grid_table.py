@@ -6,7 +6,7 @@ import json
 
 import yaml
 
-from evaluation.rlm.fixed_chunk_grid.grid_table import collect, render_dataset
+from evaluation.rlm.campaigns.fixed_chunk_grid.grid_table import collect, render_dataset
 
 
 def _run(root, budget, factor, score, pressed=1.0, context=None, retained=None):

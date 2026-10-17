@@ -13,7 +13,7 @@ from unittest import mock
 
 import torch
 
-from evaluation.rlm import kvzip_backend
+from evaluation.rlm.shared import kvzip_backend
 
 
 def _gpus(*free_gib):

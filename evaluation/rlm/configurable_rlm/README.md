@@ -10,7 +10,7 @@ and then we start adding all of this stuff, so now we can run any setting of RLM
 |---|---|
 | `rlm.py` | **the base RLM**: short prompt, Python REPL, loop, `llm_query`, `FINAL`, plain reads. It imports none of the features. |
 | `ordering.py` | feature: the `chunks` list, ordered by `bm25-query` or `bm25-graph` |
-| `tuning.py` | feature: our prompt tuning and guards from the original `evaluation/rlm/rlm.py` (rules, search coaching, worked example, `FINAL_NONE`, rejection of guessed answers, loop nudges) |
+| `tuning.py` | feature: our prompt tuning and guards from the original `evaluation/rlm/harness/rlm.py` (rules, search coaching, worked example, `FINAL_NONE`, rejection of guessed answers, loop nudges) |
 | `compression.py` | feature: KV-compressed reads under a memory budget B, a compression factor per read, offloading, and cost |
 | `config.py` | the settings, read from `experiments.yaml` |
 | `run.py` | runs an experiment over its questions and writes the result files |
@@ -41,7 +41,7 @@ python -m evaluation.rlm.configurable_rlm run graph_cost_aware \
 
 Finding the hard questions (vanilla right, RLM + ordering wrong) from finished runs:
 ```bash
-python -m evaluation.rlm.hard_questions --results <results root> --out hard_set
+python -m evaluation.rlm.analysis.hard_questions --results <results root> --out hard_set
 ```
 
 ## Experiments
@@ -57,6 +57,14 @@ python -m evaluation.rlm.hard_questions --results <results root> --out hard_set
 | `graph_x1` | bm25-graph | — | ×1 at 1024 MB (control: same budget, no compression) |
 | `graph_x2` | bm25-graph | — | ×2 at 1024 MB |
 | `graph_cost_aware` | bm25-graph | — | root picks ×1/2/4/8 per read, offloading, cost shown |
+| `rlm_like`, `rlm_like_graph`, `rlm_like_query` | —, bm25-graph, bm25-query | ✅ | — |
+| `rlm_like_graph_x2` | bm25-graph | ✅ | ×2 at 1024 MB |
+
+The `rlm_like*` experiments are **the closest to our original `harness/rlm.py`** as the LOFT
+campaigns ran it: tuning on, 50 turns, 6,000 characters of output per turn. They are not
+identical, because `rlm.py` also has BM25 `search()`, a repetition breaker and its own prompt
+wording. To reproduce old numbers exactly, run `python -m evaluation.rlm.harness.run_benchmark
+--mode rlm` (or `scripts/rlm/run_bxf.sh`).
 
 To add an experiment, add a few lines under `experiments:`. The keys are:
 

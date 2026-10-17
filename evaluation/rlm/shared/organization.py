@@ -99,7 +99,7 @@ def organize(document, order, cache_dir=None):
     `build_cpu_seconds` is the one-off preprocessing cost to amortise over queries.
     """
     if order not in ORDERS:
-        raise ValueError(f'unknown order: {order}')
+        raise ValueError(f"unknown order: {order}")
     started = time.process_time()
     digest = hashlib.sha256(document.encode()).hexdigest()
     config = dict(CONFIG, order=order)
@@ -107,30 +107,38 @@ def organize(document, order, cache_dir=None):
     path = Path(cache_dir) / f"{key}.json" if cache_dir else None
     if path and path.exists():
         artifact = json.loads(path.read_text())
-        if artifact['document_sha256'] != digest or artifact['config'] != config:
-            raise ValueError('organization cache mismatch')
+        if artifact["document_sha256"] != digest or artifact["config"] != config:
+            raise ValueError("organization cache mismatch")
         return artifact, time.process_time() - started, True
-    size = CONFIG['chunk_chars']
+    size = CONFIG["chunk_chars"]
     spans = [(s, min(s + size, len(document))) for s in range(0, len(document), size)]
     edges, forest = [], []
     indices = list(range(len(spans)))
-    if order == 'bm25-graph' and spans:
-        index = ChunkIndex(document, chunk_chars=size, overlap=CONFIG['overlap'], k1=CONFIG['k1'], b=CONFIG['b'])
+    if order == "bm25-graph" and spans:
+        index = ChunkIndex(document, chunk_chars=size, overlap=CONFIG["overlap"], k1=CONFIG["k1"], b=CONFIG["b"])
         if index.spans != spans:
-            raise ValueError('BM25 index and organization disagree on chunk spans')
+            raise ValueError("BM25 index and organization disagree on chunk spans")
         rows = []
         for s, e in spans:
             row = [0.0] * len(spans)
             for hit in index.search(document[s:e], k=len(spans)):
                 row[hit.start // size] = hit.score
             rows.append(row)
-        indices, edges, forest = graph_order(rows, CONFIG['neighbors'])
-    artifact = dict(config=config, document_sha256=digest, document_chars=len(document), spans=spans,
-                    order=indices, edges=edges, forest=forest, build_cpu_seconds=time.process_time() - started)
+        indices, edges, forest = graph_order(rows, CONFIG["neighbors"])
+    artifact = dict(
+        config=config,
+        document_sha256=digest,
+        document_chars=len(document),
+        spans=spans,
+        order=indices,
+        edges=edges,
+        forest=forest,
+        build_cpu_seconds=time.process_time() - started,
+    )
     text = json.dumps(artifact)
     if path:
         path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_suffix(f'.{os.getpid()}.tmp')
+        temporary = path.with_suffix(f".{os.getpid()}.tmp")
         temporary.write_text(text)
         temporary.replace(path)
     # Round-trip so a fresh build and a cache hit hand back identical types.
@@ -139,13 +147,15 @@ def organize(document, order, cache_dir=None):
 
 def ordered_hits(document, artifact):
     """The artifact's chunks as Hits, in its order. Rank is the position in that order."""
-    if artifact['document_sha256'] != hashlib.sha256(document.encode()).hexdigest():
-        raise ValueError('organization artifact belongs to a different document')
-    spans = artifact['spans']
-    if sorted(artifact['order']) != list(range(len(spans))):
-        raise ValueError('organization order is not a permutation of its chunks')
-    return [Hit(rank, spans[i][0], spans[i][1], 0.0, document[spans[i][0]:spans[i][1]])
-            for rank, i in enumerate(artifact['order'], start=1)]
+    if artifact["document_sha256"] != hashlib.sha256(document.encode()).hexdigest():
+        raise ValueError("organization artifact belongs to a different document")
+    spans = artifact["spans"]
+    if sorted(artifact["order"]) != list(range(len(spans))):
+        raise ValueError("organization order is not a permutation of its chunks")
+    return [
+        Hit(rank, spans[i][0], spans[i][1], 0.0, document[spans[i][0] : spans[i][1]])
+        for rank, i in enumerate(artifact["order"], start=1)
+    ]
 
 
 @dataclass(frozen=True)
@@ -160,14 +170,14 @@ class OrderedPayload:
 
     def render(self, document):
         for h in self.hits:
-            if not 0 <= h.start < h.end <= len(document) or h.text != document[h.start:h.end]:
-                raise ValueError('ordered payload has invalid source offsets/text')
-        return '\n\n'.join(f'[source chars {h.start}:{h.end}]\n{h.text}' for h in self.hits)
+            if not 0 <= h.start < h.end <= len(document) or h.text != document[h.start : h.end]:
+                raise ValueError("ordered payload has invalid source offsets/text")
+        return "\n\n".join(f"[source chars {h.start}:{h.end}]\n{h.text}" for h in self.hits)
 
 
 def reader_messages(system, question, payload, document):
     """Exactly the messages llm_query sends for an ordered payload on a plain chat client."""
-    return [dict(role='system', content=system), dict(role='user', content=f'{question}\n\n{payload.render(document)}')]
+    return [dict(role="system", content=system), dict(role="user", content=f"{question}\n\n{payload.render(document)}")]
 
 
 class ModelTokens:
@@ -181,13 +191,13 @@ class ModelTokens:
     def count_messages(self, messages):
         ids = self.tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True)
         # transformers 5 may return a BatchEncoding rather than a list of ids.
-        return len(ids['input_ids'] if hasattr(ids, 'keys') else ids)
+        return len(ids["input_ids"] if hasattr(ids, "keys") else ids)
 
 
 def pack(document, hits, question, system, counter, budget):
     """Sequentially pack full messages; bisect oversized chunks without text loss."""
     if budget <= 0:
-        raise ValueError('group input budget must be positive')
+        raise ValueError("group input budget must be positive")
     groups, current = [], []
 
     def size(items):
@@ -204,7 +214,7 @@ def pack(document, hits, question, system, counter, budget):
             pending.append(hit)
         else:
             if hit.end - hit.start <= 1:
-                raise ValueError('reader instructions/question/labels leave no room for source text')
+                raise ValueError("reader instructions/question/labels leave no room for source text")
             middle = (hit.start + hit.end) // 2
             for s, e in ((middle, hit.end), (hit.start, middle)):
                 pending.append(Hit(hit.rank, s, e, hit.score, document[s:e]))

@@ -7,8 +7,9 @@ from __future__ import annotations
 import time
 from typing import Callable, Optional, Sequence
 
-from .. import retrieval
-from ..retrieval import Hit
+from evaluation.rlm.shared import retrieval
+from evaluation.rlm.shared.retrieval import Hit
+
 from .backend import VLLMClient, is_context_overflow
 from .grounding import _mentions, composed_answer_grounded
 from .prompts import (

@@ -6,11 +6,11 @@ import sys
 
 import pytest
 
-from evaluation.rlm.clean_rlm import RLM, Scratchpad, VLLMClient, vanilla_answer
-from evaluation.rlm.client import LLMClient
-from evaluation.rlm.rlm import RLM as ParentRLM
-from evaluation.rlm.rlm import vanilla_answer as parent_vanilla_answer
-from evaluation.rlm.run_benchmark import main
+from evaluation.rlm.harness.clean_rlm import RLM, Scratchpad, VLLMClient, vanilla_answer
+from evaluation.rlm.harness.rlm import RLM as ParentRLM
+from evaluation.rlm.harness.rlm import vanilla_answer as parent_vanilla_answer
+from evaluation.rlm.harness.run_benchmark import main
+from evaluation.rlm.shared.client import LLMClient
 
 
 class ScriptedClient:
@@ -116,7 +116,7 @@ def test_agentic_http_path_matches_parent_representatively():
 
 
 def test_structured_http_path_matches_parent_representatively():
-    from evaluation.rlm.retrieval import Hit
+    from evaluation.rlm.shared.retrieval import Hit
 
     document = "alpha fact. beta fact."
     chunks = [

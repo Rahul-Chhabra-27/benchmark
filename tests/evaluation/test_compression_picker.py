@@ -8,8 +8,8 @@ import pandas as pd
 import pytest
 import yaml
 
-from evaluation.rlm import compression_picker as cli
-from evaluation.rlm.compression_picker import (
+from evaluation.rlm.analysis import compression_picker as cli
+from evaluation.rlm.analysis.compression_picker import (
     FixedPicker,
     PerTaskPicker,
     QuestionFeatures,
@@ -243,7 +243,7 @@ def test_calibrate_prefers_spread_when_it_routes_questions_to_their_best_factor(
 
 def test_best_per_task_breaks_ties_toward_less_compression():
     runs = cells({1: {"a": 1, "b": 0}, 4: {"a": 0, "b": 1}})
-    from evaluation.rlm.compression_picker import score_matrix
+    from evaluation.rlm.analysis.compression_picker import score_matrix
 
     assert best_per_task(score_matrix(runs)) == {"nq_128k": 1}
 
@@ -269,7 +269,7 @@ def test_plan_then_assemble_through_the_command_line(tmp_path, monkeypatch, caps
         },
     ]
     monkeypatch.setattr(
-        "evaluation.rlm.compression_picker.load_examples", lambda dataset, task, limit, split: iter(examples)
+        "evaluation.rlm.analysis.compression_picker.load_examples", lambda dataset, task, limit, split: iter(examples)
     )
     plan_dir = tmp_path / "plan"
     # B = 1000 tokens; 500 tokens per chunk: 1 evidence chunk -> x1, 10 -> x8.
@@ -298,7 +298,7 @@ def test_calibrate_through_the_command_line_writes_a_usable_picker(tmp_path, mon
         {"id": "loft:nq_128k:1", "task": "nq_128k", "question": LOFT_WRAPPER.format(q="nebula?"), "context": wide},
     ]
     monkeypatch.setattr(
-        "evaluation.rlm.compression_picker.load_examples",
+        "evaluation.rlm.analysis.compression_picker.load_examples",
         lambda dataset, task, limit, split: iter(dev) if split == "dev" else iter(()),
     )
     runs, config = tmp_path / "dev", dict(sub_kv_memory_budget=147.5)

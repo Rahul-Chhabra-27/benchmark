@@ -7,8 +7,9 @@ from __future__ import annotations
 import time
 from typing import Callable, Mapping, Sequence
 
-from ..organization import OrderedPayload, reader_messages
-from ..retrieval import Hit
+from evaluation.rlm.shared.organization import OrderedPayload, reader_messages
+from evaluation.rlm.shared.retrieval import Hit
+
 from .grounding import _mentions
 from .prompts import (
     ORDERED_READER_FAILURES,

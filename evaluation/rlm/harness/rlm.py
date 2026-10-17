@@ -46,10 +46,10 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import Callable, Mapping, Optional, Sequence
 
-from . import retrieval
-from .client import LLMClient
-from .organization import OrderedPayload, reader_messages
-from .retrieval import Hit, tokenize
+from evaluation.rlm.shared import retrieval
+from evaluation.rlm.shared.client import LLMClient
+from evaluation.rlm.shared.organization import OrderedPayload, reader_messages
+from evaluation.rlm.shared.retrieval import Hit, tokenize
 
 ROOT_SYSTEM_PROMPT = """You are solving a task over a LONG document that does NOT fit in your context window.
 The document is stored in a Python REPL as a string variable named `context`

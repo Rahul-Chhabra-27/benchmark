@@ -19,8 +19,8 @@ from pathlib import Path
 
 import yaml
 
-from ..benchmarks.registry import RULER_32K_TASKS
-from .rlm import CHUNK_ORDER_REVISION
+from evaluation.benchmarks.registry import RULER_32K_TASKS
+from evaluation.rlm.harness.rlm import CHUNK_ORDER_REVISION
 
 ARMS = ("bm25-graph", "bm25-query")
 LOFT_SUBSETS = ("nq_128k", "hotpotqa_128k", "musique_128k", "qampari_128k", "quest_128k")

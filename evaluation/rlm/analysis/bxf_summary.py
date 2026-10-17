@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """One table for a B x F results tree: what each cell scored, and whether it got its B and F.
 
-    python -m evaluation.rlm.bxf_summary /tmp/$USER/bxf/results
+    python -m evaluation.rlm.analysis.bxf_summary /tmp/$USER/bxf/results
 
 Every run under the tree that read its chunks through a KVzip model (a B x F cell of an
 ordered-chunk arm) becomes one row. Each is checked with the campaign gate's own per-run
@@ -21,8 +21,7 @@ from pathlib import Path
 import yaml
 
 from evaluation.compare import headline_score
-
-from .rlm_order_gate import check_run
+from evaluation.rlm.campaigns.rlm_order_gate import check_run
 
 COLUMNS = ("B", "F", "arm", "subset", "rows", "score", "N", "kept_max", "B_tok", "F_real", "pressed", "check")
 

@@ -18,11 +18,8 @@ from evaluation.benchmarks.loaders import _load_ruler128k, split_ruler_input
 from evaluation.benchmarks.loft.calculate_metrics import extract_prediction
 from evaluation.benchmarks.registry import DATASET_REGISTRY, SCORER_REGISTRY
 from evaluation.benchmarks.ruler.create_huggingface_dataset import ANSWER_PATTERNS, QUESTION_PATTERNS
-from evaluation.rlm import retrieval
-from evaluation.rlm import run_benchmark as rb
-from evaluation.rlm.organization import CONFIG, OrderedPayload, ordered_hits, organize, reader_messages
-from evaluation.rlm.retrieval import Hit
-from evaluation.rlm.rlm import (
+from evaluation.rlm.harness import run_benchmark as rb
+from evaluation.rlm.harness.rlm import (
     CHUNK_ORDER_NOTES,
     CHUNK_READS_BEFORE_ABSTAIN,
     CHUNK_WORKED_SESSIONS,
@@ -36,6 +33,9 @@ from evaluation.rlm.rlm import (
     UNGROUNDED_FINAL_CHUNKS,
     composed_answer_grounded,
 )
+from evaluation.rlm.shared import retrieval
+from evaluation.rlm.shared.organization import CONFIG, OrderedPayload, ordered_hits, organize, reader_messages
+from evaluation.rlm.shared.retrieval import Hit
 from tests.evaluation.test_rlm_run_benchmark import _args
 
 SIZE = CONFIG["chunk_chars"]

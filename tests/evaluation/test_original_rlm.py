@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Original RLM: REPL + FINAL / FINAL_VAR, matching recursive-llm/."""
 
-from evaluation.rlm.original_rlm import OriginalRLM, extract_final, extract_final_var_name
+from evaluation.rlm.harness.original_rlm import OriginalRLM, extract_final, extract_final_var_name
 
 
 class ScriptedClient:
@@ -41,7 +41,7 @@ def test_python_then_final():
 def test_final_var_reads_repl_state():
     root = ScriptedClient(
         [
-            'ans = context.split()[0]\nprint(ans)',
+            "ans = context.split()[0]\nprint(ans)",
             "FINAL_VAR(ans)",
         ]
     )

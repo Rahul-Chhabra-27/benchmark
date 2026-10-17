@@ -68,7 +68,7 @@ fi
 
 # 1. Gate: integrity problems fail; behaviour rows are listed under REVIEW.
 # shellcheck disable=SC2086  # the --revision pair, when set, is two words on purpose
-$PY -m evaluation.rlm.rlm_order_gate "$RESULTS" --dataset "$DATASET" --expect "$EXPECT" \
+$PY -m evaluation.rlm.campaigns.rlm_order_gate "$RESULTS" --dataset "$DATASET" --expect "$EXPECT" \
   ${REVISION:+--revision $REVISION} ${comparator[@]+"${comparator[@]}"} > "$REPORT/${STAGE}_gate.txt" 2>&1
 gate=$?
 echo "gate exit=$gate"
@@ -82,7 +82,7 @@ else
 fi
 
 # 3. Report, with every pair repeated on the rows no revision was tuned on.
-$PY -m evaluation.rlm.rlm_order_report --results "$RESULTS" --out "$REPORT/$STAGE" \
+$PY -m evaluation.rlm.campaigns.rlm_order_report --results "$RESULTS" --out "$REPORT/$STAGE" \
   ${reference[@]+"${reference[@]}"} --repo . --tuned-rows "$TUNED_ROWS" > "$REPORT/${STAGE}_report_stdout.txt" 2>&1
 echo "report exit=$?"
 

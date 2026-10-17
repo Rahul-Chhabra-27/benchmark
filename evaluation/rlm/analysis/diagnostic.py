@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""Opt-in call tracing: python -P evaluation/rlm/diagnostic.py --trace-dir DIR -- <benchmark args>.
+"""Opt-in call tracing: python -P evaluation/rlm/analysis/diagnostic.py --trace-dir DIR -- <benchmark args>.
 
 Only explicit model messages/responses and REPL source are captured, never arbitrary
 locals. Profiling adds elapsed-time overhead; it does not alter requests or guards.
@@ -23,7 +23,7 @@ from pathlib import Path
 class DiagnosticTrace:
     def __init__(self, directory, project_root=None):
         self.directory = Path(directory)
-        self.root = Path(project_root or Path(__file__).resolve().parents[2]).resolve()
+        self.root = Path(project_root or Path(__file__).resolve().parents[3]).resolve()
         self.active = {}
         self.functions = {}
         self.counts: collections.Counter[str] = collections.Counter()
@@ -93,7 +93,7 @@ class DiagnosticTrace:
         if parent_entry:
             self.edges[(parent_entry[1], function)] += 1
         self.serial += 1
-        chat = module == "evaluation.rlm.client" and name == "LLMClient.chat"
+        chat = module == "evaluation.rlm.shared.client" and name == "LLMClient.chat"
         record = dict(
             event="call",
             call=self.serial,
@@ -105,7 +105,7 @@ class DiagnosticTrace:
         if chat:
             record["messages"] = frame.f_locals["messages"]
             record["model"] = frame.f_locals["self"].model
-        is_exec = module == "evaluation.rlm.rlm" and name == "RLM._exec"
+        is_exec = module == "evaluation.rlm.harness.rlm" and name == "RLM._exec"
         if is_exec:
             record["code"] = frame.f_locals["code"]
         self.active[key] = (self.serial, function, time.perf_counter(), "chat" if chat else "exec" if is_exec else None)
@@ -145,9 +145,9 @@ def main():
         benchmark_args = benchmark_args[1:]
     old_argv = sys.argv
     try:
-        sys.argv = ["evaluation.rlm.run_benchmark", *benchmark_args]
+        sys.argv = ["evaluation.rlm.harness.run_benchmark", *benchmark_args]
         with DiagnosticTrace(args.trace_dir):
-            runpy.run_module("evaluation.rlm.run_benchmark", run_name="__main__")
+            runpy.run_module("evaluation.rlm.harness.run_benchmark", run_name="__main__")
     finally:
         sys.argv = old_argv
 

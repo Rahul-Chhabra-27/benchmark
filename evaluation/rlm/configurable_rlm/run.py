@@ -26,9 +26,9 @@ import yaml
 
 from evaluation.benchmarks.registry import SCORER_REGISTRY
 from evaluation.benchmarks.results import score_prediction_frame
+from evaluation.rlm.shared.client import LLMClient
+from evaluation.rlm.shared.datasets import load_examples
 
-from ..client import LLMClient
-from ..datasets import load_examples
 from .config import ExperimentConfig, config_to_dict
 from .rlm import RLM, Feature, Limits, Reader, Result, plain_reader
 

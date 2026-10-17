@@ -22,28 +22,34 @@ the GPU or the model window cannot hold is refused before any example runs. The 
 the same cell as `BUDGET_MB=512 FACTOR=4`. To run cells with one command, see
 [`RUNNING.md` §7](../../docs/RUNNING.md#7-b--f-cells) (`bash scripts/rlm/run_bxf.sh`).
 
-## The RLM implementations here
+## How this folder is arranged
+
+| folder | holds |
+|---|---|
+| `shared/` | building blocks: `datasets.py`, `client.py` (vLLM), `kvzip_backend.py` (KVzip sub-calls), `sizing.py` (B × F), `retrieval.py` (BM25), `organization.py` (bm25-graph) |
+| `harness/` | the original runner `run_benchmark.py` and the RLMs it runs with `--mode` (below) |
+| `configurable_rlm/` | a clean base RLM; ordering, tuning and compression are features switched on in one `experiments.yaml` — see its [README](configurable_rlm/README.md) |
+| `chunk_sources/` | chunks handed to the RLM by something else: `chunkset.py`, `oracle_chunks.py`, `query_free_chunks.py`, `window_notes.py` |
+| `analysis/` | reading finished runs: `paired.py`, `bxf_summary.py`, `hard_questions.py`, `compression_picker.py`, `structured_decompose.py`, `diagnostic.py` |
+| `campaigns/` | tooling for finished campaigns: `rlm_order_*.py` and `fixed_chunk_grid/` |
+
+## The RLM implementations
 
 | code | what it is | run it with |
 |---|---|---|
-| `rlm.py` | the original, tuned RLM (long prompt, guards, KVzip B × F cells) | `run_benchmark --mode rlm` |
-| `clean_rlm/` | the same RLM split into modules, KVzip removed (from apd10-dev) | `run_benchmark --mode clean-rlm` |
-| `configurable_rlm/` | a clean base RLM; ordering, tuning and compression are features switched on in one experiments file | `python -m evaluation.rlm.configurable_rlm run <experiment>` |
-| `original_rlm.py` | the RLM paper's protocol inside this harness (from apd10-dev) | `run_benchmark --mode original` |
-| `skylight_rlm.py` | an agent that reads chunks by command, without a REPL (from apd10-dev) | `run_benchmark --mode skylight` |
+| `harness/rlm.py` | our original, tuned RLM (long prompt, guards, KVzip B × F cells) | `python -m evaluation.rlm.harness.run_benchmark --mode rlm` |
+| `harness/clean_rlm/` | the same RLM split into modules, KVzip removed (from apd10-dev) | `… run_benchmark --mode clean-rlm` |
+| `harness/original_rlm.py` | the RLM paper's protocol inside this harness (from apd10-dev) | `… run_benchmark --mode original` |
+| `harness/skylight_rlm.py` | an agent that reads chunks by command, without a REPL (from apd10-dev) | `… run_benchmark --mode skylight` |
+| `configurable_rlm/` | a clean base RLM with ordering, our tuning and compression as features | `python -m evaluation.rlm.configurable_rlm run <experiment>` |
 
-**`configurable_rlm/`** is a clean base RLM with ordering, our prompt tuning and
-compression as features on top, each switched on in one `experiments.yaml`. Its
-[README](configurable_rlm/README.md) has the commands, the experiments, and the status of
-the professor's requests.
-
-**`hard_questions.py`** finds the questions vanilla solves but RLM + ordering does not, and
-those only a compressed RLM solves, across any finished runs, and writes them as ids files —
-the small validation set: `python -m evaluation.rlm.hard_questions --results <root> --out hard_set`,
+**`analysis/hard_questions.py`** finds the questions vanilla solves but RLM + ordering does
+not, and those only a compressed RLM solves, and writes them as ids files — the small
+validation set: `python -m evaluation.rlm.analysis.hard_questions --results <root> --out hard_set`,
 then `configurable_rlm run <experiment> --set data.ids_file=hard_set/ids/<task>__validation_set.txt`.
 
-**`compression_picker.py`** chooses one compression factor per question before the run
-(`bash scripts/rlm/run_picked.sh`). Each module's docstring has the details.
+**`analysis/compression_picker.py`** chooses one compression factor per question before the
+run (`bash scripts/rlm/run_picked.sh`). Each module's docstring has the details.
 
 ## Goal
 Quantify how Recursive Language Models (RLMs) compare against vanilla long-context
@@ -86,9 +92,9 @@ The steps below are the generic outline.
 3. **Serve a model**: `vllm serve Qwen/Qwen3-4B-Instruct-2507 --port 8000`
    (or use `run_infolab.sh`, which does this per GPU with the right flags).
 4. **Smoke test** (~5 examples):
-   `python -m evaluation.rlm.run_benchmark --dataset niah --limit 5 --mode both`
+   `python -m evaluation.rlm.harness.run_benchmark --dataset niah --limit 5 --mode both`
    For a shared RULER-32K subset:
-   `python -m evaluation.rlm.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5 --mode both`.
+   `python -m evaluation.rlm.harness.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5 --mode both`.
 5. **Full runs**: `bash scripts/rlm/campaigns/loft128k_vanilla_vs_rlm/run_infolab.sh` (bare metal) or
    `sbatch slurm/loft128k_a100.slurm` (SLURM).
 6. **Score & compare**: `python -m evaluation.compare --backend rlm`
@@ -283,7 +289,7 @@ necessarily the index CUDA gives you.
 ## The reader's ceiling (`oracle_chunks.py`)
 
 ```bash
-python -m evaluation.rlm.oracle_chunks --dataset loft --data-dir musique_128k \
+python -m evaluation.rlm.chunk_sources.oracle_chunks --dataset loft --data-dir musique_128k \
   --split test --limit 55 --window 2000 --overlap 400 --k 5 --out-dir <dir>
 ```
 
@@ -306,7 +312,7 @@ Two things it always does, and both matter:
 ## Reading a sweep back (`structured_decompose.py`)
 
 ```bash
-python -m evaluation.rlm.structured_decompose --results <tree> --csv cells.csv
+python -m evaluation.rlm.analysis.structured_decompose --results <tree> --csv cells.csv
 ```
 
 Renders score by window x k, then walks k upward and splits each step into the

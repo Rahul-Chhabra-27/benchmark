@@ -4,9 +4,15 @@
 
 import pytest
 
-from evaluation.rlm import retrieval
-from evaluation.rlm.retrieval import Hit
-from evaluation.rlm.rlm import HIT_SEPARATOR, READ_STRATEGY_DEFAULT, RLM, SEARCH_TERMS_FIND, SUB_FIT_FAILURE_PREFIX
+from evaluation.rlm.harness.rlm import (
+    HIT_SEPARATOR,
+    READ_STRATEGY_DEFAULT,
+    RLM,
+    SEARCH_TERMS_FIND,
+    SUB_FIT_FAILURE_PREFIX,
+)
+from evaluation.rlm.shared import retrieval
+from evaluation.rlm.shared.retrieval import Hit
 
 DOCUMENT = (
     ("filler text about nothing in particular " * 40)

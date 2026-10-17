@@ -10,8 +10,8 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from evaluation.rlm import retrieval
-from evaluation.rlm.chunkset import ChunkSet, ChunkSetError, document_digest, file_digest, window_spans
+from evaluation.rlm.chunk_sources.chunkset import ChunkSet, ChunkSetError, document_digest, file_digest, window_spans
+from evaluation.rlm.shared import retrieval
 
 DOCUMENT = ("alpha beta gamma delta epsilon zeta eta theta " * 400)[:9000]
 

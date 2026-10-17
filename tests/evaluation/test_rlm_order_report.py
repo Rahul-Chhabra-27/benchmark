@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """The ordered-chunk report's slice of the rows no prompt revision was tuned on."""
 
-from evaluation.rlm.rlm_order_report import held_out_ids, noise_note
+from evaluation.rlm.campaigns.rlm_order_report import held_out_ids, noise_note
 
 
 def test_the_noise_note_speaks_the_metrics_scale():

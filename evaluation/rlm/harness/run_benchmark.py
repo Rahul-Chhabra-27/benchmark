@@ -3,9 +3,9 @@
 """Run vanilla vs RLM on a long-context task. Resumable JSONL checkpointing.
 
 Usage:
-  python -m evaluation.rlm.run_benchmark --dataset niah --mode rlm --limit 1 --debug
-  python -m evaluation.rlm.run_benchmark --dataset loft --data-dir nq_128k --mode original --limit 1
-  python -m evaluation.rlm.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5
+  python -m evaluation.rlm.harness.run_benchmark --dataset niah --mode rlm --limit 1 --debug
+  python -m evaluation.rlm.harness.run_benchmark --dataset loft --data-dir nq_128k --mode original --limit 1
+  python -m evaluation.rlm.harness.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5
 """
 
 from __future__ import annotations
@@ -25,27 +25,36 @@ from evaluation import compare
 from evaluation.benchmarks.registry import LOFT_TASKS, LONGBENCH_128K_SUBSETS, RULER_32K_TASKS, SCORER_REGISTRY
 from evaluation.benchmarks.results import score_prediction_frame
 from evaluation.results_layout import RLM_RESULTS_DIR
+from evaluation.rlm.chunk_sources import chunkset, window_notes
+from evaluation.rlm.chunk_sources.chunkset import ChunkSet, ChunkSetError, file_digest
+from evaluation.rlm.shared import retrieval
+from evaluation.rlm.shared.client import LLMClient
+from evaluation.rlm.shared.datasets import available_datasets, canonical_dataset_name, load_examples
+from evaluation.rlm.shared.organization import CONFIG as ORGANIZATION_CONFIG
+from evaluation.rlm.shared.organization import ORDERS, ModelTokens, ordered_hits, organize, pack
+from evaluation.rlm.shared.retrieval import Hit
 
-from . import chunkset, retrieval, window_notes
-from .chunkset import ChunkSet, ChunkSetError, file_digest
 from .clean_rlm import RLM as CleanRLM
 from .clean_rlm import VLLMClient as CleanVLLMClient
-from .client import LLMClient
-from .datasets import available_datasets, canonical_dataset_name, load_examples
-from .organization import CONFIG as ORGANIZATION_CONFIG
-from .organization import ORDERS, ModelTokens, ordered_hits, organize, pack
 from .original_rlm import OriginalRLM
-from .retrieval import Hit
 
 # rlm_exp1 (LOOK routing with GPU / offloaded-token costs) was wired in on apd10-dev
 # before the module itself was pushed. Without it every other mode must still run,
 # so the import is optional and --mode rlm-exp1 refuses until the module lands.
 try:
-    from .rlm_exp1 import RLM as Exp1RLM
-    from .rlm_exp1 import LookEndpointConfig, LookStrategy
-    from .rlm_exp1 import VLLMClient as Exp1VLLMClient
+    from evaluation.rlm.rlm_exp1 import RLM as Exp1RLM
+    from evaluation.rlm.rlm_exp1 import LookEndpointConfig, LookStrategy
+    from evaluation.rlm.rlm_exp1 import VLLMClient as Exp1VLLMClient
 except ImportError:  # pragma: no cover - depends on whether rlm_exp1 is present
     Exp1RLM = LookEndpointConfig = LookStrategy = Exp1VLLMClient = None  # type: ignore[assignment,misc]
+from evaluation.rlm.shared.sizing import (
+    DEFAULT_MIN_TOKENS,
+    DEFAULT_RESERVE_TOKENS,
+    FIXED_CHUNK_CHAR_OVERSHOOT,
+    compression_ratio_from_factor,
+    fixed_chunk_char_cap,
+)
+
 from .rlm import (
     CHUNK_ORDER_REVISION,
     CHUNK_ORDERS,
@@ -62,13 +71,6 @@ from .rlm import (
     Scratchpad,
     bare_query,
     vanilla_answer,
-)
-from .sizing import (
-    DEFAULT_MIN_TOKENS,
-    DEFAULT_RESERVE_TOKENS,
-    FIXED_CHUNK_CHAR_OVERSHOOT,
-    compression_ratio_from_factor,
-    fixed_chunk_char_cap,
 )
 from .skylight_rlm import SkylightRLM
 
@@ -1991,7 +1993,7 @@ def main() -> None:
             ap.error("--sub-backend kvzip only affects RLM sub-calls; use --mode rlm (or both)")
         # Imported lazily: the http path must stay importable in a venv without
         # torch or kvpress's deps.
-        from .kvzip_backend import KVzipSubClient
+        from evaluation.rlm.shared.kvzip_backend import KVzipSubClient
 
         sub = KVzipSubClient(
             model=args.sub_model,

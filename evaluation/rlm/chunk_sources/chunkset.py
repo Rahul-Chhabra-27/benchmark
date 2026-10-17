@@ -37,8 +37,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Optional
 
-from .retrieval import DEFAULT_CHUNK_CHARS, DEFAULT_OVERLAP, Hit
-
+from evaluation.rlm.shared.retrieval import DEFAULT_CHUNK_CHARS, DEFAULT_OVERLAP, Hit
 
 # A tag becomes a COMPONENT of the run-directory name, which is "__"-joined, so it
 # must not contain a separator, a path character, or a doubled underscore that would

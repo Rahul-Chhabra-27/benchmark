@@ -13,9 +13,11 @@ A picker chooses F per question from the question alone, and the run then uses i
 Pickers: fixed:F | spread[:RATIO] (how spread out the question's BM25 evidence is) |
 per-task:T=F,... | calibrated:FILE (whatever `calibrate` chose on the dev split).
 
-    python -m evaluation.rlm.compression_picker plan --tasks hotpotqa --budget-mb 1024 --picker spread:0.3 --out P
-    python -m evaluation.rlm.compression_picker calibrate --tasks ... --budget-mb 1024 --dev-results R --out cal.json
-    python -m evaluation.rlm.compression_picker assemble --plan P --results R [--baselines R]
+    python -m evaluation.rlm.analysis.compression_picker plan --tasks hotpotqa --budget-mb 1024 \
+        --picker spread:0.3 --out P
+    python -m evaluation.rlm.analysis.compression_picker calibrate --tasks ... --budget-mb 1024 \
+        --dev-results R --out cal.json
+    python -m evaluation.rlm.analysis.compression_picker assemble --plan P --results R [--baselines R]
 """
 
 from __future__ import annotations
@@ -31,12 +33,11 @@ import pandas as pd
 import yaml
 
 from evaluation.benchmarks.results import score_prediction_frame
-
-from .datasets import load_examples
-from .organization import CONFIG as ORGANIZATION_CONFIG
-from .retrieval import get_index
-from .rlm import CHARS_PER_TOKEN_ESTIMATE
-from .run_benchmark import chunk_order_query
+from evaluation.rlm.harness.rlm import CHARS_PER_TOKEN_ESTIMATE
+from evaluation.rlm.harness.run_benchmark import chunk_order_query
+from evaluation.rlm.shared.datasets import load_examples
+from evaluation.rlm.shared.organization import CONFIG as ORGANIZATION_CONFIG
+from evaluation.rlm.shared.retrieval import get_index
 
 # ======================================================================================
 # B x F arithmetic
@@ -734,7 +735,9 @@ def cmd_assemble(args: argparse.Namespace) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    ap = argparse.ArgumentParser(prog="python -m evaluation.rlm.compression_picker", description=__doc__.split("\n")[0])
+    ap = argparse.ArgumentParser(
+        prog="python -m evaluation.rlm.analysis.compression_picker", description=__doc__.split("\n")[0]
+    )
     sub = ap.add_subparsers(dest="command", required=True)
 
     plan = sub.add_parser("plan", help="pick F per question and write the plan")

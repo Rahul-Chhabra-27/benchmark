@@ -12,7 +12,7 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 
-from evaluation.rlm.paired import _delist, bootstrap_ci, compare, load_rows, per_row_scores, sign_test
+from evaluation.rlm.analysis.paired import _delist, bootstrap_ci, compare, load_rows, per_row_scores, sign_test
 
 
 def write_run(root: Path, name: str, rows, dataset="loft", task="nq_128k", as_csv=False) -> Path:
@@ -74,10 +74,14 @@ class PerRowScoreTest(unittest.TestCase):
         # A server outage is a missing measurement, not a wrong answer.
         frame = pd.DataFrame(
             [
-                {"id": "a", "task": "nq_128k", "answers": ["whale"],
-                 "predicted_answer": "Final Answer: whale", "error": None},
-                {"id": "b", "task": "nq_128k", "answers": ["shark"],
-                 "predicted_answer": None, "error": "boom"},
+                {
+                    "id": "a",
+                    "task": "nq_128k",
+                    "answers": ["whale"],
+                    "predicted_answer": "Final Answer: whale",
+                    "error": None,
+                },
+                {"id": "b", "task": "nq_128k", "answers": ["shark"], "predicted_answer": None, "error": "boom"},
             ]
         )
         _, scores = per_row_scores(frame, "loft")
@@ -88,8 +92,18 @@ class PerRowScoreTest(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             run = write_run(Path(tmp), "r", [("loft:nq_128k:0", ["whale"], "Final Answer: otter")])
             with open(run / "checkpoint.jsonl", "a") as fh:
-                fh.write(json.dumps({"id": "loft:nq_128k:0", "task": "nq_128k", "answers": ["whale"],
-                                     "answer_prefix": "Final Answer: ", "pred": "Final Answer: whale"}) + "\n")
+                fh.write(
+                    json.dumps(
+                        {
+                            "id": "loft:nq_128k:0",
+                            "task": "nq_128k",
+                            "answers": ["whale"],
+                            "answer_prefix": "Final Answer: ",
+                            "pred": "Final Answer: whale",
+                        }
+                    )
+                    + "\n"
+                )
             frame, _ = load_rows(run)
             _, scores = per_row_scores(frame, "loft")
             self.assertEqual(scores, {"loft:nq_128k:0": 1.0}, "the retry, not the stale failure")

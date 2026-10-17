@@ -20,7 +20,7 @@ answer string does not establish that the window carries sufficient evidence
 (c448c97). Read a "gold window" as an upper bound on signal, never a certificate.
 
 Usage:
-    python -m evaluation.rlm.structured_decompose --results <tree> [--csv out.csv]
+    python -m evaluation.rlm.analysis.structured_decompose --results <tree> [--csv out.csv]
 """
 
 from __future__ import annotations

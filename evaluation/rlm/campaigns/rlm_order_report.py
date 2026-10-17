@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Report the ordered-chunk agentic campaign, one subset at a time.
 
-    python -m evaluation.rlm.rlm_order_report --results <campaign>/results --out <campaign>/report \
+    python -m evaluation.rlm.campaigns.rlm_order_report --results <campaign>/results --out <campaign>/report \
         [--structured-results /mnt/nas/gautammahale/archive/graphorder/results] \
         [--guards /mnt/nas/gautammahale/benchmark/evaluation/results/loft128k_guards]
 
@@ -39,8 +39,9 @@ from typing import Any
 
 import yaml
 
-from ..compare import headline_score
-from .paired import compare, load_rows, per_row_scores
+from evaluation.compare import headline_score
+from evaluation.rlm.analysis.paired import compare, load_rows, per_row_scores
+
 from .rlm_order_gate import ANSWERED_ENDINGS
 
 ARMS = ("bm25-query", "bm25-graph")

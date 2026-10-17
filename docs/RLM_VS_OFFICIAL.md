@@ -4,13 +4,13 @@ This is a comparison of the two LOFT-128k n=20 arms that share a REPL-over-`cont
 
 | | Official | Ours (`none`) |
 |---|---|---|
-| Code | `baselines/official_rlm/recursive-llm` (`src/rlm/core.py`) | `evaluation/rlm/rlm.py` |
-| Runner | `baselines/official_rlm/run_benchmark.py` | `python -m evaluation.rlm.run_benchmark --mode rlm` |
+| Code | `baselines/official_rlm/recursive-llm` (`src/rlm/core.py`) | `evaluation/rlm/harness/rlm.py` |
+| Runner | `baselines/official_rlm/run_benchmark.py` | `python -m evaluation.rlm.harness.run_benchmark --mode rlm` |
 | Results | `evaluation/results/rlm/recursive-llm/loft128k-n20-think-split/` | `evaluation/results/rlm/loft128k-qwen35-n20-order-grid/` cells **without** `__order-*` |
 
 Both campaigns used the same vLLM servers (Qwen3.5-4B/9B/27B), thinking ON, 30 root turns, test split, first 20 rows.
 
-`--mode original` (`evaluation/rlm/original_rlm.py`) is a closer clone of the paper loop. It was **not** the `none` arm of the order grid.
+`--mode original` (`evaluation/rlm/harness/original_rlm.py`) is a closer clone of the paper loop. It was **not** the `none` arm of the order grid.
 
 ---
 
@@ -64,7 +64,7 @@ Locate is still `find` / regex; the prompt tells the root to search **distinctiv
 
 **Official** (`baselines/official_rlm/recursive-llm/src/rlm/prompts.py`): short paper prompt. “You cannot see the context. Write Python. `FINAL` is a protocol directive, not a function.” Examples are `print(context[:500])`, `re.findall`, `context.find`. Depth / `max_depth` are stated explicitly.
 
-**Ours:** a long strategy prompt (`ROOT_SYSTEM_PROMPT` in `evaluation/rlm/rlm.py`). It forbids simulating REPL output, forbids guessing, requires `FINAL` on a computed value, allows `FINAL_NONE` after a real read, and injects the LOFT task into the system message. On `none`, `answer_list_format` is **off** (the bm25 arms of the same grid used `auto` on qampari/quest — a confound, not a `none` vs official difference).
+**Ours:** a long strategy prompt (`ROOT_SYSTEM_PROMPT` in `evaluation/rlm/harness/rlm.py`). It forbids simulating REPL output, forbids guessing, requires `FINAL` on a computed value, allows `FINAL_NONE` after a real read, and injects the LOFT task into the system message. On `none`, `answer_list_format` is **off** (the bm25 arms of the same grid used `auto` on qampari/quest — a confound, not a `none` vs official difference).
 
 Sub-LM prompt official: leaf “answer the subproblem from supplied context, no REPL/FINAL”. Ours: `SUB_SYSTEM_PROMPT` — “answer using ONLY the text provided, concise and factual.”
 
@@ -96,7 +96,7 @@ That is why 4B nq is 0.050 official vs 0.750 ours: official 18/20 never emitted 
 
 ## Guards ours has that official does not
 
-Defaults from the order-grid runner (`evaluation.rlm.run_benchmark`):
+Defaults from the order-grid runner (`evaluation.rlm.harness.run_benchmark`):
 
 - `--max-sub-calls 40` — further `llm_query` calls return a notice
 - `--min-sub-calls-before-abstain 1` — `FINAL_NONE` without a read is nudged away
@@ -113,7 +113,7 @@ Official has LiteLLM retries (`--max-retries 2`), a 900 s elapsed budget, and an
 
 **Official.** LiteLLM against the vLLM OpenAI endpoint. `--enable-thinking` sets `extra_body.chat_template_kwargs.enable_thinking=True`. vLLM often concatenates `<think>…</think>` into `message.content`; `install_vllm_reasoning_split()` peels that **before** the FINAL/REPL parsers.
 
-**Ours.** Direct OpenAI SDK (`evaluation/rlm/client.py`). Campaign did **not** pass `--no-think`. `enable_thinking=False` is only forced when `--no-think` is set; thinking-on is the server/template default rather than an explicit extra_body on this path. There is no equivalent peel in `RLM` (Skylight has `_strip_thinking`; this loop does not).
+**Ours.** Direct OpenAI SDK (`evaluation/rlm/shared/client.py`). Campaign did **not** pass `--no-think`. `enable_thinking=False` is only forced when `--no-think` is set; thinking-on is the server/template default rather than an explicit extra_body on this path. There is no equivalent peel in `RLM` (Skylight has `_strip_thinking`; this loop does not).
 
 Same GPUs and `max-model-len` 32768; different clients and parse-time handling of traces.
 

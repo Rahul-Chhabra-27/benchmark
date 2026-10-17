@@ -7,7 +7,8 @@ from __future__ import annotations
 from collections import Counter
 from typing import Sequence
 
-from ..retrieval import Hit, tokenize
+from evaluation.rlm.shared.retrieval import Hit, tokenize
+
 from .prompts import STRUCTURED_MAP_GRANULARITIES
 
 HIT_SEPARATOR = "\n...\n"

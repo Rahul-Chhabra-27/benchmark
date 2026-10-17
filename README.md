@@ -43,7 +43,7 @@ sbatch slurm/run-eval.sh matrix_configs/<config>.yaml <profile> <worker-count>
 
 # RLM: serve a model, then run both arms against it
 vllm serve Qwen/Qwen3-4B-Instruct-2507 --port 8000
-python -m evaluation.rlm.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5
+python -m evaluation.rlm.harness.run_benchmark --dataset ruler32k --data-dir niah_single_1 --limit 5
 
 # Join both backends into one comparison table
 python -m evaluation.compare --dataset ruler32k

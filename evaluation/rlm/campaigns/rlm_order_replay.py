@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Replay revision 6's grounding rule on a finished revision-5 ordered-chunk campaign.
 
-    python -m evaluation.rlm.rlm_order_replay <results dir> <dataset>
+    python -m evaluation.rlm.campaigns.rlm_order_replay <results dir> <dataset>
 
 Revision 6 changes no prompt text, only which FINAL literals are accepted
 (composed_answer_grounded). So up to the first literal revision 5 rejected, a revision-6
@@ -23,8 +23,8 @@ import ast
 import json
 from pathlib import Path
 
-from .paired import load_rows, per_row_scores
-from .rlm import TEXT_FINAL_RE, _static_string, composed_answer_grounded
+from evaluation.rlm.analysis.paired import load_rows, per_row_scores
+from evaluation.rlm.harness.rlm import TEXT_FINAL_RE, _static_string, composed_answer_grounded
 
 
 def final_literal(code: str) -> str | None:

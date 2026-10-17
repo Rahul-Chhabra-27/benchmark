@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 1993-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""The tuning feature: our prompt tuning and guards, from the original RLM (evaluation/rlm/rlm.py).
+"""The tuning feature: our prompt tuning and guards, from the original RLM (evaluation/rlm/harness/rlm.py).
 
 The base RLM is the RLM idea with a short prompt. Everything we tuned on top of it over
 the LOFT campaigns lives here, switched on with `tuning: true` in experiments.yaml, so
@@ -22,7 +22,7 @@ from __future__ import annotations
 import ast
 from typing import Any
 
-from ..rlm import (
+from evaluation.rlm.harness.rlm import (
     CHUNK_READS_BEFORE_ABSTAIN,
     CHUNK_WORKED_SESSIONS,
     EXAMPLE_LLM_QUERY_SPLIT,
@@ -36,6 +36,7 @@ from ..rlm import (
     _static_string,
     composed_answer_grounded,
 )
+
 from .rlm import Feature, Result
 
 FINAL_NONE_TOOL = "  FINAL_NONE(reason)            end WITHOUT an answer, only after genuinely searching.\n"

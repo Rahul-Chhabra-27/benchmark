@@ -14,7 +14,7 @@ docs/RUNNING.md.
 
 import unittest
 
-from evaluation.rlm.sizing import (
+from evaluation.rlm.shared.sizing import (
     CHARS_PER_TOKEN_BOUNDS,
     DEFAULT_CHARS_PER_TOKEN,
     FIXED_CHUNK_CHAR_OVERSHOOT,

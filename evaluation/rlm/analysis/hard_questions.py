@@ -17,7 +17,7 @@ Steps on a host with results (LOFT-128k, 55 test rows per task):
     1. vanilla:        run_benchmark --mode vanilla --vanilla-char-limit 600000 ...
                        (the default 400,000 cuts LOFT-128k documents, ~430,000 chars)
     2. RLM + ordering: LIMIT=55 BUDGETS_MB=1024 FACTORS="1 2 4" ARMS=bm25-graph bash scripts/rlm/run_bxf.sh
-    3. python -m evaluation.rlm.hard_questions --results <results root> --out hard_set
+    3. python -m evaluation.rlm.analysis.hard_questions --results <results root> --out hard_set
 """
 
 from __future__ import annotations
@@ -228,7 +228,9 @@ def _markdown(frame) -> str:
 
 
 def main(argv: list[str] | None = None) -> None:
-    ap = argparse.ArgumentParser(prog="python -m evaluation.rlm.hard_questions", description=__doc__.split("\n")[0])
+    ap = argparse.ArgumentParser(
+        prog="python -m evaluation.rlm.analysis.hard_questions", description=__doc__.split("\n")[0]
+    )
     ap.add_argument("--results", type=Path, nargs="+", required=True, help="roots holding finished runs")
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--solved", type=float, default=0.5, help="official score at which a question counts as solved")

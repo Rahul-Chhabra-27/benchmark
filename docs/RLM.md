@@ -31,8 +31,8 @@ derived from the KV memory budget rather than picked by hand.
 
 ## 1. How RLM and KVPress coexist
 
-Files: [`evaluation/rlm/rlm.py`](../evaluation/rlm/rlm.py),
-[`evaluation/rlm/kvzip_backend.py`](../evaluation/rlm/kvzip_backend.py)
+Files: [`evaluation/rlm/harness/rlm.py`](../evaluation/rlm/harness/rlm.py),
+[`evaluation/rlm/shared/kvzip_backend.py`](../evaluation/rlm/shared/kvzip_backend.py)
 
 The harnesses share everything except inference:
 
@@ -141,7 +141,7 @@ Two consequences worth internalising:
 
 ## 4. Deriving the sub-call chunk size
 
-File: [`evaluation/rlm/sizing.py`](../evaluation/rlm/sizing.py)
+File: [`evaluation/rlm/shared/sizing.py`](../evaluation/rlm/shared/sizing.py)
 
 Point (1) above is the lever. The realized ratio depends on how big a slice the root sends,
 so if the slice size is chosen by hand and the budget by sweep, the two drift and every arm
@@ -213,7 +213,7 @@ mean the sub client silently dropped the tail of every slice.
 ## 5. Using it
 
 ```bash
-python -m evaluation.rlm.run_benchmark \
+python -m evaluation.rlm.harness.run_benchmark \
     --dataset loft --data-dir nq_128k --mode rlm --scratchpad \
     --sub-backend kvzip \
     --memory-budget 1 --memory-budget-unit GB \

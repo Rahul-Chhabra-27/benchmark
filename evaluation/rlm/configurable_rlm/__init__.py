@@ -4,7 +4,7 @@
 
     rlm.py            the base RLM: prompt, REPL, loop, plain reads -- imports no feature
     ordering.py       feature: the `chunks` list (bm25-query / bm25-graph)
-    tuning.py         feature: our prompt tuning and guards, from evaluation/rlm/rlm.py
+    tuning.py         feature: our prompt tuning and guards, from evaluation/rlm/harness/rlm.py
     compression.py    feature: KV budget, factor per read, offloading, cost (a reader)
     config.py         the settings, read from experiments.yaml
     run.py            settings -> every question -> result files

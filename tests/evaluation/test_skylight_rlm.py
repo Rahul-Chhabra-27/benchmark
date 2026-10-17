@@ -4,11 +4,11 @@
 
 import pytest
 
-from evaluation.rlm import skylight_rlm
-from evaluation.rlm.organization import ordered_hits, organize
-from evaluation.rlm.retrieval import reset_cache
-from evaluation.rlm.rlm import MemoryBudget
-from evaluation.rlm.skylight_rlm import SUB_SYSTEM_PROMPT, SkylightRLM, _rfind_order, parse_root_action
+from evaluation.rlm.harness import skylight_rlm
+from evaluation.rlm.harness.rlm import MemoryBudget
+from evaluation.rlm.harness.skylight_rlm import SUB_SYSTEM_PROMPT, SkylightRLM, _rfind_order, parse_root_action
+from evaluation.rlm.shared.organization import ordered_hits, organize
+from evaluation.rlm.shared.retrieval import reset_cache
 
 # This file was written against a newer skylight_rlm than apd10-dev pushed (it uses
 # _is_no_answer, repetition penalties, a vanilla last step...). Until that version lands,

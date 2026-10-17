@@ -9,7 +9,7 @@ Run from the repository root (the module uses absolute `evaluation.*` imports):
 import time
 import unittest
 
-from evaluation.rlm.rlm import RLM, MemoryBudget, Scratchpad
+from evaluation.rlm.harness.rlm import RLM, MemoryBudget, Scratchpad
 
 
 class _ScriptedClient:

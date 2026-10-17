@@ -26,7 +26,8 @@ import threading
 import time
 from typing import Any, Optional
 
-from .client import LLMClient
+from evaluation.rlm.shared.client import LLMClient
+
 from .rlm import RLMResult
 
 _RESULT_NAME = "_rlm_last_result"
@@ -36,10 +37,7 @@ LEAF_SYSTEM_PROMPT = (
     "Return the answer directly and do not emit REPL code or FINAL directives."
 )
 
-EMPTY_NUDGE = (
-    "Your response was empty. Return one short executable Python step "
-    "or a standalone final directive."
-)
+EMPTY_NUDGE = "Your response was empty. Return one short executable Python step " "or a standalone final directive."
 
 
 def build_system_prompt(context_size: int, depth: int = 0, max_depth: int = 1) -> str:
@@ -48,9 +46,7 @@ def build_system_prompt(context_size: int, depth: int = 0, max_depth: int = 1) -
         recursive_api = "- LM subcalls are disabled for this run."
         depth_note = "No subcalls are available."
     else:
-        recursive_api = (
-            "- recursive_llm(sub_query, sub_context) -> str " "(recursively process sub-context)"
-        )
+        recursive_api = "- recursive_llm(sub_query, sub_context) -> str " "(recursively process sub-context)"
         if depth + 1 >= max_depth:
             depth_note = "recursive_llm makes one plain LM call at this boundary."
         else:
@@ -150,9 +146,7 @@ def _execute(code: str, env: dict[str, Any], max_output_chars: int, timeout: Opt
     # The original runs each step in a worker process it can kill. In-process,
     # SIGALRM is the closest equivalent: it interrupts a runaway Python loop, but
     # a C-level regex only raises once it returns -- a known CPython limitation.
-    use_alarm = (
-        bool(timeout) and hasattr(signal, "SIGALRM") and threading.current_thread() is threading.main_thread()
-    )
+    use_alarm = bool(timeout) and hasattr(signal, "SIGALRM") and threading.current_thread() is threading.main_thread()
     buf = io.StringIO()
     old_handler = None
     try:

@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
-from ..client import LLMClient
+from evaluation.rlm.shared.client import LLMClient
 
 
 def is_context_overflow(exc: Exception) -> bool:

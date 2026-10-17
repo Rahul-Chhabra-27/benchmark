@@ -39,8 +39,8 @@ from typing import Optional
 import pandas as pd
 import yaml
 
-from ..benchmarks.results import score_prediction_frame
-from ..compare import headline_score
+from evaluation.benchmarks.results import score_prediction_frame
+from evaluation.compare import headline_score
 
 # One example at n=55 is 0.018 and the campaign measured run-to-run drift of about
 # that much under four concurrent lanes at temperature 0.0 (vLLM batching numerics).
@@ -228,8 +228,7 @@ def render(result: dict) -> str:
     # it cannot see the run-to-run drift the campaign measured at about that size.
     verdict = "BELOW the floor -- do not report this as a difference" if half_width < floor else "above the floor"
     lines.append(
-        f"  noise floor  +/-{floor:.3f} (1 example at n={result['n']}); "
-        f"CI half-width {half_width:.3f} {verdict}"
+        f"  noise floor  +/-{floor:.3f} (1 example at n={result['n']}); " f"CI half-width {half_width:.3f} {verdict}"
     )
     return "\n".join(lines)
 

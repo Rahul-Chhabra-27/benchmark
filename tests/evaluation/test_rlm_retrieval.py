@@ -9,8 +9,8 @@ import inspect
 
 import pytest
 
-from evaluation.rlm import retrieval
-from evaluation.rlm.rlm import _clip_spans, _merge_spans, _widen_spans
+from evaluation.rlm.harness.rlm import _clip_spans, _merge_spans, _widen_spans
+from evaluation.rlm.shared import retrieval
 
 FILLER = "the quick brown fox jumps over the lazy dog and keeps on running through fields "
 NEEDLE = "Bignotti Cotter Racing entered the Datsun sponsored round at Riverside. "

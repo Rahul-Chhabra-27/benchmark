@@ -42,11 +42,12 @@ import math
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from . import retrieval
+from evaluation.rlm.harness.rlm import STRUCTURED_NOTHING
+from evaluation.rlm.shared import retrieval
+from evaluation.rlm.shared.client import LLMClient
+from evaluation.rlm.shared.datasets import canonical_dataset_name, load_examples
+
 from .chunkset import document_digest, window_spans
-from .client import LLMClient
-from .datasets import canonical_dataset_name, load_examples
-from .rlm import STRUCTURED_NOTHING
 
 # Bump when the prompt below changes. It is part of the filename AND hashed into the
 # header, so a notes file built by a different prompt cannot be read as this one.
@@ -233,8 +234,7 @@ def main() -> None:
         )
         reply = (client.chat([{"role": "user", "content": prompt}]) or "").strip()
         empty = not reply or reply.upper().lstrip().startswith(STRUCTURED_NOTHING)
-        records[window] = {"window": window, "start": start, "end": end, "note": "" if empty else reply,
-                           "empty": empty}
+        records[window] = {"window": window, "start": start, "end": end, "note": "" if empty else reply, "empty": empty}
         if window % 25 == 0:
             print(f"  window {window}/{len(spans)}", flush=True)
 

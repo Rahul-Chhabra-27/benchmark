@@ -32,7 +32,7 @@ import traceback
 from dataclasses import asdict, dataclass, field, replace
 from typing import Any, Iterable, Iterator, Optional, Protocol, Sequence
 
-from ..client import LLMClient
+from evaluation.rlm.shared.client import LLMClient
 
 # ======================================================================================
 # Prompts: every word the models are shown

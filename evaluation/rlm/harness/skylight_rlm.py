@@ -21,10 +21,11 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional, Sequence
 
-from .client import LLMClient
-from .organization import CONFIG as ORGANIZATION_CONFIG
-from .organization import ordered_hits, organize
-from .retrieval import Hit, get_index
+from evaluation.rlm.shared.client import LLMClient
+from evaluation.rlm.shared.organization import CONFIG as ORGANIZATION_CONFIG
+from evaluation.rlm.shared.organization import ordered_hits, organize
+from evaluation.rlm.shared.retrieval import Hit, get_index
+
 from .rlm import MemoryBudget, RLMResult, TokenCounter, _is_context_overflow
 
 # --------------------------------------------------------------------------- #
@@ -63,7 +64,7 @@ WHAT TO TRY (in this order):
 MEMORY: older history may be dropped to stay within a memory budget. Re-read
 anything you still need. Do not invent chunk contents.
 
-Each turn, emit EXACTLY ONE stop form, then STOP. Write nothing after it. The two 
+Each turn, emit EXACTLY ONE stop form, then STOP. Write nothing after it. The two
 stop forms are either 1) Ask for more information or 2) Finish with final answer.
 
 ────────────────────────────────────────

@@ -192,7 +192,7 @@ class CompressedReader:
 
 def load_kv_model(config: ExperimentConfig) -> Any:
     """The in-process kvpress model, built for the largest factor and the widest read."""
-    from ..kvzip_backend import KVzipSubClient  # torch and kvpress, only when needed
+    from evaluation.rlm.shared.kvzip_backend import KVzipSubClient  # torch and kvpress, only when needed
 
     largest = max(config.compression.factors)
     return KVzipSubClient(

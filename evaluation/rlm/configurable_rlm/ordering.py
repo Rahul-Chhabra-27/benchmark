@@ -15,9 +15,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from ..organization import CONFIG as GRID
-from ..organization import ordered_hits, organize
-from ..retrieval import Hit, get_index
+from evaluation.rlm.shared.organization import CONFIG as GRID
+from evaluation.rlm.shared.organization import ordered_hits, organize
+from evaluation.rlm.shared.retrieval import Hit, get_index
+
 from .rlm import Feature, Result
 
 CHUNKS_TOOL = """\

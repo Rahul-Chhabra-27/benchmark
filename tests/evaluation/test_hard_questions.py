@@ -7,8 +7,8 @@ import json
 import pytest
 import yaml
 
-from evaluation.rlm import hard_questions as cli
-from evaluation.rlm.hard_questions import classify, describe, discover, score_matrix, summarize
+from evaluation.rlm.analysis import hard_questions as cli
+from evaluation.rlm.analysis.hard_questions import classify, describe, discover, score_matrix, summarize
 from evaluation.rlm.configurable_rlm.config import config_from_dict
 from evaluation.rlm.configurable_rlm.run import run_experiment
 

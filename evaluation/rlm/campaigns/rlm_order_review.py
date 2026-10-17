@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Label the cause of every REVIEW row of an ordered-chunk stage, one line each.
 
-    python -m evaluation.rlm.rlm_order_review <results dir>
+    python -m evaluation.rlm.campaigns.rlm_order_review <results dir>
 
 REVIEW rows are the gate's (rlm_order_gate): an ending a harness guard forced, or a row
 that passed no chunk to llm_query. The labels are what an acceptance review samples

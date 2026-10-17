@@ -7,10 +7,10 @@ import pytest
 # The module these tests cover has not been pushed yet (see run_benchmark's optional import).
 pytest.importorskip("evaluation.rlm.rlm_exp1")
 
-from evaluation.rlm.client import Usage  # noqa: E402
 from evaluation.rlm.rlm_exp1 import RLM, LookEndpointConfig, LookStrategy  # noqa: E402
 from evaluation.rlm.rlm_exp1.costs import render_cost_table, token_placement  # noqa: E402
 from evaluation.rlm.rlm_exp1.repl import extract_sub_summary  # noqa: E402
+from evaluation.rlm.shared.client import Usage  # noqa: E402
 
 
 class ScriptedClient:

@@ -99,7 +99,7 @@ for s in $SUBSETS; do
   echo "################ $arm $DATASET/$data_dir ${rows[*]} cpu=$cpu $(date +%T)"
   # $split is word-split on purpose: empty for RULER, which has no dev/test split.
   # shellcheck disable=SC2086
-  taskset -c "$cpu" "$PY" -m evaluation.rlm.run_benchmark --dataset "$DATASET" --data-dir "$data_dir" \
+  taskset -c "$cpu" "$PY" -m evaluation.rlm.harness.run_benchmark --dataset "$DATASET" --data-dir "$data_dir" \
       $split "${rows[@]}" --mode rlm --chunk-order "$arm" --organization-dir "$ORG" \
       --max-steps "$MAX_STEPS" \
       --root-model "$MODEL" --sub-model "$MODEL" --base-url "$BASE_URL" "${sub_flags[@]}" \

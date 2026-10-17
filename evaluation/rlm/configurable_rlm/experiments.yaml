@@ -64,3 +64,25 @@ experiments:
   order_graph_tuned:
     ordering: bm25-graph
     tuning: true
+
+  # Closest to our original rlm.py (harness/rlm.py) as the LOFT campaigns ran it: tuning on,
+  # 50 turns (rlm_order_lane.sh), 6000 characters of output per turn (rlm.py's obs_limit).
+  # Not identical: rlm.py also has BM25 search(), a repetition breaker and its own prompt
+  # wording. To reproduce old numbers exactly, run harness/run_benchmark.py --mode rlm.
+  rlm_like:
+    ordering: none
+    tuning: true
+    rlm: {max_steps: 50, output_chars: 6000}
+  rlm_like_graph:            # like rlm_order_lane.sh bm25-graph (plain sub-calls)
+    ordering: bm25-graph
+    tuning: true
+    rlm: {max_steps: 50, output_chars: 6000}
+  rlm_like_query:            # like rlm_order_lane.sh bm25-query
+    ordering: bm25-query
+    tuning: true
+    rlm: {max_steps: 50, output_chars: 6000}
+  rlm_like_graph_x2:         # like a B x F cell (run_bxf.sh): bm25-graph, 1024 MB x 2, KVzip
+    ordering: bm25-graph
+    tuning: true
+    compression: {budget_mb: 1024, factor: 2}
+    rlm: {max_steps: 50, output_chars: 6000}

@@ -154,7 +154,7 @@ KVzip matrix.
 - **The evidence is thin:** one subset, n=20.
 - **Some cells are not measurements.** The cells at N = 131,072, and some at 65,536, had
   their sub-model refuse slices for GPU memory. The headline cells were clean.
-- **Run `evaluation/rlm/fixed_chunk_grid/audit_cells.py` on any tree before trusting a cell.**
+- **Run `evaluation/rlm/campaigns/fixed_chunk_grid/audit_cells.py` on any tree before trusting a cell.**
 - **The recommended next step was not another grid.** It was the N ≈ 8k cells (F = 1, 2, 4,
   8) at 100+ rows on all six subsets.
 
@@ -283,7 +283,7 @@ question:
 - `lead`, `stride`, `random` and `all` (`query_free_chunks.py`);
 - a query-free notes index (`window_notes.py`);
 - held-out rows 55–99, which no configuration choice had seen;
-- paired statistics (`evaluation/rlm/paired.py`).
+- paired statistics (`evaluation/rlm/analysis/paired.py`).
 
 **Result at k = 2** (a 4,000-character read; 16 of about 85 ladder cells were in when the
 record stops):
@@ -395,7 +395,7 @@ chunk as a `chunks` list, in a pre-computed order, and told how the order was ma
   model. Their 4-cell smoke test passed on 2026-09-12; RUNNING.md §7 has the output.
 - **The CWE diagnostic:** a traced run of one RULER CWE row through both revision-6 arms.
   Both scored 0.0. Their readers saw 4 and 8 of the 10 gold words, and neither prediction
-  held any. The tracer is `evaluation/rlm/diagnostic.py`. The evidence tarball is
+  held any. The tracer is `evaluation/rlm/analysis/diagnostic.py`. The evidence tarball is
   `cwe-diagnostic.tar.gz`, SHA-256 `bc963387…0facda`.
 
 **Archive:** `/mnt/nas/gautammahale/archive/rlmorder/`, with `full_{results,report,logs}`,

@@ -108,7 +108,7 @@ run() {  # run <label> <extra args...>
   # holdout. The two are mutually exclusive at the CLI on purpose: --ids-file is
   # applied BEFORE --limit, so passing both would silently mean "the first N of the
   # named rows" -- a different experiment that reads like a cap.
-  $PY -m evaluation.rlm.run_benchmark --dataset loft --split "$SPLIT" $ROWSEL \
+  $PY -m evaluation.rlm.harness.run_benchmark --dataset loft --split "$SPLIT" $ROWSEL \
       --mode structured "$@" $COMMON 2>&1 | grep -vE "^\s*$"
 }
 
@@ -146,7 +146,7 @@ for s in "$@"; do
     if [ -f "$CH" ]; then
       run "oracle $sub" --data-dir "$sub" --chunks-source file --chunks-file "$CH" --chunks-k 5
     else
-      echo "################ oracle $sub SKIPPED: $CH missing (build it with evaluation.rlm.oracle_chunks)"
+      echo "################ oracle $sub SKIPPED: $CH missing (build it with evaluation.rlm.chunk_sources.oracle_chunks)"
     fi
   fi
 

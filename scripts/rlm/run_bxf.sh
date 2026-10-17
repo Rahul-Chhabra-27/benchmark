@@ -99,6 +99,6 @@ done
 
 echo
 echo "=== summary of $RESULTS"
-cd "$REPO" && PYTHONPATH=. "$KVZIP_PYTHON" -m evaluation.rlm.bxf_summary "$RESULTS"
+cd "$REPO" && PYTHONPATH=. "$KVZIP_PYTHON" -m evaluation.rlm.analysis.bxf_summary "$RESULTS"
 summary=$?
 [ "$failed" = 0 ] && [ "$summary" = 0 ]

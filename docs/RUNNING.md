@@ -267,7 +267,7 @@ Put the flags every run shares into one array, so each run line shows only what 
 ```bash
 source /tmp/$USER/rlm/env; cd $S/skylight
 PORT=8013 MODEL=Qwen/Qwen3.5-4B
-RUN=($S/venv-drv/bin/python -m evaluation.rlm.run_benchmark
+RUN=($S/venv-drv/bin/python -m evaluation.rlm.harness.run_benchmark
      --base-url http://localhost:$PORT/v1 --root-model $MODEL --sub-model $MODEL
      --max-steps 50 --max-sub-calls 40 --exec-timeout 60 --run-timeout 900
      --vanilla-char-limit 700000 --vanilla-max-prompt-tokens 134000
@@ -393,7 +393,7 @@ offline:
 
 ```bash
 cd $REPO
-sg infolab -c "HF_HOME=$HF_HOME PYTHONPATH=. $PY -m evaluation.rlm.rlm_order_stage --dataset all --weights"
+sg infolab -c "HF_HOME=$HF_HOME PYTHONPATH=. $PY -m evaluation.rlm.campaigns.rlm_order_stage --dataset all --weights"
 ```
 
 It ends with `staged: lanes can run with HF_HUB_OFFLINE=1`. On cat, LOFT's five subsets
@@ -456,10 +456,10 @@ tail -f $S/logs/ruler_pilot_bm25-query_p1.log     # every lane ends with '######
 
 ```bash
 # RULER
-sg infolab -c "cd $REPO && HF_HOME=$HF_HOME HF_HUB_OFFLINE=1 PYTHONPATH=. $PY -m evaluation.rlm.rlm_order_gate \
+sg infolab -c "cd $REPO && HF_HOME=$HF_HOME HF_HUB_OFFLINE=1 PYTHONPATH=. $PY -m evaluation.rlm.campaigns.rlm_order_gate \
   $S/results_ruler128k_pilot --dataset ruler128k --pilot --expect 3"
 # LOFT: this also checks rows, questions and the graph order against the structured campaign
-sg infolab -c "cd $REPO && HF_HOME=$HF_HOME HF_HUB_OFFLINE=1 PYTHONPATH=. $PY -m evaluation.rlm.rlm_order_gate \
+sg infolab -c "cd $REPO && HF_HOME=$HF_HOME HF_HUB_OFFLINE=1 PYTHONPATH=. $PY -m evaluation.rlm.campaigns.rlm_order_gate \
   $S/results_loft_pilot --dataset loft --pilot --expect 3 \
   --structured-results /mnt/nas/gautammahale/archive/graphorder/results \
   --organization-dir /mnt/nas/gautammahale/archive/graphorder/organization"
@@ -471,7 +471,7 @@ sg infolab -c "cd $REPO && HF_HOME=$HF_HOME HF_HUB_OFFLINE=1 PYTHONPATH=. $PY -m
   never read a chunk. A run WARNS once more than 10% of its rows are listed, and FAILS past
   25%.
 - **To see why each row was flagged:**
-  `PYTHONPATH=. $PY -m evaluation.rlm.rlm_order_review <results dir>`.
+  `PYTHONPATH=. $PY -m evaluation.rlm.campaigns.rlm_order_review <results dir>`.
 
 **The full run** is the same loop, with four changes:
 - `LIMIT=55`;
@@ -507,13 +507,13 @@ It does four things:
 - the harness's interventions;
 - where the gold sat in each order.
 
-`python -m evaluation.rlm.rlm_order_replay <results> <dataset>` shows what revision 6's
+`python -m evaluation.rlm.campaigns.rlm_order_replay <results> <dataset>` shows what revision 6's
 grounding rule would have changed in a revision-5 run.
 
 ### 6.5 One row by hand, for debugging
 
 ```bash
-PYTHONPATH=. HF_HUB_OFFLINE=1 $PY -m evaluation.rlm.run_benchmark \
+PYTHONPATH=. HF_HUB_OFFLINE=1 $PY -m evaluation.rlm.harness.run_benchmark \
   --dataset ruler128k --data-dir niah_single_1 --limit 1 \
   --mode rlm --chunk-order bm25-query --organization-dir $S/organization_debug --max-steps 50 \
   --root-model Qwen/Qwen3-4B-Instruct-2507 --sub-model Qwen/Qwen3-4B-Instruct-2507 \
@@ -723,7 +723,7 @@ arm there would shrink-retry and merge truncated rows into existing checkpoints.
 ### 8.2 One KVzip run, directly
 
 ```bash
-python -m evaluation.rlm.run_benchmark \
+python -m evaluation.rlm.harness.run_benchmark \
   --dataset loft --data-dir nq_128k --split test --limit 50 \
   --mode rlm --scratchpad --max-steps 50 \
   --base-url http://localhost:8000/v1 \
@@ -814,7 +814,7 @@ N=$((B*F)); CALLS=$(( (131072 + N - 1)/N + 1 )); [ $CALLS -gt 64 ] && CALLS=64
 MINFREE=$(awk -v n=$N 'BEGIN{x=n*147456*1.2/(2^30);m=int(x);if(x>m)m++;m+=12;if(m<14)m=14;print m}')
 PRESS=kvzip; [ "$F" -eq 1 ] && PRESS=no_press
 
-CUDA_VISIBLE_DEVICES=$GPU "$KVPY" -m evaluation.rlm.run_benchmark \
+CUDA_VISIBLE_DEVICES=$GPU "$KVPY" -m evaluation.rlm.harness.run_benchmark \
   --dataset longbench128k --data-dir "$SUBSET" --limit "$NEX" \
   --base-url http://localhost:8000/v1 \
   --root-model Qwen/Qwen3-4B-Instruct-2507 --sub-model Qwen/Qwen3-4B-Instruct-2507 \
@@ -836,8 +836,8 @@ CUDA_VISIBLE_DEVICES=$GPU "$KVPY" -m evaluation.rlm.run_benchmark \
 sub-model never really ran, then render the tables:
 
 ```bash
-python evaluation/rlm/fixed_chunk_grid/audit_cells.py $BASE/fixed_chunk_grid/myrun --quiet   # exits 1 on any flagged cell
-python evaluation/rlm/fixed_chunk_grid/grid_table.py --results $BASE/fixed_chunk_grid/myrun
+python evaluation/rlm/campaigns/fixed_chunk_grid/audit_cells.py $BASE/fixed_chunk_grid/myrun --quiet   # exits 1 on any flagged cell
+python evaluation/rlm/campaigns/fixed_chunk_grid/grid_table.py --results $BASE/fixed_chunk_grid/myrun
 ```
 
 To go faster, run more lanes with **disjoint** `DATASETS`, `BUDGETS` or `FACTORS`. Give each
@@ -900,7 +900,7 @@ python3 -m venv /workspace/venvs/vllm
 
 ```bash
 cd $REPO && source /workspace/rlm_env.sh
-PYTHONPATH=. $PY -m evaluation.rlm.rlm_order_stage --dataset all --weights
+PYTHONPATH=. $PY -m evaluation.rlm.campaigns.rlm_order_stage --dataset all --weights
 ```
 
 ```bash
@@ -936,8 +936,8 @@ done
   the flag skips only the checks against them.
 
 ```bash
-PYTHONPATH=. HF_HUB_OFFLINE=1 $PY -m evaluation.rlm.rlm_order_gate $S/results_ruler128k_pilot --dataset ruler128k --pilot --expect 3
-PYTHONPATH=. HF_HUB_OFFLINE=1 $PY -m evaluation.rlm.rlm_order_gate $S/results_loft_pilot --dataset loft --pilot --expect 3 --no-comparator
+PYTHONPATH=. HF_HUB_OFFLINE=1 $PY -m evaluation.rlm.campaigns.rlm_order_gate $S/results_ruler128k_pilot --dataset ruler128k --pilot --expect 3
+PYTHONPATH=. HF_HUB_OFFLINE=1 $PY -m evaluation.rlm.campaigns.rlm_order_gate $S/results_loft_pilot --dataset loft --pilot --expect 3 --no-comparator
 ```
 
 ```bash
@@ -1005,7 +1005,7 @@ Joining runs, and paired statistics:
 python -m evaluation.compare --dataset loft --backend rlm --csv comparison.csv
 ```
 
-`python -m evaluation.rlm.paired --a <run_dir> --b <run_dir>` gives a paired bootstrap CI,
+`python -m evaluation.rlm.analysis.paired --a <run_dir> --b <run_dir>` gives a paired bootstrap CI,
 W/L/T and a sign test. It refuses arms that ran different rows.
 
 ---
