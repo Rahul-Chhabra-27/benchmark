@@ -50,7 +50,7 @@ experiments:
     ordering: bm25-graph
     compression: {budget_mb: 1024, factor: 2}
 
-  # The professor's setting: the root chooses the factor per read, reads larger than B x F
+  # The root chooses the factor per read, reads larger than B x F
   # offload the excess KV to CPU, and every read reports its cost.
   graph_cost_aware:
     ordering: bm25-graph

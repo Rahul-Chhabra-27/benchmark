@@ -22,34 +22,16 @@ the GPU or the model window cannot hold is refused before any example runs. The 
 the same cell as `BUDGET_MB=512 FACTOR=4`. To run cells with one command, see
 [`RUNNING.md` §7](../../docs/RUNNING.md#7-b--f-cells) (`bash scripts/rlm/run_bxf.sh`).
 
-## How this folder is arranged
-
-| folder | holds |
-|---|---|
-| `shared/` | building blocks: `datasets.py`, `client.py` (vLLM), `kvzip_backend.py` (KVzip sub-calls), `sizing.py` (B × F), `retrieval.py` (BM25), `organization.py` (bm25-graph) |
-| `harness/` | the original runner `run_benchmark.py` and the RLMs it runs with `--mode` (below) |
-| `configurable_rlm/` | one `experiments.yaml` for every setting: `loop: base` (minimal RLM) or `loop: tuned` (our original `rlm.py`, unchanged), with ordering and compression switches — see the root [README](../../README.md) §5 |
-| `chunk_sources/` | chunks handed to the RLM by something else: `chunkset.py`, `oracle_chunks.py`, `query_free_chunks.py`, `window_notes.py` |
-| `analysis/` | reading finished runs: `paired.py`, `bxf_summary.py`, `hard_questions.py`, `compression_picker.py`, `structured_decompose.py`, `diagnostic.py` |
-| `campaigns/` | tooling for finished campaigns: `rlm_order_*.py` and `fixed_chunk_grid/` |
-
-## The RLM implementations
-
-| code | what it is | run it with |
-|---|---|---|
-| `harness/rlm.py` | our original, tuned RLM (long prompt, guards, KVzip B × F cells) | `python -m evaluation.rlm.harness.run_benchmark --mode rlm` |
-| `harness/clean_rlm/` | the same RLM split into modules, KVzip removed (from apd10-dev) | `… run_benchmark --mode clean-rlm` |
-| `harness/original_rlm.py` | the RLM paper's protocol inside this harness (from apd10-dev) | `… run_benchmark --mode original` |
-| `harness/skylight_rlm.py` | an agent that reads chunks by command, without a REPL (from apd10-dev) | `… run_benchmark --mode skylight` |
-| `configurable_rlm/` | the minimal base RLM (`loop: base`), or our original `rlm.py` run unchanged (`loop: tuned`), switched in `experiments.yaml` | `python -m evaluation.rlm.configurable_rlm run <experiment>` |
-
-**`analysis/hard_questions.py`** finds the questions vanilla solves but RLM + ordering does
-not, and those only a compressed RLM solves, and writes them as ids files — the small
-validation set: `python -m evaluation.rlm.analysis.hard_questions --results <root> --out hard_set`,
-then `configurable_rlm run <experiment> --set data.ids_file=hard_set/ids/<task>__validation_set.txt`.
-
-**`analysis/compression_picker.py`** chooses one compression factor per question before the
-run (`bash scripts/rlm/run_picked.sh`). Each module's docstring has the details.
+## Folders
+- `shared/`: datasets, vLLM client, KVzip sub-calls, B × F sizing, BM25, bm25-graph order
+- `harness/`: `run_benchmark.py` and the RLMs it runs with `--mode`:
+  `rlm.py` (tuned), `clean_rlm/` (modular, no KVzip), `original_rlm.py` (paper protocol),
+  `skylight_rlm.py` (chunk commands, no REPL)
+- `configurable_rlm/`: `loop: base | tuned` with ordering and compression, set in
+  `experiments.yaml` (see the root [README](../../README.md))
+- `chunk_sources/`: chunks chosen outside the RLM (oracle, query-free, notes)
+- `analysis/`: `hard_questions.py`, `paired.py`, `bxf_summary.py`, `compression_picker.py`, …
+- `campaigns/`: tooling for finished campaigns (`rlm_order_*`, `fixed_chunk_grid/`)
 
 ## Goal
 Quantify how Recursive Language Models (RLMs) compare against vanilla long-context
