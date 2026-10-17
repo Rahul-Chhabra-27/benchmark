@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import inspect
 import json
 import time
 from dataclasses import asdict
@@ -2222,20 +2223,27 @@ def main() -> None:
         if args.mode == "rlm-exp1"
         else None
     )
-    skylight = SkylightRLM(
-        root_client=root,
-        sub_client=sub,
-        max_steps=args.max_steps,
-        chunk_chars=ORGANIZATION_CONFIG["chunk_chars"],
-        chunk_overlap=ORGANIZATION_CONFIG["overlap"],
-        budget=budget,
-        run_timeout=args.run_timeout or None,
-        max_sub_calls=args.max_sub_calls or None,
-        debug=args.debug,
-        organization_dir=args.organization_dir,
-        vanilla_max_prompt_tokens=args.vanilla_max_prompt_tokens,
-        enable_thinking=not args.no_think,
-    )
+    skylight = None
+    if args.mode == "skylight":
+        skylight_options = dict(
+            root_client=root,
+            sub_client=sub,
+            max_steps=args.max_steps,
+            chunk_chars=ORGANIZATION_CONFIG["chunk_chars"],
+            chunk_overlap=ORGANIZATION_CONFIG["overlap"],
+            budget=budget,
+            run_timeout=args.run_timeout or None,
+            max_sub_calls=args.max_sub_calls or None,
+            debug=args.debug,
+            organization_dir=args.organization_dir,
+            vanilla_max_prompt_tokens=args.vanilla_max_prompt_tokens,
+            enable_thinking=not args.no_think,
+        )
+        # Built only for --mode skylight: apd10-dev wired two options (vanilla_max_prompt_tokens,
+        # enable_thinking) that its pushed skylight_rlm.py does not take yet, and building it
+        # unconditionally crashed every other mode. Pass only what this skylight_rlm.py accepts.
+        accepted = inspect.signature(SkylightRLM.__init__).parameters
+        skylight = SkylightRLM(**{k: v for k, v in skylight_options.items() if k in accepted})
     original = OriginalRLM(
         root_client=root,
         sub_client=sub,

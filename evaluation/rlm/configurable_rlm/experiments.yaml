@@ -16,7 +16,7 @@ defaults:
   models:
     root: Qwen/Qwen3-4B-Instruct-2507
     base_url: http://localhost:8002/v1
-    thinking: false
+    # thinking: false        # uncomment to send enable_thinking=false (the tuned loop: --no-think)
   rlm:
     max_steps: 30
     max_sub_calls: 40
@@ -57,32 +57,33 @@ experiments:
     compression: {budget_mb: 1024, factor: 1, choices: [1, 2, 4, 8], offload: true}
     cost: {gpu_token: 0, offloaded_token: 100, show_root: true}
 
-  # Our prompt tuning and guards (tuning.py) on the same settings, to measure what it adds.
-  base_tuned:
+  # Our original, fully tuned RLM (harness/rlm.py), run exactly as it is -- same code and
+  # arguments as the earlier campaigns (50 turns, as rlm_order_lane.sh) -- with the same
+  # ordering / compression switches as the base RLM above.
+  tuned:                     # no ordering, no compression
+    loop: tuned
     ordering: none
-    tuning: true
-  order_graph_tuned:
-    ordering: bm25-graph
-    tuning: true
-
-  # Closest to our original rlm.py (harness/rlm.py) as the LOFT campaigns ran it: tuning on,
-  # 50 turns (rlm_order_lane.sh), 6000 characters of output per turn (rlm.py's obs_limit).
-  # Not identical: rlm.py also has BM25 search(), a repetition breaker and its own prompt
-  # wording. To reproduce old numbers exactly, run harness/run_benchmark.py --mode rlm.
-  rlm_like:
-    ordering: none
-    tuning: true
-    rlm: {max_steps: 50, output_chars: 6000}
-  rlm_like_graph:            # like rlm_order_lane.sh bm25-graph (plain sub-calls)
-    ordering: bm25-graph
-    tuning: true
-    rlm: {max_steps: 50, output_chars: 6000}
-  rlm_like_query:            # like rlm_order_lane.sh bm25-query
+    rlm: {max_steps: 50}
+  tuned_query:               # ordering only (= rlm_order_lane.sh bm25-query)
+    loop: tuned
     ordering: bm25-query
-    tuning: true
-    rlm: {max_steps: 50, output_chars: 6000}
-  rlm_like_graph_x2:         # like a B x F cell (run_bxf.sh): bm25-graph, 1024 MB x 2, KVzip
+    rlm: {max_steps: 50}
+  tuned_graph:               # ordering only (= rlm_order_lane.sh bm25-graph)
+    loop: tuned
     ordering: bm25-graph
-    tuning: true
+    rlm: {max_steps: 50}
+  tuned_x2:                  # compression only: KVzip, 1024 MB, slices sized for x2
+    loop: tuned
+    ordering: none
     compression: {budget_mb: 1024, factor: 2}
-    rlm: {max_steps: 50, output_chars: 6000}
+    rlm: {max_steps: 50}
+  tuned_graph_x1:            # ordering + the no-compression control at the same budget
+    loop: tuned
+    ordering: bm25-graph
+    compression: {budget_mb: 1024, factor: 1}
+    rlm: {max_steps: 50}
+  tuned_graph_x2:            # ordering + compression (= a run_bxf.sh B x F cell)
+    loop: tuned
+    ordering: bm25-graph
+    compression: {budget_mb: 1024, factor: 2}
+    rlm: {max_steps: 50}

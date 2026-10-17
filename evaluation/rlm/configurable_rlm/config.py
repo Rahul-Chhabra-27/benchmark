@@ -19,6 +19,7 @@ from typing import Any, Optional
 import yaml
 
 ORDERINGS = ("none", "bm25-query", "bm25-graph")
+LOOPS = ("base", "tuned")
 FACTORS = (1, 2, 4, 8)
 # Qwen3-4B-Instruct-2507: 36 layers x 8 KV heads x 128 dims x 2 (K, V) x 2 bytes.
 KV_BYTES_PER_TOKEN = 147_456
@@ -54,7 +55,10 @@ class ModelConfig:
     root: str = "Qwen/Qwen3-4B-Instruct-2507"
     sub: Optional[str] = None  # defaults to the root model
     base_url: str = "http://localhost:8002/v1"
-    thinking: bool = False  # Qwen3 thinking mode for root and http sub-calls
+    # Qwen3 thinking mode: false turns it off, true on; unset (null) leaves the server's
+    # default. The base loop treats unset as off; the tuned loop passes nothing, as the
+    # original launchers did.
+    thinking: Optional[bool] = None
 
     @property
     def sub_model(self) -> str:
@@ -120,7 +124,9 @@ class ExperimentConfig:
     data: DataConfig
     models: ModelConfig = field(default_factory=ModelConfig)
     ordering: str = "none"
-    tuning: bool = False  # our prompt tuning and guards (tuning.py) on top of the base RLM
+    # base: the minimal RLM in rlm.py. tuned: our original, fully tuned RLM (harness/rlm.py),
+    # run exactly as it is through its own runner -- see tuned.py.
+    loop: str = "base"
     compression: CompressionConfig = field(default_factory=CompressionConfig)
     cost: CostConfig = field(default_factory=CostConfig)
     rlm: RLMConfig = field(default_factory=RLMConfig)
@@ -151,6 +157,18 @@ class ExperimentConfig:
             raise ValueError("data.tasks is empty")
         if self.data.ids_file is not None and self.data.limit is not None:
             raise ValueError("data.ids_file and data.limit both choose which questions run; set only one")
+        if self.loop not in LOOPS:
+            raise ValueError(f"loop must be one of {LOOPS}, got {self.loop!r}")
+        if self.loop == "tuned":
+            c0, missing = self.compression, []
+            if len(c0.factors) > 1:
+                missing.append("compression.choices")
+            if c0.offload:
+                missing.append("compression.offload")
+            if self.cost.show_root:
+                missing.append("cost.show_root")
+            if missing:
+                raise ValueError(f"loop: tuned runs our original rlm.py, which has no {missing}; use loop: base")
         if self.ordering not in ORDERINGS:
             raise ValueError(f"ordering must be one of {ORDERINGS}, got {self.ordering!r}")
         c = self.compression

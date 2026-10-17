@@ -44,6 +44,8 @@ def describe(config: ExperimentConfig) -> str:
             reads += ", offloading on"
     else:
         reads = "plain reads over http (no kvpress)"
+    tuned = config.loop == "tuned"
+    loop = "tuned: our original rlm.py, via harness/run_benchmark.py" if tuned else "base: the minimal RLM"
     shown = ", shown to the root" if config.cost.show_root else ", recorded only"
     costs = f"gpu {config.cost.gpu_token:g}/token, offloaded {config.cost.offloaded_token:g}/token{shown}"
     return "\n".join(
@@ -53,9 +55,9 @@ def describe(config: ExperimentConfig) -> str:
             f"limit={config.data.limit}",
             f"root         {config.models.root} @ {config.models.base_url}",
             f"ordering     {config.ordering}",
-            f"tuning       {'on (our prompt tuning and guards)' if config.tuning else 'off (base prompt)'}",
-            f"reads        {reads}; one read <= {config.largest_read_tokens:,} tokens",
-            f"cost         {costs}",
+            f"loop         {loop}",
+            f"reads        {reads}" + ("" if tuned else f"; one read <= {config.largest_read_tokens:,} tokens"),
+            *([] if tuned else [f"cost         {costs}"]),
             f"limits       {config.rlm.max_steps} turns, {config.rlm.max_sub_calls} reads, "
             f"{config.rlm.run_timeout_s:g}s per question",
             f"output       {Path(config.output_dir) / config.name}/<task>/",
@@ -80,13 +82,20 @@ def main(argv: list[str] | None = None) -> None:
             extras = "".join(
                 f"  {k}" for k, on in (("offload", c.offload), ("cost shown", config.cost.show_root)) if on
             )
-            tuned = "  tuned" if config.tuning else ""
+            tuned = "  loop=tuned" if config.loop == "tuned" else ""
             print(f"  {name:<18} ordering={config.ordering:<11} compression={compression}{extras}{tuned}")
         return
     if not args.name:
         ap.error(f"{args.command} needs an experiment name; see `list`")
     config = load_experiment(args.name, args.file, _overrides(args.set))
     print(describe(config))
+    if args.command == "check" and config.loop == "tuned":
+        from .tuned import command
+
+        print("\n--- runs our original rlm.py, one command per task ---")
+        for task in config.data.task_dirs():
+            print(" ".join(command(config, task)))
+        return
     if args.command == "check":
         rlm = RLM(None, make_reader(config, load_model=False), make_limits(config), make_features(config))
         print("\n--- root prompt (with a placeholder question) ---")

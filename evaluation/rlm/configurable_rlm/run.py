@@ -77,10 +77,6 @@ def make_features(config: ExperimentConfig) -> list[Feature]:
 
         organization_dir = config.organization_dir or str(Path(config.output_dir) / "organization")
         features.append(Ordering(config.ordering, organization_dir))
-    if config.tuning:
-        from .tuning import Tuning
-
-        features.append(Tuning(config.ordering))
     return features
 
 
@@ -236,11 +232,15 @@ def run_experiment(
     log: Callable[[str], None] = print,
 ) -> dict[str, dict]:
     """Run every task of a config. `root`, `reader` and `load` are injectable for tests."""
+    if config.loop == "tuned":
+        from .tuned import run_tuned  # our original rlm.py, through its own runner
+
+        return run_tuned(config, log)
     rlm = make_rlm(config, root or make_root(config), reader or make_reader(config))
     results = {}
     wanted = config.data.ids()
     for task in config.data.task_dirs():
-        options = f"ordering={config.ordering}, tuning={config.tuning}, F={config.compression.factor}"
+        options = f"ordering={config.ordering}, loop=base, F={config.compression.factor}"
         log(f"=== {config.name}: {task} ({options})")
         examples = load(config.data.dataset, task, config.data.limit, config.data.split)
         if wanted is not None:

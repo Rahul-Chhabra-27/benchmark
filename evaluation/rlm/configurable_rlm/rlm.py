@@ -12,8 +12,9 @@
 Everything else is added ON TOP of this base, never inside it, through two seams:
   a Reader decides how llm_query reads -- compression.py is one (KV budget, factor
     choice, offloading, cost);
-  Features add tools, prompt lines and checks -- ordering.py (the `chunks` list) and
-    tuning.py (our prompt tuning and guards) are two.
+  Features add tools, prompt lines and checks -- ordering.py (the `chunks` list) is one.
+Our original, fully tuned RLM is not built from this base: `loop: tuned` runs it as it
+is (tuned.py).
 This file imports none of them.
 """
 
@@ -268,8 +269,7 @@ def plain_reader(model: str, base_url: str, limit_tokens: int, thinking: bool = 
 #     after_turn(output, result)    a note for the root's next message ("" for none)
 #     summary(result)               numbers for the question's summary
 #
-# A feature may end the question itself by setting result.done and result.ending
-# (tuning's FINAL_NONE ends it as "abstained").
+# A feature may end the question itself by setting result.done and result.ending.
 
 
 class Feature:

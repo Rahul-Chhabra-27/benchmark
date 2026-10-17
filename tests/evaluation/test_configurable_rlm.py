@@ -12,6 +12,7 @@ import yaml
 
 from evaluation.rlm.configurable_rlm import __main__ as cli
 from evaluation.rlm.configurable_rlm import rlm as base
+from evaluation.rlm.configurable_rlm import tuned
 from evaluation.rlm.configurable_rlm.compression import CompressedReader, Placement
 from evaluation.rlm.configurable_rlm.config import config_from_dict, load_experiment, read_experiments
 from evaluation.rlm.configurable_rlm.ordering import Ordering, build_chunks, query_text
@@ -27,7 +28,6 @@ from evaluation.rlm.configurable_rlm.rlm import (
     system_prompt,
 )
 from evaluation.rlm.configurable_rlm.run import run_experiment
-from evaluation.rlm.configurable_rlm.tuning import Tuning
 
 
 def code(body: str) -> str:
@@ -122,7 +122,7 @@ def test_an_experiment_is_its_keys_over_the_defaults(tmp_path):
 def test_every_shipped_experiment_loads():
     _, experiments = read_experiments()
     names = [load_experiment(name).name for name in experiments]
-    assert len(names) >= 9 and {"graph_cost_aware", "order_graph_tuned"} <= set(names)
+    assert len(names) >= 11 and {"graph_cost_aware", "tuned", "tuned_graph_x2"} <= set(names)
 
 
 def test_list_and_check_commands(capsys):
@@ -141,7 +141,7 @@ def test_list_and_check_commands(capsys):
 def test_the_base_rlm_imports_none_of_its_features():
     tree = ast.parse(Path(base.__file__).read_text())
     imported = [n.module or "" for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)]
-    assert not [m for m in imported if any(f in m for f in ("compression", "ordering", "tuning"))]
+    assert not [m for m in imported if any(f in m for f in ("compression", "ordering", "tuned"))]
 
 
 def test_a_plain_run_refuses_a_compression_option():
@@ -537,68 +537,120 @@ def test_run_metrics_report_cost_and_factor_use(tmp_path):
     assert record["calls"][0]["offloaded_tokens"] > 0 and record["reads"]["cost"] > 0
 
 
-# =========================================================================== the tuning feature
-
-
-def tuned(replies, reader=None, ordering="none", **limits):
-    return RLM(ScriptedRoot(replies), reader or plain(), Limits(**limits), [Tuning(ordering)])
-
-
-def test_tuning_adds_our_rules_and_final_none_only_when_on():
-    base_prompt = RLM(None, plain(), Limits()).system_prompt("q", 1000)
-    tuned_prompt = RLM(None, plain(), Limits(), [Tuning()]).system_prompt("q", 1000)
-    assert "FINAL_NONE" not in base_prompt and "Rules:" not in base_prompt
-    assert "FINAL_NONE(reason)" in tuned_prompt and "SEARCH TERMS" in tuned_prompt and "invoice total" in tuned_prompt
-    graph = RLM(None, plain(), Limits(), [Ordering("bm25-graph"), Tuning("bm25-graph")]).system_prompt("q", 1000)
-    assert "shark film" in graph  # the worked session rlm.py shows for this ordering
-
-
-def test_final_none_is_refused_until_the_document_was_read():
-    result = tuned(
-        [code("FINAL_NONE('not there')"), code("a = llm_query('q', 'abcd')"), code("FINAL_NONE('absent')")]
-    ).run("doc", "q")
-    assert (result.end_reason, result.answer, result.steps) == ("abstained", None, 3)
-    assert "REJECTED: you called FINAL_NONE" in result.transcript[0]["output"]
-    assert result.summary["abstain_nudges"] == 1 and result.summary["abstain_reason"] == "absent"
-
-
-def test_with_ordered_chunks_an_abstention_needs_three_reads():
-    cells = [
-        code("a = llm_query('q', 'abcd')"),
-        code("FINAL_NONE('x')"),
-        code("FINAL_NONE('x')"),
-        code("FINAL_NONE('x')"),
-    ]
-    result = tuned(cells, ordering="bm25-graph").run("doc", "q")
-    assert result.summary["abstain_nudges"] == 2 and result.end_reason == "abstained"  # refused twice, then believed
-
-
-def test_a_guessed_literal_final_is_rejected_but_a_computed_one_is_not():
-    cells = [code("FINAL('Berlin')"), code("ans = llm_query('q', 'abcd')"), code("FINAL(ans)")]
-    result = tuned(cells, plain("Paris")).run("doc", "q")
-    assert (result.answer, result.end_reason) == ("Paris", "final")
-    assert "REJECTED: FINAL('Berlin')" in result.transcript[0]["output"] and result.summary["rejected_finals"] == 1
-    seen = tuned([code("print('it is Paris')"), code("FINAL('Paris')")]).run("doc", "q")
-    assert seen.answer == "Paris"  # a literal the run has seen is grounded
-
-
-def test_repeated_guessing_ends_the_question_without_an_answer():
-    result = tuned([code("FINAL('Berlin')")] * 3).run("doc", "q")
-    assert (result.answer, result.end_reason, result.steps) == (None, "ungrounded_final", 3)
-
-
-def test_error_loops_end_and_silent_loops_get_a_nudge():
-    errors = tuned([code("1 / 0")] * 3).run("doc", "q")
-    assert errors.end_reason == "error_loop" and errors.steps == 3
-    silent = tuned([code("x = 1")] * 3, max_steps=3).run("doc", "q")
-    assert "printed nothing" in silent.transcript[2]["output"]
-
-
-def test_a_literal_printed_in_the_same_cell_is_grounded():
-    result = tuned([code("print('the answer is Paris')\nFINAL('Paris')")]).run("doc", "q")
-    assert (result.answer, result.end_reason, result.steps) == ("Paris", "final", 1)
-
-
 def test_final_does_not_echo_its_answer_as_output():
     result = rlm([code("FINAL('Paris')")]).run("doc", "q")
     assert result.transcript[0]["printed"] == "[no output]"
+
+
+# =========================================================================== loop: tuned (our original rlm.py)
+
+
+def tuned_config(**extra):
+    return config_from_dict({"name": "t", "data": {"tasks": ["hotpotqa"], "limit": 3}, "loop": "tuned", **extra})
+
+
+def flag(cmd, name):
+    return cmd[cmd.index(name) + 1]
+
+
+def test_a_tuned_experiment_becomes_the_original_runners_command():
+    config = tuned_config(ordering="bm25-graph", compression={"budget_mb": 1024, "factor": 2}, rlm={"max_steps": 50})
+    cmd = tuned.command(config, "hotpotqa_128k", python="python")
+    assert cmd[:3] == ["python", "-m", "evaluation.rlm.harness.run_benchmark"]
+    assert flag(cmd, "--mode") == "rlm" and flag(cmd, "--data-dir") == "hotpotqa_128k" and flag(cmd, "--limit") == "3"
+    assert flag(cmd, "--chunk-order") == "bm25-graph" and flag(cmd, "--max-steps") == "50"
+    assert (flag(cmd, "--sub-backend"), flag(cmd, "--press"), flag(cmd, "--memory-budget")) == (
+        "kvzip",
+        "kvzip",
+        "1024",
+    )
+    assert flag(cmd, "--compression-factor") == "2" and flag(cmd, "--sub-min-free-gib") == "13"
+    assert "--no-think" not in cmd  # thinking unset: the server's default, as the launchers left it
+    for at_default in ("--max-sub-calls", "--exec-timeout", "--run-timeout"):
+        assert at_default not in cmd  # equal to run_benchmark's defaults, so left off like the launchers did
+
+
+def test_a_plain_tuned_run_has_no_ordering_or_kvzip_flags():
+    config = tuned_config(
+        models={"thinking": False}, data={"tasks": ["nq"], "ids_file": "ids.txt"}, rlm={"run_timeout_s": 600}
+    )
+    cmd = tuned.command(config, "nq_128k", python="python")
+    assert "--chunk-order" not in cmd and "--sub-backend" not in cmd and "--no-think" in cmd
+    assert flag(cmd, "--run-timeout") == "600"  # differs from the default, so passed
+    assert flag(cmd, "--ids-file") == "ids.txt" and "--limit" not in cmd
+    f1 = tuned.command(tuned_config(compression={"budget_mb": 512, "factor": 1}), "x", python="python")
+    assert flag(f1, "--press") == "no_press"  # F = 1 is the uncompressed control at the same budget
+    assert flag(f1, "--max-subcall-chars") == "auto"  # without ordering rlm.py sizes slices from B and F
+    graph = tuned.command(tuned_config(ordering="bm25-graph", compression={"budget_mb": 512, "factor": 2}), "x")
+    assert "--max-subcall-chars" not in graph  # with ordering it reads fixed B x F cells
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"compression": {"budget_mb": 1024, "choices": [1, 2]}},
+        {"compression": {"budget_mb": 1024, "offload": True}},
+        {"compression": {"budget_mb": 1024}, "cost": {"show_root": True}},
+    ],
+)
+def test_a_tuned_experiment_refuses_what_rlm_py_does_not_have(extra):
+    with pytest.raises(ValueError, match="loop: tuned runs our original rlm.py"):
+        tuned_config(**extra)
+    with pytest.raises(ValueError, match="loop must be one of"):
+        tuned_config(loop="fancy")
+
+
+def test_run_tuned_runs_each_task_and_reads_back_its_metrics(tmp_path):
+    config = tuned_config(output_dir=str(tmp_path))
+    ran = []
+
+    def fake_runner(cmd):
+        ran.append(cmd)
+        run = tmp_path / "t" / "loft__hotpotqa_128k__rlm"
+        run.mkdir(parents=True)
+        (run / "config.yaml").write_text(yaml.safe_dump({"backend": "rlm", "mode": "rlm", "data_dir": "hotpotqa_128k"}))
+        (run / "metrics.json").write_text(json.dumps({"f1": 0.5}))
+        return 0
+
+    assert tuned.run_tuned(config, log=lambda _: None, execute=fake_runner) == {"hotpotqa_128k": {"f1": 0.5}}
+    assert len(ran) == 1 and flag(ran[0], "--out") == str(tmp_path / "t")
+    with pytest.raises(SystemExit, match="exited with 1"):
+        tuned.run_tuned(config, log=lambda _: None, execute=lambda cmd: 1)
+
+
+def test_check_prints_the_command_for_a_tuned_experiment(capsys):
+    cli.main(["check", "tuned_graph", "--set", "data.tasks=[nq]"])
+    out = capsys.readouterr().out
+    assert (
+        "our original rlm.py" in out
+        and "evaluation.rlm.harness.run_benchmark" in out
+        and "--chunk-order bm25-graph" in out
+    )
+
+
+def test_the_tuned_command_matches_rlm_order_lanes_flags():
+    config = tuned_config(ordering="bm25-graph", compression={"budget_mb": 512, "factor": 4}, rlm={"max_steps": 50})
+    cmd = tuned.command(config, "nq_128k", python="python")
+    flags = [a for a in cmd if a.startswith("--")]
+    # the order rlm_order_lane.sh writes them in, with its sub_flags for a B x F cell
+    assert flags == [
+        "--dataset",
+        "--data-dir",
+        "--split",
+        "--limit",
+        "--mode",
+        "--chunk-order",
+        "--organization-dir",
+        "--max-steps",
+        "--root-model",
+        "--sub-model",
+        "--base-url",
+        "--sub-backend",
+        "--press",
+        "--memory-budget",
+        "--memory-budget-unit",
+        "--compression-factor",
+        "--sub-min-free-gib",
+        "--out",
+    ]
+    assert tuned.min_free_gib(512, 4) == 13 and tuned.min_free_gib(2048, 8) == 40  # the lane's awk formula
