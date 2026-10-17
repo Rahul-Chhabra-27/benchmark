@@ -199,3 +199,9 @@ cython_debug/
 # in the CWD on every process that touches torch.distributed internals --
 # harmless, but every SLURM job run from this directory leaves one behind.
 tmp[a-z0-9]*/
+
+# Explanation notes written while building this branch; kept locally, not part of the repo.
+# The one guide to running everything is the root README.md.
+evaluation/rlm/configurable_rlm/README.md
+scripts/README.md
+slurm/README.md

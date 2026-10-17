@@ -28,7 +28,7 @@ the same cell as `BUDGET_MB=512 FACTOR=4`. To run cells with one command, see
 |---|---|
 | `shared/` | building blocks: `datasets.py`, `client.py` (vLLM), `kvzip_backend.py` (KVzip sub-calls), `sizing.py` (B × F), `retrieval.py` (BM25), `organization.py` (bm25-graph) |
 | `harness/` | the original runner `run_benchmark.py` and the RLMs it runs with `--mode` (below) |
-| `configurable_rlm/` | one `experiments.yaml` for every setting: `loop: base` (minimal RLM) or `loop: tuned` (our original `rlm.py`, unchanged), with ordering and compression switches — see its [README](configurable_rlm/README.md) |
+| `configurable_rlm/` | one `experiments.yaml` for every setting: `loop: base` (minimal RLM) or `loop: tuned` (our original `rlm.py`, unchanged), with ordering and compression switches — see the root [README](../../README.md) §5 |
 | `chunk_sources/` | chunks handed to the RLM by something else: `chunkset.py`, `oracle_chunks.py`, `query_free_chunks.py`, `window_notes.py` |
 | `analysis/` | reading finished runs: `paired.py`, `bxf_summary.py`, `hard_questions.py`, `compression_picker.py`, `structured_decompose.py`, `diagnostic.py` |
 | `campaigns/` | tooling for finished campaigns: `rlm_order_*.py` and `fixed_chunk_grid/` |

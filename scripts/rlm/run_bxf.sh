@@ -53,7 +53,15 @@ generates() {
 started=""
 stop_server() {
   if [ -n "$started" ] && [ "${KEEP_SERVER:-0}" != 1 ]; then
-    tmux kill-session -t "$started" 2>/dev/null && echo "stopped the server (tmux $started)"
+    if command -v tmux >/dev/null 2>&1 && tmux kill-session -t "$started" 2>/dev/null; then
+      echo "stopped the server (tmux $started)"
+    elif [ -f "$LOGS/$started.pid" ]; then
+      # the tmux-free path writes its pid beside the log; kill the whole process
+      # group so vLLM's workers go with it rather than being left on the GPU.
+      kill -TERM -- "-$(cat "$LOGS/$started.pid")" 2>/dev/null || kill "$(cat "$LOGS/$started.pid")" 2>/dev/null
+      rm -f "$LOGS/$started.pid"
+      echo "stopped the server (pid file $started.pid)"
+    fi
   fi
 }
 trap stop_server EXIT
@@ -67,7 +75,7 @@ else
     started=""
     exit 1
   }
-  echo "starting the root server on GPU $GPU (tmux $started); waiting for it to generate..."
+  echo "starting the root server on GPU $GPU (session $started); waiting for it to generate..."
   for _ in $(seq 120); do
     generates && break
     sleep 15
@@ -84,10 +92,10 @@ for budget in $BUDGETS_MB; do
   for factor in $FACTORS; do
     for arm in $ARMS; do
       log="$LOGS/bxf_${budget}MB_x${factor}_${arm}.log"
-      echo "=== B=${budget} MB  F=${factor}  $arm  ($DATASET: $SUBSETS, $LIMIT rows)  $(date +%T)  log: $log"
+      echo "=== B=${budget} MB  F=${factor}  $arm  ($DATASET: $SUBSETS, $LIMIT rows, split=${SPLIT:-test})  $(date +%T)  log: $log"
       # shellcheck disable=SC2086  # SUBSETS is a word list on purpose.
       if ! BUDGET_MB=$budget FACTOR=$factor CUDA_VISIBLE_DEVICES=$GPU CUDA_DEVICE_ORDER=PCI_BUS_ID \
-        DATASET=$DATASET LIMIT=$LIMIT REPO=$REPO RESULTS=$RESULTS BASE_URL=$base MODEL=$MODEL \
+        DATASET=$DATASET LIMIT=$LIMIT SPLIT=${SPLIT:-test} REPO=$REPO RESULTS=$RESULTS BASE_URL=$base MODEL=$MODEL \
         bash "$here/rlm_order_lane.sh" "$arm" "$CPU" $SUBSETS >"$log" 2>&1; then
         echo "!! this cell failed. The end of its log:"
         tail -n 8 "$log"

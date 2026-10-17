@@ -12,7 +12,7 @@
     python -m evaluation.rlm.configurable_rlm list
     python -m evaluation.rlm.configurable_rlm run order_graph
 
-README.md in this folder has the commands and experiments.
+The root README.md (§5) has the commands and experiments.
 """
 
 from .config import ExperimentConfig, config_from_dict, load_experiment

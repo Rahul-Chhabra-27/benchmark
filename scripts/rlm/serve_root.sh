@@ -72,11 +72,24 @@ case "$GPU" in
     if [ -z "$GPU_INDEX" ]; then echo "no GPU with UUID $GPU on this host" >&2; exit 1; fi ;;
   *) GPU_INDEX=$GPU ;;
 esac
-tmux new-session -d -s "$SESSION" \
-  "CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=$GPU_INDEX HF_HOME=$HF HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
-   OMP_NUM_THREADS=$THREADS MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false UV_USE_IO_URING=0 \
-   $PIN $VLLM serve $MODEL --served-model-name $MODEL --port $PORT \
-   --max-model-len $MAX_LEN --gpu-memory-utilization $GPU_UTIL --enforce-eager -O0 2>&1 | tee $LOG"
+SERVE_ENV="CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=$GPU_INDEX HF_HOME=$HF HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+   OMP_NUM_THREADS=$THREADS MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 TOKENIZERS_PARALLELISM=false UV_USE_IO_URING=0"
+SERVE_CMD="$PIN $VLLM serve $MODEL --served-model-name $MODEL --port $PORT \
+   --max-model-len $MAX_LEN --gpu-memory-utilization $GPU_UTIL --enforce-eager -O0"
+
+# tmux keeps the server alive across a dropped ssh session, which is what an
+# interactive host needs. A batch scheduler already owns the process tree, and
+# tmux is not installed on every cluster -- when it is missing, `tmux new-session`
+# fails and the caller waits forever for a server that was never started. Fall
+# back to a plain detached process, whose pid is written next to the log so the
+# teardown can find it without tmux.
+if command -v tmux >/dev/null 2>&1; then
+  tmux new-session -d -s "$SESSION" "$SERVE_ENV $SERVE_CMD 2>&1 | tee $LOG"
+else
+  echo "tmux not found; starting the server as a detached process" >&2
+  env $SERVE_ENV setsid $SERVE_CMD >"$LOG" 2>&1 < /dev/null &
+  echo $! > "$(dirname "$LOG")/$SESSION.pid"
+fi
 echo "serving $MODEL on GPU $GPU, port $PORT, tmux session $SESSION${CPUS:+, cpus $CPUS}"
 echo "weights load from NFS and can take several minutes; wait for a real generation:"
 echo "  until curl -s --max-time 60 -o /dev/null -w '%{http_code}' http://localhost:$PORT/v1/chat/completions \\"

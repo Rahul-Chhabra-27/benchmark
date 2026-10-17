@@ -81,7 +81,14 @@ root_server_up() {
 
 root_server_down() {
   [ -n "$_rs_started" ] && [ "${KEEP_SERVER:-0}" != 1 ] || return 0
-  tmux kill-session -t "$_rs_started" 2>/dev/null && echo "stopped the server (tmux $_rs_started)"
+  if command -v tmux >/dev/null 2>&1 && tmux kill-session -t "$_rs_started" 2>/dev/null; then
+    echo "stopped the server (tmux $_rs_started)"
+  elif [ -f "$LOGS/$_rs_started.pid" ]; then
+    # serve_root.sh's tmux-free path writes its pid beside the log: stop the whole group
+    kill -TERM -- "-$(cat "$LOGS/$_rs_started.pid")" 2>/dev/null || kill "$(cat "$LOGS/$_rs_started.pid")" 2>/dev/null
+    rm -f "$LOGS/$_rs_started.pid"
+    echo "stopped the server (pid file $_rs_started.pid)"
+  fi
   return 0
 }
 
